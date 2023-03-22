@@ -1,0 +1,41 @@
+buildscript {
+    ext {
+        springbootVersion = '3.0.0'
+    }
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springbootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group 'com.eskgus.nasipan'
+version '1.0-SNAPSHOT'
+sourceCompatibility = 17
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.projectlombok:lombok')
+    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
+    implementation('com.h2database:h2')
+    implementation('org.springframework.boot:spring-boot-starter-mustache')
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+
+    annotationProcessor('org.projectlombok:lombok')
+}
+
+test {
+    useJUnitPlatform()
+}
