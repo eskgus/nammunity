@@ -15,4 +15,9 @@ public class IndexController {
         model.addAttribute("posts", postsService.findAllDesc());
         return "main-page";
     }
+
+    @GetMapping("/posts/save")
+    public String savePosts() {
+        return "posts-save";
+    }
 }
