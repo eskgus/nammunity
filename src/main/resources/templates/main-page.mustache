@@ -15,6 +15,7 @@
                 <th>제목</th>
                 <th>작성자</th>
                 <th>작성일</th>
+                <th>조회수</th>
             </tr>
             </thead>
             <tbody id="tbody">
@@ -24,6 +25,7 @@
                     <td><a href="/posts/read/{{id}}">{{title}}</a></td>
                     <td>{{author}}</td>
                     <td>{{modifiedDate}}</td>
+                    <td>{{view}}</td>
                 </tr>
             {{/posts}}
             </tbody>

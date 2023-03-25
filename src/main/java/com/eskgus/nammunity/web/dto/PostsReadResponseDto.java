@@ -13,6 +13,7 @@ public class PostsReadResponseDto {
     private String author;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
+    private int view;
 
     public PostsReadResponseDto(Posts entity) {
         this.id = entity.getId();
@@ -21,5 +22,6 @@ public class PostsReadResponseDto {
         this.author = entity.getAuthor();
         this.createdDate = entity.getCreatedDate();
         this.modifiedDate = entity.getModifiedDate();
+        this.view = entity.getView();
     }
 }

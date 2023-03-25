@@ -40,7 +40,7 @@ public class PostsRepositoryTest {
 
     @Test
     public void addBaseTimeEntity() {
-        LocalDateTime now = LocalDateTime.of(2025, 3, 23, 18, 13, 0);
+        LocalDateTime now = LocalDateTime.of(2023, 3, 23, 18, 13, 0);
         postsRepository.save(Posts.builder().title("title").content("content").author("author").build());
 
         List<Posts> postsList = postsRepository.findAll();

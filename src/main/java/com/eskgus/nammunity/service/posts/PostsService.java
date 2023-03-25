@@ -32,4 +32,9 @@ public class PostsService {
                 IllegalArgumentException("해당 게시글이 없습니다. id = " + id));
         return new PostsReadResponseDto(entity);
     }
+
+    @Transactional
+    public int countViews(Long id) {
+        return postsRepository.countViews(id);
+    }
 }
