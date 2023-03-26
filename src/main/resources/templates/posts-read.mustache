@@ -2,6 +2,9 @@
     <div class="col-md-12">
         <div class="col-md-4">
             <form>
+                <div>
+                    <input type="hidden" id="id" value="{{post.id}}">
+                </div>
                 <div class="form-group">
                     <label for="title">제목</label>
                     <input type="text" class="form-control" id="title" value="{{post.title}}" readonly>
@@ -29,6 +32,7 @@
             </form>
             <a href="/" role="button" class="btn btn-primary">돌아가기</a>
             <a href="/posts/update/{{id}}" role="button" class="btn btn-success">수정</a>
+            <button type="button" class="btn btn-danger" id="btn-delete">삭제</button>
         </div>
     </div>
 {{>layout/footer}}
