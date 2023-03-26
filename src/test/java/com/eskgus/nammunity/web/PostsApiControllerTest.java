@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.web.dto.PostsSaveRequestDto;
+import com.eskgus.nammunity.web.dto.PostsUpdateRequestDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -51,5 +54,29 @@ public class PostsApiControllerTest {
 
         Assertions.assertThat(all.get(0).getTitle()).isEqualTo(title);
         Assertions.assertThat(all.get(0).getContent()).isEqualTo(content);
+    }
+
+    @Test
+    public void updatePosts() throws Exception {
+        Posts posts = postsRepository.save(Posts.builder().title("title").content("content").author("author").build());
+
+        Long id = posts.getId();
+        String modifiedTitle = "modified Title";
+        String modifiedContent = "modified Content";
+
+        PostsUpdateRequestDto requestDto = PostsUpdateRequestDto.builder()
+                .title(modifiedTitle).content(modifiedContent).build();
+        HttpEntity<PostsUpdateRequestDto> requestEntity = new HttpEntity<>(requestDto);
+
+        String url = "http://localhost:" + port + "/api/posts/" + id;
+
+        ResponseEntity<Long> responseEntity = testRestTemplate.exchange(url, HttpMethod.PUT, requestEntity, Long.class);
+
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(responseEntity.getBody()).isGreaterThan(0L);
+
+        posts = postsRepository.findAll().get(0);
+        Assertions.assertThat(posts.getTitle()).isEqualTo(modifiedTitle);
+        Assertions.assertThat(posts.getContent()).isEqualTo(modifiedContent);
     }
 }
