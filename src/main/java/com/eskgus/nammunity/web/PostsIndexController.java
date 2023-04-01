@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @RequiredArgsConstructor
 @Controller
-public class IndexController {
+public class PostsIndexController {
     private final PostsService postsService;
 
     @GetMapping("/")
@@ -21,7 +21,7 @@ public class IndexController {
 
     @GetMapping("/posts/save")
     public String savePosts() {
-        return "posts-save";
+        return "posts/posts-save";
     }
 
     @GetMapping("/posts/read/{id}")
@@ -29,13 +29,13 @@ public class IndexController {
         postsService.countViews(id);
         PostsReadResponseDto responseDto = postsService.findById(id);
         model.addAttribute("post", responseDto);
-        return "posts-read";
+        return "posts/posts-read";
     }
 
     @GetMapping("/posts/update/{id}")
     public String updatePosts(@PathVariable Long id, Model model) {
         PostsReadResponseDto responseDto = postsService.findById(id);
         model.addAttribute("post", responseDto);
-        return "posts-update";
+        return "posts/posts-update";
     }
 }
