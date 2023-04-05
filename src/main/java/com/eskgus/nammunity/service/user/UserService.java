@@ -1,6 +1,5 @@
 package com.eskgus.nammunity.service.user;
 
-import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.UserRequestDto;
 import lombok.RequiredArgsConstructor;
@@ -20,5 +19,13 @@ public class UserService {
         UserRequestDto encRequestDto = UserRequestDto.builder()
                 .username(requestDto.getUsername()).password(password).nickname(requestDto.getNickname()).build();
         return userRepository.save(encRequestDto.toEntity()).getId();
+    }
+
+    public Boolean checkUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    public Boolean checkNickname(String nickname) {
+        return userRepository.existsByNickname(nickname);
     }
 }

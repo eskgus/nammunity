@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class UserIndexController {
-    @GetMapping("/user/signUp")
+    @GetMapping("/user/sign-up")
     public String signUpUser() {
         return "user/sign-up";
     }

@@ -18,7 +18,7 @@ public class UserIndexControllerTest {
 
     @Test
     public void loadSignUpPage() {
-        String body = this.testRestTemplate.getForObject("/user/signUp", String.class);
+        String body = this.testRestTemplate.getForObject("/user/sign-up", String.class);
 
         Assertions.assertThat(body).contains("회원가입");
     }
