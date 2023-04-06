@@ -4,7 +4,9 @@ import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.UserRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @RestController
@@ -13,6 +15,11 @@ public class UserApiController {
 
     @PostMapping("/api/user")
     public Long signUp(@Valid @RequestBody UserRequestDto requestDto) {
+        if (userService.checkUsername(requestDto.getUsername())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username");
+        } else if (userService.checkNickname(requestDto.getNickname())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "nickname");
+        }
         return userService.signUp(requestDto);
     }
 
