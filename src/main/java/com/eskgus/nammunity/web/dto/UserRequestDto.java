@@ -25,11 +25,15 @@ public class UserRequestDto {
             message = "닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하")
     private String nickname;
 
+    @NotBlank(message = "비밀번호를 확인하세요.")
+    private String confirmPassword;
+
     @Builder
-    public UserRequestDto(String username, String password, String nickname) {
+    public UserRequestDto(String username, String password, String nickname, String confirmPassword) {
         this.username = username;
         this.password = password;
         this.nickname = nickname;
+        this.confirmPassword = confirmPassword;
     }
 
     public User toEntity() {

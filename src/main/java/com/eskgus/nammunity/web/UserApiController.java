@@ -19,6 +19,8 @@ public class UserApiController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username");
         } else if (userService.checkNickname(requestDto.getNickname())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "nickname");
+        } else if (!requestDto.getPassword().equals(requestDto.getConfirmPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "confirmPassword");
         }
         return userService.signUp(requestDto);
     }
