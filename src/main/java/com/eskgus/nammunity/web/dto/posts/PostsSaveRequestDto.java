@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.dto;
+package com.eskgus.nammunity.web.dto.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import lombok.Builder;

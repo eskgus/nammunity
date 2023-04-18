@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.web;
 
 import com.eskgus.nammunity.service.posts.PostsService;
-import com.eskgus.nammunity.web.dto.PostsReadResponseDto;
+import com.eskgus.nammunity.web.dto.posts.PostsReadResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

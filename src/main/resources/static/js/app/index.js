@@ -29,6 +29,14 @@ var main = {
             _this.checkPassword();
         });
 
+        $('#email').blur(function() {
+            _this.checkEmail();
+        });
+
+        $('#btn-confirm-email').on('click', function() {
+            window.close();
+        });
+
         var confirmPassword = document.getElementById('confirm-password');
         if (confirmPassword) {
             confirmPassword.addEventListener('focusin', function() {
@@ -102,7 +110,8 @@ var main = {
             username: $('#username').val(),
             password: $('#password').val(),
             nickname: $('#nickname').val(),
-            confirmPassword: $('#confirm-password').val()
+            confirmPassword: $('#confirm-password').val(),
+            email: $('#email').val()
         };
 
         var rb = this.redBox;
@@ -110,8 +119,8 @@ var main = {
 
         $.ajax({
             type: 'POST',
-            url: '/api/user',
-            dataType: 'json',
+            url: '/api/users',
+//            dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data),
         }).done(function() {
@@ -120,13 +129,7 @@ var main = {
         }).fail(function(response) {
             var error = response.responseJSON;
 
-            if (error.existingUsername) {
-                alert(error.existingUsername);
-                rb('username', data.username);
-            } else if (error.existingNickname) {
-                alert(error.existingNickname);
-                rb('nickname', data.nickname);
-            } else if (error.username) {
+            if (error.username) {
                 alert(error.username);
                 rb('username', data.username);
             } else if (error.password) {
@@ -139,6 +142,9 @@ var main = {
             } else if (error.nickname) {
                 alert(error.nickname);
                 rb('nickname', data.nickname);
+            } else if (error.email) {
+                alert(error.email);
+                rb('email', data.email);
             }
         });
     },
@@ -149,7 +155,7 @@ var main = {
 
         $.ajax({
             type: 'GET',
-            url: '/api/exists/username/' + username
+            url: '/api/users/exists/username/' + username
         }).done(function(response) {
             if (response == false) {
                 check.style = 'display: none';
@@ -159,7 +165,7 @@ var main = {
                 rb('username', username);
             }
         }).fail(function(response) {
-            if (response.status == 404) {
+            if (response.status == 401) {
                 check.textContent = 'ID를 입력하세요.';
                 check.style = 'display: block; color: red';
                 rb('username', username);
@@ -173,7 +179,7 @@ var main = {
 
         $.ajax({
             type: 'GET',
-            url: '/api/exists/nickname/' + nickname
+            url: '/api/users/exists/nickname/' + nickname
         }).done(function(response) {
             if (response == false) {
                 check.style = 'display: none';
@@ -183,7 +189,7 @@ var main = {
                 rb('nickname', nickname);
             }
         }).fail(function(response) {
-            if (response.status == 404) {
+            if (response.status == 401) {
                 check.textContent = '닉네임을 입력하세요.';
                 check.style = 'display: block; color: red';
                 rb('nickname', nickname);
@@ -229,6 +235,30 @@ var main = {
                 check.style = 'display: block; color: red';
             }
         }
+    },
+    checkEmail : function() {
+        var email = $('#email').val();
+        var check = document.getElementById('ch-email');
+        var rb = this.redBoxWof;
+
+        $.ajax({
+            type: 'GET',
+            url: '/api/users/exists/email/' + email
+        }).done(function(response) {
+            if (response == false) {
+                check.style = 'display: none';
+            } else {
+                check.textContent = '이미 사용 중인 이메일입니다.';
+                check.style = 'display: block; color: red';
+                rb('email', email);
+            }
+        }).fail(function(response) {
+            if (response.status == 401) {
+                check.textContent = '이메일을 입력하세요.';
+                check.style = 'display: block; color: red';
+                rb('email', email);
+            }
+        });
     },
     redBox : function(field, pre) {
         var box = document.getElementById(field);

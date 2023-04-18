@@ -1,6 +1,8 @@
-package com.eskgus.nammunity.web.dto;
+package com.eskgus.nammunity.web.dto.user;
 
+import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
@@ -9,7 +11,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class UserRequestDto {
+public class RegistrationDto {
     @NotBlank(message = "ID를 입력하세요.")
     @Pattern(regexp = "^(?=[a-z])(?=.*[0-9])[a-z0-9]{4,20}",
             message = "ID는 영어 소문자로 시작, 숫자 1개 이상 포함, 한글/특수문자/공백 불가능, 4글자 이상 20글자 이하")
@@ -28,15 +30,25 @@ public class UserRequestDto {
     @NotBlank(message = "비밀번호를 확인하세요.")
     private String confirmPassword;
 
+    @NotBlank(message = "이메일을 입력하세요.")
+    @Email(message = "이메일 형식이 맞지 않습니다.")
+    private String email;
+
+    private Role role;
+
     @Builder
-    public UserRequestDto(String username, String password, String nickname, String confirmPassword) {
+    public RegistrationDto(String username, String password, String confirmPassword, String nickname,
+                           String email, Role role) {
         this.username = username;
         this.password = password;
-        this.nickname = nickname;
         this.confirmPassword = confirmPassword;
+        this.nickname = nickname;
+        this.email = email;
+        this.role = role;
     }
 
     public User toEntity() {
-        return User.builder().username(username).password(password).nickname(nickname).build();
+        return User.builder().username(username).password(password).nickname(nickname)
+                .email(email).role(role).build();
     }
 }

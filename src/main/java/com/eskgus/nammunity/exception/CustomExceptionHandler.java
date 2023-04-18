@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,13 +27,27 @@ public class CustomExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     public Map<String, String> SignUpExceptionHandler(ResponseStatusException ex) {
         Map<String, String> error = new HashMap<>();
-        if (ex.getReason().equals("username")) {
-            error.put("existingUsername", "이미 사용 중인 ID입니다.");
-        } else if (ex.getReason().equals("nickname")) {
-            error.put("existingNickname", "이미 사용 중인 닉네임입니다.");
-        } else if (ex.getReason().equals("confirmPassword")) {
-            error.put("confirmPassword", "비밀번호가 일치하지 않습니다.");
+        String reason = ex.getReason();
+        switch (reason) {
+            case "username":
+                error.put(reason, "이미 사용 중인 ID입니다.");
+                break;
+            case "nickname":
+                error.put(reason, "이미 사용 중인 닉네임입니다.");
+                break;
+            case "confirmPassword":
+                error.put(reason, "비밀번호가 일치하지 않습니다.");
+                break;
+            case "email":
+                error.put(reason, "이미 사용 중인 이메일입니다.");
+                break;
         }
         return error;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public RedirectView ConfirmTokenExceptionHandler(IllegalArgumentException ex, RedirectAttributes ra) {
+        ra.addFlashAttribute("error", ex.getMessage());
+        return new RedirectView("/users/confirm-email");
     }
 }

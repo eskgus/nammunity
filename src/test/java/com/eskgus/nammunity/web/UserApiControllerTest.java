@@ -2,7 +2,7 @@ package com.eskgus.nammunity.web;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.web.dto.UserRequestDto;
+import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ public class UserApiControllerTest {
 
     @Test
     public void signUpUser() throws Exception {
-        UserRequestDto requestDto = UserRequestDto.builder()
+        RegistrationDto requestDto = RegistrationDto.builder()
                 .username("username123").password("password123").nickname("nick네ME123").build();
 
         String url = "http://localhost:" + port + "/api/user";
@@ -64,10 +64,10 @@ public class UserApiControllerTest {
         userRepository.save(User.builder().username(username).password(password).nickname(nickname).build());
 
         // username123으로 회원가입 시도하는 다른 사용자1
-        UserRequestDto requestDto1 = UserRequestDto.builder()
+        RegistrationDto requestDto1 = RegistrationDto.builder()
                 .username(username).password(password).nickname(nickname).build();
 
-        HttpEntity<UserRequestDto> requestEntity1 = new HttpEntity<>(requestDto1);
+        HttpEntity<RegistrationDto> requestEntity1 = new HttpEntity<>(requestDto1);
 
         String url1 = "http://localhost:" + port + "/api/exists/username/" + username;
 
@@ -77,9 +77,9 @@ public class UserApiControllerTest {
         Assertions.assertThat(responseEntity1.getBody()).isTrue();
 
         // username1234로 회원가입 시도하는 또 다른 사용자2
-        UserRequestDto requestDto2 = UserRequestDto.builder()
+        RegistrationDto requestDto2 = RegistrationDto.builder()
                 .username("username1234").password(password).nickname(nickname).build();
-        HttpEntity<UserRequestDto> requestEntity2 = new HttpEntity<>(requestDto2);
+        HttpEntity<RegistrationDto> requestEntity2 = new HttpEntity<>(requestDto2);
         String url2 = "http://localhost:" + port + "/api/exists/username/" + "username1234";
         ResponseEntity<Boolean> responseEntity2 = testRestTemplate.exchange(url2, HttpMethod.GET, requestEntity2, Boolean.class);
         Assertions.assertThat(responseEntity2.getStatusCode()).isEqualTo(HttpStatus.OK);

@@ -2,8 +2,8 @@ package com.eskgus.nammunity.web;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.web.dto.PostsSaveRequestDto;
-import com.eskgus.nammunity.web.dto.PostsUpdateRequestDto;
+import com.eskgus.nammunity.web.dto.posts.PostsSaveRequestDto;
+import com.eskgus.nammunity.web.dto.posts.PostsUpdateRequestDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

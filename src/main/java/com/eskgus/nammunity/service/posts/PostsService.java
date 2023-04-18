@@ -2,10 +2,10 @@ package com.eskgus.nammunity.service.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.web.dto.PostsListResponseDto;
-import com.eskgus.nammunity.web.dto.PostsReadResponseDto;
-import com.eskgus.nammunity.web.dto.PostsSaveRequestDto;
-import com.eskgus.nammunity.web.dto.PostsUpdateRequestDto;
+import com.eskgus.nammunity.web.dto.posts.PostsListResponseDto;
+import com.eskgus.nammunity.web.dto.posts.PostsReadResponseDto;
+import com.eskgus.nammunity.web.dto.posts.PostsSaveRequestDto;
+import com.eskgus.nammunity.web.dto.posts.PostsUpdateRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
