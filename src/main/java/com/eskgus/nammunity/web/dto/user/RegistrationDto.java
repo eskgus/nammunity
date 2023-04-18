@@ -22,13 +22,13 @@ public class RegistrationDto {
             message = "비밀번호는 영어와 숫자 1개 이상 포함, 특수문자 가능, 한글/공백 불가능, 8글자 이상 20글자 이하")
     private String password;
 
+    @NotBlank(message = "비밀번호를 확인하세요.")
+    private String confirmPassword;
+
     @NotBlank(message = "닉네임을 입력하세요.")
     @Pattern(regexp = "(?=[a-zA-Z0-9가-힣])[a-zA-Z0-9가-힣]{3,10}",
             message = "닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하")
     private String nickname;
-
-    @NotBlank(message = "비밀번호를 확인하세요.")
-    private String confirmPassword;
 
     @NotBlank(message = "이메일을 입력하세요.")
     @Email(message = "이메일 형식이 맞지 않습니다.")

@@ -120,7 +120,6 @@ var main = {
         $.ajax({
             type: 'POST',
             url: '/api/users',
-//            dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data),
         }).done(function() {

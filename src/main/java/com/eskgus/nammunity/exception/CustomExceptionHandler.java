@@ -32,11 +32,11 @@ public class CustomExceptionHandler {
             case "username":
                 error.put(reason, "이미 사용 중인 ID입니다.");
                 break;
-            case "nickname":
-                error.put(reason, "이미 사용 중인 닉네임입니다.");
-                break;
             case "confirmPassword":
                 error.put(reason, "비밀번호가 일치하지 않습니다.");
+                break;
+            case "nickname":
+                error.put(reason, "이미 사용 중인 닉네임입니다.");
                 break;
             case "email":
                 error.put(reason, "이미 사용 중인 이메일입니다.");

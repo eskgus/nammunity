@@ -26,10 +26,10 @@ public class RegistrationService {
     public void register(RegistrationDto registrationDto) {
         if (userService.checkUsername(registrationDto.getUsername())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username");
-        } else if (userService.checkNickname(registrationDto.getNickname())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "nickname");
         } else if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "confirmPassword");
+        } else if (userService.checkNickname(registrationDto.getNickname())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "nickname");
         } else if (userService.checkEmail(registrationDto.getEmail())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "email");
         }

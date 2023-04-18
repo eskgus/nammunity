@@ -2,8 +2,8 @@ package com.eskgus.nammunity.web;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.web.dto.posts.PostsSaveRequestDto;
-import com.eskgus.nammunity.web.dto.posts.PostsUpdateRequestDto;
+import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
+import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ public class PostsApiControllerTest {
     public void savePosts() throws Exception {
         String title = "test title";
         String content = "test content";
-        PostsSaveRequestDto requestDto = PostsSaveRequestDto.builder()
+        PostsSaveDto requestDto = PostsSaveDto.builder()
                 .title(title).content(content).author("test author").build();
         String url = "http://localhost:" + port + "/api/posts";
 
@@ -64,9 +64,9 @@ public class PostsApiControllerTest {
         String modifiedTitle = "modified Title";
         String modifiedContent = "modified Content";
 
-        PostsUpdateRequestDto requestDto = PostsUpdateRequestDto.builder()
+        PostsUpdateDto requestDto = PostsUpdateDto.builder()
                 .title(modifiedTitle).content(modifiedContent).build();
-        HttpEntity<PostsUpdateRequestDto> requestEntity = new HttpEntity<>(requestDto);
+        HttpEntity<PostsUpdateDto> requestEntity = new HttpEntity<>(requestDto);
 
         String url = "http://localhost:" + port + "/api/posts/" + id;
 

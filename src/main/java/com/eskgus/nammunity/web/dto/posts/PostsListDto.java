@@ -6,14 +6,14 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class PostsListResponseDto {
+public class PostsListDto {
     private Long id;
     private String title;
     private String author;
     private LocalDateTime modifiedDate;
     private int view;
 
-    public PostsListResponseDto(Posts entity) {
+    public PostsListDto(Posts entity) {
         this.id = entity.getId();
         this.title = entity.getTitle();
         this.author = entity.getAuthor();

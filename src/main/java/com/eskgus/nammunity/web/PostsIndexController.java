@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.web;
 
 import com.eskgus.nammunity.service.posts.PostsService;
-import com.eskgus.nammunity.web.dto.posts.PostsReadResponseDto;
+import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,14 +27,14 @@ public class PostsIndexController {
     @GetMapping("/posts/read/{id}")
     public String readPosts(@PathVariable Long id, Model model) {
         postsService.countViews(id);
-        PostsReadResponseDto responseDto = postsService.findById(id);
+        PostsReadDto responseDto = postsService.findById(id);
         model.addAttribute("post", responseDto);
         return "posts/posts-read";
     }
 
     @GetMapping("/posts/update/{id}")
     public String updatePosts(@PathVariable Long id, Model model) {
-        PostsReadResponseDto responseDto = postsService.findById(id);
+        PostsReadDto responseDto = postsService.findById(id);
         model.addAttribute("post", responseDto);
         return "posts/posts-update";
     }
