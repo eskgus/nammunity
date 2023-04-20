@@ -29,7 +29,8 @@ public class SecurityConfig{
                         .requestMatchers("/", "/posts/read/**", "/api/users/**", "/users/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**").hasRole(Role.USER.name())
                         .anyRequest().authenticated())
-                .httpBasic(withDefaults());
+                .httpBasic(withDefaults())
+                .formLogin();
         return http.build();
     }
 }
