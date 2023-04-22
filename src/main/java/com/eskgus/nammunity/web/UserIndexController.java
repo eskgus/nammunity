@@ -1,10 +1,13 @@
 package com.eskgus.nammunity.web;
 
+import com.eskgus.nammunity.domain.user.CustomUserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/users")
@@ -22,5 +25,17 @@ public class UserIndexController {
             model.addAttribute("error", attr);
         }
         return "user/confirm-email";
+    }
+
+    @GetMapping("/sign-in")
+    public String signInUser(@RequestParam(required = false) Boolean error,
+                             @AuthenticationPrincipal CustomUserDetails user, Model model) {
+        if (user != null) {
+            model.addAttribute("user", user.getNickname());
+        }
+        if (error != null) {
+            model.addAttribute("error", error);
+        }
+        return "user/sign-in";
     }
 }

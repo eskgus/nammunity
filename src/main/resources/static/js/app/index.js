@@ -121,7 +121,7 @@ var main = {
             type: 'POST',
             url: '/api/users',
             contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data),
+            data: JSON.stringify(data)
         }).done(function() {
             alert('회원가입이 완료됐습니다.');
             window.location.href = '/';

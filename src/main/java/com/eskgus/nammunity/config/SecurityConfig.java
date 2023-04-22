@@ -23,14 +23,19 @@ public class SecurityConfig{
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable().headers().frameOptions().disable()
                 .and()
-                .authorizeHttpRequests((request) -> request
+                .authorizeHttpRequests(request -> request
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**"))
                         .permitAll()
                         .requestMatchers("/", "/posts/read/**", "/api/users/**", "/users/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**").hasRole(Role.USER.name())
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())
-                .formLogin();
+                .formLogin(form -> form
+                        .loginPage("/users/sign-in")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/users/sign-in?error=true")
+                        .permitAll())
+                .logout().permitAll();
         return http.build();
     }
 }
