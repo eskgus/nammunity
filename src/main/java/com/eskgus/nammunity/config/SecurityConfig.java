@@ -35,7 +35,10 @@ public class SecurityConfig{
                         .defaultSuccessUrl("/", true)
                         .failureUrl("/users/sign-in?error=true")
                         .permitAll())
-                .logout().permitAll();
+                .logout()
+                .logoutUrl("/users/sign-out")
+                .logoutSuccessUrl("/")
+                .permitAll();
         return http.build();
     }
 }

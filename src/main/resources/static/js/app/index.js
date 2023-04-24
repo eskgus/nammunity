@@ -37,7 +37,7 @@ var main = {
             window.close();
         });
 
-        var confirmPassword = document.getElementById('confirm-password');
+        var confirmPassword = document.getElementById('confirmPassword');
         if (confirmPassword) {
             confirmPassword.addEventListener('focusin', function() {
                 confirmPassword.addEventListener('input', function() {
@@ -109,13 +109,12 @@ var main = {
         var data = {
             username: $('#username').val(),
             password: $('#password').val(),
+            confirmPassword: $('#confirmPassword').val(),
             nickname: $('#nickname').val(),
-            confirmPassword: $('#confirm-password').val(),
             email: $('#email').val()
         };
 
         var rb = this.redBox;
-        var rbwf = this.redBoxWof;
 
         $.ajax({
             type: 'POST',
@@ -126,31 +125,26 @@ var main = {
             alert('회원가입이 완료됐습니다.');
             window.location.href = '/';
         }).fail(function(response) {
-            var error = response.responseJSON;
+            var errors = response.responseJSON;
+            var size = Object.keys(errors).length;
+            let firstData = 4;
 
-            if (error.username) {
-                alert(error.username);
-                rb('username', data.username);
-            } else if (error.password) {
-                alert(error.password);
-                rb('password', data.password);
-                rbwf('confirm-password', data.confirmPassword);
-            } else if (error.confirmPassword) {
-                alert(error.confirmPassword);
-                rb('confirm-password', data.confirmPassword);
-            } else if (error.nickname) {
-                alert(error.nickname);
-                rb('nickname', data.nickname);
-            } else if (error.email) {
-                alert(error.email);
-                rb('email', data.email);
+            for (let i = 0; i < size; i++) {
+                let error = Object.keys(errors)[i];
+                let index = Object.keys(data).indexOf(error);
+                firstData = firstData > index ? index : firstData;
+                rb(error, data[Object.keys(data)[index]]);
             }
+
+            var firstError = Object.keys(data)[firstData];
+            alert(errors[firstError]);
+            document.getElementById(Object.keys(data)[firstData]).focus();
         });
     },
     checkUsername : function() {
         var username = $('#username').val();
         var check = document.getElementById('ch-username');
-        var rb = this.redBoxWof;
+        var rb = this.redBox;
 
         $.ajax({
             type: 'GET',
@@ -174,7 +168,7 @@ var main = {
     checkNickname : function() {
         var nickname = $('#nickname').val();
         var check = document.getElementById('ch-nickname');
-        var rb = this.redBoxWof;
+        var rb = this.redBox;
 
         $.ajax({
             type: 'GET',
@@ -198,7 +192,7 @@ var main = {
     checkPassword : function() {
         var password = $('#password').val();
         var check = document.getElementById('ch-password');
-        var rb = this.redBoxWof;
+        var rb = this.redBox;
 
         if (password == '') {
             check.textContent = '비밀번호를 입력하세요.';
@@ -210,9 +204,9 @@ var main = {
     },
     checkConfirmPassword : function(event) {
         var password = $('#password').val();
-        var confirmPassword = $('#confirm-password').val();
-        var box = document.getElementById('confirm-password');
-        var check = document.getElementById('ch-confirm-password');
+        var confirmPassword = $('#confirmPassword').val();
+        var box = document.getElementById('confirmPassword');
+        var check = document.getElementById('ch-confirmPassword');
 
         if (event == 'input') {
             if (password == confirmPassword) {
@@ -238,7 +232,7 @@ var main = {
     checkEmail : function() {
         var email = $('#email').val();
         var check = document.getElementById('ch-email');
-        var rb = this.redBoxWof;
+        var rb = this.redBox;
 
         $.ajax({
             type: 'GET',
@@ -260,19 +254,6 @@ var main = {
         });
     },
     redBox : function(field, pre) {
-        var box = document.getElementById(field);
-
-        box.focus();
-        box.style = 'border: 1px solid red; background-color: pink';
-        box.addEventListener('input', function() {
-            if (pre != box.value) {
-                box.style = 'border: 1px solid #ced4da';
-            } else {
-                box.style = 'border: 1px solid red; background-color: pink';
-            }
-        });
-    },
-    redBoxWof : function(field, pre) {
         var box = document.getElementById(field);
 
         box.style = 'border: 1px solid red; background-color: pink';

@@ -8,6 +8,7 @@
 <body>
     {{#user}}
         {{user}}
+        <a href="/users/sign-out" role="button" class="btn btn-primary">로그아웃</a>
     {{/user}}
     {{^user}}
         <a href="/users/sign-in" role="button" class="btn btn-primary">로그인</a>
