@@ -1,6 +1,5 @@
 package com.eskgus.nammunity.web;
 
-
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
