@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,12 +14,12 @@ public class PostsApiController {
     private final PostsService postsService;
 
     @PostMapping
-    public Long save(@RequestBody PostsSaveDto requestDto) {
+    public Long save(@Valid @RequestBody PostsSaveDto requestDto) {
         return postsService.save(requestDto);
     }
 
     @PutMapping("/{id}")
-    public Long update(@PathVariable Long id, @RequestBody PostsUpdateDto requestDto) {
+    public Long update(@PathVariable Long id, @Valid @RequestBody PostsUpdateDto requestDto) {
         return postsService.update(id, requestDto);
     }
 

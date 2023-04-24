@@ -57,6 +57,9 @@ var main = {
             content: $('#content').val()
         };
 
+        var rb = this.redBoxNBC;
+        var fail = this.fail;
+
         $.ajax({
             type: 'POST',
             url: '/api/posts',
@@ -66,8 +69,8 @@ var main = {
         }).done(function() {
             alert('글이 등록되었습니다.');
             window.location.href = '/';
-        }).fail(function(error) {
-            alert(JSON.stringify(error));
+        }).fail(function(response) {
+            fail(response, data, rb);
         });
     },
     update : function() {
@@ -77,6 +80,8 @@ var main = {
         };
 
         var id = $('#id').val();
+        var rb = this.redBoxNBC;
+        var fail = this.fail;
 
         $.ajax({
             type: 'PUT',
@@ -87,8 +92,8 @@ var main = {
         }).done(function() {
             alert('글이 수정되었습니다.');
             window.location.href = '/posts/read/' + id;
-        }).fail(function(error) {
-            alert(JSON.stringify(error));
+        }).fail(function(response) {
+            fail(response, data, rb);
         });
     },
     delete : function() {
@@ -115,6 +120,7 @@ var main = {
         };
 
         var rb = this.redBox;
+        var fail = this.fail;
 
         $.ajax({
             type: 'POST',
@@ -125,20 +131,7 @@ var main = {
             alert('회원가입이 완료됐습니다.');
             window.location.href = '/';
         }).fail(function(response) {
-            var errors = response.responseJSON;
-            var size = Object.keys(errors).length;
-            let firstData = 4;
-
-            for (let i = 0; i < size; i++) {
-                let error = Object.keys(errors)[i];
-                let index = Object.keys(data).indexOf(error);
-                firstData = firstData > index ? index : firstData;
-                rb(error, data[Object.keys(data)[index]]);
-            }
-
-            var firstError = Object.keys(data)[firstData];
-            alert(errors[firstError]);
-            document.getElementById(Object.keys(data)[firstData]).focus();
+            fail(response, data, rb);
         });
     },
     checkUsername : function() {
@@ -264,6 +257,34 @@ var main = {
                 box.style = 'border: 1px solid red; background-color: pink';
             }
         });
+    },
+    redBoxNBC : function(field, pre) {
+        var box = document.getElementById(field);
+
+        box.style = 'border: 1px solid red';
+        box.addEventListener('input', function() {
+            if (pre != box.value) {
+                box.style = 'border: 1px solid #ced4da';
+            } else {
+                box.style = 'border: 1px solid red';
+            }
+        });
+    },
+    fail: function (response, data, rb) {
+        var errors = response.responseJSON;
+        var size = Object.keys(errors).length;
+        let firstData = 4;
+
+        for (let i = 0; i < size; i++) {
+            let error = Object.keys(errors)[i];
+            let index = Object.keys(data).indexOf(error);
+            firstData = firstData > index ? index : firstData;
+            rb(error, data[Object.keys(data)[index]]);
+        }
+
+        var firstError = Object.keys(data)[firstData];
+        alert(errors[firstError]);
+        document.getElementById(Object.keys(data)[firstData]).focus();
     }
 };
 
