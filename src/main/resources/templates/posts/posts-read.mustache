@@ -31,8 +31,10 @@
                 </div>
             </form>
             <a href="/" role="button" class="btn btn-primary">돌아가기</a>
-            <a href="/posts/update/{{id}}" role="button" class="btn btn-success">수정</a>
-            <button type="button" class="btn btn-danger" id="btn-delete">삭제</button>
+            {{#author}}
+                <a href="/posts/update/{{id}}" role="button" class="btn btn-success">수정</a>
+                <button type="button" class="btn btn-danger" id="btn-delete">삭제</button>
+            {{/author}}
         </div>
     </div>
 {{>layout/footer}}

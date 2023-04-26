@@ -26,8 +26,10 @@ public class SecurityConfig{
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**"))
                         .permitAll()
-                        .requestMatchers("/", "/posts/read/**", "/api/users/**", "/users/**", "/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**").hasRole(Role.USER.name())
+                        .requestMatchers("/", "/posts/read/**", "/api/users/**", "/users/**",
+                                "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**")
+                        .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())
                 .formLogin(form -> form

@@ -48,4 +48,14 @@ public class UserService {
                 IllegalArgumentException("가입되지 않은 이메일입니다."));
         user.updateEnabled();
     }
+
+    public User findByNickname(String nickname) {
+        return userRepository.findByNickname(nickname).orElseThrow(() -> new
+                IllegalArgumentException("존재하지 않는 닉네임입니다."));
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("존재하지 않는 ID입니다."));
+    }
 }

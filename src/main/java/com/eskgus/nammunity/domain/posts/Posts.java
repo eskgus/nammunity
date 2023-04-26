@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.domain.posts;
 
 import com.eskgus.nammunity.domain.BaseTimeEntity;
+import com.eskgus.nammunity.domain.user.User;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,11 +27,16 @@ public class Posts extends BaseTimeEntity {
     @Column(columnDefinition = "int default 0", nullable = false)
     private int view;
 
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "Users_id")
+    private User user;
+
     @Builder
-    public Posts(String title, String content, String author) {
+    public Posts(String title, String content, String author, User user) {
         this.title = title;
         this.content = content;
         this.author = author;
+        this.user = user;
     }
 
     public void update(String title, String content) {

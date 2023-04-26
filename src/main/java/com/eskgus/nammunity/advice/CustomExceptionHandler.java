@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.exception;
+package com.eskgus.nammunity.advice;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;

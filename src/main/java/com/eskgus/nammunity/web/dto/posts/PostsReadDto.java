@@ -14,6 +14,7 @@ public class PostsReadDto {
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
     private int view;
+    private Long userId;
 
     public PostsReadDto(Posts entity) {
         this.id = entity.getId();
@@ -23,5 +24,6 @@ public class PostsReadDto {
         this.createdDate = entity.getCreatedDate();
         this.modifiedDate = entity.getModifiedDate();
         this.view = entity.getView();
+        this.userId = entity.getUser().getId();
     }
 }

@@ -1,7 +1,5 @@
 package com.eskgus.nammunity.web;
 
-import com.eskgus.nammunity.domain.user.CustomUserDetails;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,11 +23,7 @@ public class UserIndexController {
     }
 
     @GetMapping("/sign-in")
-    public String signInUser(@RequestParam(required = false) Boolean error,
-                             @AuthenticationPrincipal CustomUserDetails user, Model model) {
-        if (user != null) {
-            model.addAttribute("user", user.getNickname());
-        }
+    public String signInUser(@RequestParam(required = false) Boolean error, Model model) {
         if (error != null) {
             model.addAttribute("error", error);
         }

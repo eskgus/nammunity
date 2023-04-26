@@ -1,10 +1,12 @@
 package com.eskgus.nammunity.web;
 
+import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -14,8 +16,9 @@ public class PostsApiController {
     private final PostsService postsService;
 
     @PostMapping
-    public Long save(@Valid @RequestBody PostsSaveDto requestDto) {
-        return postsService.save(requestDto);
+    public Long save(@Valid @RequestBody PostsSaveDto requestDto, @AuthenticationPrincipal CustomUserDetails user) {
+        String nickname = user.getNickname();
+        return postsService.save(requestDto, nickname);
     }
 
     @PutMapping("/{id}")

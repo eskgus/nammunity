@@ -2,6 +2,8 @@ package com.eskgus.nammunity.service.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
+import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 @Service
 public class PostsService {
     private final PostsRepository postsRepository;
+    private final UserService userService;
 
     @Transactional(readOnly = true)
     public List<PostsListDto> findAllDesc() {
@@ -24,8 +27,12 @@ public class PostsService {
     }
 
     @Transactional
-    public Long save(PostsSaveDto requestDto) {
-        return postsRepository.save(requestDto.toEntity()).getId();
+    public Long save(PostsSaveDto requestDto, String nickname) {
+        User user = userService.findByNickname(nickname);
+        PostsSaveDto postsSaveDto = PostsSaveDto.builder()
+                .title(requestDto.getTitle()).content(requestDto.getContent())
+                .author(nickname).user(user).build();
+        return postsRepository.save(postsSaveDto.toEntity()).getId();
     }
 
     public PostsReadDto findById(Long id) {
