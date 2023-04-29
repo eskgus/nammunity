@@ -41,6 +41,9 @@ public class CustomExceptionHandler {
             case "email":
                 error.put(reason, "이미 사용 중인 이메일입니다.");
                 break;
+            case "confirmEmail":
+                error.put(reason, "인증되지 않은 이메일입니다.");
+                break;
         }
         return error;
     }

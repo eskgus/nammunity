@@ -2,6 +2,7 @@ package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.user.Role;
+import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.email.EmailSender;
 import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -41,20 +43,28 @@ public class RegistrationService {
                 .email(registrationDto.getEmail())
                 .role(Role.USER).build();
 
-        String token = userService.signUp(encRegistrationDto);
-
-        String link = "http://localhost:8080/api/users/confirm?token=" + token;
-
-        String text = setEmailText(registrationDto.getUsername(), link);
-
-        emailSender.send(registrationDto.getEmail(), text);
+        Long id = userService.signUp(encRegistrationDto);
+        sendEmail(id);
     }
 
-    public String setEmailText(String username, String link) {
+    @Transactional
+    public void sendEmail(Long id) {
+        User user = userService.findById(id);
+
+        String token = UUID.randomUUID().toString();
+        Tokens newToken = Tokens.builder().token(token).createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMinutes(5)).user(user).build();
+        tokensService.save(newToken);
+
+        String text = setEmailText(user.getUsername(), token);
+        emailSender.send(user.getEmail(), text);
+    }
+
+    public String setEmailText(String username, String token) {
         return "<div style=\"font-size: 18px; font-family: sans-serif\">" +
                 "<p>안녕하세요, " + username + "님?</p>" +
                 "<p>나뮤니티 가입을 환영합니다! 아래의 링크를 눌러 이메일 인증을 해주세요 ^_^</p>" +
-                "<p><a href=\"" + link + "\">인증하기</a></p>" +
+                "<p><a href=\"http://localhost:8080/api/users/confirm?token=" + token + "\">인증하기</a></p>" +
                 "<p>링크는 5분 뒤 만료됩니다.</p></div>";
     }
 

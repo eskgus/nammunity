@@ -1,0 +1,9 @@
+{{>layout/header}}
+
+    <input type="hidden" id="id" value="{{user.id}}">
+    <p>인증 메일이 발송됐습니다. 메일 인증을 해야 회원가입이 완료됩니다.</p>
+    <p>가입하신 이메일은 {{user.email}}입니다.</p>
+    <button type="button" class="btn btn-primary" id="btn-confirm-email">인증 완료</button>
+    <button type="button" class="btn btn-success" id="btn-resend">재발송</button>
+
+{{>layout/footer}}

@@ -33,7 +33,7 @@ var main = {
             _this.checkEmail();
         });
 
-        $('#btn-confirm-email').on('click', function() {
+        $('#btn-close-window').on('click', function() {
             window.close();
         });
 
@@ -52,6 +52,14 @@ var main = {
 
         $('#btn-back').on('click', function() {
             window.history.back();
+        });
+
+        $('#btn-confirm-email').on('click', function() {
+            _this.confirmEmail();
+        });
+
+        $('#btn-resend').on('click', function() {
+            _this.resendEmail();
         });
     },
     save : function() {
@@ -140,9 +148,8 @@ var main = {
             url: '/api/users',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
-        }).done(function() {
-            alert('회원가입이 완료됐습니다.');
-            window.location.href = '/';
+        }).done(function(response) {
+            window.location.href = '/users/sign-up/' + response;
         }).fail(function(response) {
             fail(response, data, rb);
         });
@@ -257,6 +264,31 @@ var main = {
                 check.style = 'display: block; color: red';
                 rb('email', email);
             }
+        });
+    },
+    confirmEmail : function() {
+        var id = $('#id').val();
+
+        $.ajax({
+            type: 'GET',
+            url: '/api/users/confirm/' + id
+        }).done(function() {
+            window.location.href = '/users/sign-in';
+        }).fail(function(response) {
+            var error = response.responseJSON;
+            alert(error[Object.keys(error)]);
+        });
+    },
+    resendEmail: function() {
+        var id = $('#id').val();
+
+        $.ajax({
+            type: 'POST',
+            url: '/api/users/confirm/' + id
+        }).done(function() {
+            alert('재발송 완료');
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
         });
     },
     redBox : function(field, pre) {

@@ -5,7 +5,9 @@ import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.view.RedirectView;
 
 @RequiredArgsConstructor
@@ -16,14 +18,28 @@ public class UserApiController {
     private final RegistrationService registrationService;
 
     @PostMapping
-    public void signUp(@Valid @RequestBody RegistrationDto registrationDto) {
+    public Long signUp(@Valid @RequestBody RegistrationDto registrationDto) {
         registrationService.register(registrationDto);
+        return userService.findByUsername(registrationDto.getUsername()).getId();
     }
 
     @GetMapping("/confirm")
     public RedirectView confirmToken(@RequestParam String token) {
         registrationService.confirmToken(token);
         return new RedirectView("/users/confirm-email");
+    }
+
+    @GetMapping("/confirm/{id}")
+    public void checkUserEnabled(@PathVariable Long id) {
+        boolean enabled = userService.findById(id).isEnabled();
+        if (!enabled) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "confirmEmail");
+        }
+    }
+
+    @PostMapping("/confirm/{id}")
+    public void resendToken(@PathVariable Long id) {
+        registrationService.sendEmail(id);
     }
 
     @GetMapping("/exists/username/{username}")

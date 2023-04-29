@@ -1,12 +1,18 @@
 package com.eskgus.nammunity.web;
 
+import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.service.user.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+@RequiredArgsConstructor
 @Controller
 @RequestMapping("/users")
 public class UserIndexController {
+    private final UserService userService;
+
     @GetMapping("/sign-up")
     public String signUpUser() {
         return "user/sign-up";
@@ -28,5 +34,12 @@ public class UserIndexController {
             model.addAttribute("error", error);
         }
         return "user/sign-in";
+    }
+
+    @GetMapping("/sign-up/{id}")
+    public String afterSignUp(@PathVariable Long id, Model model) {
+        User user = userService.findById(id);
+        model.addAttribute("user", user);
+        return "user/after-sign-up";
     }
 }

@@ -11,7 +11,7 @@ public class TemplateAdvice {
     @ModelAttribute
     public void addDefaultAttributes(@AuthenticationPrincipal CustomUserDetails user, Model model) {
         if (user != null) {
-            model.addAttribute("user", user.getNickname());
+            model.addAttribute("auth", user.getNickname());
         }
     }
 }
