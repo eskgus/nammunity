@@ -32,15 +32,15 @@ public class SecurityConfig{
                         .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())
-                .formLogin(form -> form
+                .formLogin(login -> login
                         .loginPage("/users/sign-in")
-                        .defaultSuccessUrl("/", true)
+                        .successHandler(new CustomAuthenticationSuccessHandler())
                         .failureUrl("/users/sign-in?error=true")
                         .permitAll())
-                .logout()
-                .logoutUrl("/users/sign-out")
-                .logoutSuccessUrl("/")
-                .permitAll();
+                .logout(logout -> logout
+                        .logoutUrl("/users/sign-out")
+                        .logoutSuccessHandler(new CustomLogoutSuccessHandler())
+                        .permitAll());
         return http.build();
     }
 }
