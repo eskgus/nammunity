@@ -143,6 +143,9 @@ var main = {
         var rb = this.redBox;
         var fail = this.fail;
 
+        var button = document.getElementById('btn-sign-up');
+        button.disabled = true;
+
         $.ajax({
             type: 'POST',
             url: '/api/users',
@@ -152,6 +155,7 @@ var main = {
             window.location.href = '/users/sign-up/' + response;
         }).fail(function(response) {
             fail(response, data, rb);
+            button.disabled = false;
         });
     },
     checkUsername : function() {
