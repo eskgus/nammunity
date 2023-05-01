@@ -292,7 +292,8 @@ var main = {
         }).done(function() {
             alert('재발송 완료');
         }).fail(function(response) {
-            alert(JSON.stringify(response));
+            var error = response.responseJSON;
+            alert(error[Object.keys(error)]);
         });
     },
     redBox : function(field, pre) {

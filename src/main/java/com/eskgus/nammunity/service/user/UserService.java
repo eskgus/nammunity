@@ -50,4 +50,9 @@ public class UserService {
         return userRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException("존재하지 않는 회원입니다."));
     }
+
+    @Transactional
+    public void delete(User user) {
+        userRepository.delete(user);
+    }
 }

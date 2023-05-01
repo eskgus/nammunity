@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.web;
 
+import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
@@ -10,12 +12,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.time.LocalDateTime;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/users")
 public class UserApiController {
     private final UserService userService;
     private final RegistrationService registrationService;
+    private final TokensService tokensService;
 
     @PostMapping
     public Long signUp(@Valid @RequestBody RegistrationDto registrationDto) {
@@ -39,6 +44,13 @@ public class UserApiController {
 
     @PostMapping("/confirm/{id}")
     public void resendToken(@PathVariable Long id) {
+        User user = userService.findById(id);
+        if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
+            tokensService.deleteAllByUser(user);
+            userService.delete(user);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "resendToken");
+        }
+
         registrationService.sendEmail(id);
     }
 

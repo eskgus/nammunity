@@ -53,7 +53,7 @@ public class RegistrationService {
 
         String token = UUID.randomUUID().toString();
         Tokens newToken = Tokens.builder().token(token).createdAt(LocalDateTime.now())
-                .expiredAt(LocalDateTime.now().plusMinutes(5)).user(user).build();
+                .expiredAt(LocalDateTime.now().plusMinutes(3)).user(user).build();
         tokensService.save(newToken);
 
         String text = setEmailText(user.getUsername(), token);
@@ -65,7 +65,7 @@ public class RegistrationService {
                 "<p>안녕하세요, " + username + "님?</p>" +
                 "<p>나뮤니티 가입을 환영합니다! 아래의 링크를 눌러 이메일 인증을 해주세요 ^_^</p>" +
                 "<p><a href=\"http://localhost:8080/api/users/confirm?token=" + token + "\">인증하기</a></p>" +
-                "<p>링크는 5분 뒤 만료됩니다.</p></div>";
+                "<p>링크는 3분 뒤 만료됩니다.</p></div>";
     }
 
     @Transactional

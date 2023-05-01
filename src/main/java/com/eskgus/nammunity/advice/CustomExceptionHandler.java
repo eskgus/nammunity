@@ -44,6 +44,9 @@ public class CustomExceptionHandler {
             case "confirmEmail":
                 error.put(reason, "인증되지 않은 이메일입니다.");
                 break;
+            case "resendToken":
+                error.put(reason, "더 이상 재발송할 수 없어요. 다시 가입해 주세요.");
+                break;
         }
         return error;
     }
