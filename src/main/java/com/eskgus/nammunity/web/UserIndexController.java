@@ -29,9 +29,9 @@ public class UserIndexController {
     }
 
     @GetMapping("/sign-in")
-    public String signInUser(@RequestParam(required = false) Boolean error, Model model) {
-        if (error != null) {
-            model.addAttribute("error", error);
+    public String signInUser(@ModelAttribute("message") String message, Model model) {
+        if (message != null) {
+            model.addAttribute("message", message);
         }
         return "user/sign-in";
     }

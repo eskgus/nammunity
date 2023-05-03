@@ -35,7 +35,7 @@ public class SecurityConfig{
                 .formLogin(login -> login
                         .loginPage("/users/sign-in")
                         .successHandler(new CustomAuthenticationSuccessHandler())
-                        .failureUrl("/users/sign-in?error=true")
+                        .failureHandler(new CustomAuthenticationFailureHandler())
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/users/sign-out")

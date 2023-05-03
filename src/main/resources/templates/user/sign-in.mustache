@@ -3,11 +3,11 @@
     <div class="col-md-12">
         <div class="col-md-4">
             <form action="sign-in" method="post">
-                {{#error}}
+                {{#message}}
                     <div id="sign-in-failed" style="color: red">
-                        ID가 존재하지 않거나 비밀번호가 일치하지 않습니다.
+                        {{message}}
                     </div>
-                {{/error}}
+                {{/message}}
                 <div class="form-group">
                     <label for="username">ID</label>
                     <input type="text" class="form-control" id="i-username" name="username">
