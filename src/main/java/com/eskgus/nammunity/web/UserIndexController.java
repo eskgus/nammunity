@@ -42,4 +42,9 @@ public class UserIndexController {
         model.addAttribute("user", user);
         return "user/after-sign-up";
     }
+
+    @GetMapping("/find/username")
+    public String findUsername() {
+        return "user/find-username";
+    }
 }

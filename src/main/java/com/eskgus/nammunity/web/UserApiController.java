@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.service.user.RegistrationService;
+import com.eskgus.nammunity.service.user.SignInService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ public class UserApiController {
     private final UserService userService;
     private final RegistrationService registrationService;
     private final TokensService tokensService;
+    private final SignInService signInService;
 
     @PostMapping
     public Long signUp(@Valid @RequestBody RegistrationDto registrationDto) {
@@ -67,5 +69,16 @@ public class UserApiController {
     @GetMapping("/exists/email/{email}")
     public Boolean checkEmail(@PathVariable String email) {
         return userService.checkEmail(email);
+    }
+
+    @GetMapping("/find/username/{email}")
+    public String findUsername(@PathVariable String email) {
+        String username;
+        try {
+            username = signInService.findUsername(email);
+        } catch (IllegalArgumentException ex) {
+            return ex.getMessage();
+        }
+        return "가입하신 ID는 " + username.substring(0, 3) + "****입니다.";
     }
 }

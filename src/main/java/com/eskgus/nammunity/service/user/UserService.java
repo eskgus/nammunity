@@ -51,6 +51,11 @@ public class UserService {
                 IllegalArgumentException("존재하지 않는 회원입니다."));
     }
 
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new
+                IllegalArgumentException("가입되지 않은 이메일입니다."));
+    }
+
     @Transactional
     public void delete(User user) {
         userRepository.delete(user);

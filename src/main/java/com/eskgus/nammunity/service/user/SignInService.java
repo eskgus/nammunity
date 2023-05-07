@@ -24,4 +24,9 @@ public class SignInService {
     public void resetAttempt(User user) {
         user.resetAttempt();
     }
+
+    public String findUsername(String email) {
+        User user = userService.findByEmail(email);
+        return user.getUsername();
+    }
 }

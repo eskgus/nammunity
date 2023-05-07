@@ -61,6 +61,10 @@ var main = {
         $('#btn-resend').on('click', function() {
             _this.resendEmail();
         });
+
+        $('#btn-find-username').on('click', function() {
+            _this.findUsername();
+        });
     },
     save : function() {
         var data = {
@@ -294,6 +298,20 @@ var main = {
         }).fail(function(response) {
             var error = response.responseJSON;
             alert(error[Object.keys(error)]);
+        });
+    },
+    findUsername : function() {
+        var email = $('#f-email').val();
+        var result = document.getElementById('f-username');
+
+        $.ajax({
+            type: 'GET',
+            url: '/api/users/find/username/' + email
+        }).done(function(response) {
+            result.textContent = response;
+            result.style = 'display: block';
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
         });
     },
     redBox : function(field, pre) {
