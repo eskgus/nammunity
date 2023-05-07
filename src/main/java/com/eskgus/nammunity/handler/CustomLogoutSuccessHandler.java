@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.config;
+package com.eskgus.nammunity.handler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

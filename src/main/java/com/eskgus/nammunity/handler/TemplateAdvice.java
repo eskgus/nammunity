@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.advice;
+package com.eskgus.nammunity.handler;
 
 import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
