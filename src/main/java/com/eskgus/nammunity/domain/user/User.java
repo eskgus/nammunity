@@ -63,7 +63,7 @@ public class User extends BaseTimeEntity {
         return attempt;
     }
 
-    public void resetAttempt() {
-        this.attempt = 0;
+    public void updatePassword(String password) {
+        this.password = password;
     }
 }

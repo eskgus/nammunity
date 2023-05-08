@@ -65,6 +65,10 @@ var main = {
         $('#btn-find-username').on('click', function() {
             _this.findUsername();
         });
+
+        $('#btn-find-password').on('click', function() {
+            _this.findPassword();
+        });
     },
     save : function() {
         var data = {
@@ -312,6 +316,24 @@ var main = {
             result.style = 'display: block';
         }).fail(function(response) {
             alert(JSON.stringify(response));
+        });
+    },
+    findPassword : function() {
+        var username = $('#f-username').val();
+        var result = document.getElementById('f-password');
+
+        var button = document.getElementById('btn-find-password');
+        button.disabled = true;
+
+        $.ajax({
+            type: 'PUT',
+            url: '/api/users/find/password/' + username
+        }).done(function(response) {
+            result.textContent = response;
+            result.style = 'display:block';
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
+            button.disabled = false;
         });
     },
     redBox : function(field, pre) {

@@ -15,7 +15,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
 
         if (httpMethod.equals("GET")) {
             String url = request.getHeader("referer");
-            if (url != null && !url.contains("/sign-in") && !url.contains("/sign-up")) {
+            if (url != null && !url.contains("/sign-in") && !url.contains("/sign-up") && !url.contains("/find")) {
                 request.getSession().setAttribute("prePage", url);
             }
         }

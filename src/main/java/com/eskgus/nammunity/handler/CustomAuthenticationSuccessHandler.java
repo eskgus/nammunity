@@ -9,11 +9,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@Component
 public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
     @Autowired
     UserService userService;
@@ -28,7 +26,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
         String username = request.getParameter("username").toString();
         User user = userService.findByUsername(username);
         if (user.getAttempt() != 0) {
-            signInService.resetAttempt(user);
+            signInService.resetAttempt(user.getId());
         }
 
         Object url = request.getSession().getAttribute("prePage");

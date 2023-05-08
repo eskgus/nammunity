@@ -53,7 +53,7 @@ public class UserApiController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "resendToken");
         }
 
-        registrationService.sendEmail(id);
+        registrationService.sendToken(id);
     }
 
     @GetMapping("/exists/username/{username}")
@@ -80,5 +80,15 @@ public class UserApiController {
             return ex.getMessage();
         }
         return "가입하신 ID는 " + username.substring(0, 3) + "****입니다.";
+    }
+
+    @PutMapping("/find/password/{username}")
+    public String findPassword(@PathVariable String username) {
+        try {
+            signInService.findPassword(username);
+        } catch (IllegalArgumentException ex) {
+            return ex.getMessage();
+        }
+        return "가입된 이메일로 임시 비밀번호를 보냈습니다.";
     }
 }

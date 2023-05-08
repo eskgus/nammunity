@@ -4,7 +4,6 @@ import com.eskgus.nammunity.handler.CustomAuthenticationFailureHandler;
 import com.eskgus.nammunity.handler.CustomAuthenticationSuccessHandler;
 import com.eskgus.nammunity.handler.CustomLogoutSuccessHandler;
 import com.eskgus.nammunity.domain.user.Role;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,11 +17,15 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig{
-    @Autowired
-    CustomAuthenticationFailureHandler authenticationFailureHandler;
+    @Bean
+    public CustomAuthenticationFailureHandler authenticationFailureHandler() {
+        return new CustomAuthenticationFailureHandler();
+    }
 
-    @Autowired
-    CustomAuthenticationSuccessHandler authenticationSuccessHandler;
+    @Bean
+    public CustomAuthenticationSuccessHandler authenticationSuccessHandler() {
+        return new CustomAuthenticationSuccessHandler();
+    }
 
     @Bean
     public BCryptPasswordEncoder encoder() {
@@ -44,8 +47,8 @@ public class SecurityConfig{
                 .httpBasic(withDefaults())
                 .formLogin(login -> login
                         .loginPage("/users/sign-in")
-                        .successHandler(authenticationSuccessHandler)
-                        .failureHandler(authenticationFailureHandler)
+                        .successHandler(authenticationSuccessHandler())
+                        .failureHandler(authenticationFailureHandler())
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/users/sign-out")
