@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.time.LocalDateTime;
@@ -31,8 +32,12 @@ public class UserApiController {
     }
 
     @GetMapping("/confirm")
-    public RedirectView confirmToken(@RequestParam String token) {
-        registrationService.confirmToken(token);
+    public RedirectView confirmToken(@RequestParam String token, RedirectAttributes ra) {
+        try {
+            registrationService.confirmToken(token);
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+        }
         return new RedirectView("/users/confirm-email");
     }
 

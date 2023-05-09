@@ -6,8 +6,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,11 +47,5 @@ public class CustomExceptionHandler {
                 break;
         }
         return error;
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public RedirectView ConfirmTokenExceptionHandler(IllegalArgumentException ex, RedirectAttributes ra) {
-        ra.addFlashAttribute("error", ex.getMessage());
-        return new RedirectView("/users/confirm-email");
     }
 }
