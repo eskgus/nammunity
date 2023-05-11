@@ -45,6 +45,12 @@ public class CustomExceptionHandler {
             case "resendToken":
                 error.put(reason, "더 이상 재발송할 수 없어요. 다시 가입해 주세요.");
                 break;
+            case "oldPassword":
+                error.put(reason, "비밀번호가 틀렸습니다.");
+                break;
+            case "password":
+                error.put(reason, "현재 비밀번호와 새 비밀번호가 같으면 안 됩니다.");
+                break;
         }
         return error;
     }

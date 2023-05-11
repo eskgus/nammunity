@@ -31,7 +31,11 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
 
         Object url = request.getSession().getAttribute("prePage");
         if (url != null) {
-            response.sendRedirect(url.toString());
+            if (url.toString().contains("/find/password")) {
+                response.sendRedirect("/users/change/password");
+            } else {
+                response.sendRedirect(url.toString());
+            }
         } else {
             response.sendRedirect("/");
         }

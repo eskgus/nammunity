@@ -5,7 +5,9 @@ import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.SignInService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -95,5 +97,14 @@ public class UserApiController {
             return ex.getMessage();
         }
         return "가입된 이메일로 임시 비밀번호를 보냈습니다.";
+    }
+
+    @PutMapping("/change/password")
+    public String changePassword(@Valid @RequestBody PasswordUpdateDto requestDto,
+                                 HttpServletRequest request) {
+        String username = request.getUserPrincipal().getName();
+        Long id = userService.findByUsername(username).getId();
+        userService.changePassword(requestDto, id);
+        return "비밀번호가 변경됐습니다.";
     }
 }

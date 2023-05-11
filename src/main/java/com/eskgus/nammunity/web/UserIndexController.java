@@ -52,4 +52,9 @@ public class UserIndexController {
     public String findPassword() {
         return "user/find-password";
     }
+
+    @GetMapping("/change/password")
+    public String changePassword() {
+        return "user/change-password";
+    }
 }

@@ -50,6 +50,10 @@ var main = {
             });
         }
 
+        $('#oldPassword').blur(function() {
+            _this.checkOldPassword();
+        });
+
         $('#btn-back').on('click', function() {
             window.history.back();
         });
@@ -68,6 +72,10 @@ var main = {
 
         $('#btn-find-password').on('click', function() {
             _this.findPassword();
+        });
+
+        $('#btn-change-password').on('click', function() {
+            _this.changePassword();
         });
     },
     save : function() {
@@ -254,6 +262,19 @@ var main = {
             }
         }
     },
+    checkOldPassword : function() {
+        var oldPassword = $('#oldPassword').val();
+        var check = document.getElementById('ch-oldPassword');
+        var rb = this.redBox;
+
+        if (oldPassword == '') {
+            check.textContent = '비밀번호를 입력하세요.';
+            check.style = 'display: block; color: red';
+            rb('oldPassword', oldPassword);
+        } else {
+          check.style = 'display: none';
+        }
+    },
     checkEmail : function() {
         var email = $('#email').val();
         var check = document.getElementById('ch-email');
@@ -334,6 +355,28 @@ var main = {
         }).fail(function(response) {
             alert(JSON.stringify(response));
             button.disabled = false;
+        });
+    },
+    changePassword : function() {
+        var data = {
+            oldPassword: $('#oldPassword').val(),
+            password: $('#password').val(),
+            confirmPassword: $('#confirmPassword').val()
+        };
+
+        var rb = this.redBox;
+        var fail = this.fail;
+
+        $.ajax({
+            type: 'PUT',
+            url: '/api/users/change/password',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
+        }).done(function(response) {
+            alert(response);
+            window.location.href = '/';
+        }).fail(function(response) {
+            fail(response, data, rb);
         });
     },
     redBox : function(field, pre) {

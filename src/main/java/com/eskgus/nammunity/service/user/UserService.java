@@ -2,15 +2,20 @@ package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder encoder;
 
     @Transactional
     public Long signUp(RegistrationDto registrationDto) {
@@ -59,5 +64,25 @@ public class UserService {
     @Transactional
     public void delete(User user) {
         userRepository.delete(user);
+    }
+
+    @Transactional
+    public void changePassword(PasswordUpdateDto requestDto, Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new
+                IllegalArgumentException("user not found"));
+
+        String oldPassword = requestDto.getOldPassword();
+        String currentPassword = user.getPassword();
+        String newPassword = requestDto.getPassword();
+
+        if (!encoder.matches(oldPassword, currentPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "oldPassword");
+        } else if (oldPassword.equals(newPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "password");
+        } else if (!newPassword.equals(requestDto.getConfirmPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "confirmPassword");
+        }
+
+        user.updatePassword(encoder.encode(newPassword));
     }
 }
