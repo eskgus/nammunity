@@ -44,11 +44,16 @@ public class EmailService implements EmailSender{
     }
 
     public String setEmailText(String username, String token) {
-        return "<div style=\"font-size: 18px; font-family: sans-serif\">" +
-                "<p>안녕하세요, " + username + "님?</p>" +
-                "<p>나뮤니티 가입을 환영합니다! 아래의 링크를 눌러 이메일 인증을 해주세요 ^_^</p>" +
+        String text = "<div style=\"font-size: 18px; font-family: sans-serif\">";
+
+        if (!username.isBlank()) {
+            text += "<p>안녕하세요, " + username + "님?</p>" +
+                    "<p>나뮤니티 가입을 환영합니다!</p>";
+        }
+        text += "<p>아래의 링크를 눌러 이메일 인증을 해주세요 ^_^</p>" +
                 "<p><a href=\"http://localhost:8080/api/users/confirm?token=" + token + "\">인증하기</a></p>" +
                 "<p>링크는 3분 뒤 만료됩니다.</p></div>";
+        return text;
     }
 
     public String setEmailText(String password) {

@@ -33,7 +33,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
             try {
                 int attempt = signInService.increaseAttempt(username);
                 if (attempt >= 5) {
-                    message = "로그인에 5번 이상 실패했습니다.";
+                    message = "로그인에 5번 이상 실패했습니다. ID 또는 비밀번호 찾기를 하세요.";
                 }
             } catch (Exception ex) {
             }

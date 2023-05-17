@@ -168,9 +168,15 @@ var main = {
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            window.location.href = '/users/sign-up/' + response;
+            if (Object.keys(response) == 'id') {
+                var id = response[Object.keys(response)];
+                window.location.href = '/users/sign-up/' + id;
+            } else {
+                fail(response, data, rb);
+                button.disabled = false;
+            }
         }).fail(function(response) {
-            fail(response, data, rb);
+            alert(JSON.stringify(response));
             button.disabled = false;
         });
     },
@@ -181,21 +187,21 @@ var main = {
 
         $.ajax({
             type: 'GET',
-            url: '/api/users/exists/username/' + username
+            url: '/api/users?username=' + username
         }).done(function(response) {
-            if (response == false) {
+            if (response == 'false') {
                 check.style = 'display: none';
+            } else if (response == 'blank') {
+                check.textContent = 'ID를 입력하세요.';
+                check.style = 'display: block; color: red';
+                rb('username', username);
             } else {
                 check.textContent = '이미 사용 중인 ID입니다.';
                 check.style = 'display: block; color: red';
                 rb('username', username);
             }
         }).fail(function(response) {
-            if (response.status == 401) {
-                check.textContent = 'ID를 입력하세요.';
-                check.style = 'display: block; color: red';
-                rb('username', username);
-            }
+            alert(JSON.stringify(response))
         });
     },
     checkNickname : function() {
@@ -205,21 +211,21 @@ var main = {
 
         $.ajax({
             type: 'GET',
-            url: '/api/users/exists/nickname/' + nickname
+            url: '/api/users?nickname=' + nickname
         }).done(function(response) {
-            if (response == false) {
+            if (response == 'false') {
                 check.style = 'display: none';
+            } else if (response == 'blank') {
+                check.textContent = '닉네임을 입력하세요.';
+                check.style = 'display: block; color: red';
+                rb('nickname', nickname);
             } else {
                 check.textContent = '이미 사용 중인 닉네임입니다.';
                 check.style = 'display: block; color: red';
                 rb('nickname', nickname);
             }
         }).fail(function(response) {
-            if (response.status == 401) {
-                check.textContent = '닉네임을 입력하세요.';
-                check.style = 'display: block; color: red';
-                rb('nickname', nickname);
-            }
+            alert(JSON.stringify(response))
         });
     },
     checkPassword : function() {
@@ -282,21 +288,21 @@ var main = {
 
         $.ajax({
             type: 'GET',
-            url: '/api/users/exists/email/' + email
+            url: '/api/users?email=' + email
         }).done(function(response) {
-            if (response == false) {
+            if (response == 'false') {
                 check.style = 'display: none';
+            } else if (response == 'blank') {
+                check.textContent = '이메일을 입력하세요.';
+                check.style = 'display: block; color: red';
+                rb('email', email);
             } else {
                 check.textContent = '이미 사용 중인 이메일입니다.';
                 check.style = 'display: block; color: red';
                 rb('email', email);
             }
         }).fail(function(response) {
-            if (response.status == 401) {
-                check.textContent = '이메일을 입력하세요.';
-                check.style = 'display: block; color: red';
-                rb('email', email);
-            }
+            alert(JSON.stringify(response))
         });
     },
     confirmEmail : function() {
@@ -305,11 +311,14 @@ var main = {
         $.ajax({
             type: 'GET',
             url: '/api/users/confirm/' + id
-        }).done(function() {
-            window.location.href = '/users/sign-in';
+        }).done(function(response) {
+            if (response == 'OK') {
+                window.location.href = '/users/sign-in';
+            } else {
+                alert(response);
+            }
         }).fail(function(response) {
-            var error = response.responseJSON;
-            alert(error[Object.keys(error)]);
+            alert(JSON.stringify(response));
         });
     },
     resendEmail: function() {
@@ -318,11 +327,10 @@ var main = {
         $.ajax({
             type: 'POST',
             url: '/api/users/confirm/' + id
-        }).done(function() {
-            alert('재발송 완료');
+        }).done(function(response) {
+            alert(response);
         }).fail(function(response) {
-            var error = response.responseJSON;
-            alert(error[Object.keys(error)]);
+            alert(JSON.stringify(response));
         });
     },
     findUsername : function() {
@@ -331,10 +339,13 @@ var main = {
 
         $.ajax({
             type: 'GET',
-            url: '/api/users/find/username/' + email
+            url: '/api/users/sign-in?email=' + email
         }).done(function(response) {
             result.textContent = response;
             result.style = 'display: block';
+            if (!response.includes('****')) {
+                result.style = 'color: red';
+            }
         }).fail(function(response) {
             alert(JSON.stringify(response));
         });
@@ -348,10 +359,14 @@ var main = {
 
         $.ajax({
             type: 'PUT',
-            url: '/api/users/find/password/' + username
+            url: '/api/users/sign-in?username=' + username
         }).done(function(response) {
             result.textContent = response;
             result.style = 'display:block';
+            if (!response.includes('임시')) {
+                result.style = 'color: red';
+                button.disabled = false;
+            }
         }).fail(function(response) {
             alert(JSON.stringify(response));
             button.disabled = false;
@@ -373,10 +388,16 @@ var main = {
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            alert(response);
-            window.location.href = '/';
+            if (Object.keys(response) == 'OK') {
+                alert(response[Object.keys(response)]);
+                window.location.href = '/';
+            } else if (Object.keys(response) == 'username') {
+                alert(response[Object.keys(response)]);
+            } else {
+                fail(response, data, rb);
+            }
         }).fail(function(response) {
-            fail(response, data, rb);
+            alert(JSON.stringify(response));
         });
     },
     redBox : function(field, pre) {
@@ -404,19 +425,18 @@ var main = {
         });
     },
     fail: function (response, data, rb) {
-        var errors = response.responseJSON;
-        var size = Object.keys(errors).length;
+        var size = Object.keys(response).length;
         let firstData = 4;
 
         for (let i = 0; i < size; i++) {
-            let error = Object.keys(errors)[i];
+            let error = Object.keys(response)[i];
             let index = Object.keys(data).indexOf(error);
             firstData = firstData > index ? index : firstData;
             rb(error, data[Object.keys(data)[index]]);
         }
 
         var firstError = Object.keys(data)[firstData];
-        alert(errors[firstError]);
+        alert(response[firstError]);
         document.getElementById(Object.keys(data)[firstData]).focus();
     }
 };

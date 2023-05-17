@@ -7,11 +7,9 @@ import com.eskgus.nammunity.service.email.EmailService;
 import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -25,15 +23,15 @@ public class RegistrationService {
     private final TokensService tokensService;
 
     @Transactional
-    public void register(RegistrationDto registrationDto) {
+    public Long register(RegistrationDto registrationDto) {
         if (userService.checkUsername(registrationDto.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username");
+            throw new IllegalArgumentException("username");
         } else if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "confirmPassword");
+            throw new IllegalArgumentException("confirmPassword");
         } else if (userService.checkNickname(registrationDto.getNickname())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "nickname");
+            throw new IllegalArgumentException("nickname");
         } else if (userService.checkEmail(registrationDto.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "email");
+            throw new IllegalArgumentException("email");
         }
 
         String password = encoder.encode(registrationDto.getPassword());
@@ -44,11 +42,12 @@ public class RegistrationService {
                 .role(Role.USER).build();
 
         Long id = userService.signUp(encRegistrationDto);
-        sendToken(id);
+        sendToken(id, encRegistrationDto.getEmail());
+        return id;
     }
 
     @Transactional
-    public void sendToken(Long id) {
+    public void sendToken(Long id, String email) {
         User user = userService.findById(id);
 
         String token = UUID.randomUUID().toString();
@@ -56,8 +55,13 @@ public class RegistrationService {
                 .expiredAt(LocalDateTime.now().plusMinutes(3)).user(user).build();
         tokensService.save(newToken);
 
-        String text = emailService.setEmailText(user.getUsername(), token);
-        emailService.send(user.getEmail(), text);
+        String text;
+        if (!email.equals(user.getEmail())) {
+            text = emailService.setEmailText("", token);
+        } else {
+            text = emailService.setEmailText(user.getUsername(), token);
+        }
+        emailService.send(email, text);
     }
 
     @Transactional
@@ -72,6 +76,6 @@ public class RegistrationService {
         }
 
         tokensService.updateConfirmedAt(token, LocalDateTime.now());
-        userService.updateEnabled(confirmationToken.getUser().getEmail());
+        userService.updateEnabled(confirmationToken.getUser());
     }
 }

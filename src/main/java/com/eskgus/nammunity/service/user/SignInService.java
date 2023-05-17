@@ -20,7 +20,7 @@ public class SignInService {
     public Integer increaseAttempt(String username) {
         User user = userService.findByUsername(username);
         int attempt = user.increaseAttempt();
-        if (attempt >= 5 && !user.isLocked()) {
+        if (attempt == 5 && !user.isLocked()) {
             user.updateLocked();
         }
         return attempt;
@@ -60,5 +60,9 @@ public class SignInService {
 
         String password = encoder.encode(str);
         user.updatePassword(password);
+
+        if (user.isLocked()) {
+            user.updateLocked();
+        }
     }
 }

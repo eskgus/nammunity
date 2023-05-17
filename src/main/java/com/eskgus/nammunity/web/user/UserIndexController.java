@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web;
+package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.user.UserService;
@@ -18,6 +18,13 @@ public class UserIndexController {
         return "user/sign-up";
     }
 
+    @GetMapping("/sign-up/{id}")
+    public String afterSignUp(@PathVariable Long id, Model model) {
+        User user = userService.findById(id);
+        model.addAttribute("user", user);
+        return "user/after-sign-up";
+    }
+
     @GetMapping("/confirm-email")
     public String confirmEmail(@ModelAttribute("error") String attr, Model model) {
         if (attr.isBlank()) {
@@ -34,13 +41,6 @@ public class UserIndexController {
             model.addAttribute("message", message);
         }
         return "user/sign-in";
-    }
-
-    @GetMapping("/sign-up/{id}")
-    public String afterSignUp(@PathVariable Long id, Model model) {
-        User user = userService.findById(id);
-        model.addAttribute("user", user);
-        return "user/after-sign-up";
     }
 
     @GetMapping("/find/username")

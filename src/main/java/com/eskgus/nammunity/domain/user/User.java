@@ -51,11 +51,11 @@ public class User extends BaseTimeEntity {
     }
 
     public void updateEnabled() {
-        this.enabled = true;
+        this.enabled = !enabled;
     }
 
     public void updateLocked() {
-        this.locked = true;
+        this.locked = !locked;
     }
 
     public Integer increaseAttempt() {

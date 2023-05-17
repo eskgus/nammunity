@@ -40,7 +40,7 @@ public class SecurityConfig{
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**"))
                         .permitAll()
                         .requestMatchers("/", "/posts/read/**",
-                                "/api/users", "/api/users/confirm/**", "/api/users/exists/**", "/api/users/find/**",
+                                "/api/users", "/api/users/confirm/**", "/api/users/sign-in",
                                 "/users/sign-up/**", "/users/sign-in", "/users/confirm-email", "/users/find/**",
                                 "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**",

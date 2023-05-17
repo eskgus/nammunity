@@ -5,11 +5,9 @@ import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @Service
@@ -35,9 +33,7 @@ public class UserService {
     }
 
     @Transactional
-    public void updateEnabled(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new
-                IllegalArgumentException("가입되지 않은 이메일입니다."));
+    public void updateEnabled(User user) {
         user.updateEnabled();
     }
 
@@ -67,20 +63,20 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(PasswordUpdateDto requestDto, Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("user not found"));
+    public void changePassword(PasswordUpdateDto requestDto, String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("username"));
 
         String oldPassword = requestDto.getOldPassword();
         String currentPassword = user.getPassword();
         String newPassword = requestDto.getPassword();
 
         if (!encoder.matches(oldPassword, currentPassword)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "oldPassword");
+            throw new IllegalArgumentException("oldPassword");
         } else if (oldPassword.equals(newPassword)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "password");
+            throw new IllegalArgumentException("password");
         } else if (!newPassword.equals(requestDto.getConfirmPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "confirmPassword");
+            throw new IllegalArgumentException("confirmPassword");
         }
 
         user.updatePassword(encoder.encode(newPassword));
