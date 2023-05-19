@@ -168,7 +168,7 @@ var main = {
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            if (Object.keys(response) == 'id') {
+            if (Object.keys(response) == 'OK') {
                 var id = response[Object.keys(response)];
                 window.location.href = '/users/sign-up/' + id;
             } else {
@@ -189,14 +189,10 @@ var main = {
             type: 'GET',
             url: '/api/users?username=' + username
         }).done(function(response) {
-            if (response == 'false') {
+            if (response == 'OK') {
                 check.style = 'display: none';
-            } else if (response == 'blank') {
-                check.textContent = 'ID를 입력하세요.';
-                check.style = 'display: block; color: red';
-                rb('username', username);
             } else {
-                check.textContent = '이미 사용 중인 ID입니다.';
+                check.textContent = response;
                 check.style = 'display: block; color: red';
                 rb('username', username);
             }
@@ -213,14 +209,10 @@ var main = {
             type: 'GET',
             url: '/api/users?nickname=' + nickname
         }).done(function(response) {
-            if (response == 'false') {
+            if (response == 'OK') {
                 check.style = 'display: none';
-            } else if (response == 'blank') {
-                check.textContent = '닉네임을 입력하세요.';
-                check.style = 'display: block; color: red';
-                rb('nickname', nickname);
             } else {
-                check.textContent = '이미 사용 중인 닉네임입니다.';
+                check.textContent = response;
                 check.style = 'display: block; color: red';
                 rb('nickname', nickname);
             }
@@ -290,14 +282,10 @@ var main = {
             type: 'GET',
             url: '/api/users?email=' + email
         }).done(function(response) {
-            if (response == 'false') {
+            if (response == 'OK') {
                 check.style = 'display: none';
-            } else if (response == 'blank') {
-                check.textContent = '이메일을 입력하세요.';
-                check.style = 'display: block; color: red';
-                rb('email', email);
             } else {
-                check.textContent = '이미 사용 중인 이메일입니다.';
+                check.textContent = response;
                 check.style = 'display: block; color: red';
                 rb('email', email);
             }
@@ -341,9 +329,9 @@ var main = {
             type: 'GET',
             url: '/api/users/sign-in?email=' + email
         }).done(function(response) {
-            result.textContent = response;
+            result.textContent = response[Object.keys(response)];
             result.style = 'display: block';
-            if (!response.includes('****')) {
+            if (Object.keys(response) != 'OK') {
                 result.style = 'color: red';
             }
         }).fail(function(response) {
@@ -361,9 +349,9 @@ var main = {
             type: 'PUT',
             url: '/api/users/sign-in?username=' + username
         }).done(function(response) {
-            result.textContent = response;
+            result.textContent = response[Object.keys(response)];
             result.style = 'display:block';
-            if (!response.includes('임시')) {
+            if (Object.keys(response) != 'OK') {
                 result.style = 'color: red';
                 button.textContent = '찾기';
             } else {

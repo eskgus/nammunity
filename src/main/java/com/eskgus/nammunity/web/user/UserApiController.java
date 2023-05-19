@@ -21,7 +21,7 @@ public class UserApiController {
     public Map<String, String> signUp(@Valid @RequestBody RegistrationDto registrationDto) {
         Map<String, String> response = new HashMap<>();
         try {
-            response.put("id", registrationService.register(registrationDto).toString());
+            response.put("OK", registrationService.register(registrationDto).toString());
         } catch (IllegalArgumentException ex) {
             String reason = ex.getMessage();
             response.put(reason, switch (reason) {
@@ -39,14 +39,26 @@ public class UserApiController {
     public String check(@RequestParam(name = "username", required = false) String username,
                         @RequestParam(name = "nickname", required = false) String nickname,
                         @RequestParam(name = "email", required = false) String email) {
-        if (username != null && !username.isBlank()) {
-            return String.valueOf(registrationService.check("username", username));
-        } else if (nickname != null && !nickname.isBlank()) {
-            return String.valueOf(registrationService.check("nickname", nickname));
-        } else if (email != null && !email.isBlank()) {
-            return String.valueOf(registrationService.check("email", email));
+        if (username != null) {
+            if (username.isBlank()) {
+                return "ID를 입력하세요.";
+            } else if (registrationService.check("username", username)) {
+                return "이미 사용 중인 ID입니다.";
+            }
+        } else if (nickname != null) {
+            if (nickname.isBlank()) {
+                return "닉네임을 입력하세요.";
+            } else if (registrationService.check("nickname", nickname)) {
+                return "이미 사용 중인 닉네임입니다.";
+            }
+        } else if (email != null) {
+            if (email.isBlank()) {
+                return "이메일을 입력하세요.";
+            } else if (registrationService.check("email", email)) {
+                return "이미 사용 중인 이메일입니다.";
+            }
         }
-        return "blank";
+        return "OK";
     }
 
     @PutMapping("/change/password")
