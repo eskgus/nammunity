@@ -3,8 +3,10 @@ package com.eskgus.nammunity.service.user;
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.service.email.EmailService;
 import com.eskgus.nammunity.service.tokens.TokensService;
+import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,16 +23,17 @@ public class RegistrationService {
     private final BCryptPasswordEncoder encoder;
     private final EmailService emailService;
     private final TokensService tokensService;
+    private final UserRepository userRepository;
 
     @Transactional
     public Long register(RegistrationDto registrationDto) {
-        if (userService.checkUsername(registrationDto.getUsername())) {
+        if (userRepository.existsByUsername(registrationDto.getUsername())) {
             throw new IllegalArgumentException("username");
         } else if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
             throw new IllegalArgumentException("confirmPassword");
-        } else if (userService.checkNickname(registrationDto.getNickname())) {
+        } else if (userRepository.existsByNickname(registrationDto.getNickname())) {
             throw new IllegalArgumentException("nickname");
-        } else if (userService.checkEmail(registrationDto.getEmail())) {
+        } else if (userRepository.existsByEmail(registrationDto.getEmail())) {
             throw new IllegalArgumentException("email");
         }
 
@@ -77,5 +80,34 @@ public class RegistrationService {
 
         tokensService.updateConfirmedAt(token, LocalDateTime.now());
         userService.updateEnabled(confirmationToken.getUser());
+    }
+
+    public boolean check(String type, String value) {
+        if (type.equals("username")) {
+            return userRepository.existsByUsername(value);
+        } else if (type.equals("nickname")) {
+            return userRepository.existsByNickname(value);
+        }
+        return userRepository.existsByEmail(value);
+    }
+
+    @Transactional
+    public void changePassword(PasswordUpdateDto requestDto, String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("username"));
+
+        String oldPassword = requestDto.getOldPassword();
+        String currentPassword = user.getPassword();
+        String newPassword = requestDto.getPassword();
+
+        if (!encoder.matches(oldPassword, currentPassword)) {
+            throw new IllegalArgumentException("oldPassword");
+        } else if (oldPassword.equals(newPassword)) {
+            throw new IllegalArgumentException("password");
+        } else if (!newPassword.equals(requestDto.getConfirmPassword())) {
+            throw new IllegalArgumentException("confirmPassword");
+        }
+
+        user.updatePassword(encoder.encode(newPassword));
     }
 }

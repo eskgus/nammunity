@@ -1,7 +1,6 @@
 package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.service.user.RegistrationService;
-import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import jakarta.validation.Valid;
@@ -16,7 +15,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users")
 public class UserApiController {
-    private final UserService userService;
     private final RegistrationService registrationService;
 
     @PostMapping
@@ -26,20 +24,13 @@ public class UserApiController {
             response.put("id", registrationService.register(registrationDto).toString());
         } catch (IllegalArgumentException ex) {
             String reason = ex.getMessage();
-            switch (reason) {
-                case "username":
-                    response.put(reason, "이미 사용 중인 ID입니다.");
-                    break;
-                case "confirmPassword":
-                    response.put(reason, "비밀번호가 일치하지 않습니다.");
-                    break;
-                case "nickname":
-                    response.put(reason, "이미 사용 중인 닉네임입니다.");
-                    break;
-                case "email":
-                    response.put(reason, "이미 사용 중인 이메일입니다.");
-                    break;
-            }
+            response.put(reason, switch (reason) {
+                case "username" -> "이미 사용 중인 ID입니다.";
+                case "confirmPassword" -> "비밀번호가 일치하지 않습니다.";
+                case "nickname" -> "이미 사용 중인 닉네임입니다.";
+                case "email" -> "이미 사용 중인 이메일입니다.";
+                default -> throw new IllegalStateException("unexpected value");
+            });
         }
         return response;
     }
@@ -49,11 +40,11 @@ public class UserApiController {
                         @RequestParam(name = "nickname", required = false) String nickname,
                         @RequestParam(name = "email", required = false) String email) {
         if (username != null && !username.isBlank()) {
-            return userService.checkUsername(username).toString();
+            return String.valueOf(registrationService.check("username", username));
         } else if (nickname != null && !nickname.isBlank()) {
-            return userService.checkNickname(nickname).toString();
+            return String.valueOf(registrationService.check("nickname", nickname));
         } else if (email != null && !email.isBlank()) {
-            return userService.checkEmail(email).toString();
+            return String.valueOf(registrationService.check("email", email));
         }
         return "blank";
     }
@@ -64,24 +55,17 @@ public class UserApiController {
         Map<String, String> response = new HashMap<>();
         String username = principal.getName();
         try {
-            userService.changePassword(requestDto, username);
+            registrationService.changePassword(requestDto, username);
             response.put("OK", "비밀번호가 변경됐습니다.");
         } catch (IllegalArgumentException ex) {
             String reason = ex.getMessage();
-            switch (reason) {
-                case "username":
-                    response.put(reason, "존재하지 않는 ID입니다.");
-                    break;
-                case "oldPassword":
-                    response.put(reason, "비밀번호가 틀렸습니다.");
-                    break;
-                case "password":
-                    response.put(reason, "현재 비밀번호와 새 비밀번호가 같으면 안 됩니다.");
-                    break;
-                case "confirmPassword":
-                    response.put(reason, "비밀번호가 일치하지 않습니다.");
-                    break;
-            }
+            response.put(reason, switch(reason) {
+                case "username" -> "존재하지 않는 ID입니다.";
+                case "oldPassword" -> "현재 비밀번호가 일치하지 않습니다.";
+                case "password" -> "현재 비밀번호와 새 비밀번호가 같으면 안 됩니다.";
+                case "confirmPassword" -> "비밀번호가 일치하지 않습니다.";
+                default -> throw new IllegalStateException("unexpected value");
+            });
         }
         return response;
     }

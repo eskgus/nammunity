@@ -17,8 +17,8 @@ public class PostsApiController {
 
     @PostMapping
     public Long save(@Valid @RequestBody PostsSaveDto requestDto, @AuthenticationPrincipal CustomUserDetails user) {
-        String nickname = user.getNickname();
-        return postsService.save(requestDto, nickname);
+        Long id = user.getId();
+        return postsService.save(requestDto, id);
     }
 
     @PutMapping("/{id}")

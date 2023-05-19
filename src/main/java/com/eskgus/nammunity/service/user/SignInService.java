@@ -11,14 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 public class SignInService {
-    private final UserService userService;
     private final EmailService emailService;
     private final BCryptPasswordEncoder encoder;
     private final UserRepository userRepository;
 
     @Transactional
     public Integer increaseAttempt(String username) {
-        User user = userService.findByUsername(username);
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("존재하지 않는 ID입니다."));
         int attempt = user.increaseAttempt();
         if (attempt == 5 && !user.isLocked()) {
             user.updateLocked();
@@ -26,19 +26,16 @@ public class SignInService {
         return attempt;
     }
 
-    @Transactional
-    public void resetAttempt(Long id) {
-        userRepository.resetAttempt(id);
-    }
-
     public String findUsername(String email) {
-        User user = userService.findByEmail(email);
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new
+                IllegalArgumentException("가입되지 않은 이메일입니다."));
         return user.getUsername();
     }
 
     @Transactional
     public void findPassword(String username) {
-        User user = userService.findByUsername(username);
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("존재하지 않는 ID입니다."));
 
         char[] ch = new char[36];
         for (int i = 0; i < 36; i++) {

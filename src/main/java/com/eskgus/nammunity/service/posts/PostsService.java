@@ -27,11 +27,11 @@ public class PostsService {
     }
 
     @Transactional
-    public Long save(PostsSaveDto requestDto, String nickname) {
-        User user = userService.findByNickname(nickname);
+    public Long save(PostsSaveDto requestDto, Long id) {
+        User user = userService.findById(id);
         PostsSaveDto postsSaveDto = PostsSaveDto.builder()
                 .title(requestDto.getTitle()).content(requestDto.getContent())
-                .author(nickname).user(user).build();
+                .author(user.getNickname()).user(user).build();
         return postsRepository.save(postsSaveDto.toEntity()).getId();
     }
 
