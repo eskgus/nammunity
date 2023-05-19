@@ -44,7 +44,9 @@ public class ConfirmationApiController {
                               @RequestParam(required = false) String email) {
         User user = userService.findById(id);
         if (email == null) {
-            if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
+            if (user.isEnabled()) {
+                return "이미 인증된 메일입니다.";
+            } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
                 tokensService.deleteAllByUser(user);
                 userService.delete(user);
                 return "더 이상 재발송할 수 없어요. 다시 가입해 주세요.";

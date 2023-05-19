@@ -365,8 +365,11 @@ var main = {
             result.style = 'display:block';
             if (!response.includes('임시')) {
                 result.style = 'color: red';
-                button.disabled = false;
+                button.textContent = '찾기';
+            } else {
+                button.textContent = '재발송';
             }
+            button.disabled = false;
         }).fail(function(response) {
             alert(JSON.stringify(response));
             button.disabled = false;
