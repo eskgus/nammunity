@@ -58,6 +58,7 @@ public class ConfirmationApiController {
             userService.updateEnabled(user);
         }
 
+        tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
         registrationService.sendToken(id, email);
         return "발송 완료";
     }

@@ -31,6 +31,11 @@ public class TokensService {
     }
 
     @Transactional
+    public void updateExpiredAtAllByUser(User user, LocalDateTime now) {
+        tokensRepository.updateExpiredAtAllByUser(user, now);
+    }
+
+    @Transactional
     public void deleteAllByUser(User user) {
         tokensRepository.deleteAllByUser(user);
     }
