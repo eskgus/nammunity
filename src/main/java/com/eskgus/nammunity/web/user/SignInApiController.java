@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.service.user.SignInService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +32,12 @@ public class SignInApiController {
     }
 
     @PutMapping
-    public Map<String, String> findPassword(@RequestParam @NotBlank(message = "ID를 입력하세요.") String username) {
+    public Map<String, String> findPassword(@RequestParam @NotBlank(message = "ID를 입력하세요.") String username,
+                                            HttpServletRequest request) {
         Map<String, String> response = new HashMap<>();
         try {
             signInService.findPassword(username);
+            request.getSession().setAttribute("prePage", "/users/change/password");
             response.put("OK", "가입된 이메일로 임시 비밀번호를 보냈습니다.");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
