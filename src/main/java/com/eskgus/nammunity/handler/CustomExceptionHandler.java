@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.handler;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -15,5 +16,12 @@ public class CustomExceptionHandler {
         ex.getBindingResult().getFieldErrors()
                     .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
         return errors;
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Map<String, String> PatternExceptionHandler(ConstraintViolationException ex) {
+        Map<String, String> error = new HashMap<>();
+        ex.getConstraintViolations().forEach(e -> error.put("error", e.getMessage()));
+        return error;
     }
 }
