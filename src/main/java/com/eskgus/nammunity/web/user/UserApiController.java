@@ -2,6 +2,7 @@ package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.UpdateService;
+import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import jakarta.validation.Valid;
@@ -80,6 +81,20 @@ public class UserApiController {
                 case "confirmPassword" -> "비밀번호가 일치하지 않습니다.";
                 default -> throw new IllegalStateException("unexpected value");
             });
+        }
+        return response;
+    }
+
+    @PutMapping("/update/nickname")
+    public Map<String, String> updateNickname(@Valid @RequestBody NicknameUpdateDto requestDto,
+                                 Principal principal) {
+        Map<String, String> response = new HashMap<>();
+        String username = principal.getName();
+        try {
+            updateService.updateNickname(requestDto, username);
+            response.put("OK", "수정 완료");
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
         }
         return response;
     }

@@ -1,24 +1,30 @@
 package com.eskgus.nammunity.handler;
 
 import com.eskgus.nammunity.domain.user.CustomUserDetails;
+import com.eskgus.nammunity.service.user.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
+@RequiredArgsConstructor
 public class TemplateAdvice {
+    private final CustomUserDetailsService userDetailsService;
+
     @ModelAttribute
-    public void addDefaultAttributes(@AuthenticationPrincipal CustomUserDetails user, Model model,
-                                     HttpServletRequest request) {
+    public void addDefaultAttributes(Principal principal, Model model, HttpServletRequest request) {
         Map<String, String> attr = new HashMap<>();
 
-        if (user != null) {
-            attr.put("auth", user.getNickname());
+        if (principal != null) {
+            String nickname = ((CustomUserDetails)
+                    userDetailsService.loadUserByUsername(principal.getName())).getNickname();
+            attr.put("auth", nickname);
         }
 
         Object url = request.getSession().getAttribute("prePage");

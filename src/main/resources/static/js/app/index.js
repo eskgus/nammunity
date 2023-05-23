@@ -77,6 +77,10 @@ var main = {
         $('#btn-update-password').on('click', function() {
             _this.updatePassword();
         });
+
+        $('#btn-update-user-info').on('click', function() {
+            _this.updateUserInfo();
+        });
     },
     save : function() {
         var data = {
@@ -402,6 +406,27 @@ var main = {
                 alert(response[Object.keys(response)]);
             } else {
                 fail(response, data, rb);
+            }
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
+        });
+    },
+    updateUserInfo : function() {
+        var data = {
+            nickname: $('#u-nickname').val()
+        };
+
+        $.ajax({
+            type: 'PUT',
+            url: '/api/users/update/nickname',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
+                alert(response[Object.keys(response)]);
+                window.location.href = '/users/my-page';
+            } else {
+                alert(response[Object.keys(response)]);
             }
         }).fail(function(response) {
             alert(JSON.stringify(response));
