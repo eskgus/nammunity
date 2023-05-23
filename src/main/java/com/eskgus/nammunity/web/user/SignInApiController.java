@@ -37,7 +37,7 @@ public class SignInApiController {
         Map<String, String> response = new HashMap<>();
         try {
             signInService.findPassword(username);
-            request.getSession().setAttribute("prePage", "/users/change/password");
+            request.getSession().setAttribute("prePage", "/users/my-page/update/password");
             response.put("OK", "가입된 이메일로 임시 비밀번호를 보냈습니다.");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());

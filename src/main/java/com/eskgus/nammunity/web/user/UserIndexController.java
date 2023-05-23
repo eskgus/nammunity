@@ -1,8 +1,10 @@
 package com.eskgus.nammunity.web.user;
 
+import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -53,8 +55,20 @@ public class UserIndexController {
         return "user/find-password";
     }
 
-    @GetMapping("/change/password")
-    public String changePassword() {
-        return "user/change-password";
+    @GetMapping("/my-page")
+    public String myPage() {
+        return "user/my-page";
+    }
+
+    @GetMapping("/my-page/update/password")
+    public String updatePassword() {
+        return "user/update-password";
+    }
+
+    @GetMapping("/my-page/update/user-info")
+    public String updateUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        User user = userService.findById(userDetails.getId());
+        model.addAttribute("user", user);
+        return "user/update-user-info";
     }
 }

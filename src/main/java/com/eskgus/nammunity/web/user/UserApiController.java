@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.service.user.RegistrationService;
+import com.eskgus.nammunity.service.user.UpdateService;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import jakarta.validation.Valid;
@@ -16,6 +17,7 @@ import java.util.Map;
 @RequestMapping("/api/users")
 public class UserApiController {
     private final RegistrationService registrationService;
+    private final UpdateService updateService;
 
     @PostMapping
     public Map<String, String> signUp(@Valid @RequestBody RegistrationDto registrationDto) {
@@ -61,13 +63,13 @@ public class UserApiController {
         return "OK";
     }
 
-    @PutMapping("/change/password")
-    public Map<String, String> changePassword(@Valid @RequestBody PasswordUpdateDto requestDto,
+    @PutMapping("/update/password")
+    public Map<String, String> updatePassword(@Valid @RequestBody PasswordUpdateDto requestDto,
                                  Principal principal) {
         Map<String, String> response = new HashMap<>();
         String username = principal.getName();
         try {
-            registrationService.changePassword(requestDto, username);
+            updateService.updatePassword(requestDto, username);
             response.put("OK", "비밀번호가 변경됐습니다.");
         } catch (IllegalArgumentException ex) {
             String reason = ex.getMessage();

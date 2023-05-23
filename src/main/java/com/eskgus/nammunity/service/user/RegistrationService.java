@@ -6,7 +6,6 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.service.email.EmailService;
 import com.eskgus.nammunity.service.tokens.TokensService;
-import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class RegistrationService {
     private final EmailService emailService;
     private final TokensService tokensService;
     private final UserRepository userRepository;
+    private final UpdateService updateService;
 
     @Transactional
     public Long register(RegistrationDto registrationDto) {
@@ -92,22 +94,35 @@ public class RegistrationService {
     }
 
     @Transactional
-    public void changePassword(PasswordUpdateDto requestDto, String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new
-                IllegalArgumentException("username"));
+    public Map<String, String> resendToken(Long id, String email) {
+        Map<String, String> response = new HashMap<>();
+        User user = userService.findById(id);
 
-        String oldPassword = requestDto.getOldPassword();
-        String currentPassword = user.getPassword();
-        String newPassword = requestDto.getPassword();
-
-        if (!encoder.matches(oldPassword, currentPassword)) {
-            throw new IllegalArgumentException("oldPassword");
-        } else if (oldPassword.equals(newPassword)) {
-            throw new IllegalArgumentException("password");
-        } else if (!newPassword.equals(requestDto.getConfirmPassword())) {
-            throw new IllegalArgumentException("confirmPassword");
+        if (email == null) {
+            if (user.isEnabled()) {
+                response.put("error", "이미 인증된 메일입니다.");
+            } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
+                tokensService.deleteAllByUser(user);
+                userService.delete(user);
+                response.put("error", "더 이상 재발송할 수 없어요. 다시 가입해 주세요.");
+            }
+            email = user.getEmail();
+        } else {
+            if (email.isBlank()) {
+                response.put("error", "이메일을 입력하세요.");
+            } else if (user.getEmail().equals(email) && user.isEnabled()) {
+                response.put("error", "현재 이메일과 같습니다.");
+            } else if (user.isEnabled()) {
+                userService.updateEnabled(user);
+                updateService.updateEmail(user, email);
+            }
         }
 
-        user.updatePassword(encoder.encode(newPassword));
+        if (!response.containsKey("error")) {
+            tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
+            sendToken(id, email);
+            response.put("OK", "발송 완료");
+        }
+        return response;
     }
 }

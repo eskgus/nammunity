@@ -1,23 +1,24 @@
 package com.eskgus.nammunity.web.user;
 
-import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.UserService;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
-import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
+@Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/users/confirm")
 public class ConfirmationApiController {
     private final RegistrationService registrationService;
     private final UserService userService;
-    private final TokensService tokensService;
 
     @GetMapping
     public RedirectView confirmToken(@RequestParam String token,
@@ -39,27 +40,16 @@ public class ConfirmationApiController {
         return "OK";
     }
 
-    @PostMapping("/{id}")
-    public String resendToken(@PathVariable Long id,
-                              @RequestParam(required = false) String email) {
-        User user = userService.findById(id);
-        if (email == null) {
-            if (user.isEnabled()) {
-                return "이미 인증된 메일입니다.";
-            } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
-                tokensService.deleteAllByUser(user);
-                userService.delete(user);
-                return "더 이상 재발송할 수 없어요. 다시 가입해 주세요.";
-            }
-            email = user.getEmail();
-        } else if (email.isBlank()) {
-            return "이메일을 입력하세요.";
-        } else if (user.isEnabled()) {
-            userService.updateEnabled(user);
+    @PostMapping
+    public Map<String, String> resendToken(@RequestParam(name = "id") Long id,
+                                           @RequestParam(required = false, name = "email")
+                              @Email(message = "이메일 형식이 맞지 않습니다.") String email) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            response = registrationService.resendToken(id, email);
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
         }
-
-        tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
-        registrationService.sendToken(id, email);
-        return "발송 완료";
+        return response;
     }
 }

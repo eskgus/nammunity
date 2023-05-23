@@ -74,8 +74,8 @@ var main = {
             _this.findPassword();
         });
 
-        $('#btn-change-password').on('click', function() {
-            _this.changePassword();
+        $('#btn-update-password').on('click', function() {
+            _this.updatePassword();
         });
     },
     save : function() {
@@ -311,14 +311,30 @@ var main = {
     },
     resendEmail: function() {
         var id = $('#id').val();
+        var email = $('#u-email').val();
+        var url = '/api/users/confirm?id=' + id;
+        var button = document.getElementById('btn-resend');
+        button.disabled = true;
+
+        if (email != null) {
+            url += '&email=' + email;
+        }
 
         $.ajax({
             type: 'POST',
-            url: '/api/users/confirm/' + id
+            url: url
         }).done(function(response) {
-            alert(response);
+            alert(response[Object.keys(response)]);
+            if (Object.keys(response) == 'OK') {
+                button.textContent = '재발송';
+            } else {
+                button.textContent = '인증';
+            }
+            button.disabled = false;
         }).fail(function(response) {
             alert(JSON.stringify(response));
+            button.textContent = '인증';
+            button.disabled = false;
         });
     },
     findUsername : function() {
@@ -363,7 +379,7 @@ var main = {
             button.disabled = false;
         });
     },
-    changePassword : function() {
+    updatePassword : function() {
         var data = {
             oldPassword: $('#oldPassword').val(),
             password: $('#password').val(),
@@ -375,13 +391,13 @@ var main = {
 
         $.ajax({
             type: 'PUT',
-            url: '/api/users/change/password',
+            url: '/api/users/update/password',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
             if (Object.keys(response) == 'OK') {
                 alert(response[Object.keys(response)]);
-                window.location.href = '/';
+                window.location.href = '/users/my-page';
             } else if (Object.keys(response) == 'username') {
                 alert(response[Object.keys(response)]);
             } else {
