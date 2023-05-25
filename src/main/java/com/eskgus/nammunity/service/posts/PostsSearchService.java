@@ -29,7 +29,6 @@ public class PostsSearchService {
         return new PostsReadDto(entity);
     }
 
-
     @Transactional(readOnly = true)
     public List<PostsListDto> findByUser(User user) {
         return postsRepository.findByUser(user).stream().map(PostsListDto::new).collect(Collectors.toList());

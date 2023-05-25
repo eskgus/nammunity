@@ -26,22 +26,20 @@ public class PostsRepositoryTest {
     public void saveAndLoadPosts() {
         String title = "test title";
         String content = "test content";
-        String author = "test author";
 
-        postsRepository.save(Posts.builder().title(title).content(content).author(author).build());
+        postsRepository.save(Posts.builder().title(title).content(content).build());
 
         List<Posts> postsList = postsRepository.findAll();
 
         Posts posts = postsList.get(0);
         Assertions.assertThat(posts.getTitle()).isEqualTo(title);
         Assertions.assertThat(posts.getContent()).isEqualTo(content);
-        Assertions.assertThat(posts.getAuthor()).isEqualTo(author);
     }
 
     @Test
     public void addBaseTimeEntity() {
         LocalDateTime now = LocalDateTime.of(2023, 3, 23, 18, 13, 0);
-        postsRepository.save(Posts.builder().title("title").content("content").author("author").build());
+        postsRepository.save(Posts.builder().title("title").content("content").build());
 
         List<Posts> postsList = postsRepository.findAll();
 

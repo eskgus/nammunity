@@ -28,17 +28,21 @@ public class PostsAuthInterceptor implements HandlerInterceptor {
         String httpMethod = request.getMethod();
 
         if (httpMethod.equals("GET") || httpMethod.equals("PUT") || httpMethod.equals("DELETE")) {
-            CustomUserDetails userDetails = (CustomUserDetails)
-                    userDetailsService.loadUserByUsername(request.getUserPrincipal().getName());
-            Long userId = userDetails.getId();
+            try {
+                CustomUserDetails userDetails = (CustomUserDetails)
+                        userDetailsService.loadUserByUsername(request.getUserPrincipal().getName());
+                Long userId = userDetails.getId();
 
-            Map<?, ?> pathVariables = (Map<?, ?>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-            Long id = Long.parseLong((String)pathVariables.get("id"));
-            Long authorId = postsSearchService.findById(id).getUserId();
+                Map<?, ?> pathVariables = (Map<?, ?>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+                Long id = Long.parseLong((String) pathVariables.get("id"));
+                Long authorId = postsSearchService.findById(id).getUserId();
 
-            if (!userId.equals(authorId)) {
-                response.sendError(HttpStatus.FORBIDDEN.value());
-                return false;
+                if (!userId.equals(authorId)) {
+                    response.sendError(HttpStatus.FORBIDDEN.value());
+                    return false;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
         return true;

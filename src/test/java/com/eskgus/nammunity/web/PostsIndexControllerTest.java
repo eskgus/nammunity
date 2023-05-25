@@ -30,7 +30,7 @@ public class PostsIndexControllerTest {
 
     @Test
     public void readAPost() {
-        postsRepository.save(Posts.builder().title("title").content("content").author("author").build());
+        postsRepository.save(Posts.builder().title("title").content("content").build());
 
         Posts posts = postsRepository.findAll().get(0);
 

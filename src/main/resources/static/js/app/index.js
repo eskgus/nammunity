@@ -101,11 +101,15 @@ var main = {
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
-        }).done(function() {
-            alert('글이 등록되었습니다.');
-            window.location.href = '/';
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
+                alert('글이 등록되었습니다.');
+                window.location.href = '/';
+            } else {
+                fail(response, data, rb);
+            }
         }).fail(function(response) {
-            fail(response, data, rb);
+            alert(JSON.stringify(response));
         });
     },
     update : function() {
@@ -124,15 +128,23 @@ var main = {
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
-        }).done(function() {
-            alert('글이 수정되었습니다.');
-            window.location.href = '/posts/read/' + id;
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
+                alert('글이 수정되었습니다.');
+                window.location.href = '/posts/read/' + id;
+            } else if (Object.keys(response) == 'error') {
+                alert(response[Object.keys(response)]);
+                window.location.href = '/';
+            } else {
+                fail(response, data, rb);
+            }
         }).fail(function(response) {
             if (response.status == 403) {
                 alert('권한이 없습니다.');
                 window.history.back();
             } else {
-                fail(response, data, rb);
+                alert(JSON.stringify(response));
+                window.location.href = '/';
             }
         });
     },
