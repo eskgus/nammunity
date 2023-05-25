@@ -4,11 +4,15 @@ import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -60,7 +64,12 @@ public class UserIndexController {
     @GetMapping("/my-page")
     public String myPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         User user = userService.findById(userDetails.getId());
-        model.addAttribute("posts", postsSearchService.findByUser(user));
+        List<PostsListDto> posts = postsSearchService.findByUser(user);
+
+        if (posts.size() > 5) {
+            model.addAttribute("more", true);
+        }
+        model.addAttribute("posts", posts.stream().limit(5).collect(Collectors.toList()));
         return "user/my-page";
     }
 
@@ -74,5 +83,12 @@ public class UserIndexController {
         User user = userService.findById(userDetails.getId());
         model.addAttribute("user", user);
         return "user/update-user-info";
+    }
+
+    @GetMapping("/my-page/posts")
+    public String listPosts(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        User user = userService.findById(userDetails.getId());
+        model.addAttribute("posts", postsSearchService.findByUser(user));
+        return "user/posts-list";
     }
 }

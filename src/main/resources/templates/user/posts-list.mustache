@@ -1,0 +1,30 @@
+{{>layout/header}}
+
+<h1>작성 글</h1>
+<table class="table table-horizontal table-bordered">
+    <thead class="thead-strong">
+    <tr>
+        <th>게시글 번호</th>
+        <th>제목</th>
+        <th>작성일</th>
+        <th>조회 수</th>
+    </tr>
+    </thead>
+    <tbody id="tbody">
+    {{#posts}}
+        <tr>
+            <td>{{id}}</td>
+            <td><a href="/posts/read/{{id}}">{{title}}</a></td>
+            <td>{{modifiedDate}}</td>
+            <td>{{view}}</td>
+        </tr>
+    {{/posts}}
+    {{^posts}}
+        <tr>
+            <td colspan="4">작성한 게시글이 없어요.</td>
+        </tr>
+    {{/posts}}
+    </tbody>
+</table>
+
+{{>layout/footer}}
