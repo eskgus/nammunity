@@ -2,9 +2,8 @@ package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.UserService;
-import jakarta.validation.constraints.Email;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
@@ -12,7 +11,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import java.util.HashMap;
 import java.util.Map;
 
-@Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/users/confirm")
@@ -32,21 +30,27 @@ public class ConfirmationApiController {
     }
 
     @GetMapping("/{id}")
-    public String checkUserEnabled(@PathVariable Long id) {
+    public Map<String, String> checkUserEnabled(@PathVariable Long id, HttpServletRequest request) {
+        Map<String, String> response = new HashMap<>();
         boolean enabled = userService.findById(id).isEnabled();
         if (!enabled) {
-            return "인증되지 않은 이메일입니다.";
+            response.put("error", "인증되지 않은 메일입니다.");
+        } else {
+            if (request.getHeader("referer").contains("sign-up")) {
+                response.put("OK", "/users/sign-in");
+            } else {
+                response.put("OK", "/users/my-page/update/user-info");
+            }
         }
-        return "OK";
+        return response;
     }
 
     @PostMapping
-    public Map<String, String> resendToken(@RequestParam(name = "id") Long id,
-                                           @RequestParam(required = false, name = "email")
-                              @Email(message = "이메일 형식이 맞지 않습니다.") String email) {
+    public Map<String, String> resendToken(@RequestBody Map<String, Long> id) {
         Map<String, String> response = new HashMap<>();
         try {
-            response = registrationService.resendToken(id, email);
+            registrationService.resendToken(id.get("id"));
+            response.put("OK", "발송 완료");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }

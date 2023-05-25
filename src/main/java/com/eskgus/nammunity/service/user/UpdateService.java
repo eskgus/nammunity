@@ -2,6 +2,8 @@ package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.service.tokens.TokensService;
+import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import lombok.RequiredArgsConstructor;
@@ -9,11 +11,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @RequiredArgsConstructor
 @Service
 public class UpdateService {
     private final BCryptPasswordEncoder encoder;
     private final UserRepository userRepository;
+    private final TokensService tokensService;
+    private final RegistrationService registrationService;
 
     @Transactional
     public void updatePassword(PasswordUpdateDto requestDto, String username) {
@@ -36,7 +42,21 @@ public class UpdateService {
     }
 
     @Transactional
-    public void updateEmail(User user, String email) {
+    public void updateEmail(EmailUpdateDto requestDto, String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("존재하지 않는 ID입니다."));
+        String email = requestDto.getEmail();
+
+        if (user.getEmail().equals(email) && user.isEnabled()) {
+            throw new IllegalArgumentException("현재 이메일과 같습니다.");
+        } else if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        } else if (user.isEnabled()) {
+            user.updateEnabled();
+        }
+
+        tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
+        registrationService.sendToken(user.getId(), email);
         user.updateEmail(email);
     }
 

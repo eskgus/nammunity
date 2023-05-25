@@ -78,8 +78,12 @@ var main = {
             _this.updatePassword();
         });
 
-        $('#btn-update-user-info').on('click', function() {
-            _this.updateUserInfo();
+        $('#btn-update-nickname').on('click', function() {
+            _this.updateNickname();
+        });
+
+        $('#btn-update-email').on('click', function() {
+            _this.updateEmail();
         });
     },
     save : function() {
@@ -304,40 +308,33 @@ var main = {
             type: 'GET',
             url: '/api/users/confirm/' + id
         }).done(function(response) {
-            if (response == 'OK') {
-                window.location.href = '/users/sign-in';
+            if (Object.keys(response) == 'OK') {
+                window.location.href = response[Object.keys(response)];
             } else {
-                alert(response);
+                alert(response[Object.keys(response)]);
             }
         }).fail(function(response) {
             alert(JSON.stringify(response));
         });
     },
     resendEmail: function() {
-        var id = $('#id').val();
-        var email = $('#u-email').val();
-        var url = '/api/users/confirm?id=' + id;
+        var data = {
+            id: $('#id').val()
+        };
+
         var button = document.getElementById('btn-resend');
         button.disabled = true;
 
-        if (email != null) {
-            url += '&email=' + email;
-        }
-
         $.ajax({
             type: 'POST',
-            url: url
+            url: '/api/users/confirm',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
         }).done(function(response) {
             alert(response[Object.keys(response)]);
-            if (Object.keys(response) == 'OK') {
-                button.textContent = '재발송';
-            } else {
-                button.textContent = '인증';
-            }
             button.disabled = false;
         }).fail(function(response) {
             alert(JSON.stringify(response));
-            button.textContent = '인증';
             button.disabled = false;
         });
     },
@@ -411,7 +408,7 @@ var main = {
             alert(JSON.stringify(response));
         });
     },
-    updateUserInfo : function() {
+    updateNickname : function() {
         var data = {
             nickname: $('#u-nickname').val()
         };
@@ -424,12 +421,40 @@ var main = {
         }).done(function(response) {
             if (Object.keys(response) == 'OK') {
                 alert(response[Object.keys(response)]);
-                window.location.href = '/users/my-page';
+                window.location.reload();
             } else {
                 alert(response[Object.keys(response)]);
             }
         }).fail(function(response) {
             alert(JSON.stringify(response));
+        });
+    },
+    updateEmail : function() {
+        var data = {
+            email: $('#u-email').val()
+        };
+
+        var button1 = document.getElementById('btn-update-email');
+        var button2 = document.getElementById('btn-confirm-email');
+        button1.disabled = true;
+
+        $.ajax({
+            type: 'PUT',
+            url: '/api/users/update/email',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
+        }).done(function(response) {
+            alert(response[Object.keys(response)]);
+            if (Object.keys(response) == 'OK') {
+                button1.textContent = '재발송';
+                button2.style = 'display: inline-block';
+            } else {
+                button1.textContent = '인증';
+            }
+            button1.disabled = false;
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
+            button1.disabled = false;
         });
     },
     redBox : function(field, pre) {

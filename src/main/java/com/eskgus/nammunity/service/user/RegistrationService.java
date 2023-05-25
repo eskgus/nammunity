@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -25,7 +23,6 @@ public class RegistrationService {
     private final EmailService emailService;
     private final TokensService tokensService;
     private final UserRepository userRepository;
-    private final UpdateService updateService;
 
     @Transactional
     public Long register(RegistrationDto registrationDto) {
@@ -94,35 +91,18 @@ public class RegistrationService {
     }
 
     @Transactional
-    public Map<String, String> resendToken(Long id, String email) {
-        Map<String, String> response = new HashMap<>();
+    public void resendToken(Long id) {
         User user = userService.findById(id);
 
-        if (email == null) {
-            if (user.isEnabled()) {
-                response.put("error", "이미 인증된 메일입니다.");
-            } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
-                tokensService.deleteAllByUser(user);
-                userService.delete(user);
-                response.put("error", "더 이상 재발송할 수 없어요. 다시 가입해 주세요.");
-            }
-            email = user.getEmail();
-        } else {
-            if (email.isBlank()) {
-                response.put("error", "이메일을 입력하세요.");
-            } else if (user.getEmail().equals(email) && user.isEnabled()) {
-                response.put("error", "현재 이메일과 같습니다.");
-            } else if (user.isEnabled()) {
-                userService.updateEnabled(user);
-                updateService.updateEmail(user, email);
-            }
+        if (user.isEnabled()) {
+            throw new IllegalArgumentException("이미 인증된 메일입니다.");
+        } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
+            tokensService.deleteAllByUser(user);
+            userService.delete(user);
+            throw new IllegalArgumentException("더 이상 재발송할 수 없어요. 다시 가입해 주세요.");
         }
 
-        if (!response.containsKey("error")) {
-            tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
-            sendToken(id, email);
-            response.put("OK", "발송 완료");
-        }
-        return response;
+        tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
+        sendToken(id, user.getEmail());
     }
 }

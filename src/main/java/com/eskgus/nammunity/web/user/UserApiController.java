@@ -2,6 +2,7 @@ package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.UpdateService;
+import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
@@ -87,12 +88,26 @@ public class UserApiController {
 
     @PutMapping("/update/nickname")
     public Map<String, String> updateNickname(@Valid @RequestBody NicknameUpdateDto requestDto,
-                                 Principal principal) {
+                                              Principal principal) {
         Map<String, String> response = new HashMap<>();
         String username = principal.getName();
         try {
             updateService.updateNickname(requestDto, username);
             response.put("OK", "수정 완료");
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
+        }
+        return response;
+    }
+
+    @PutMapping("/update/email")
+    public Map<String, String> updateEmail(@Valid @RequestBody EmailUpdateDto requestDto,
+                                           Principal principal) {
+        Map<String, String> response = new HashMap<>();
+        String username = principal.getName();
+        try {
+            updateService.updateEmail(requestDto, username);
+            response.put("OK", "발송 완료");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }
