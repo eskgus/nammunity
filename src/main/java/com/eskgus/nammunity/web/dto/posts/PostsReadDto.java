@@ -20,7 +20,7 @@ public class PostsReadDto {
         this.id = entity.getId();
         this.title = entity.getTitle();
         this.content = entity.getContent();
-        this.author = entity.getAuthor();
+        this.author = entity.getUser().getNickname();
         this.createdDate = entity.getCreatedDate();
         this.modifiedDate = entity.getModifiedDate();
         this.view = entity.getView();

@@ -31,7 +31,7 @@ public class PostsService {
         User user = userService.findById(id);
         PostsSaveDto postsSaveDto = PostsSaveDto.builder()
                 .title(requestDto.getTitle()).content(requestDto.getContent())
-                .author(user.getNickname()).user(user).build();
+                .user(user).build();
         return postsRepository.save(postsSaveDto.toEntity()).getId();
     }
 

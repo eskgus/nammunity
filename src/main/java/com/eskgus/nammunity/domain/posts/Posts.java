@@ -21,9 +21,6 @@ public class Posts extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(nullable = false)
-    private String author;
-
     @Column(columnDefinition = "int default 0", nullable = false)
     private int view;
 
@@ -32,10 +29,9 @@ public class Posts extends BaseTimeEntity {
     private User user;
 
     @Builder
-    public Posts(String title, String content, String author, User user) {
+    public Posts(String title, String content, User user) {
         this.title = title;
         this.content = content;
-        this.author = author;
         this.user = user;
     }
 

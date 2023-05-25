@@ -16,7 +16,7 @@ public class PostsListDto {
     public PostsListDto(Posts entity) {
         this.id = entity.getId();
         this.title = entity.getTitle();
-        this.author = entity.getAuthor();
+        this.author = entity.getUser().getNickname();
         this.modifiedDate = entity.getModifiedDate();
         this.view = entity.getView();
     }

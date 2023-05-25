@@ -41,8 +41,7 @@ public class PostsApiControllerTest {
     public void savePosts() throws Exception {
         String title = "test title";
         String content = "test content";
-        PostsSaveDto requestDto = PostsSaveDto.builder()
-                .title(title).content(content).author("test author").build();
+        PostsSaveDto requestDto = PostsSaveDto.builder().title(title).content(content).build();
         String url = "http://localhost:" + port + "/api/posts";
 
         ResponseEntity<Long> responseEntity = testRestTemplate.postForEntity(url, requestDto, Long.class);
@@ -58,7 +57,7 @@ public class PostsApiControllerTest {
 
     @Test
     public void updatePosts() throws Exception {
-        Posts posts = postsRepository.save(Posts.builder().title("title").content("content").author("author").build());
+        Posts posts = postsRepository.save(Posts.builder().title("title").content("content").build());
 
         Long id = posts.getId();
         String modifiedTitle = "modified Title";
@@ -82,7 +81,7 @@ public class PostsApiControllerTest {
 
     @Test
     public void deletePosts() throws Exception {
-        Posts posts = postsRepository.save(Posts.builder().title("title").content("content").author("author").build());
+        Posts posts = postsRepository.save(Posts.builder().title("title").content("content").build());
         Long id = posts.getId();
 
         String url = "http://localhost:" + port + "/api/posts/" + id;
