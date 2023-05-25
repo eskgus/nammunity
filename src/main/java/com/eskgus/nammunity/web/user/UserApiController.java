@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.service.user.RegistrationService;
-import com.eskgus.nammunity.service.user.UpdateService;
+import com.eskgus.nammunity.service.user.UserUpdateService;
 import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
@@ -19,7 +19,7 @@ import java.util.Map;
 @RequestMapping("/api/users")
 public class UserApiController {
     private final RegistrationService registrationService;
-    private final UpdateService updateService;
+    private final UserUpdateService userUpdateService;
 
     @PostMapping
     public Map<String, String> signUp(@Valid @RequestBody RegistrationDto registrationDto) {
@@ -71,7 +71,7 @@ public class UserApiController {
         Map<String, String> response = new HashMap<>();
         String username = principal.getName();
         try {
-            updateService.updatePassword(requestDto, username);
+            userUpdateService.updatePassword(requestDto, username);
             response.put("OK", "비밀번호가 변경됐습니다.");
         } catch (IllegalArgumentException ex) {
             String reason = ex.getMessage();
@@ -92,7 +92,7 @@ public class UserApiController {
         Map<String, String> response = new HashMap<>();
         String username = principal.getName();
         try {
-            updateService.updateNickname(requestDto, username);
+            userUpdateService.updateNickname(requestDto, username);
             response.put("OK", "수정 완료");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
@@ -106,7 +106,7 @@ public class UserApiController {
         Map<String, String> response = new HashMap<>();
         String username = principal.getName();
         try {
-            updateService.updateEmail(requestDto, username);
+            userUpdateService.updateEmail(requestDto, username);
             response.put("OK", "발송 완료");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());

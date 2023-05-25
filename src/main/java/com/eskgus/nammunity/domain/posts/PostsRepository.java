@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.posts;
 
+import com.eskgus.nammunity.domain.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,4 +14,7 @@ public interface PostsRepository extends JpaRepository<Posts, Long> {
     @Modifying
     @Query("UPDATE Posts p SET p.view = p.view + 1 WHERE p.id = :id")
     int countViews(Long id);
+
+    @Query("SELECT p FROM Posts p WHERE p.user = :user ORDER BY p.id DESC")
+    List<Posts> findByUser(User user);
 }

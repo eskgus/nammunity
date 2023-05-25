@@ -2,6 +2,7 @@ package com.eskgus.nammunity.web.posts;
 
 import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,15 +18,16 @@ import java.util.Map;
 @Controller
 public class PostsIndexController {
     private final PostsService postsService;
+    private final PostsSearchService postsSearchService;
 
     @GetMapping("/")
     public String mainPage(Model model) {
-        model.addAttribute("posts", postsService.findAllDesc());
+        model.addAttribute("posts", postsSearchService.findAllDesc());
         return "main-page";
     }
 
     @GetMapping("/posts/save")
-    public String savePosts(@AuthenticationPrincipal CustomUserDetails user, Model model) {
+    public String savePosts() {
         return "posts/posts-save";
     }
 
@@ -34,7 +36,7 @@ public class PostsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         postsService.countViews(id);
-        PostsReadDto responseDto = postsService.findById(id);
+        PostsReadDto responseDto = postsSearchService.findById(id);
         attr.put("post", responseDto);
 
         Long authorId = responseDto.getUserId();
@@ -48,7 +50,7 @@ public class PostsIndexController {
 
     @GetMapping("/posts/update/{id}")
     public String updatePosts(@PathVariable Long id, Model model) {
-        PostsReadDto responseDto = postsService.findById(id);
+        PostsReadDto responseDto = postsSearchService.findById(id);
         model.addAttribute("post", responseDto);
         return "posts/posts-update";
     }

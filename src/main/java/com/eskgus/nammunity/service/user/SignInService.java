@@ -26,6 +26,7 @@ public class SignInService {
         return attempt;
     }
 
+    @Transactional(readOnly = true)
     public String findUsername(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new
                 IllegalArgumentException("가입되지 않은 이메일입니다."));

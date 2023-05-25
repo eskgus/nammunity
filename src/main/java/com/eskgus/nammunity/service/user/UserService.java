@@ -17,6 +17,7 @@ public class UserService {
         return userRepository.save(registrationDto.toEntity()).getId();
     }
 
+    @Transactional(readOnly = true)
     public User findById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException("존재하지 않는 회원입니다."));

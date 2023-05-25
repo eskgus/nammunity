@@ -2,6 +2,7 @@ package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/users")
 public class UserIndexController {
     private final UserService userService;
+    private final PostsSearchService postsSearchService;
 
     @GetMapping("/sign-up")
     public String signUpUser() {
@@ -56,7 +58,9 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page")
-    public String myPage() {
+    public String myPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        User user = userService.findById(userDetails.getId());
+        model.addAttribute("posts", postsSearchService.findByUser(user));
         return "user/my-page";
     }
 

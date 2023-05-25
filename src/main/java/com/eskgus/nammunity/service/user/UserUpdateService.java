@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Service
-public class UpdateService {
+public class UserUpdateService {
     private final BCryptPasswordEncoder encoder;
     private final UserRepository userRepository;
     private final TokensService tokensService;

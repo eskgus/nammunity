@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.config.interceptor;
 
 import com.eskgus.nammunity.domain.user.CustomUserDetails;
-import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,7 +16,7 @@ import java.util.Map;
 @Component
 public class PostsAuthInterceptor implements HandlerInterceptor {
     @Autowired
-    PostsService postsService;
+    PostsSearchService postsSearchService;
 
     @Autowired
     CustomUserDetailsService userDetailsService;
@@ -34,7 +34,7 @@ public class PostsAuthInterceptor implements HandlerInterceptor {
 
             Map<?, ?> pathVariables = (Map<?, ?>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
             Long id = Long.parseLong((String)pathVariables.get("id"));
-            Long authorId = postsService.findById(id).getUserId();
+            Long authorId = postsSearchService.findById(id).getUserId();
 
             if (!userId.equals(authorId)) {
                 response.sendError(HttpStatus.FORBIDDEN.value());
