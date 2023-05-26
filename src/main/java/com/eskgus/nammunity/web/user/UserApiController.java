@@ -113,4 +113,17 @@ public class UserApiController {
         }
         return response;
     }
+
+    @DeleteMapping("/delete")
+    public Map<String, String> deleteUser(Principal principal) {
+        Map<String, String> response = new HashMap<>();
+        String username = principal.getName();
+        try {
+            userUpdateService.deleteUser(username);
+            response.put("OK", "탈퇴됐습니다.");
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
+        }
+        return response;
+    }
 }

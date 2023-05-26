@@ -2,6 +2,7 @@ package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
@@ -20,6 +21,8 @@ public class UserUpdateService {
     private final UserRepository userRepository;
     private final TokensService tokensService;
     private final RegistrationService registrationService;
+    private final PostsService postsService;
+    private final UserService userService;
 
     @Transactional
     public void updatePassword(PasswordUpdateDto requestDto, String username) {
@@ -72,5 +75,14 @@ public class UserUpdateService {
         }
 
         user.updateNickname(requestDto.getNickname());
+    }
+
+    @Transactional
+    public void deleteUser(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("존재하지 않는 ID입니다."));
+        postsService.deleteAllByUser(user);
+        tokensService.deleteAllByUser(user);
+        userService.delete(user);
     }
 }

@@ -85,6 +85,10 @@ var main = {
         $('#btn-update-email').on('click', function() {
             _this.updateEmail();
         });
+
+        $('#btn-delete-account').on('click', function() {
+            _this.deleteAccount();
+        });
     },
     save : function() {
         var data = {
@@ -431,11 +435,9 @@ var main = {
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
+            alert(response[Object.keys(response)]);
             if (Object.keys(response) == 'OK') {
-                alert(response[Object.keys(response)]);
                 window.location.reload();
-            } else {
-                alert(response[Object.keys(response)]);
             }
         }).fail(function(response) {
             alert(JSON.stringify(response));
@@ -467,6 +469,19 @@ var main = {
         }).fail(function(response) {
             alert(JSON.stringify(response));
             button1.disabled = false;
+        });
+    },
+    deleteAccount : function() {
+        $.ajax({
+            type: 'DELETE',
+            url: '/api/users/delete'
+        }).done(function(response) {
+            alert(response[Object.keys(response)]);
+            if (Object.keys(response) == 'OK') {
+                window.location.href = '/users/sign-out';
+            }
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
         });
     },
     redBox : function(field, pre) {

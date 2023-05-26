@@ -91,4 +91,9 @@ public class UserIndexController {
         model.addAttribute("posts", postsSearchService.findByUser(user));
         return "user/posts-list";
     }
+
+    @GetMapping("/my-page/delete/account")
+    public String deleteAccount() {
+        return "user/delete-account";
+    }
 }
