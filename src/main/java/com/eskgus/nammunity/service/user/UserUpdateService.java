@@ -50,11 +50,12 @@ public class UserUpdateService {
                 IllegalArgumentException("존재하지 않는 ID입니다."));
         String email = requestDto.getEmail();
 
-        if (user.getEmail().equals(email) && user.isEnabled()) {
-            throw new IllegalArgumentException("현재 이메일과 같습니다.");
-        } else if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
-        } else if (user.isEnabled()) {
+        if (user.isEnabled()) {
+            if (user.getEmail().equals(email)) {
+                throw new IllegalArgumentException("현재 이메일과 같습니다.");
+            } else if (userRepository.existsByEmail(email)) {
+                throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            }
             user.updateEnabled();
         }
 

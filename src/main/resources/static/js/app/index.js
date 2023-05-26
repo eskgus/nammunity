@@ -325,7 +325,11 @@ var main = {
             url: '/api/users/confirm/' + id
         }).done(function(response) {
             if (Object.keys(response) == 'OK') {
-                window.location.href = response[Object.keys(response)];
+                var url = response[Object.keys(response)];
+                if (url.includes('update/user-info')) {
+                    alert('수정 완료');
+                }
+                window.location.href = url;
             } else {
                 alert(response[Object.keys(response)]);
             }
