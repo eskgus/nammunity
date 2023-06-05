@@ -23,14 +23,14 @@ public class UserIndexController {
 
     @GetMapping("/sign-up")
     public String signUpUser() {
-        return "user/sign-up";
+        return "user/sign-up/sign-up";
     }
 
     @GetMapping("/sign-up/{id}")
     public String afterSignUp(@PathVariable Long id, Model model) {
         User user = userService.findById(id);
         model.addAttribute("user", user);
-        return "user/after-sign-up";
+        return "user/sign-up/after-sign-up";
     }
 
     @GetMapping("/confirm-email")
@@ -40,7 +40,7 @@ public class UserIndexController {
         } else {
             model.addAttribute("error", attr);
         }
-        return "user/confirm-email";
+        return "user/sign-up/confirm-email";
     }
 
     @GetMapping("/sign-in")
@@ -48,17 +48,17 @@ public class UserIndexController {
         if (message != null) {
             model.addAttribute("message", message);
         }
-        return "user/sign-in";
+        return "user/sign-in/sign-in";
     }
 
     @GetMapping("/find/username")
     public String findUsername() {
-        return "user/find-username";
+        return "user/sign-in/find-username";
     }
 
     @GetMapping("/find/password")
     public String findPassword() {
-        return "user/find-password";
+        return "user/sign-in/find-password";
     }
 
     @GetMapping("/my-page")
@@ -70,30 +70,30 @@ public class UserIndexController {
             model.addAttribute("more", true);
         }
         model.addAttribute("posts", posts.stream().limit(5).collect(Collectors.toList()));
-        return "user/my-page";
+        return "user/my-page/my-page";
     }
 
     @GetMapping("/my-page/update/password")
     public String updatePassword() {
-        return "user/update-password";
+        return "user/my-page/update-password";
     }
 
     @GetMapping("/my-page/update/user-info")
     public String updateUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         User user = userService.findById(userDetails.getId());
         model.addAttribute("user", user);
-        return "user/update-user-info";
+        return "user/my-page/update-user-info";
     }
 
     @GetMapping("/my-page/posts")
     public String listPosts(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         User user = userService.findById(userDetails.getId());
         model.addAttribute("posts", postsSearchService.findByUser(user));
-        return "user/posts-list";
+        return "user/my-page/posts-list";
     }
 
     @GetMapping("/my-page/delete/account")
     public String deleteAccount() {
-        return "user/delete-account";
+        return "user/my-page/delete-account";
     }
 }
