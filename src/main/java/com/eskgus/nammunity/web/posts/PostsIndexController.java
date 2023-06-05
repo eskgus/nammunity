@@ -39,6 +39,10 @@ public class PostsIndexController {
         PostsReadDto responseDto = postsSearchService.findById(id);
         attr.put("post", responseDto);
 
+        if (!responseDto.getCreatedDate().equals(responseDto.getModifiedDate())) {
+            attr.put("modify", true);
+        }
+
         Long authorId = responseDto.getUserId();
         if (user != null && user.getId().equals(authorId)) {
             attr.put("author", true);
