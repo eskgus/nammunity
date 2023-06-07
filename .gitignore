@@ -2,3 +2,4 @@
 .idea
 /build
 application-mail.yml
+application-oauth.yml

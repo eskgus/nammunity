@@ -1,16 +1,15 @@
 package com.eskgus.nammunity.web.user;
 
-import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,8 +61,8 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page")
-    public String myPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        User user = userService.findById(userDetails.getId());
+    public String myPage(Principal principal, Model model) {
+        User user = userService.findByUsername(principal.getName());
         List<PostsListDto> posts = postsSearchService.findByUser(user);
 
         if (posts.size() > 5) {
@@ -79,15 +78,15 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page/update/user-info")
-    public String updateUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        User user = userService.findById(userDetails.getId());
+    public String updateUserInfo(Principal principal, Model model) {
+        User user = userService.findByUsername(principal.getName());
         model.addAttribute("user", user);
         return "user/my-page/update-user-info";
     }
 
     @GetMapping("/my-page/posts")
-    public String listPosts(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        User user = userService.findById(userDetails.getId());
+    public String listPosts(Principal principal, Model model) {
+        User user = userService.findByUsername(principal.getName());
         model.addAttribute("posts", postsSearchService.findByUser(user));
         return "user/my-page/posts-list";
     }

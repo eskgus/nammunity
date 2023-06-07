@@ -23,6 +23,12 @@ public class UserService {
                 IllegalArgumentException("존재하지 않는 회원입니다."));
     }
 
+    @Transactional(readOnly = true)
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("존재하지 않는 ID입니다."));
+    }
+
     @Transactional
     public void resetAttempt(Long id) {
         userRepository.resetAttempt(id);

@@ -1,8 +1,7 @@
 package com.eskgus.nammunity.config.interceptor;
 
-import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
-import com.eskgus.nammunity.service.user.CustomUserDetailsService;
+import com.eskgus.nammunity.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +18,7 @@ public class PostsAuthInterceptor implements HandlerInterceptor {
     PostsSearchService postsSearchService;
 
     @Autowired
-    CustomUserDetailsService userDetailsService;
+    UserService userService;
 
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -29,11 +28,10 @@ public class PostsAuthInterceptor implements HandlerInterceptor {
 
         if (httpMethod.equals("GET") || httpMethod.equals("PUT") || httpMethod.equals("DELETE")) {
             try {
-                CustomUserDetails userDetails = (CustomUserDetails)
-                        userDetailsService.loadUserByUsername(request.getUserPrincipal().getName());
-                Long userId = userDetails.getId();
+                Long userId = userService.findByUsername(request.getUserPrincipal().getName()).getId();
 
-                Map<?, ?> pathVariables = (Map<?, ?>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+                Map<?, ?> pathVariables = (Map<?, ?>) request
+                        .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
                 Long id = Long.parseLong((String) pathVariables.get("id"));
                 Long authorId = postsSearchService.findById(id).getUserId();
 

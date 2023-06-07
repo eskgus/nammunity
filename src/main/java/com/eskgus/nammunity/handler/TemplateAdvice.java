@@ -1,7 +1,6 @@
 package com.eskgus.nammunity.handler;
 
-import com.eskgus.nammunity.domain.user.CustomUserDetails;
-import com.eskgus.nammunity.service.user.CustomUserDetailsService;
+import com.eskgus.nammunity.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
@@ -15,15 +14,15 @@ import java.util.Map;
 @ControllerAdvice
 @RequiredArgsConstructor
 public class TemplateAdvice {
-    private final CustomUserDetailsService userDetailsService;
+    private final UserService userService;
 
     @ModelAttribute
     public void addDefaultAttributes(Principal principal, Model model, HttpServletRequest request) {
         Map<String, String> attr = new HashMap<>();
 
         if (principal != null) {
-            String nickname = ((CustomUserDetails)
-                    userDetailsService.loadUserByUsername(principal.getName())).getNickname();
+            String nickname = userService.findByUsername(principal.getName()).getNickname();
+
             attr.put("auth", nickname);
         }
 

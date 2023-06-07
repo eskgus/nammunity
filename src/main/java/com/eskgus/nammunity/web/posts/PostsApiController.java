@@ -1,14 +1,15 @@
 package com.eskgus.nammunity.web.posts;
 
-import com.eskgus.nammunity.domain.user.CustomUserDetails;
+import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,11 +18,13 @@ import java.util.Map;
 @RequestMapping("/api/posts")
 public class PostsApiController {
     private final PostsService postsService;
+    private final UserService userService;
 
     @PostMapping
     public Map<String, String> save(@Valid @RequestBody PostsSaveDto requestDto,
-                                    @AuthenticationPrincipal CustomUserDetails user) {
+                                    Principal principal) {
         Map<String, String> response = new HashMap<>();
+        User user = userService.findByUsername(principal.getName());
         response.put("OK", postsService.save(requestDto, user.getId()).toString());
         return response;
     }

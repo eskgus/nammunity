@@ -1,16 +1,16 @@
 package com.eskgus.nammunity.web.posts;
 
-import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +19,7 @@ import java.util.Map;
 public class PostsIndexController {
     private final PostsService postsService;
     private final PostsSearchService postsSearchService;
+    private final UserService userService;
 
     @GetMapping("/")
     public String mainPage(Model model) {
@@ -32,7 +33,7 @@ public class PostsIndexController {
     }
 
     @GetMapping("/posts/read/{id}")
-    public String readPosts(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails user, Model model) {
+    public String readPosts(@PathVariable Long id, Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
 
         postsService.countViews(id);
@@ -44,8 +45,11 @@ public class PostsIndexController {
         }
 
         Long authorId = responseDto.getUserId();
-        if (user != null && user.getId().equals(authorId)) {
-            attr.put("author", true);
+        if (principal != null) {
+            Long userId = userService.findByUsername(principal.getName()).getId();
+            if (userId.equals(authorId)) {
+                attr.put("author", true);
+            }
         }
 
         model.addAllAttributes(attr);

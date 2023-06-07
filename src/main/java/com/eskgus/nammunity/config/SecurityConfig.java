@@ -53,7 +53,8 @@ public class SecurityConfig{
                         .successHandler(authenticationSuccessHandler())
                         .failureHandler(authenticationFailureHandler())
                         .permitAll())
-                .logout(logout -> logout
+                .oauth2Login().loginPage("/users/sign-in")
+                .and().logout(logout -> logout
                         .logoutUrl("/users/sign-out")
                         .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                         .permitAll());
