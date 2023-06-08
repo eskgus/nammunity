@@ -15,7 +15,7 @@ public class User extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(length = 20, nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -39,6 +39,9 @@ public class User extends BaseTimeEntity {
 
     @Column(columnDefinition = "int default 0", nullable = false)
     private int attempt;
+
+    @Column
+    private boolean social = false;
 
     @Builder
     public User(String username, String password, String nickname, String email,
@@ -73,5 +76,9 @@ public class User extends BaseTimeEntity {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void updateSocial() {
+        this.social = true;
     }
 }

@@ -30,7 +30,12 @@ public class SignInService {
     public String findUsername(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new
                 IllegalArgumentException("가입되지 않은 이메일입니다."));
-        return user.getUsername();
+
+        String username = user.getUsername();
+        if (user.isSocial() && username.charAt(1) == '_') {
+            return username;
+        }
+        return username.substring(0, 3) + "****";
     }
 
     @Transactional

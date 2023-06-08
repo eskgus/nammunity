@@ -10,7 +10,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -79,8 +81,16 @@ public class UserIndexController {
 
     @GetMapping("/my-page/update/user-info")
     public String updateUserInfo(Principal principal, Model model) {
+        Map<String, Object> attr = new HashMap<>();
+
         User user = userService.findByUsername(principal.getName());
-        model.addAttribute("user", user);
+        attr.put("user", user);
+
+        if (user.isSocial()) {
+            attr.put("social", true);
+        }
+
+        model.addAllAttributes(attr);
         return "user/my-page/update-user-info";
     }
 

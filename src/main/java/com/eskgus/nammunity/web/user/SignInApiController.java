@@ -24,7 +24,7 @@ public class SignInApiController {
         Map<String, String> response = new HashMap<>();
         try {
             String username = signInService.findUsername(email);
-            response.put("OK", "가입하신 ID는 " + username.substring(0, 3) + "****입니다.");
+            response.put("OK", "가입하신 ID는 " + username + "입니다.");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }
