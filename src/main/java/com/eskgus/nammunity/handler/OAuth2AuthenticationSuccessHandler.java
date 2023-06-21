@@ -25,11 +25,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Cookie accessToken = (Cookie) user.getAttributes().get("accessToken");
         response.addCookie(accessToken);
 
-        if (user.getAttributes().containsKey("refreshToken")) {
-            Cookie refreshToken = (Cookie) user.getAttributes().get("refreshToken");
-            response.addCookie(refreshToken);
-        }
-
         Object url = request.getSession().getAttribute("prePage");
         if (url != null) {
             response.sendRedirect(url.toString());
