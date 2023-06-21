@@ -4,19 +4,46 @@ import com.eskgus.nammunity.handler.CustomAuthenticationFailureHandler;
 import com.eskgus.nammunity.handler.CustomAuthenticationSuccessHandler;
 import com.eskgus.nammunity.handler.CustomLogoutSuccessHandler;
 import com.eskgus.nammunity.domain.user.Role;
+import com.eskgus.nammunity.handler.OAuth2AuthenticationSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
+import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig{
+public class SecurityConfig {
+    @Bean
+    public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
+        DefaultAuthorizationCodeTokenResponseClient accessTokenResponseClient =
+                new DefaultAuthorizationCodeTokenResponseClient();
+
+        OAuth2AccessTokenResponseHttpMessageConverter tokenResponseHttpMessageConverter =
+                new OAuth2AccessTokenResponseHttpMessageConverter();
+        tokenResponseHttpMessageConverter.setAccessTokenResponseConverter(new CustomTokenResponseConverter());
+
+        RestTemplate restTemplate = new RestTemplate(Arrays.asList(
+                new FormHttpMessageConverter(), tokenResponseHttpMessageConverter));
+        restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
+
+        accessTokenResponseClient.setRestOperations(restTemplate);
+        return accessTokenResponseClient;
+    }
+
     @Bean
     public CustomAuthenticationFailureHandler authenticationFailureHandler() {
         return new CustomAuthenticationFailureHandler();
@@ -53,8 +80,12 @@ public class SecurityConfig{
                         .successHandler(authenticationSuccessHandler())
                         .failureHandler(authenticationFailureHandler())
                         .permitAll())
-                .oauth2Login().loginPage("/users/sign-in")
-                .and().logout(logout -> logout
+                .oauth2Login(login -> login
+                        .loginPage("/users/sign-in")
+                        .tokenEndpoint().accessTokenResponseClient(accessTokenResponseClient())
+                        .and()
+                        .successHandler(new OAuth2AuthenticationSuccessHandler()))
+                .logout(logout -> logout
                         .logoutUrl("/users/sign-out")
                         .logoutSuccessHandler(new CustomLogoutSuccessHandler())
                         .permitAll());
