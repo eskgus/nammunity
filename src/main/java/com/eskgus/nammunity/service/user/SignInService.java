@@ -32,7 +32,7 @@ public class SignInService {
                 IllegalArgumentException("가입되지 않은 이메일입니다."));
 
         String username = user.getUsername();
-        if (user.isSocial() && username.charAt(1) == '_') {
+        if (username.charAt(1) == '_') {
             return username;
         }
         return username.substring(0, 3) + "****";

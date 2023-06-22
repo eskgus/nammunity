@@ -12,10 +12,7 @@ import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -26,6 +23,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -44,6 +42,24 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final OAuth2TokensRepository oAuth2TokensRepository;
     private final OAuth2TokensService oAuth2TokensService;
 
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String googleClientId;
+
+    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
+    private String googleClientSecret;
+
+    @Value("${spring.security.oauth2.client.registration.naver.client-id}")
+    private String naverClientId;
+
+    @Value("${spring.security.oauth2.client.registration.naver.client-secret}")
+    private String naverClientSecret;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
+    private String kakaoClientId;
+
+    @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
+    private String kakaoClientSecret;
+
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         log.info("CustomOAuth2UserService.....");
@@ -54,9 +70,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         CustomOAuth2User customOAuth2User = CustomOAuth2User
                 .of(registrationId, oAuth2User.getAttributes());
+
+        String accessToken = userRequest.getAccessToken().getTokenValue();
+        int exp = (int) userRequest.getAdditionalParameters().get("expires_in");
+        customOAuth2User.getAttributes().put("accessToken", createCookie(accessToken, exp));
         customOAuth2User.getAttributes()
                 .put("refreshToken", userRequest.getAdditionalParameters().get("refresh_token"));
-        customOAuth2User.getAttributes().put("accessToken", createCookie(userRequest));
 
         User user = saveOrUpdate(customOAuth2User, registrationId);
         customOAuth2User.getAttributes().put("username", user.getUsername());
@@ -83,8 +102,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user.updateEnabled();
         }
 
-        if (!user.isSocial()) {
-            user.updateSocial();
+        if (user.getSocial().equals("none")) {
+            user.updateSocial(registrationId);
             userRepository.save(user);
         }
 
@@ -105,14 +124,97 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return user;
     }
 
-    public Cookie createCookie(OAuth2UserRequest userRequest) {
-        String token = userRequest.getAccessToken().getTokenValue();
-        int exp = (int) userRequest.getAdditionalParameters().get("expires_in");
-
+    public Cookie createCookie(String token, int exp) {
         Cookie cookie = new Cookie("access_token", token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(exp);
         return cookie;
+    }
+
+    @Transactional
+    public void unlinkSocial(String username, String social, String accessToken) {
+        log.info("unlinkSocial in service.....");
+
+        HttpHeaders headers = new HttpHeaders();
+
+        String url = switch (social) {
+            case "google" -> "https://oauth2.googleapis.com/revoke?"
+                    + "client_id=" + googleClientId
+                    + "&client_secret=" + googleClientSecret
+                    + "&token=" + accessToken;
+            case "naver" -> "https://nid.naver.com/oauth2.0/token?"
+                    + "client_id=" + naverClientId
+                    + "&client_secret=" + naverClientSecret
+                    + "&access_token=" + accessToken
+                    + "&grant_type=delete"
+                    + "&service_provider=NAVER";
+            case "kakao" -> "https://kapi.kakao.com/v1/user/unlink";
+            default -> throw new IllegalStateException("unexpected value");
+        };
+        if (social.equals("kakao")) {
+            headers.set("Authorization", "Bearer " + accessToken);
+        }
+
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+
+        User user = userRepository.findByUsername(username).get();
+        oAuth2TokensService.delete(user);
+        userRepository.resetSocial(username);
+    }
+
+    public void validateAccessToken(String social, String accessToken) {
+        log.info("validateAccessToken.....");
+
+        String url = null;
+        HttpHeaders headers = new HttpHeaders();
+
+        if (social.equals("google")) {
+            url = "https://oauth2.googleapis.com/tokeninfo?"
+                    + "access_token=" + accessToken;
+        } else {
+            if (social.equals("naver")) {
+                url = "https://openapi.naver.com/v1/nid/me";
+            } else {
+                url = "https://kapi.kakao.com/v1/user/access_token_info";
+            }
+            headers.set("Authorization", "Bearer " + accessToken);
+        }
+
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+    }
+
+    public Cookie refreshAccessToken(String social, String username) {
+        log.info("refreshAccessToken.....");
+
+        User user = userRepository.findByUsername(username).get();
+        String refreshToken = oAuth2TokensRepository.findByUser(user).get()
+                .getRefreshToken();
+
+        String url = switch (social) {
+            case "google" -> "https://oauth2.googleapis.com/token?"
+                    + "client_id=" + googleClientId
+                    + "&client_secret=" + googleClientSecret;
+            case "naver" -> "https://nid.naver.com/oauth2.0/token?"
+                    + "client_id=" + naverClientId
+                    + "&client_secret=" + naverClientSecret;
+            case "kakao" -> url = "https://kauth.kakao.com/oauth/token?"
+                    + "client_id=" + kakaoClientId
+                    + "&client_secret=" + kakaoClientSecret;
+            default -> throw new IllegalStateException("unexpected value");
+        };
+        url += "&grant_type=refresh_token"
+                + "&refresh_token=" + refreshToken;
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, null, Map.class);
+
+        String newAccessToken = (String) response.getBody().get("access_token");
+        int exp = (int) response.getBody().get("expires_in");
+        return createCookie(newAccessToken, exp);
     }
 }

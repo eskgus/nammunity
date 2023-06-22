@@ -85,10 +85,7 @@ public class UserIndexController {
 
         User user = userService.findByUsername(principal.getName());
         attr.put("user", user);
-
-        if (user.isSocial()) {
-            attr.put("social", true);
-        }
+        attr.put(user.getSocial(), true);
 
         model.addAllAttributes(attr);
         return "user/my-page/update-user-info";

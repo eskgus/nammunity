@@ -1,25 +1,32 @@
 package com.eskgus.nammunity.web.user;
 
+import com.eskgus.nammunity.service.user.CustomOAuth2UserService;
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.UserUpdateService;
 import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
+@Log4j2
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/users")
 public class UserApiController {
     private final RegistrationService registrationService;
     private final UserUpdateService userUpdateService;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @PostMapping
     public Map<String, String> signUp(@Valid @RequestBody RegistrationDto registrationDto) {
@@ -124,6 +131,36 @@ public class UserApiController {
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }
+        return response;
+    }
+
+    @PostMapping("/unlink/{social}")
+    public Map<String, String> unlinkSocial(@PathVariable String social,
+                                            @CookieValue(name = "access_token", required = false) String accessToken,
+                                            Principal principal, HttpServletResponse servletResponse) {
+        log.info("unlinkSocial in controller.....");
+        Map<String, String> response = new HashMap<>();
+        String username = principal.getName();
+
+        try {
+            customOAuth2UserService.validateAccessToken(social, accessToken);
+        } catch (HttpClientErrorException ex) {
+            if (ex.getStatusCode().is4xxClientError()) {
+                Cookie newAccessToken = customOAuth2UserService.refreshAccessToken(social, username);
+                servletResponse.addCookie(newAccessToken);
+                accessToken = newAccessToken.getValue();
+            }
+        }
+
+        try {
+            customOAuth2UserService.unlinkSocial(username, social, accessToken);
+            response.put("OK", "연동 해제 완료 !");
+        } catch (HttpClientErrorException ex) {
+            log.info(ex.getMessage());
+            log.info(ex.getResponseBodyAsString());
+            response.put("error", "error");
+        }
+
         return response;
     }
 }

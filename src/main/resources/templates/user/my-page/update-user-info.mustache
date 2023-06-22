@@ -16,14 +16,35 @@
     <div class="form-group">
         <label for="u-email">이메일</label>
         <input type="text" class="form-control" id="u-email" value="{{user.email}}"
-               {{#social}}readonly>
+               {{^none}}readonly>
                    <span>SNS 연동 회원은 이메일 직접 수정이 불가능합니다. 관리자한테 문의하세요.</span>
-               {{/social}}
-        {{^social}}
+               {{/none}}
+        {{#none}}
             >
             <button type="button" class="btn btn-success" id="btn-update-email">인증</button>
             <button type="button" class="btn btn-primary" id="btn-confirm-email" style="display: none">인증 완료</button>
-        {{/social}}
+        {{/none}}
+    </div>
+    <div>
+        <p>sns 연동</p>
+        {{^google}}
+            <a href="/oauth2/authorization/google" {{^none}}style="pointer-events: none;"{{/none}}>구글 연동하기</a>
+        {{/google}}
+        {{#google}}
+            <button type="button" id="btn-unlink-google">구글 연동 해제</button>
+        {{/google}}
+        {{^naver}}
+            <a href="/oauth2/authorization/naver" {{^none}}style="pointer-events: none;"{{/none}}>네이버 연동하기</a>
+        {{/naver}}
+        {{#naver}}
+            <button type="button" id="btn-unlink-naver">네이버 연동 해제</button>
+        {{/naver}}
+        {{^kakao}}
+            <a href="/oauth2/authorization/kakao" {{^none}}style="pointer-events: none;"{{/none}}>카카오 연동하기</a>
+        {{/kakao}}
+        {{#kakao}}
+            <button type="button" id="btn-unlink-kakao">카카오 연동 해제</button>
+        {{/kakao}}
     </div>
     <a href="/users/my-page" role="button" class="btn btn-secondary">취소</a>
 </div>

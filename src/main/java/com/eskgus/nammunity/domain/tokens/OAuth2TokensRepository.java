@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface OAuth2TokensRepository extends JpaRepository<OAuth2Tokens, Long> {
     Optional<OAuth2Tokens> findByUser(User user);
+
+    void deleteByUser(User user);
 }

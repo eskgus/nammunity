@@ -41,7 +41,7 @@ public class User extends BaseTimeEntity {
     private int attempt;
 
     @Column
-    private boolean social = false;
+    private String social = "none";
 
     @Builder
     public User(String username, String password, String nickname, String email,
@@ -78,7 +78,7 @@ public class User extends BaseTimeEntity {
         this.nickname = nickname;
     }
 
-    public void updateSocial() {
-        this.social = true;
+    public void updateSocial(String social) {
+        this.social = social;
     }
 }

@@ -89,6 +89,18 @@ var main = {
         $('#btn-delete-account').on('click', function() {
             _this.deleteAccount();
         });
+
+        $('#btn-unlink-google').on('click', function() {
+            _this.unlinkSocial('google');
+        });
+
+        $('#btn-unlink-naver').on('click', function() {
+            _this.unlinkSocial('naver');
+        });
+
+        $('#btn-unlink-kakao').on('click', function() {
+            _this.unlinkSocial('kakao');
+        });
     },
     save : function() {
         var data = {
@@ -483,6 +495,21 @@ var main = {
             alert(response[Object.keys(response)]);
             if (Object.keys(response) == 'OK') {
                 window.location.href = '/users/sign-out';
+            }
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
+        });
+    },
+    unlinkSocial : function(social) {
+        $.ajax({
+            type: 'POST',
+            url: '/api/users/unlink/' + social
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
+                alert(response[Object.keys(response)]);
+                window.location.reload();
+            } else {
+                alert(response[Object.keys(response)]);
             }
         }).fail(function(response) {
             alert(JSON.stringify(response));
