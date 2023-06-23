@@ -7,6 +7,7 @@ import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class UserUpdateService {
     private final RegistrationService registrationService;
     private final PostsService postsService;
     private final UserService userService;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Transactional
     public void updatePassword(PasswordUpdateDto requestDto, String username) {
@@ -79,11 +81,17 @@ public class UserUpdateService {
     }
 
     @Transactional
-    public void deleteUser(String username) {
+    public Cookie deleteUser(String username, String accessToken) {
+        Cookie cookie = null;
+
         User user = userRepository.findByUsername(username).orElseThrow(() -> new
                 IllegalArgumentException("존재하지 않는 ID입니다."));
         postsService.deleteAllByUser(user);
         tokensService.deleteAllByUser(user);
+        if (!user.getSocial().equals("none")) {
+            cookie = customOAuth2UserService.unlinkSocial(username, user.getSocial(), accessToken);
+        }
         userService.delete(user);
+        return cookie;
     }
 }

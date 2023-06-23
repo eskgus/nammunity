@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -62,7 +63,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        log.info("CustomOAuth2UserService.....");
+        log.info("loadUser.....");
 
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
@@ -133,8 +134,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     @Transactional
-    public void unlinkSocial(String username, String social, String accessToken) {
+    public Cookie unlinkSocial(String username, String social, String accessToken) {
         log.info("unlinkSocial in service.....");
+
+        Cookie cookie = new Cookie("access_token", null);
+        try {
+            validateAccessToken(social, accessToken);
+        } catch (HttpClientErrorException ex) {
+            if (ex.getStatusCode().is4xxClientError()) {
+                cookie = refreshAccessToken(social, username);
+                accessToken = cookie.getValue();
+            }
+        }
+        cookie.setMaxAge(0);
 
         HttpHeaders headers = new HttpHeaders();
 
@@ -163,6 +175,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User user = userRepository.findByUsername(username).get();
         oAuth2TokensService.delete(user);
         userRepository.resetSocial(username);
+
+        return cookie;
     }
 
     public void validateAccessToken(String social, String accessToken) {
@@ -214,7 +228,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, null, Map.class);
 
         String newAccessToken = (String) response.getBody().get("access_token");
-        int exp = (int) response.getBody().get("expires_in");
+        int exp = Integer.parseInt(response.getBody().get("expires_in").toString());
         return createCookie(newAccessToken, exp);
     }
 }

@@ -122,11 +122,16 @@ public class UserApiController {
     }
 
     @DeleteMapping("/delete")
-    public Map<String, String> deleteUser(Principal principal) {
+    public Map<String, String> deleteUser(Principal principal,
+                                          @CookieValue(name = "access_token", required = false) String accessToken,
+                                          HttpServletResponse servletResponse) {
         Map<String, String> response = new HashMap<>();
         String username = principal.getName();
         try {
-            userUpdateService.deleteUser(username);
+            Cookie cookie = userUpdateService.deleteUser(username, accessToken);
+            if (cookie != null) {
+                servletResponse.addCookie(cookie);
+            }
             response.put("OK", "탈퇴됐습니다.");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
@@ -138,22 +143,12 @@ public class UserApiController {
     public Map<String, String> unlinkSocial(@PathVariable String social,
                                             @CookieValue(name = "access_token", required = false) String accessToken,
                                             Principal principal, HttpServletResponse servletResponse) {
-        log.info("unlinkSocial in controller.....");
         Map<String, String> response = new HashMap<>();
         String username = principal.getName();
 
         try {
-            customOAuth2UserService.validateAccessToken(social, accessToken);
-        } catch (HttpClientErrorException ex) {
-            if (ex.getStatusCode().is4xxClientError()) {
-                Cookie newAccessToken = customOAuth2UserService.refreshAccessToken(social, username);
-                servletResponse.addCookie(newAccessToken);
-                accessToken = newAccessToken.getValue();
-            }
-        }
-
-        try {
-            customOAuth2UserService.unlinkSocial(username, social, accessToken);
+            Cookie cookie = customOAuth2UserService.unlinkSocial(username, social, accessToken);
+            servletResponse.addCookie(cookie);
             response.put("OK", "연동 해제 완료 !");
         } catch (HttpClientErrorException ex) {
             log.info(ex.getMessage());
