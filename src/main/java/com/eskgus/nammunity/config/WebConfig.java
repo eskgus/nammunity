@@ -21,6 +21,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/api/posts/**", "/posts/update/**");
 
         registry.addInterceptor(userAuthInterceptor)
-                .addPathPatterns("/users/sign-up", "/users/sign-in");
+                .addPathPatterns("/users/sign-up", "/users/sign-in", "/users/my-page/update/user-info");
     }
 }

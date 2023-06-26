@@ -17,8 +17,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.attempt = 0 WHERE u.id = :id")
     void resetAttempt(Long id);
-
-    @Modifying
-    @Query("UPDATE User u SET u.social = 'none' WHERE u.username = :username")
-    void resetSocial(String username);
 }

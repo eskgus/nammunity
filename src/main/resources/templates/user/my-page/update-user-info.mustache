@@ -47,6 +47,11 @@
         {{/kakao}}
     </div>
     <a href="/users/my-page" role="button" class="btn btn-secondary">취소</a>
+    {{#message}}
+        <script>
+            alert('{{message}}');
+        </script>
+    {{/message}}
 </div>
 
 {{>layout/footer}}

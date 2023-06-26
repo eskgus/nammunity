@@ -1,10 +1,7 @@
 package com.eskgus.nammunity.config;
 
-import com.eskgus.nammunity.handler.CustomAuthenticationFailureHandler;
-import com.eskgus.nammunity.handler.CustomAuthenticationSuccessHandler;
-import com.eskgus.nammunity.handler.CustomLogoutSuccessHandler;
+import com.eskgus.nammunity.handler.*;
 import com.eskgus.nammunity.domain.user.Role;
-import com.eskgus.nammunity.handler.OAuth2AuthenticationSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -84,7 +81,8 @@ public class SecurityConfig {
                         .loginPage("/users/sign-in")
                         .tokenEndpoint().accessTokenResponseClient(accessTokenResponseClient())
                         .and()
-                        .successHandler(new OAuth2AuthenticationSuccessHandler()))
+                        .successHandler(new OAuth2AuthenticationSuccessHandler())
+                        .failureHandler(new OAuth2AuthenticationFailureHandler()))
                 .logout(logout -> logout
                         .logoutUrl("/users/sign-out")
                         .logoutSuccessHandler(new CustomLogoutSuccessHandler())
