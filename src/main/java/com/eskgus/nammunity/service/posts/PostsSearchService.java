@@ -4,7 +4,6 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
-import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +22,9 @@ public class PostsSearchService {
     }
 
     @Transactional(readOnly = true)
-    public PostsReadDto findById(Long id) {
-        Posts entity = postsRepository.findById(id).orElseThrow(() -> new
+    public Posts findById(Long id) {
+        return postsRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException("해당 게시글이 없습니다. id = " + id));
-        return new PostsReadDto(entity);
     }
 
     @Transactional(readOnly = true)

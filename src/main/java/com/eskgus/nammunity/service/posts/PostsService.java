@@ -26,8 +26,8 @@ public class PostsService {
     }
 
     @Transactional
-    public int countViews(Long id) {
-        return postsRepository.countViews(id);
+    public void countViews(Posts posts) {
+        posts.countViews();
     }
 
     @Transactional

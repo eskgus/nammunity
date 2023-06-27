@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.posts;
 
+import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
@@ -36,21 +37,22 @@ public class PostsIndexController {
     public String readPosts(@PathVariable Long id, Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
 
-        postsService.countViews(id);
-        PostsReadDto responseDto = postsSearchService.findById(id);
-        attr.put("post", responseDto);
+        Posts posts = postsSearchService.findById(id);
 
-        if (!responseDto.getCreatedDate().equals(responseDto.getModifiedDate())) {
+        if (!posts.getCreatedDate().equals(posts.getModifiedDate())) {
             attr.put("modify", true);
         }
 
-        Long authorId = responseDto.getUserId();
-        if (principal != null) {
-            Long userId = userService.findByUsername(principal.getName()).getId();
-            if (userId.equals(authorId)) {
-                attr.put("author", true);
-            }
+        long authorId = posts.getUser().getId();
+        if (principal != null
+                && userService.findByUsername(principal.getName()).getId() == authorId) {
+            attr.put("author", true);
+        } else {
+            postsService.countViews(posts);
         }
+
+        PostsReadDto responseDto = new PostsReadDto(posts);
+        attr.put("post", responseDto);
 
         model.addAllAttributes(attr);
         return "posts/posts-read";
@@ -58,7 +60,8 @@ public class PostsIndexController {
 
     @GetMapping("/posts/update/{id}")
     public String updatePosts(@PathVariable Long id, Model model) {
-        PostsReadDto responseDto = postsSearchService.findById(id);
+        Posts posts = postsSearchService.findById(id);
+        PostsReadDto responseDto = new PostsReadDto(posts);
         model.addAttribute("post", responseDto);
         return "posts/posts-update";
     }

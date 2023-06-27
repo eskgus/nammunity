@@ -33,7 +33,7 @@ public class PostsAuthInterceptor implements HandlerInterceptor {
                 Map<?, ?> pathVariables = (Map<?, ?>) request
                         .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
                 Long id = Long.parseLong((String) pathVariables.get("id"));
-                Long authorId = postsSearchService.findById(id).getUserId();
+                Long authorId = postsSearchService.findById(id).getUser().getId();
 
                 if (!userId.equals(authorId)) {
                     response.sendError(HttpStatus.FORBIDDEN.value());
