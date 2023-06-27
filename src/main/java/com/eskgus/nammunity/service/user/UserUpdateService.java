@@ -62,7 +62,7 @@ public class UserUpdateService {
         }
 
         tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
-        registrationService.sendToken(user.getId(), email);
+        registrationService.sendToken(user.getId(), email, "update");
         user.updateEmail(email);
     }
 

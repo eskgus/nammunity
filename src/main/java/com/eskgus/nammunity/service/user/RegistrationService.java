@@ -44,12 +44,12 @@ public class RegistrationService {
                 .role(Role.USER).build();
 
         Long id = userService.signUp(encRegistrationDto);
-        sendToken(id, encRegistrationDto.getEmail());
+        sendToken(id, encRegistrationDto.getEmail(), "registration");
         return id;
     }
 
     @Transactional
-    public void sendToken(Long id, String email) {
+    public void sendToken(Long id, String email, String purpose) {
         User user = userService.findById(id);
 
         String token = UUID.randomUUID().toString();
@@ -58,7 +58,7 @@ public class RegistrationService {
         tokensService.save(newToken);
 
         String text;
-        if (!email.equals(user.getEmail())) {
+        if (purpose.equals("update")) {
             text = emailService.setEmailText("", token);
         } else {
             text = emailService.setEmailText(user.getUsername(), token);
@@ -103,6 +103,6 @@ public class RegistrationService {
         }
 
         tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
-        sendToken(id, user.getEmail());
+        sendToken(id, user.getEmail(), "registration");
     }
 }
