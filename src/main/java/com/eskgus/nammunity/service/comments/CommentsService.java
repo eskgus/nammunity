@@ -42,4 +42,9 @@ public class CommentsService {
         return commentsRepository.findByPosts(posts).stream().map(CommentsReadDto::new)
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void deleteAllByPosts(Posts posts) {
+        commentsRepository.deleteAllByPosts(posts);
+    }
 }

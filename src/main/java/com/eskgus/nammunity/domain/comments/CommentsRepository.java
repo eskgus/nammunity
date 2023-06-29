@@ -9,4 +9,6 @@ import java.util.List;
 public interface CommentsRepository extends JpaRepository<Comments, Long> {
     @Query("SELECT c FROM Comments c WHERE c.posts = :posts")
     List<Comments> findByPosts(Posts posts);
+
+    void deleteAllByPosts(Posts posts);
 }
