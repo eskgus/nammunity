@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.user;
+package com.eskgus.nammunity.web.controller.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.posts.PostsSearchService;

@@ -66,11 +66,13 @@ var main = {
             _this.resendEmail();
         });
 
-        $('#btn-find-username').on('click', function() {
+        $('#btn-find-username').on('click', function(event) {
+            event.preventDefault();
             _this.findUsername();
         });
 
-        $('#btn-find-password').on('click', function() {
+        $('#btn-find-password').on('click', function(event) {
+            event.preventDefault();
             _this.findPassword();
         });
 
@@ -100,6 +102,10 @@ var main = {
 
         $('#btn-unlink-kakao').on('click', function() {
             _this.unlinkSocial('kakao');
+        });
+
+        $('#btn-cmt-save').on('click', function() {
+            _this.saveComments();
         });
     },
     save : function() {
@@ -165,23 +171,25 @@ var main = {
         });
     },
     delete : function() {
-        var id = $('#id').val();
+        if (confirm('정말로 삭제하시겠어요?')) {
+            var id = $('#id').val();
 
-        $.ajax({
-            type: 'DELETE',
-            url: '/api/posts/' + id,
-            contentType: 'application/json; charset=utf-8'
-        }).done(function() {
-            alert('글이 삭제되었습니다.');
-            window.location.href = '/';
-        }).fail(function(response) {
-            if (response.status == 403) {
-                alert('권한이 없습니다.');
-                window.history.back();
-            } else {
-                alert(JSON.stringify(response));
-            }
-        });
+            $.ajax({
+                type: 'DELETE',
+                url: '/api/posts/' + id,
+                contentType: 'application/json; charset=utf-8'
+            }).done(function() {
+                alert('글이 삭제되었습니다.');
+                window.location.href = '/';
+            }).fail(function(response) {
+                if (response.status == 403) {
+                    alert('권한이 없습니다.');
+                    window.history.back();
+                } else {
+                    alert(JSON.stringify(response));
+                }
+            });
+        }
     },
     signUp : function() {
         var data = {
@@ -229,7 +237,7 @@ var main = {
                 check.style = 'display: none';
             } else {
                 check.textContent = response;
-                check.style = 'display: block; color: red';
+                check.style = 'display: inline-block';
                 rb('username', username);
             }
         }).fail(function(response) {
@@ -249,7 +257,7 @@ var main = {
                 check.style = 'display: none';
             } else {
                 check.textContent = response;
-                check.style = 'display: block; color: red';
+                check.style = 'display: inline-block';
                 rb('nickname', nickname);
             }
         }).fail(function(response) {
@@ -263,7 +271,7 @@ var main = {
 
         if (password == '') {
             check.textContent = '비밀번호를 입력하세요.';
-            check.style = 'display: block; color: red';
+            check.style = 'display: inline-block';
             rb('password', password);
         } else {
             check.style = 'display: none';
@@ -277,22 +285,22 @@ var main = {
 
         if (event == 'input') {
             if (password == confirmPassword) {
-                box.style = 'border: 1px solid #AAC2A9; background-color: #C1DAC0';
+                box.style = 'border: 1px solid #205943; background-color: #C1DAC0';
                 check.style = 'display: none';
             } else {
-                box.style = 'border: 1px solid red; background-color: pink';
+                box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
                 check.textContent = '비밀번호가 일치하지 않습니다.';
-                check.style = 'display: block; color: red';
+                check.style = 'display: inline-block';
             }
         } else if (event == 'focusout') {
             if (confirmPassword == '') {
-                box.style = 'border: 1px solid red; background-color: pink';
+                box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
                 check.textContent = '비밀번호를 확인하세요.';
-                check.style = 'display: block; color: red';
+                check.style = 'display: inline-block';
             } else if (password != confirmPassword) {
-                box.style = 'border: 1px solid red; background-color: pink';
+                box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
                 check.textContent = '비밀번호가 일치하지 않습니다.';
-                check.style = 'display: block; color: red';
+                check.style = 'display: inline-block';
             }
         }
     },
@@ -322,7 +330,7 @@ var main = {
                 check.style = 'display: none';
             } else {
                 check.textContent = response;
-                check.style = 'display: block; color: red';
+                check.style = 'display: inline-block';
                 rb('email', email);
             }
         }).fail(function(response) {
@@ -381,7 +389,7 @@ var main = {
             result.textContent = response[Object.keys(response)];
             result.style = 'display: block';
             if (Object.keys(response) != 'OK') {
-                result.style = 'color: red';
+                result.style = 'display:block; color: #ea3636';
             }
         }).fail(function(response) {
             alert(JSON.stringify(response));
@@ -401,7 +409,7 @@ var main = {
             result.textContent = response[Object.keys(response)];
             result.style = 'display:block';
             if (Object.keys(response) != 'OK') {
-                result.style = 'color: red';
+                result.style = 'display:block; color: #ea3636';
                 button.textContent = '찾기';
             } else {
                 button.textContent = '재발송';
@@ -515,27 +523,50 @@ var main = {
             alert(JSON.stringify(response));
         });
     },
+    saveComments : function() {
+        var data = {
+            content: $('#cmt-content').val(),
+            postsId: $('#id').val()
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/api/comments',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
+                alert(response[Object.keys(response)]);
+                window.location.reload();
+            } else {
+                alert(response[Object.keys(response)]);
+            }
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
+        });
+    },
     redBox : function(field, pre) {
         var box = document.getElementById(field);
 
-        box.style = 'border: 1px solid red; background-color: pink';
+        box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
         box.addEventListener('input', function() {
             if (pre != box.value) {
-                box.style = 'border: 1px solid #ced4da';
+                box.style = 'border: 1px solid #205943';
             } else {
-                box.style = 'border: 1px solid red; background-color: pink';
+                box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
             }
         });
     },
     redBoxNBC : function(field, pre) {
         var box = document.getElementById(field);
 
-        box.style = 'border: 1px solid red';
+        box.style = 'border: 2px solid #ea3636';
         box.addEventListener('input', function() {
             if (pre != box.value) {
                 box.style = 'border: 1px solid #ced4da';
             } else {
-                box.style = 'border: 1px solid red';
+                box.style = 'border: 1px solid #ced4da';
             }
         });
     },

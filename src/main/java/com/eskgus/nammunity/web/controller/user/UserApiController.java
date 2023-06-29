@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.user;
+package com.eskgus.nammunity.web.controller.user;
 
 import com.eskgus.nammunity.service.user.CustomOAuth2UserService;
 import com.eskgus.nammunity.service.user.RegistrationService;

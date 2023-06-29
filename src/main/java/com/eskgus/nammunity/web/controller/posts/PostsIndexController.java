@@ -1,6 +1,7 @@
-package com.eskgus.nammunity.web.posts;
+package com.eskgus.nammunity.web.controller.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
@@ -21,6 +22,7 @@ public class PostsIndexController {
     private final PostsService postsService;
     private final PostsSearchService postsSearchService;
     private final UserService userService;
+    private final CommentsService commentsService;
 
     @GetMapping("/")
     public String mainPage(Model model) {
@@ -38,6 +40,7 @@ public class PostsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         Posts posts = postsSearchService.findById(id);
+        attr.put("comments", commentsService.findByPostsId(posts));
 
         if (!posts.getCreatedDate().equals(posts.getModifiedDate())) {
             attr.put("modify", true);

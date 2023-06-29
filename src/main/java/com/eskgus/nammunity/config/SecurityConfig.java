@@ -68,7 +68,8 @@ public class SecurityConfig {
                                 "/users/sign-up/**", "/users/sign-in", "/users/confirm-email", "/users/find/**",
                                 "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**",
-                                "/api/users/update/**", "/api/users/delete", "/users/my-page/**")
+                                "/api/users/update/**", "/api/users/delete", "/users/my-page/**",
+                                "/api/comments/**")
                         .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())
