@@ -107,6 +107,14 @@ var main = {
         $('#btn-cmt-save').on('click', function() {
             _this.saveComments();
         });
+
+        var cmtUpdateBtns = document.getElementsByName('btn-cmt-update');
+        for (let i = 0; i < cmtUpdateBtns.length; i++) {
+            cmtUpdateBtns[i].addEventListener('click', function() {
+                const input = $(this).closest('div.collapse').find('input');
+                _this.updateComments(input);
+            });
+        }
     },
     save : function() {
         var data = {
@@ -537,7 +545,28 @@ var main = {
             data: JSON.stringify(data)
         }).done(function(response) {
             if (Object.keys(response) == 'OK') {
+                window.location.reload();
+            } else {
                 alert(response[Object.keys(response)]);
+            }
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
+        });
+    },
+    updateComments : function(input) {
+        var inputId = input.attr('id');
+        var id = inputId.slice(inputId.lastIndexOf('-') + 1);
+        var data = {
+            content: input.val()
+        };
+
+        $.ajax({
+            type: 'PUT',
+            url: '/api/comments/' + id,
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
                 window.location.reload();
             } else {
                 alert(response[Object.keys(response)]);

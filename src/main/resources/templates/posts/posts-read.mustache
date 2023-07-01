@@ -37,14 +37,31 @@
             {{/author}}
         </div>
         <p>댓글</p>
-        <input type="text" id="cmt-content" placeholder="댓글을 입력하세요.">
-        <button type="button" class="btn btn-primary" id="btn-cmt-save">등록</button>
+        {{#auth}}
+            <p>{{auth}}</p>
+            <input type="text" class="form-control" id="cmt-content" placeholder="댓글을 입력하세요.">
+            <button type="button" class="btn btn-primary" id="btn-cmt-save">등록</button>
+        {{/auth}}
+        {{^auth}}
+            <input type="text" class="form-control" id="cmt-content" placeholder="댓글을 입력하려면 로그인하세요." readonly>
+        {{/auth}}
         <div>
             {{#comments}}
-                <span>{{author}}</span>
-                <span>작성 {{createdDate}}</span>
-                <span>  수정 {{modifiedDate}}</span>
-                <p>{{content}}</p>
+                <div id="cmt-{{id}}" class="collapse show">
+                    <span>{{author}}</span>
+                    <button type="button" class="btn btn-success" data-toggle="collapse" data-target="#cmt-{{id}}">수정</button>
+                    <div>
+                        <span>작성 {{createdDate}}</span>
+                        <span>  수정 {{modifiedDate}}</span>
+                    </div>
+                    <p>{{content}}</p>
+                </div>
+                <div id="cmt-{{id}}" class="collapse">
+                    <span>{{author}}</span>
+                    <input type="text" class="form-control" id="cmt-content-{{id}}" value="{{content}}">
+                    <button type="button" class="btn btn-primary" name="btn-cmt-update">수정</button>
+                    <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#cmt-{{id}}">취소</button>
+                </div>
             {{/comments}}
         </div>
     </div>

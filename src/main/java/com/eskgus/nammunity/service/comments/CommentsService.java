@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.comments;
 
+import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
@@ -25,8 +26,6 @@ public class CommentsService {
 
     @Transactional
     public Long save(CommentsSaveDto requestDto, String username) {
-        log.info("comments save in service.....");
-
         User user = userService.findByUsername(username);
         Posts posts = postsSearchService.findById(requestDto.getPostsId());
 
@@ -46,5 +45,13 @@ public class CommentsService {
     @Transactional
     public void deleteAllByPosts(Posts posts) {
         commentsRepository.deleteAllByPosts(posts);
+    }
+
+    @Transactional
+    public Long update(Long id, String content) {
+        Comments comments = commentsRepository.findById(id).orElseThrow(() -> new
+                IllegalArgumentException("해당 댓글이 없습니다."));
+        comments.update(content);
+        return id;
     }
 }

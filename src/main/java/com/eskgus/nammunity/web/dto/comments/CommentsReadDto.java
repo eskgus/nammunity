@@ -7,12 +7,14 @@ import java.time.format.DateTimeFormatter;
 
 @Getter
 public class CommentsReadDto {
+    private Long id;
     private String content;
     private String createdDate;
     private String modifiedDate;
     private String author;
 
     public CommentsReadDto(Comments comments) {
+        this.id = comments.getId();
         this.content = comments.getContent();
         this.createdDate = comments.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
         this.modifiedDate = comments.getModifiedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
