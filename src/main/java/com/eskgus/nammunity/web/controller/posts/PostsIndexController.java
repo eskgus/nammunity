@@ -40,7 +40,7 @@ public class PostsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         Posts posts = postsSearchService.findById(id);
-        attr.put("comments", commentsService.findByPostsId(posts));
+        attr.put("comments", commentsService.findByPosts(posts));
 
         if (!posts.getCreatedDate().equals(posts.getModifiedDate())) {
             attr.put("modify", true);

@@ -37,7 +37,7 @@ public class CommentsService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentsReadDto> findByPostsId(Posts posts) {
+    public List<CommentsReadDto> findByPosts(Posts posts) {
         return commentsRepository.findByPosts(posts).stream().map(CommentsReadDto::new)
                 .collect(Collectors.toList());
     }
