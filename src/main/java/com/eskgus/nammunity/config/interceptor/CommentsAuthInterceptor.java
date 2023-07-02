@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.config.interceptor;
 
-import com.eskgus.nammunity.service.comments.CommentsService;
+import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,7 +15,7 @@ import java.util.Map;
 @Component
 public class CommentsAuthInterceptor implements HandlerInterceptor {
     @Autowired
-    CommentsService commentsService;
+    CommentsSearchService commentsSearchService;
 
     @Autowired
     UserService userService;
@@ -33,7 +33,7 @@ public class CommentsAuthInterceptor implements HandlerInterceptor {
                 Map<?, ?> pathVariables = (Map<?, ?>) request
                         .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
                 Long id = Long.parseLong((String) pathVariables.get("id"));
-                Long authorId = commentsService.findById(id).getUser().getId();
+                Long authorId = commentsSearchService.findById(id).getUser().getId();
 
                 if (!userId.equals(authorId)) {
                     response.sendError(HttpStatus.FORBIDDEN.value());
