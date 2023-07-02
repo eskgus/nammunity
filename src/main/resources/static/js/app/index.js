@@ -115,6 +115,14 @@ var main = {
                 _this.updateComments(input);
             });
         }
+
+        var cmtDeleteBtns = document.getElementsByName('btn-cmt-delete');
+        for (let i = 0; i < cmtDeleteBtns.length; i++) {
+            cmtDeleteBtns[i].addEventListener('click', function() {
+                const divId = $(this).closest('div.collapse').attr('id');
+                _this.deleteComments(divId);
+            });
+        }
     },
     save : function() {
         var data = {
@@ -574,6 +582,22 @@ var main = {
         }).fail(function(response) {
             alert(JSON.stringify(response));
         });
+    },
+    deleteComments : function(divId) {
+        if (confirm('정말로 삭제하시겠어요?')) {
+            var id = divId.slice(divId.indexOf('-') + 1);
+
+            $.ajax({
+                type: 'DELETE',
+                url: '/api/comments/' + id,
+                contentType: 'application/json; charset=utf-8'
+            }).done(function(response) {
+                alert(response[Object.keys(response)]);
+                window.location.reload();
+            }).fail(function(response) {
+                alert(JSON.stringify(response));
+            });
+        }
     },
     redBox : function(field, pre) {
         var box = document.getElementById(field);

@@ -54,4 +54,16 @@ public class CommentsService {
         comments.update(content);
         return id;
     }
+
+    @Transactional
+    public void delete(Long id) {
+        Comments comments = commentsRepository.findById(id).orElseThrow(() -> new
+                IllegalArgumentException("해당 댓글이 없습니다."));
+        commentsRepository.delete(comments);
+    }
+
+    @Transactional
+    public void deleteAllByUser(User user) {
+        commentsRepository.deleteAllByUser(user);
+    }
 }

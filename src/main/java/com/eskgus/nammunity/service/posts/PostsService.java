@@ -50,6 +50,8 @@ public class PostsService {
 
     @Transactional
     public void deleteAllByUser(User user) {
+        postsRepository.findByUser(user).forEach(post ->
+                commentsService.deleteAllByPosts(post));
         postsRepository.deleteAllByUser(user);
     }
 }

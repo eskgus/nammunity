@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.domain.comments;
 
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -11,4 +12,5 @@ public interface CommentsRepository extends JpaRepository<Comments, Long> {
     List<Comments> findByPosts(Posts posts);
 
     void deleteAllByPosts(Posts posts);
+    void deleteAllByUser(User user);
 }

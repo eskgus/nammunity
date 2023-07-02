@@ -35,7 +35,7 @@ public class CommentsApiController {
         return response;
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public Map<String, String> update(@PathVariable Long id,
                          @RequestBody CommentsUpdateDto requestDto) {
         Map<String, String> response = new HashMap<>();
@@ -43,6 +43,20 @@ public class CommentsApiController {
         try {
             commentsService.update(id, requestDto.getContent());
             response.put("OK", "댓글 수정 완료");
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
+        }
+
+        return response;
+    }
+
+    @DeleteMapping("/{id}")
+    public Map<String, String> delete(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            commentsService.delete(id);
+            response.put("OK", "삭제 완료");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }
