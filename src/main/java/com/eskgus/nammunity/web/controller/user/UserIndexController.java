@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.web.controller.user;
 
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.service.comments.CommentsService;
+import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class UserIndexController {
     private final UserService userService;
     private final PostsSearchService postsSearchService;
-    private final CommentsService commentsService;
+    private final CommentsSearchService commentsSearchService;
 
     @GetMapping("/sign-up")
     public String signUpUser() {
@@ -76,7 +76,7 @@ public class UserIndexController {
         }
         attr.put("posts", posts.stream().limit(5).collect(Collectors.toList()));
 
-        List<CommentsListDto> comments = commentsService.findByUser(user);
+        List<CommentsListDto> comments = commentsSearchService.findByUser(user);
         if (comments.size() > 5) {
             attr.put("commentsMore", true);
         }
@@ -118,7 +118,7 @@ public class UserIndexController {
     @GetMapping("/my-page/comments")
     public String listComments(Principal principal, Model model) {
         User user = userService.findByUsername(principal.getName());
-        model.addAttribute("comments", commentsService.findByUser(user));
+        model.addAttribute("comments", commentsSearchService.findByUser(user));
         return "user/my-page/comments-list";
     }
 }
