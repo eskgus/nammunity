@@ -6,6 +6,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import lombok.RequiredArgsConstructor;
@@ -70,5 +71,10 @@ public class CommentsService {
     public Comments findById(Long id) {
         return commentsRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException("해당 댓글이 없습니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommentsListDto> findByUser(User user) {
+        return commentsRepository.findByUser(user).stream().map(CommentsListDto::new).collect(Collectors.toList());
     }
 }

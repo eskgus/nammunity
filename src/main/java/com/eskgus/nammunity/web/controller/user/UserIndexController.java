@@ -1,8 +1,10 @@
 package com.eskgus.nammunity.web.controller.user;
 
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class UserIndexController {
     private final UserService userService;
     private final PostsSearchService postsSearchService;
+    private final CommentsService commentsService;
 
     @GetMapping("/sign-up")
     public String signUpUser() {
@@ -64,13 +67,22 @@ public class UserIndexController {
 
     @GetMapping("/my-page")
     public String myPage(Principal principal, Model model) {
+        Map<String, Object> attr = new HashMap<>();
         User user = userService.findByUsername(principal.getName());
-        List<PostsListDto> posts = postsSearchService.findByUser(user);
 
+        List<PostsListDto> posts = postsSearchService.findByUser(user);
         if (posts.size() > 5) {
-            model.addAttribute("more", true);
+            attr.put("postsMore", true);
         }
-        model.addAttribute("posts", posts.stream().limit(5).collect(Collectors.toList()));
+        attr.put("posts", posts.stream().limit(5).collect(Collectors.toList()));
+
+        List<CommentsListDto> comments = commentsService.findByUser(user);
+        if (comments.size() > 5) {
+            attr.put("commentsMore", true);
+        }
+        attr.put("comments", comments.stream().limit(5).collect(Collectors.toList()));
+
+        model.addAllAttributes(attr);
         return "user/my-page/my-page";
     }
 
@@ -101,5 +113,12 @@ public class UserIndexController {
     @GetMapping("/my-page/delete/account")
     public String deleteAccount() {
         return "user/my-page/delete-account";
+    }
+
+    @GetMapping("/my-page/comments")
+    public String listComments(Principal principal, Model model) {
+        User user = userService.findByUsername(principal.getName());
+        model.addAttribute("comments", commentsService.findByUser(user));
+        return "user/my-page/comments-list";
     }
 }

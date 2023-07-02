@@ -11,6 +11,9 @@ public interface CommentsRepository extends JpaRepository<Comments, Long> {
     @Query("SELECT c FROM Comments c WHERE c.posts = :posts")
     List<Comments> findByPosts(Posts posts);
 
+    @Query("SELECT c FROM Comments c WHERE c.user = :user ORDER BY c.id DESC")
+    List<Comments> findByUser(User user);
+
     void deleteAllByPosts(Posts posts);
     void deleteAllByUser(User user);
 }

@@ -4,9 +4,9 @@
 <div>
     <table class="table table-horizontal table-bordered">
         <caption style="caption-side: top">작성 글</caption>
-        {{#more}}
+        {{#postsMore}}
             <a href="/users/my-page/posts">더 보기</a>
-        {{/more}}
+        {{/postsMore}}
         <thead class="thead-strong">
             <tr>
                 <th>게시글 번호</th>
@@ -31,7 +31,37 @@
             {{/posts}}
         </tbody>
     </table>
+    <table class="table table-horizontal table-bordered">
+        <caption style="caption-side: top">작성 댓글</caption>
+        {{#commentsMore}}
+            <a href="/users/my-page/comments">더 보기</a>
+        {{/commentsMore}}
+        <thead class="thead-strong">
+        <tr>
+            <th>댓글 번호</th>
+            <th>글 제목</th>
+            <th>댓글</th>
+            <th>작성일</th>
+        </tr>
+        </thead>
+        <tbody id="tbody">
+            {{#comments}}
+                <tr>
+                    <td>{{commentsId}}</td>
+                    <td><a href="/posts/read/{{postsId}}">{{title}}</a></td>
+                    <td><a href="/posts/read/{{postsId}}#cmt-{{commentsId}}">{{content}}</a></td>
+                    <td>{{modifiedDate}}</td>
+                </tr>
+            {{/comments}}
+            {{^comments}}
+                <tr>
+                    <td colspan="4">작성한 댓글이 없어요.</td>
+                </tr>
+            {{/comments}}
+        </tbody>
+    </table>
     <a href="/users/my-page/posts">작성 글</a>
+    <a href="/users/my-page/comments">작성 댓글</a>
     <a href="/users/my-page/update/user-info">회원 정보 수정</a>
     <a href="/users/my-page/update/password">비밀번호 변경</a>
     <a href="/users/my-page/delete/account">회원 탈퇴</a>
