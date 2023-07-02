@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.controller.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
@@ -40,19 +41,23 @@ public class PostsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         Posts posts = postsSearchService.findById(id);
-        attr.put("comments", commentsService.findByPosts(posts));
-
         if (!posts.getCreatedDate().equals(posts.getModifiedDate())) {
             attr.put("modify", true);
         }
 
         long authorId = posts.getUser().getId();
-        if (principal != null
-                && userService.findByUsername(principal.getName()).getId() == authorId) {
-            attr.put("author", true);
+        User user = null;
+        if (principal != null) {
+            user = userService.findByUsername(principal.getName());
+            if (user.getId() == authorId) {
+                attr.put("author", true);
+            } else {
+                postsService.countViews(posts);
+            }
         } else {
             postsService.countViews(posts);
         }
+        attr.put("comments", commentsService.findByPosts(posts, user));
 
         PostsReadDto responseDto = new PostsReadDto(posts);
         attr.put("post", responseDto);

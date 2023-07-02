@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.config;
 
+import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.UserAuthInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Autowired
     UserAuthInterceptor userAuthInterceptor;
 
+    @Autowired
+    CommentsAuthInterceptor commentsAuthInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(postsAuthInterceptor)
@@ -22,5 +26,8 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addInterceptor(userAuthInterceptor)
                 .addPathPatterns("/users/sign-up", "/users/sign-in", "/users/my-page/update/user-info");
+
+        registry.addInterceptor(commentsAuthInterceptor)
+                .addPathPatterns("/api/comments/**");
     }
 }

@@ -49,8 +49,10 @@
             {{#comments}}
                 <div id="cmt-{{id}}" class="collapse show">
                     <span>{{author}}</span>
-                    <button type="button" class="btn btn-success" data-toggle="collapse" data-target="#cmt-{{id}}">수정</button>
-                    <button type="button" class="btn btn-danger" name="btn-cmt-delete">삭제</button>
+                    {{#auth}}
+                        <button type="button" class="btn btn-success" data-toggle="collapse" data-target="#cmt-{{id}}">수정</button>
+                        <button type="button" class="btn btn-danger" name="btn-cmt-delete">삭제</button>
+                    {{/auth}}
                     <div>
                         <span>작성 {{createdDate}}</span>
                         {{#modifiedDate}}<span>  수정 {{modifiedDate}}</span>{{/modifiedDate}}

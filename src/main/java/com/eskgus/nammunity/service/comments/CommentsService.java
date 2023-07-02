@@ -9,14 +9,12 @@ import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Log4j2
 @RequiredArgsConstructor
 @Service
 public class CommentsService {
@@ -37,8 +35,9 @@ public class CommentsService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentsReadDto> findByPosts(Posts posts) {
-        return commentsRepository.findByPosts(posts).stream().map(CommentsReadDto::new)
+    public List<CommentsReadDto> findByPosts(Posts posts, User user) {
+        return commentsRepository.findByPosts(posts).stream().map(comments ->
+                        new CommentsReadDto(comments, user))
                 .collect(Collectors.toList());
     }
 
@@ -65,5 +64,11 @@ public class CommentsService {
     @Transactional
     public void deleteAllByUser(User user) {
         commentsRepository.deleteAllByUser(user);
+    }
+
+    @Transactional(readOnly = true)
+    public Comments findById(Long id) {
+        return commentsRepository.findById(id).orElseThrow(() -> new
+                IllegalArgumentException("해당 댓글이 없습니다."));
     }
 }
