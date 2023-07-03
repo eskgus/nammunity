@@ -32,8 +32,12 @@ public class UserIndexController {
 
     @GetMapping("/sign-up/{id}")
     public String afterSignUp(@PathVariable Long id, Model model) {
-        User user = userService.findById(id);
-        model.addAttribute("user", user);
+        try {
+            User user = userService.findById(id);
+            model.addAttribute("user", user);
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("message", ex.getMessage());
+        }
         return "user/sign-up/after-sign-up";
     }
 
@@ -42,7 +46,7 @@ public class UserIndexController {
         if (attr.isBlank()) {
             model.addAttribute("success", "이메일 인증이 완료됐습니다.");
         } else {
-            model.addAttribute("error", attr);
+            model.addAttribute("failure", attr);
         }
         return "user/sign-up/confirm-email";
     }
@@ -68,20 +72,24 @@ public class UserIndexController {
     @GetMapping("/my-page")
     public String myPage(Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
-        User user = userService.findByUsername(principal.getName());
+        try {
+            User user = userService.findByUsername(principal.getName());
 
-        List<PostsListDto> posts = postsSearchService.findByUser(user);
-        if (posts.size() > 5) {
-            attr.put("postsMore", true);
+            List<PostsListDto> posts = postsSearchService.findByUser(user);
+            if (posts.size() > 5) {
+                attr.put("postsMore", true);
+            }
+            attr.put("posts", posts.stream().limit(5).collect(Collectors.toList()));
+
+            List<CommentsListDto> comments = commentsSearchService.findByUser(user);
+            if (comments.size() > 5) {
+                attr.put("commentsMore", true);
+            }
+            attr.put("comments", comments.stream().limit(5).collect(Collectors.toList()));
+        } catch (IllegalArgumentException ex) {
+            attr.put("error", ex.getMessage());
+            attr.put("signOut", "/users/sign-out");
         }
-        attr.put("posts", posts.stream().limit(5).collect(Collectors.toList()));
-
-        List<CommentsListDto> comments = commentsSearchService.findByUser(user);
-        if (comments.size() > 5) {
-            attr.put("commentsMore", true);
-        }
-        attr.put("comments", comments.stream().limit(5).collect(Collectors.toList()));
-
         model.addAllAttributes(attr);
         return "user/my-page/my-page";
     }
@@ -95,9 +103,14 @@ public class UserIndexController {
     public String updateUserInfo(Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
 
-        User user = userService.findByUsername(principal.getName());
-        attr.put("user", user);
-        attr.put(user.getSocial(), true);
+        try {
+            User user = userService.findByUsername(principal.getName());
+            attr.put("user", user);
+            attr.put(user.getSocial(), true);
+        } catch (IllegalArgumentException ex) {
+            attr.put("error", ex.getMessage());
+            attr.put("signOut", "/users/sign-out");
+        }
 
         model.addAllAttributes(attr);
         return "user/my-page/update-user-info";
@@ -105,8 +118,15 @@ public class UserIndexController {
 
     @GetMapping("/my-page/posts")
     public String listPosts(Principal principal, Model model) {
-        User user = userService.findByUsername(principal.getName());
-        model.addAttribute("posts", postsSearchService.findByUser(user));
+        Map<String, Object> attr = new HashMap<>();
+        try {
+            User user = userService.findByUsername(principal.getName());
+            attr.put("posts", postsSearchService.findByUser(user));
+        } catch (IllegalArgumentException ex) {
+            attr.put("error", ex.getMessage());
+            attr.put("signOut", "/users/sign-out");
+        }
+        model.addAllAttributes(attr);
         return "user/my-page/posts-list";
     }
 
@@ -117,8 +137,15 @@ public class UserIndexController {
 
     @GetMapping("/my-page/comments")
     public String listComments(Principal principal, Model model) {
-        User user = userService.findByUsername(principal.getName());
-        model.addAttribute("comments", commentsSearchService.findByUser(user));
+        Map<String, Object> attr = new HashMap<>();
+        try {
+            User user = userService.findByUsername(principal.getName());
+            attr.put("comments", commentsSearchService.findByUser(user));
+        } catch (IllegalArgumentException ex) {
+            attr.put("error", ex.getMessage());
+            attr.put("signOut", "/users/sign-out");
+        }
+        model.addAllAttributes(attr);
         return "user/my-page/comments-list";
     }
 }

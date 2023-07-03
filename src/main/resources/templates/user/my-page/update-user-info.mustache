@@ -2,6 +2,7 @@
 
 <h1>회원 정보 수정</h1>
 <div>
+    {{#user}}
     <input type="hidden" id="id" value="{{user.id}}">
     <div class="form-group">
         <label for="u-username">ID</label>
@@ -24,6 +25,7 @@
             <button type="button" class="btn btn-success" id="btn-update-email">인증</button>
             <button type="button" class="btn btn-primary" id="btn-confirm-email" style="display: none">인증 완료</button>
         {{/none}}
+    {{/user}}
     </div>
     <div>
         <p>sns 연동</p>

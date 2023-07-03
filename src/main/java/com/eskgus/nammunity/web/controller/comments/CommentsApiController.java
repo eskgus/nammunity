@@ -37,7 +37,7 @@ public class CommentsApiController {
 
     @PutMapping("/{id}")
     public Map<String, String> update(@PathVariable Long id,
-                         @RequestBody CommentsUpdateDto requestDto) {
+                         @Valid @RequestBody CommentsUpdateDto requestDto) {
         Map<String, String> response = new HashMap<>();
 
         try {

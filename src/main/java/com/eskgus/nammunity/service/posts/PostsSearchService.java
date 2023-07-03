@@ -24,7 +24,7 @@ public class PostsSearchService {
     @Transactional(readOnly = true)
     public Posts findById(Long id) {
         return postsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("해당 게시글이 없습니다. id = " + id));
+                IllegalArgumentException("해당 게시글이 없습니다."));
     }
 
     @Transactional(readOnly = true)

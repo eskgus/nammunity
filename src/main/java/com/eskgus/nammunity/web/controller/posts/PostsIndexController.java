@@ -40,37 +40,45 @@ public class PostsIndexController {
     public String readPosts(@PathVariable Long id, Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
 
-        Posts posts = postsSearchService.findById(id);
-        if (!posts.getCreatedDate().equals(posts.getModifiedDate())) {
-            attr.put("modify", true);
-        }
+        try {
+            Posts posts = postsSearchService.findById(id);
+            if (!posts.getCreatedDate().equals(posts.getModifiedDate())) {
+                attr.put("modify", true);
+            }
 
-        long authorId = posts.getUser().getId();
-        User user = null;
-        if (principal != null) {
-            user = userService.findByUsername(principal.getName());
-            if (user.getId() == authorId) {
-                attr.put("author", true);
+            long authorId = posts.getUser().getId();
+            User user = null;
+            if (principal != null) {
+                user = userService.findByUsername(principal.getName());
+                if (user.getId() == authorId) {
+                    attr.put("author", true);
+                } else {
+                    postsService.countViews(posts);
+                }
             } else {
                 postsService.countViews(posts);
             }
-        } else {
-            postsService.countViews(posts);
+            attr.put("comments", commentsSearchService.findByPosts(posts, user));
+
+            PostsReadDto responseDto = new PostsReadDto(posts);
+            attr.put("post", responseDto);
+
+            model.addAllAttributes(attr);
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("error", ex.getMessage());
         }
-        attr.put("comments", commentsSearchService.findByPosts(posts, user));
-
-        PostsReadDto responseDto = new PostsReadDto(posts);
-        attr.put("post", responseDto);
-
-        model.addAllAttributes(attr);
         return "posts/posts-read";
     }
 
     @GetMapping("/posts/update/{id}")
     public String updatePosts(@PathVariable Long id, Model model) {
-        Posts posts = postsSearchService.findById(id);
-        PostsReadDto responseDto = new PostsReadDto(posts);
-        model.addAttribute("post", responseDto);
+        try {
+            Posts posts = postsSearchService.findById(id);
+            PostsReadDto responseDto = new PostsReadDto(posts);
+            model.addAttribute("post", responseDto);
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("error", ex.getMessage());
+        }
         return "posts/posts-update";
     }
 }

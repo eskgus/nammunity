@@ -42,7 +42,14 @@ public class PostsApiController {
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        postsService.delete(id);
+    public Map<String, String> delete(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            postsService.delete(id);
+            response.put("OK", "글이 삭제되었습니다.");
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
+        }
+        return response;
     }
 }

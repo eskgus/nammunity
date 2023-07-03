@@ -194,8 +194,8 @@ var main = {
                 type: 'DELETE',
                 url: '/api/posts/' + id,
                 contentType: 'application/json; charset=utf-8'
-            }).done(function() {
-                alert('글이 삭제되었습니다.');
+            }).done(function(response) {
+                alert(response[Object.keys(response)]);
                 window.location.href = '/';
             }).fail(function(response) {
                 if (response.status == 403) {
@@ -556,6 +556,9 @@ var main = {
                 window.location.reload();
             } else {
                 alert(response[Object.keys(response)]);
+                if (Object.keys(response) == 'error') {
+                    window.location.href = '/';
+                }
             }
         }).fail(function(response) {
             alert(JSON.stringify(response));
@@ -578,6 +581,9 @@ var main = {
                 window.location.reload();
             } else {
                 alert(response[Object.keys(response)]);
+                if (Object.keys(response) == 'error') {
+                    window.location.reload();
+                }
             }
         }).fail(function(response) {
             alert(JSON.stringify(response));

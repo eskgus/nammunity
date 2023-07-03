@@ -21,9 +21,13 @@ public class TemplateAdvice {
         Map<String, String> attr = new HashMap<>();
 
         if (principal != null) {
-            String nickname = userService.findByUsername(principal.getName()).getNickname();
-
-            attr.put("auth", nickname);
+            try {
+                String nickname = userService.findByUsername(principal.getName()).getNickname();
+                attr.put("auth", nickname);
+            } catch (IllegalArgumentException ex) {
+                attr.put("error", ex.getMessage());
+                attr.put("signOut", "/users/sign-out");
+            }
         }
 
         Object url = request.getSession().getAttribute("prePage");
