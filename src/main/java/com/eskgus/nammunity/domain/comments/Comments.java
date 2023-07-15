@@ -16,7 +16,7 @@ public class Comments extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column
+    @Column(length = 1500, nullable = false)
     private String content;
 
     @ManyToOne

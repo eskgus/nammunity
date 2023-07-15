@@ -4,6 +4,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CommentsSaveDto {
     @NotBlank(message = "댓글을 입력하세요.")
+    @Size(max = 1500, message = "댓글은 1500글자 이하여야 합니다.")
     private String content;
 
     private Long postsId;
