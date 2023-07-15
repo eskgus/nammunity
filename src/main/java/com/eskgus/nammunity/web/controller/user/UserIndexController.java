@@ -36,7 +36,7 @@ public class UserIndexController {
             User user = userService.findById(id);
             model.addAttribute("user", user);
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("message", ex.getMessage());
+            model.addAttribute("exception", ex.getMessage());
         }
         return "user/sign-up/after-sign-up";
     }
@@ -87,7 +87,7 @@ public class UserIndexController {
             }
             attr.put("comments", comments.stream().limit(5).collect(Collectors.toList()));
         } catch (IllegalArgumentException ex) {
-            attr.put("error", ex.getMessage());
+            model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
         }
         model.addAllAttributes(attr);
@@ -108,7 +108,7 @@ public class UserIndexController {
             attr.put("user", user);
             attr.put(user.getSocial(), true);
         } catch (IllegalArgumentException ex) {
-            attr.put("error", ex.getMessage());
+            model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
         }
 
@@ -123,7 +123,7 @@ public class UserIndexController {
             User user = userService.findByUsername(principal.getName());
             attr.put("posts", postsSearchService.findByUser(user));
         } catch (IllegalArgumentException ex) {
-            attr.put("error", ex.getMessage());
+            model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
         }
         model.addAllAttributes(attr);
@@ -142,7 +142,7 @@ public class UserIndexController {
             User user = userService.findByUsername(principal.getName());
             attr.put("comments", commentsSearchService.findByUser(user));
         } catch (IllegalArgumentException ex) {
-            attr.put("error", ex.getMessage());
+            model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
         }
         model.addAllAttributes(attr);

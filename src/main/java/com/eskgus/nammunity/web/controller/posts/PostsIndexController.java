@@ -6,6 +6,7 @@ import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -58,14 +60,16 @@ public class PostsIndexController {
             } else {
                 postsService.countViews(posts);
             }
-            attr.put("comments", commentsSearchService.findByPosts(posts, user));
+            List<CommentsReadDto> comments = commentsSearchService.findByPosts(posts, user);
+            attr.put("comments", comments);
+            attr.put("n", comments.size());
 
             PostsReadDto responseDto = new PostsReadDto(posts);
             attr.put("post", responseDto);
 
             model.addAllAttributes(attr);
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("exception", ex.getMessage());
         }
         return "posts/posts-read";
     }
@@ -77,7 +81,7 @@ public class PostsIndexController {
             PostsReadDto responseDto = new PostsReadDto(posts);
             model.addAttribute("post", responseDto);
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("exception", ex.getMessage());
         }
         return "posts/posts-update";
     }

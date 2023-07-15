@@ -12,12 +12,14 @@ public class PostsListDto {
     private String author;
     private String modifiedDate;
     private int view;
+    private int comments;
 
-    public PostsListDto(Posts entity) {
+    public PostsListDto(Posts entity, int comments) {
         this.id = entity.getId();
         this.title = entity.getTitle();
         this.author = entity.getUser().getNickname();
         this.modifiedDate = entity.getModifiedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
         this.view = entity.getView();
+        this.comments = comments;
     }
 }
