@@ -1,13 +1,70 @@
 {{>layout/header}}
 
-<h1>회원 탈퇴</h1>
-<div>
-    <p>탈퇴하면 작성한 모든 글이 삭제됩니다.<p>
-    <p>정말로 탈퇴하시겠어요 ? ㅜ.ㅜ</p>
-</div>
-<div>
-    <a href="/users/my-page" role="button" class="btn btn-secondary">취소</a>
-    <button type="button" class="btn btn-danger" id="btn-delete-account">탈퇴</button>
+<div id="container">
+    <div class="wrapper">
+        <div class="my-page">
+            <div class="title-area">
+                <div class="top-area">
+                    <a class="location" href="/"><img class="icon" src="/images/app/home.png" alt="HOME"></a>
+                    <a class="location" href="/users/my-page">마이 페이지</a>
+                    <span class="location">회원 정보</span>
+                    <a class="location" href="/users/my-page/delete/account">회원 탈퇴</a>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="category-area">
+                    <div>
+                        <h2 class="title"><a href="/users/my-page">마이 페이지</a></h2>
+                    </div>
+                    <div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/smile.png);">나의 활동</h3>
+                            <ul>
+                                <li>
+                                    <a href="/users/my-page/posts">작성 글</a>
+                                </li>
+                                <li>
+                                    <a href="/users/my-page/comments">작성 댓글</a>
+                                </li>
+                                <li>
+                                    <a href="/">좋아요</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/lock.png);">회원 정보</h3>
+                            <ul>
+                                <li>
+                                    <a href="/users/my-page/update/user-info">회원 정보 수정</a>
+                                </li>
+                                <li>
+                                    <a href="/users/my-page/update/password">비밀번호 변경</a>
+                                </li>
+                                <li>
+                                    <a href="/users/my-page/delete/account">회원 탈퇴</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="delete-account-area">
+                    <div class="content">
+                        <div class="title">
+                            <h2>회원 탈퇴</h2>
+                        </div>
+                        <div class="msg-area">
+                            <p>탈퇴하면 작성한 모든 글이 삭제됩니다.</p>
+                            <p>정말로 탈퇴하시겠어요 ? ㅜ.ㅜ</p>
+                        </div>
+                    </div>
+                    <div class="btn-area">
+                        <button type="button" class="btn" id="btn-delete-account">탈퇴</button>
+                        <a class="btn" role="button" href="/users/my-page">취소</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{>layout/footer}}

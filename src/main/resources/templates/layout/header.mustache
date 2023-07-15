@@ -3,14 +3,40 @@
 <head>
     <title>나뮤니티</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/app/nammunity.css">
 </head>
+
 <body>
-    {{#auth}}
-        <a href="/users/my-page">{{auth}}</a>
-        <a href="/users/sign-out" role="button" class="btn btn-primary">로그아웃</a>
-    {{/auth}}
-    {{^auth}}
-        <a href="/users/sign-in" role="button" class="btn btn-primary">로그인</a>
-        <a href="/users/sign-up" role="button" class="btn btn-primary">회원가입</a>
-    {{/auth}}
+<div id="wrap">
+    <header id="header">
+        <div class="wrapper">
+            <div>
+                <h1>
+                    <a class="logo" href="/">
+                        <img src="/images/app/nammunity.png" alt="나뮤니티: 나현이가 만든 커뮤니티" width="346" height="64">
+                    </a>
+                </h1>
+            </div>
+            <div class="btn-area">
+                <span class="btns">
+                    <a class="btn" href="/posts/save">글 등록</a>
+                </span>
+                {{#auth}}
+                    <span class="btns">
+                        <a class="btn" href="/users/my-page">{{auth}}</a>
+                    </span>
+                    <span class="btns">
+                        <a class="btn" href="/users/sign-out">로그아웃</a>
+                    </span>
+                {{/auth}}
+                {{^auth}}
+                    <span class="btns">
+                        <a class="btn" href="/users/sign-in">로그인</a>
+                    </span>
+                    <span class="btns">
+                        <a class="btn" href="/users/sign-up">회원가입</a>
+                    </span>
+                {{/auth}}
+            </div>
+        </div>
+    </header>

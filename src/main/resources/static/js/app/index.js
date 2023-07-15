@@ -103,26 +103,6 @@ var main = {
         $('#btn-unlink-kakao').on('click', function() {
             _this.unlinkSocial('kakao');
         });
-
-        $('#btn-cmt-save').on('click', function() {
-            _this.saveComments();
-        });
-
-        var cmtUpdateBtns = document.getElementsByName('btn-cmt-update');
-        for (let i = 0; i < cmtUpdateBtns.length; i++) {
-            cmtUpdateBtns[i].addEventListener('click', function() {
-                const input = $(this).closest('div.collapse').find('input');
-                _this.updateComments(input);
-            });
-        }
-
-        var cmtDeleteBtns = document.getElementsByName('btn-cmt-delete');
-        for (let i = 0; i < cmtDeleteBtns.length; i++) {
-            cmtDeleteBtns[i].addEventListener('click', function() {
-                const divId = $(this).closest('div.collapse').attr('id');
-                _this.deleteComments(divId);
-            });
-        }
     },
     save : function() {
         var data = {
@@ -327,7 +307,7 @@ var main = {
 
         if (oldPassword == '') {
             check.textContent = '비밀번호를 입력하세요.';
-            check.style = 'display: block; color: red';
+            check.style = 'display: inline-block; color: red';
             rb('oldPassword', oldPassword);
         } else {
           check.style = 'display: none';
@@ -539,72 +519,6 @@ var main = {
             alert(JSON.stringify(response));
         });
     },
-    saveComments : function() {
-        var data = {
-            content: $('#cmt-content').val(),
-            postsId: $('#id').val()
-        };
-
-        $.ajax({
-            type: 'POST',
-            url: '/api/comments',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data)
-        }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                window.location.reload();
-            } else {
-                alert(response[Object.keys(response)]);
-                if (Object.keys(response) == 'error') {
-                    window.location.href = '/';
-                }
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
-        });
-    },
-    updateComments : function(input) {
-        var inputId = input.attr('id');
-        var id = inputId.slice(inputId.lastIndexOf('-') + 1);
-        var data = {
-            content: input.val()
-        };
-
-        $.ajax({
-            type: 'PUT',
-            url: '/api/comments/' + id,
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data)
-        }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                window.location.reload();
-            } else {
-                alert(response[Object.keys(response)]);
-                if (Object.keys(response) == 'error') {
-                    window.location.reload();
-                }
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
-        });
-    },
-    deleteComments : function(divId) {
-        if (confirm('정말로 삭제하시겠어요?')) {
-            var id = divId.slice(divId.indexOf('-') + 1);
-
-            $.ajax({
-                type: 'DELETE',
-                url: '/api/comments/' + id,
-                contentType: 'application/json; charset=utf-8'
-            }).done(function(response) {
-                alert(response[Object.keys(response)]);
-                window.location.reload();
-            }).fail(function(response) {
-                alert(JSON.stringify(response));
-            });
-        }
-    },
     redBox : function(field, pre) {
         var box = document.getElementById(field);
 
@@ -620,16 +534,16 @@ var main = {
     redBoxNBC : function(field, pre) {
         var box = document.getElementById(field);
 
-        box.style = 'border: 2px solid #ea3636';
+        box.style = 'border: 1px solid #ea3636';
         box.addEventListener('input', function() {
             if (pre != box.value) {
-                box.style = 'border: 1px solid #ced4da';
+                box.style = 'border: none';
             } else {
-                box.style = 'border: 1px solid #ced4da';
+                box.style = 'border: 1px solid #ea3636';
             }
         });
     },
-    fail: function (response, data, rb) {
+    fail : function (response, data, rb) {
         var size = Object.keys(response).length;
         let firstData = 4;
 

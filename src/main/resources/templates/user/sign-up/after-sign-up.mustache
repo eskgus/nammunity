@@ -1,9 +1,28 @@
 {{>layout/header}}
-{{#user}}
-    <input type="hidden" id="id" value="{{user.id}}">
-    <p>인증 메일이 발송됐습니다. 메일 인증을 해야 회원가입이 완료됩니다.</p>
-    <p>가입하신 이메일은 {{user.email}}입니다.</p>
-    <button type="button" class="btn btn-primary" id="btn-confirm-email">인증 완료</button>
-    <button type="button" class="btn btn-success" id="btn-resend">재발송</button>
-{{/user}}
+
+<div id="container">
+    <div class="wrapper">
+        <div class="sign-up">
+            <div class="title-area">
+                <div class="top-area">
+                    <h1 class="title">회원가입</h1>
+                </div>
+            </div>
+            <div class="msg-area">
+                {{#user}}
+                    <div>
+                        <input type="hidden" id="id" value="{{id}}">
+                        <p>인증 메일이 발송됐습니다. 메일 인증을 해야 회원가입이 완료됩니다.</p>
+                        <p>가입하신 이메일은 {{email}}입니다.</p>
+                    </div>
+                {{/user}}
+            </div>
+            <div class="btn-area">
+                <button type="button" class="btn" id="btn-confirm-email">인증 완료</button>
+                <button type="button" class="btn" id="btn-resend">재발송</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{>layout/footer}}

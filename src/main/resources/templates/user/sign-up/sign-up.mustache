@@ -1,39 +1,63 @@
 {{>layout/header}}
-    <h1>회원가입</h1>
-    <div class="col-md-12">
-        <div class="col-md-4">
-            <form>
-                <div class="form-group">
-                    <label for="username">ID</label>
-                    <input type="text" class="form-control" id="username" placeholder="ID를 입력하세요">
-                    <span style="color: green">ID는 영어 소문자로 시작, 숫자 1개 이상 포함, 한글/특수문자/공백 불가능, 4글자 이상 20글자 이하</span>
-                    <span id="ch-username"></span>
+
+<div id="container">
+    <div class="wrapper">
+        <div class="sign-up">
+            <div class="title-area">
+                <div class="top-area">
+                    <h1 class="title">회원가입</h1>
                 </div>
-                <div class="form-group">
-                    <label for="password">비밀번호</label>
-                    <input type="password" class="form-control" id="password" placeholder="비밀번호를 입력하세요">
-                    <span style="color: green">비밀번호는 영어와 숫자 1개 이상 포함, 특수문자 가능, 한글/공백 불가능, 8글자 이상 20글자 이하</span>
-                    <span id="ch-password"></span>
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">비밀번호 확인</label>
-                    <input type="password" class="form-control" id="confirmPassword" placeholder="비밀번호를 입력하세요">
-                    <span id="ch-confirmPassword"></span>
-                </div>
-                <div class="form-group">
-                    <label for="nickname">닉네임</label>
-                    <input type="text" class="form-control" id="nickname" placeholder="닉네임을 입력하세요">
-                    <span style="color: green">닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하</span>
-                    <span id="ch-nickname"></span>
-                </div>
-                <div class="form-group">
-                    <label for="email">이메일</label>
-                    <input type="text" class="form-control" id="email" placeholder="이메일을 입력하세요">
-                    <span id="ch-email"></span>
-                </div>
-            </form>
-            <a href={{prePage}} role="button" class="btn btn-secondary">취소</a>
-            <button type="button" class="btn btn-primary" id="btn-sign-up">회원가입</button>
+            </div>
+            <div class="form-area">
+                <table>
+                    <tbody>
+                    <tr>
+                        <th>ID</th>
+                        <td>
+                            <input type="text" id="username" placeholder="ID를 입력하세요">
+                            <span class="check" id="ch-username"></span>
+                            <div class="valid">ID는 영어 소문자로 시작, 숫자 1개 이상 포함, 한글/특수문자/공백 불가능, 4글자 이상 20글자 이하</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>비밀번호</th>
+                        <td>
+                            <input type="password" id="password" placeholder="비밀번호를 입력하세요">
+                            <span class="check" id="ch-password"></span>
+                            <div class="valid">비밀번호는 영어와 숫자 1개 이상 포함, 특수문자 가능, 한글/공백 불가능, 8글자 이상 20글자 이하</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>비밀번호 확인</th>
+                        <td>
+                            <input type="password" id="confirmPassword" placeholder="비밀번호를 입력하세요">
+                            <span class="check" id="ch-confirmPassword"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>닉네임</th>
+                        <td>
+                            <input type="text" id="nickname" placeholder="닉네임을 입력하세요">
+                            <span class="check" id="ch-nickname"></span>
+                            <div class="valid">닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>이메일</th>
+                        <td>
+                            <input type="text" id="email" placeholder="이메일을 입력하세요">
+                            <span class="check" id="ch-email"></span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="btn-area">
+                <button type="button" class="btn" id="btn-sign-up">회원가입</button>
+                <a role="button" class="btn" href={{prePage}}>취소</a>
+            </div>
         </div>
     </div>
+</div>
+
 {{>layout/footer}}

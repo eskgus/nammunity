@@ -1,0 +1,866 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    color: #205943;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: sans-serif;
+}
+
+#wrap {
+    height: auto;
+    max-width: 80%;
+    margin: 0 auto;
+    position: relative;
+    min-height: 745.6px;
+}
+
+.wrapper {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+}
+
+#header .wrapper,
+#footer .wrapper {
+    padding: 30px 0 30px;
+}
+
+#header h1 {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+#header .logo {
+    text-decoration: none;
+    color: #205943;
+}
+
+#header .btn-area {
+    position: absolute;
+    right: 0;
+    top: 5px;
+}
+
+#header .btn-area .btns,
+#container .btn-area .btns {
+    display: inline;
+}
+
+#header .btn-area .btns .btn,
+#container .btn-area .btns .link {
+    margin: 0 7px;
+    transition: all 0.15s;
+}
+
+#header .btns:not(:last-child):after,
+#container .btns:not(:last-child):after {
+    display: inline-block;
+    width: 1px;
+    height: 11px;
+    content: '';
+    background: #205943;
+}
+
+/* 링크 효과 (대문이랑 버튼은 visited 효과 x) */
+a {
+    text-decoration: none;
+    transition: all 0.3s;
+    color: #205943;
+}
+
+a:hover {
+    text-decoration: underline;
+    text-decoration-color: #205943;
+}
+
+a:active {
+    color: #A3F229;
+    text-decoration-color: #A3F229;
+}
+
+.tlink {
+    text-decoration: none;
+    transition: all 0.3s;
+    color: #205943;
+    font-weight: 600;
+}
+
+.tlink:visited {
+    color: #9AC19F;
+    text-decoration-color: #9AC19F;
+}
+
+#container {
+    height: auto;
+    min-height: 517.7px;
+}
+
+/* 여기부터 table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+tbody {
+    border-top: 2px solid #AAC2A9;
+    border-bottom: 2px solid #AAC2A9;
+}
+
+tr:not(:last-child) {
+    border-bottom: 1px solid #AAC2A9;
+}
+
+td {
+    padding: 7px;
+}
+
+thead {
+    border-top: 2px solid #AAC2A9;
+    background-color: #C1DAC0;
+}
+
+tbody .tit {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+/* 여기까지 table*/
+
+/* 여기부터 main */
+#container .my-page #comments-area td:first-child,
+#container .my-page #posts-area td:first-child,
+#container .main td.no-content {
+    text-align: center;
+}
+
+#container .my-page #posts-area .tit,
+#container .main .tit {
+    margin-bottom: 7px;
+    width: 80%;
+}
+
+#container .main .tit {
+    font-size: 18px;
+}
+
+#container .my-page #comments-area .date,
+#container .my-page #posts-area .date,
+#container .main .date {
+    color: #AAC2A9;
+}
+
+#container .my-page #comments-area .date img,
+#container .my-page #posts-area .date img,
+#container .main .date img {
+    width: 13px;
+    height:13px;
+    vertical-align: middle;
+}
+/* 여기까지 main */
+
+#footer {
+    font-size: 10px;
+    font-weight: 300;
+}
+
+#footer .about-me-area {
+    position: absolute;
+    display: block;
+    width: 100%;
+    padding: 5px 0;
+    background-color: #205943;
+    color: #e7f6e7;
+}
+
+#footer .about-me {
+    display: inline;
+    padding: 7px 7px 7px 7px;
+}
+
+#footer a,
+#container .my-page .content-area .category-area .title a {
+    text-decoration: none;
+    color: #e7f6e7;
+    transition: all 0.3s;
+}
+
+#footer a:hover {
+    text-decoration: underline;
+    text-decoration-color: #e7f6e7;
+}
+
+#footer a:active {
+    color: #A3F229;
+    text-decoration-color: #A3F229;
+}
+
+#container .read .title-area,
+#container .sign-up .title-area,
+#container .sign-in .title-area,
+#container .find-username .title-area,
+#container .find-password .title-area,
+#container .my-page .title-area,
+#container .my-page .delete-account-area .content,
+#container .error .title-area {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+#container .read .title-area .top-area {
+    padding: 7px 14px;
+    border-top: 2px solid #AAC2A9;
+    border-bottom: 1px solid #AAC2A9;
+    background-color: #C1DAC0;
+}
+
+#container .read .title-area .top-area .date,
+#container .read .comments-list .date {
+    float: right;
+    display: inline !important;
+    font-size: 12px;
+}
+
+#container .read .title-area .top-area .title {
+    line-height: 22px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #000;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    padding: 0 7px 0 0;
+}
+
+#container .read .title-area .btm-area {
+    position: static;
+    border-bottom: 2px solid #AAC2A9;
+    background-color: #edf5ed;
+    font-size: 12px;
+}
+
+#container .read .title-area .btm-area .author {
+    display: inline-block;
+    padding: 7px 14px;
+}
+
+#container .read .title-area .btm-area .view {
+    display: inline-block;
+    padding: 7px 14px;
+    float: right;
+}
+
+#container .read .content {
+    position: relative;
+    margin-bottom: 20px;
+    padding: 0 7px;
+    color: #000;
+}
+
+/* 여기부터 comments-area */
+#container .my-page #comments-area td pre,
+#container .read .content pre,
+#container .read .comments-area .comments-list pre {
+    font-family: sans-serif;
+    white-space: pre-wrap;
+    margin: 14px 0 7px 0;
+}
+
+#container .my-page #comments-area td pre {
+    margin: 0 0 7px 0;
+}
+
+#container .my-page #comments-area .tit {
+    margin-top: 14px;
+    border: 1px solid #AAC2A9;
+    border-radius: 0.3rem;
+    padding: 7px;
+    width: 80%;
+}
+/* 여기까지 comments-area */
+
+#container .btn-area {
+    border-top: 2px solid #AAC2A9;
+    padding: 5px 14px;
+    text-align: center;
+}
+
+#container .btn-area .btn {
+    display: inline-block;
+    border: 1px solid #AAC2A9;
+    border-radius: 0.5rem;
+    margin-left: 7px;
+    padding: 2px 10px;
+    background-color: #C1DAC0;
+    transition: 0.15s;
+    color: inherit;
+    font-size: inherit;
+}
+
+#container .btn-area .btn:first-child {
+    margin-left: 0;
+}
+
+#container .btn-area .btn:hover {
+    text-decoration: none;
+    background-color: #e7f6e7;
+}
+
+#container .btn-area .btn:active {
+    color: #205943;
+    box-shadow: 0 0 0 2px #AAC2A9;
+}
+
+#container .btn-area .btn:disabled {
+    color: #AAC2A9;
+    background-color: #e7f6e7;
+}
+
+#container .save .title-area {
+    padding: 7px;
+    border-top: 2px solid #AAC2A9;
+}
+
+#container .save .author-area,
+#container .save .content-area {
+    padding: 7px;
+    border-top: 1px solid #AAC2A9;
+}
+
+#container .save .title-area .title {
+    border: none;
+    font-size: 18px;
+    width: 99%;
+    font-family: sans-serif;
+}
+
+#container .save .author-area .author,
+#container .save .content-area .content,
+#container .read .comments-area .cmt-content {
+    border: none;
+    width: 99%;
+    font-family: sans-serif;
+}
+
+#container .save .title-area .title:focus,
+#container .save .author-area .author:focus {
+    outline: none;
+}
+
+#container .save .content-area .content {
+    height: 386px;
+    resize: none;
+}
+
+#container .save .content-area .content:focus,
+#container .read .comments-area .cmt-content:focus {
+    outline: none;
+}
+
+#container .sign-up .title-area .top-area,
+#container .sign-in .title-area .top-area,
+#container .find-username .title-area .top-area,
+#container .find-password .title-area .top-area,
+#container .my-page .title-area .top-area,
+#container .error .title-area .top-area {
+    padding: 7px 14px;
+    border-top: 2px solid #AAC2A9;
+    border-bottom: 1px solid #AAC2A9;
+    background-color: #C1DAC0;
+    font-size: 0;
+}
+
+#container .sign-up .title-area .top-area .title,
+#container .sign-in .title-area .top-area .title,
+#container .find-username .title-area .top-area .title,
+#container .find-password .title-area .top-area .title,
+#container .my-page .title-area .top-area .location,
+#container .error .title-area .top-area .title {
+    line-height: 22px;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+#container .sign-up .form-area,
+#container .sign-up .msg-area,
+#container .sign-in .form-area,
+#container .find-username .form-area,
+#container .find-password .form-area,
+#container .error .msg-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 여기 input 여기 form-data */
+#container .sign-up td input,
+#container .my-page .user-info-area td input,
+#container .sign-in .form-area input,
+#container .find-username .form-area input,
+#container .find-password .form-area input {
+    border: 1px solid #205943;
+    border-radius: 0.3rem;
+}
+
+#container .sign-in .form-area input,
+#container .find-username .form-area input,
+#container .find-password .form-area input {
+    font-size: 16px;
+    width: 300px;
+    padding: 7px;
+    margin: 7px 0;
+}
+
+p {
+    margin: 7px 0;
+}
+
+#container .my-page .delete-account-area .msg-area {
+    border: none;
+    text-align: center;
+}
+
+#container .sign-in .form-area .btn-area .btn,
+#container .find-username .form-area .btn-area .btn,
+#container .find-password .form-area .btn-area .btn {
+    box-sizing: content-box;
+    width: 300px;
+    font-size: 18px;
+    padding: 7px;
+    margin: 0;
+}
+
+#container .my-page .content-area {
+    display: flex;
+    justify-content: space-between;
+}
+
+#container .my-page .category-area {
+    width: 15%;
+    border: 1px solid #AAC2A9;
+    border-radius: 0.5rem;
+    height: fit-content;
+}
+
+#container .my-page .category-area .title {
+    margin: 0;
+    background-color: #205943;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 20px 5px 20px 5px;
+    text-align: center;
+}
+
+#container .my-page .category-area .content {
+    border-top: 1px solid #AAC2A9;
+}
+
+#container .my-page .category-area .content h3 {
+    margin: 0;
+    padding: 7px 7px 0 32px;
+    background-repeat: no-repeat;
+    background-position: 8px 9px;
+    background-size: 18px;
+}
+
+ul {
+    list-style: none;
+    padding-left: 20px;
+}
+
+li {
+    margin: 5px 0;
+}
+
+#container .my-page .delete-account-area {
+    width: 80%;
+}
+
+#container .my-page .delete-account-area .content .title {
+    position: relative;
+}
+
+#container .my-page .delete-account-area .title h2 {
+    font-size: 18px;
+}
+
+#container .my-page .location .icon {
+    float: left;
+    width: 20px;
+    height: 20px;
+}
+
+#container .my-page .location:not(:first-child):before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 14px;
+    background-image: url(/images/app/arrow.png);
+    background-repeat: no-repeat;
+    background-position: 0;
+    background-size: 10px;
+    margin: auto 4px;
+}
+
+#container .sign-in .btn-area .t-margin {
+    margin-top: 7px;
+}
+
+input:disabled,
+textarea:disabled {
+    background-color: #ECECEC;
+    color: #205943;
+}
+
+#container .sign-in .btn-area .social {
+    font-size: 18px;
+    padding: 14px 7px 7px 7px;
+}
+
+#container .sign-in .btn-area img {
+    width: 50px;
+    height: 50px;
+    margin: 7px 14px 7px 14px;
+}
+
+#container .sign-in .btn-area .social-btn {
+    width: fit-content;
+    display: inline-block;
+}
+
+.show {
+    display: block !important;
+}
+
+.dropdown {
+    margin: 0;
+}
+
+.dropdown-toggle {
+    padding: 3.2px 10px !important;
+}
+
+.dropdown-menu {
+    display: none;
+    padding-left: 0;
+    border: 1px solid #AAC2A9;
+    border-radius: 0.5rem;
+    left: -15px !important; background-color: #fff;
+}
+
+.dropdown-menu li {
+    margin: 0;
+    transition: all 0.15s;
+    display: flex;
+    justify-content: center;
+}
+
+.dropdown-menu li .first {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.dropdown-menu li .last {
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.dropdown-menu li:first-child {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.dropdown-menu li:last-child {
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.dropdown-menu li:hover {
+    background-color: #C1DAC0;
+}
+
+.dropdown-menu li:not(:last-child) {
+    border-bottom: 1px solid #AAC2A9;
+}
+
+.dropdown-menu li>a {
+    padding: 2px 10px;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.dropdown-menu li>a:active {
+    color: #205943;
+    background-color: #e7f6e7;
+    box-shadow: 0px 0px 0px 2px #AAC2A9;
+}
+
+.hidden-btn {
+    float: right;
+    margin-block: 0;
+    margin-inline: 0;
+    padding: 0 !important;
+}
+
+#container .read .comments-area {
+    border-top: 2px solid #AAC2A9;
+}
+
+#container .read .comments-area .sum-area {
+    padding: 7px 14px;
+    border-bottom: 2px solid #AAC2A9;
+    background-color: #C1DAC0;
+}
+
+#container .read .comments-area .sum-area .sum {
+    line-height: 18px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+#container .read .comments-area .comments-list .comment,
+#container .read .comments-area .comments-creation {
+    padding: 7px 14px 7px 28px;
+    border-bottom: 1px solid #AAC2A9;
+}
+
+#container .read .comments-area .author {
+    font-weight: 600;
+}
+
+#container .read .comments-list .date {
+    float: none;
+    color: #AAC2A9;
+}
+
+#container .read .comments-list div:last-child .comment,
+#container .read .comments-list div:last-child .comments-creation {
+    border-bottom: 2px solid #AAC2A9 !important;
+    margin-bottom: 20px;
+}
+
+#container .read .comments-list .comments-creation {
+    border-top: none !important;
+    border-bottom: 1px solid #AAC2A9 !important;
+}
+
+#container .read .comments-area .comments-creation {
+    border-top: 2px solid #AAC2A9;
+    border-bottom: 2px solid #AAC2A9;
+    background-color: #edf5ed;
+}
+
+#container .read .comments-area .comments-creation .cmt-content {
+    resize: none;
+    margin: 14px 0 7px 0;
+    width: -webkit-fill-available;
+}
+
+#container .read .comments-creation .btn-area{
+    padding: 0;
+    text-align: right;
+}
+
+/* 여기부터 my-page */
+/* 여기부터 my-activity-area */
+#container .my-page .my-activity-area .title {
+    position: relative;
+}
+
+#container .my-page .my-activity-area .title a.more {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+
+#container .my-page .my-activity-area .title a.more img {
+    width: 10px;
+    height: 10px;
+    margin: auto 4px;
+    content: url(/images/app/arrow.png);
+}
+/* 여기까지 my-activity-area */
+
+/* 여기부터 posts-area */
+#container .my-page .user-info-area,
+#container .my-page .my-activity-area {
+    width: 80%;
+}
+
+#container .my-page .user-info-area #social-area,
+#container .my-page .user-info-area #info-area,
+#container .my-page .user-info-area #password-area,
+#container .my-page .my-activity-area #comments-area,
+#container .my-page .my-activity-area #posts-area {
+    margin-bottom: 40px;
+}
+
+#container .my-page .user-info-area #social-area h2,
+#container .my-page .user-info-area #info-area h2,
+#container .my-page .user-info-area #password-area h2,
+#container .my-page .my-activity-area #comments-area h2,
+#container .my-page .my-activity-area #posts-area h2 {
+    font-size: 18px;
+}
+
+#container .my-page #comments-area th,
+#container .my-page #posts-area th {
+    padding: 5px;
+}
+
+#container .my-page .user-info-area #social-area td:not(:last-child),
+#container .my-page .my-activity-area #comments-area td:not(:last-child),
+#container .my-page .my-activity-area #comments-area th:not(:last-child),
+#container .my-page .my-activity-area #posts-area td:not(:last-child),
+#container .my-page .my-activity-area #posts-area th:not(:last-child) {
+    border-right: 1px solid #AAC2A9;
+}
+
+#container .my-page #comments-area th.no,
+#container .my-page #posts-area th.no {
+    width: 10%;
+}
+
+#container .my-page #comments-area th.cmt,
+#container .my-page #posts-area th.post {
+    width: 90%;
+}
+
+#container .my-page #comments-area .date,
+#container .my-page #posts-area .date {
+    font-size: 12px;
+}
+
+#container .my-page #posts-area .date img {
+    vertical-align: text-bottom;
+}
+
+#container .my-page #comments-area .tit a,
+#container .my-page #posts-area .tit a {
+    font-weight: 600;
+}
+/* 여기까지 posts-area */
+
+/* 여기부터 password-area */
+#container .my-page .user-info-area th {
+    width: 20%;
+    border-right: 1px solid #AAC2A9;
+    background-color: #C1DAC0;
+    font-size: 16px;
+}
+
+#container .my-page .user-info-area td {
+    width: 80%;
+}
+
+#container .sign-up td input,
+#container .my-page .user-info-area td input {
+    font-size: 14px;
+    width: 200px;
+    padding: 5px;
+    margin-right: 7px;
+}
+
+#container .sign-in .form-area input:focus,
+#container .find-username .form-area input:focus,
+#container .find-password .form-area input:focus,
+#container .sign-up td input:focus,
+#container .my-page .user-info-area td input:focus {
+    border-width: 2px;
+    outline: none;
+}
+
+#container .find-username .form-area .check,
+#container .find-password .form-area .check,
+#container .sign-in .form-area .check {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#container .sign-in .form-area .check,
+#container .sign-up td .check,
+#container .my-page .user-info-area #password-area td .check {
+    color: #ea3636;
+}
+
+#container .sign-up .valid,
+#container .my-page .user-info-area .valid {
+    margin-top: 7px;
+}
+
+#container .my-page .delete-account-area .btn-area,
+#container .error .btn-area,
+#container .sign-up .btn-area,
+#container .my-page .user-info-area .btn-area {
+    border: none;
+    margin-top: 25px;
+}
+/* 여기까지 password-area */
+
+/* 여기부터 user-info-area */
+#container .my-page .user-info-area #info-area td .btn-area {
+    display: inline;
+    padding: 0;
+}
+
+#container .my-page .user-info-area #social-area td {
+    font-size: 16px;
+}
+
+#container .my-page .user-info-area #social-area td img {
+    width: 24px;
+    height: 24px;
+    float: left;
+    margin-right: 7px;
+}
+
+#container .my-page .user-info-area #social-area td span {
+    font-size: 14px;
+    float: right;
+    margin: 2.4px 0;
+}
+/* 여기까지 user-info-area */
+
+/* 여기부터 sign-up */
+#container .sign-up .form-area table {
+    max-width: fit-content;
+    table-layout: auto;
+}
+
+#container .find-username .btn-area,
+#container .find-password .btn-area,
+#container .sign-in .btn-area,
+#container .read .comments-list .btn-area,
+#container .read .comments-creation .btn-area,
+#container .sign-up .form-area tr,
+#container .sign-up .form-area tbody {
+    border: none;
+}
+
+#container .sign-up .form-area th {
+    font-size: 16px;
+    text-align: left;
+    vertical-align: top;
+    padding: 7px
+}
+
+#container .sign-up .form-area td {
+    width: 500px;
+}
+/* 여기까지 sign-up */
+
+/* 여기부터 img */
+#container .my-page #comments-area .date img.like,
+#container .my-page #posts-area .date img.like,
+#container .main .date img.like {
+    content: url(/images/app/heart_s_l.png);
+}
+
+#container .my-page #posts-area .date img.view,
+#container .main .date img.view {
+    content: url(/images/app/eye_l.png);
+}
+
+#container .my-page #posts-area img.cmt,
+#container .main .date img.cmt {
+    content: url(/images/app/comment_l.png);
+}
+/* 여기까지 img */

@@ -1,17 +1,31 @@
 {{>layout/header}}
 
-<h1>ID 찾기</h1>
-<div>
-    <label for="f-email">이메일</label>
-    <input type="text" class="form-control" id="f-email">
-</div>
-<div>
-    <a href="/users/sign-in" role="button" class="btn btn-secondary">취소</a>
-    <button type="button" class="btn btn-primary" id="btn-find-username">찾기</button>
-    <a href="/users/find/password">비밀번호 찾기</a>
-</div>
-<div>
-    <span id="f-username" style="display: none"></span>
+<div id="container">
+    <div class="wrapper">
+        <div class="find-username">
+            <div class="title-area">
+                <div class="top-area">
+                    <h1 class="title">ID 찾기</h1>
+                </div>
+            </div>
+            <form class="form-area">
+                <div>
+                    <input type="text" id="f-email" placeholder="이메일">
+                </div>
+                <div style="width: 314px">
+                    <p class="check" id="f-username"></p>
+                </div>
+                <div class="btn-area">
+                    <button type="submit" class="btn" id="btn-find-username">찾기</button>
+                    <div style="margin-top: 7px">
+                        <span class="btns"><a role="button" class="link" href="/users/sign-in">로그인</a></span>
+                        <span class="btns"><a role="button" class="link" href="/users/find/password">비밀번호 찾기</a></span>
+                        <span class="btns"><a role="button" class="link" href="/users/sign-up">회원가입</a></span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 {{>layout/footer}}

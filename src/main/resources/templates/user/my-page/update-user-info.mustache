@@ -1,59 +1,152 @@
 {{>layout/header}}
 
-<h1>회원 정보 수정</h1>
-<div>
-    {{#user}}
-    <input type="hidden" id="id" value="{{user.id}}">
-    <div class="form-group">
-        <label for="u-username">ID</label>
-        <p id="u-username">{{user.username}}</p>
+<div id="container">
+    <div class="wrapper">
+        <div class="my-page">
+            <div class="title-area">
+                <div class="top-area">
+                    <a class="location" href="/"><img class="icon" src="/images/app/home.png" alt="HOME"></a>
+                    <a class="location" href="/users/my-page">마이 페이지</a>
+                    <span class="location">회원 정보</span>
+                    <a class="location" href="/users/my-page/update/user-info">회원 정보 수정</a>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="category-area">
+                    <div>
+                        <h2 class="title"><a href="/users/my-page">마이 페이지</a></h2>
+                    </div>
+                    <div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/smile.png);">나의 활동</h3>
+                            <ul>
+                                <li>
+                                    <a href="/users/my-page/posts">작성 글</a>
+                                </li>
+                                <li>
+                                    <a href="/">작성 댓글</a>
+                                </li>
+                                <li>
+                                    <a href="/">좋아요</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/lock.png);">회원 정보</h3>
+                            <ul>
+                                <li>
+                                    <a href="/users/my-page/update/user-info">회원 정보 수정</a>
+                                </li>
+                                <li>
+                                    <a href="/users/my-page/update/password">비밀번호 변경</a>
+                                </li>
+                                <li>
+                                    <a href="/users/my-page/delete/account">회원 탈퇴</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-info-area">
+                    <div id="info-area">
+                        <h2>기본 정보 수정</h2>
+                        {{#user}}
+                        <table>
+                            <tbody>
+                            <tr>
+                                <th>ID</th>
+                                <td>
+                                    {{username}}
+                                    <input type="hidden" id="id" value="{{id}}">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>닉네임</th>
+                                <td>
+                                    <input type="text" id="u-nickname" value="{{nickname}}">
+                                    <div class="btn-area">
+                                        <button type="button" id="btn-update-nickname" class="btn">수정</button>
+                                    </div>
+                                    <div class="valid">닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>이메일</th>
+                                <td>
+                                <input type="text" id="u-email" value="{{email}}"
+                                    {{^none}}
+                                       disabled>
+                                           <div class="valid">SNS 연동 회원은 이메일 직접 수정이 불가능합니다. 관리자한테 문의하세요.</div>
+                                    {{/none}}
+                                    {{#none}}
+                                        >
+                                        <div class="btn-area">
+                                            <button type="button" id="btn-update-email" class="btn">인증</button>
+                                            <button type="button" id="btn-confirm-email" class="btn" style="display: none">인증 완료</button>
+                                        </div>
+                                    {{/none}}
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        {{/user}}
+                    </div>
+                    <div id="social-area">
+                        <h2>SNS 간편 로그인 계정 연동</h2>
+                        <table>
+                            <tbody>
+                            <tr>
+                                <td>
+                                    {{^google}}
+                                        <a href="/oauth2/authorization/google" {{^none}}style="pointer-events: none;"{{/none}}>
+                                            <img src="/images/app/google_s.png">구글 로그인<span>연동하기</span></a>
+                                    {{/google}}
+                                    {{#google}}
+                                        <a role="button" id="btn-unlink-google" href="#">
+                                            <img src="/images/app/google_s.png">구글 로그인<span>연동 해제</span></a>
+                                    {{/google}}
+                                </td>
+                                <td>
+                                    {{^naver}}
+                                        <a href="/oauth2/authorization/naver" {{^none}}style="pointer-events: none;"{{/none}}>
+                                            <img src="/images/app/naver_s.png">네이버 로그인<span>연동하기</span></a>
+                                    {{/naver}}
+                                    {{#naver}}
+                                        <a role="button" id="btn-unlink-naver" href="#">
+                                            <img src="/images/app/naver_s.png">네이버 로그인<span>연동 해제</span></a>
+                                    {{/naver}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    {{^kakao}}
+                                        <a href="/oauth2/authorization/kakao" {{^none}}style="pointer-events: none;"{{/none}}>
+                                            <img src="/images/app/kakao_s.png">카카오 로그인<span>연동하기</span></a>
+                                    {{/kakao}}
+                                    {{#kakao}}
+                                        <a role="button" id="btn-unlink-kakao" href="#">
+                                            <img src="/images/app/kakao_s.png">카카오 로그인<span>연동 해제</span></a>
+                                    {{/kakao}}
+                                </td>
+                                <td></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="valid">SNS 계정 연동은 최대 1개까지만 가능합니다.</div>
+                    </div>
+                    <div class="btn-area">
+                        <a role="button" class="btn" href="/users/my-page">취소</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label for="u-nickname">닉네임</label>
-        <input type="text" class="form-control" id="u-nickname" value="{{user.nickname}}">
-        <span style="color: green">닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하</span>
-        <button type="button" class="btn btn-primary" id="btn-update-nickname">수정</button>
-    </div>
-    <div class="form-group">
-        <label for="u-email">이메일</label>
-        <input type="text" class="form-control" id="u-email" value="{{user.email}}"
-               {{^none}}readonly>
-                   <span>SNS 연동 회원은 이메일 직접 수정이 불가능합니다. 관리자한테 문의하세요.</span>
-               {{/none}}
-        {{#none}}
-            >
-            <button type="button" class="btn btn-success" id="btn-update-email">인증</button>
-            <button type="button" class="btn btn-primary" id="btn-confirm-email" style="display: none">인증 완료</button>
-        {{/none}}
-    {{/user}}
-    </div>
-    <div>
-        <p>sns 연동</p>
-        {{^google}}
-            <a href="/oauth2/authorization/google" {{^none}}style="pointer-events: none;"{{/none}}>구글 연동하기</a>
-        {{/google}}
-        {{#google}}
-            <button type="button" id="btn-unlink-google">구글 연동 해제</button>
-        {{/google}}
-        {{^naver}}
-            <a href="/oauth2/authorization/naver" {{^none}}style="pointer-events: none;"{{/none}}>네이버 연동하기</a>
-        {{/naver}}
-        {{#naver}}
-            <button type="button" id="btn-unlink-naver">네이버 연동 해제</button>
-        {{/naver}}
-        {{^kakao}}
-            <a href="/oauth2/authorization/kakao" {{^none}}style="pointer-events: none;"{{/none}}>카카오 연동하기</a>
-        {{/kakao}}
-        {{#kakao}}
-            <button type="button" id="btn-unlink-kakao">카카오 연동 해제</button>
-        {{/kakao}}
-    </div>
-    <a href="/users/my-page" role="button" class="btn btn-secondary">취소</a>
-    {{#message}}
-        <script>
-            alert('{{message}}');
-        </script>
-    {{/message}}
 </div>
+
+{{#message}}
+    <script>
+        alert('{{message}}');
+    </script>
+{{/message}}
 
 {{>layout/footer}}

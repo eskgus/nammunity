@@ -1,70 +1,108 @@
 {{>layout/header}}
 
-<h1>마이 페이지</h1>
-<div>
-    <table class="table table-horizontal table-bordered">
-        <caption style="caption-side: top">작성 글</caption>
-        {{#postsMore}}
-            <a href="/users/my-page/posts">더 보기</a>
-        {{/postsMore}}
-        <thead class="thead-strong">
-            <tr>
-                <th>게시글 번호</th>
-                <th>제목</th>
-                <th>작성일</th>
-                <th>조회 수</th>
-            </tr>
-        </thead>
-        <tbody id="tbody">
-            {{#posts}}
-                <tr>
-                    <td>{{id}}</td>
-                    <td><a href="/posts/read/{{id}}">{{title}}</a></td>
-                    <td>{{modifiedDate}}</td>
-                    <td>{{view}}</td>
-                </tr>
-            {{/posts}}
-            {{^posts}}
-                <tr>
-                    <td colspan="4">작성한 게시글이 없어요.</td>
-                </tr>
-            {{/posts}}
-        </tbody>
-    </table>
-    <table class="table table-horizontal table-bordered">
-        <caption style="caption-side: top">작성 댓글</caption>
-        {{#commentsMore}}
-            <a href="/users/my-page/comments">더 보기</a>
-        {{/commentsMore}}
-        <thead class="thead-strong">
-        <tr>
-            <th>댓글 번호</th>
-            <th>글 제목</th>
-            <th>댓글</th>
-            <th>작성일</th>
-        </tr>
-        </thead>
-        <tbody id="tbody">
-            {{#comments}}
-                <tr>
-                    <td>{{commentsId}}</td>
-                    <td><a href="/posts/read/{{postsId}}">{{title}}</a></td>
-                    <td><a href="/posts/read/{{postsId}}#cmt-{{commentsId}}">{{content}}</a></td>
-                    <td>{{modifiedDate}}</td>
-                </tr>
-            {{/comments}}
-            {{^comments}}
-                <tr>
-                    <td colspan="4">작성한 댓글이 없어요.</td>
-                </tr>
-            {{/comments}}
-        </tbody>
-    </table>
-    <a href="/users/my-page/posts">작성 글</a>
-    <a href="/users/my-page/comments">작성 댓글</a>
-    <a href="/users/my-page/update/user-info">회원 정보 수정</a>
-    <a href="/users/my-page/update/password">비밀번호 변경</a>
-    <a href="/users/my-page/delete/account">회원 탈퇴</a>
+<div id="container">
+    <div class="wrapper">
+        <div class="my-page">
+            <div class="title-area">
+                <div class="top-area">
+                    <a class="location" href="/"><img class="icon" src="/images/app/home.png" alt="HOME"></a>
+                    <a class="location" href="/users/my-page">마이 페이지</a>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="category-area">
+                    <div>
+                        <h2 class="title"><a href="/users/my-page">마이 페이지</a></h2>
+                    </div>
+                    <div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/smile.png);">나의 활동</h3>
+                            <ul>
+                                <li><a href="/users/my-page/posts">작성 글</a></li>
+                                <li><a href="/users/my-page/comments">작성 댓글</a></li>
+                                <li><a href="/">좋아요</a></li>
+                            </ul>
+                        </div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/lock.png);">회원 정보</h3>
+                            <ul>
+                                <li><a href="/users/my-page/update/user-info">회원 정보 수정</a></li>
+                                <li><a href="/users/my-page/update/password">비밀번호 변경</a></li>
+                                <li><a href="/users/my-page/delete/account">회원 탈퇴</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="my-activity-area">
+                    <div id="posts-area">
+                        <div class="title">
+                            <h2>작성 글</h2>
+                            {{#postsMore}}<a class="more" href="/users/my-page/posts">더 보기<img></a>{{/postsMore}}
+                        </div>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th class="no">번호</th>
+                                <th class="post">게시글</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{^posts}}
+                                <tr>
+                                    <td colspan="2">작성한 글이 없어요.</td>
+                                </tr>
+                            {{/posts}}
+                            {{#posts}}
+                                <tr>
+                                    <td>{{id}}</td>
+                                    <td>
+                                        <div class="tit">
+                                            <a href="/posts/read/{{id}}">{{title}}</a>
+                                        </div>
+                                        <span class="date">{{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> 3</span>
+                                    </td>
+                                </tr>
+                            {{/posts}}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="comments-area">
+                        <div class="title">
+                            <h2>작성 댓글</h2>
+                            {{#commentsMore}}<a class="more" href="/users/my-page/comments">더 보기<img></a>{{/commentsMore}}
+                        </div>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th class="no">번호</th>
+                                <th class="cmt">댓글</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{^comments}}
+                                <tr>
+                                    <td colspan="2">작성한 댓글이 없어요.</td>
+                                </tr>
+                            {{/comments}}
+                            {{#comments}}
+                                <tr>
+                                    <td>{{commentsId}}</td>
+                                    <td>
+                                        <a href="/posts/read/{{postsId}}#cmt-{{commentsId}}"><pre>{{content}}</pre></a>
+                                        <span class="date">{{modifiedDate}} | <img class="like"> 3</span>
+                                        <div class="tit">
+                                            <a href="/posts/read/{{postsId}}">{{title}}</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {{/comments}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{>layout/footer}}

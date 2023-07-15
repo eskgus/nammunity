@@ -1,13 +1,28 @@
 {{>layout/header}}
 
-<div>
-    {{#failure}}
-        <p>{{failure}}</p>
-    {{/failure}}
-    {{#success}}
-        <p>{{success}}</p>
-    {{/success}}
-    <button type="button" class="btn btn-primary" id="btn-close-window">확인</button>
+<div id="container">
+    <div class="wrapper">
+        <div class="sign-up">
+            <div class="title-area">
+                <div class="top-area">
+                    <h1 class="title">인증</h1>
+                </div>
+            </div>
+            <div class="msg-area">
+                <div>
+                    {{#failure}}
+                        <p>{{failure}}</p>
+                    {{/failure}}
+                    {{#success}}
+                        <p>{{success}}</p>
+                    {{/success}}
+                </div>
+            </div>
+            <div class="btn-area">
+                <button type="button" class="btn" id="btn-close-window">확인</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{>layout/footer}}

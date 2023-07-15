@@ -1,32 +1,27 @@
 {{>layout/header}}
-    <h1>나뮤니티: 나현이가 만든 커뮤니티</h1>
-    <div class="col-md-12">
-        <div class="row">
-            <div class="col-md-6">
-                <a href="/posts/save" role="button" class="btn btn-primary">글 등록</a>
-            </div>
+
+<div id="container">
+    <div class="wrapper">
+        <div class="main">
+            <table>
+                <tbody>
+                {{^posts}}
+                    <tr><td class="no-content">글이 없어요.</td></tr>
+                {{/posts}}
+                {{#posts}}
+                    <tr>
+                        <td>
+                            <div class="tit">
+                                <a class="tlink" href="/posts/read/{{id}}">{{title}}</a>
+                            </div>
+                            <span class="date">{{author}} | {{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> 3</span>
+                        </td>
+                    </tr>
+                {{/posts}}
+                </tbody>
+            </table>
         </div>
-        <table class="table table-horizontal table-bordered">
-            <thead class="thead-strong">
-            <tr>
-                <th>게시글 번호</th>
-                <th>제목</th>
-                <th>작성자</th>
-                <th>작성일</th>
-                <th>조회 수</th>
-            </tr>
-            </thead>
-            <tbody id="tbody">
-            {{#posts}}
-                <tr>
-                    <td>{{id}}</td>
-                    <td><a href="/posts/read/{{id}}">{{title}}</a></td>
-                    <td>{{author}}</td>
-                    <td>{{modifiedDate}}</td>
-                    <td>{{view}}</td>
-                </tr>
-            {{/posts}}
-            </tbody>
-        </table>
     </div>
+</div>
+
 {{>layout/footer}}

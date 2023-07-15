@@ -1,73 +1,93 @@
 {{>layout/header}}
-    <div class="col-md-12">
-        <div class="col-md-4">
+
+<div id="container">
+    <div class="wrapper">
+        <div class="read">
             {{#post}}
-            <form>
-                <div>
-                    <input type="hidden" id="id" value="{{id}}">
-                </div>
-                <div class="form-group">
-                    <label for="title">제목</label>
-                    <input type="text" class="form-control" id="title" value="{{title}}" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="author">작성자</label>
-                    <input type="text" class="form-control" id="author" value="{{author}}" readonly>
-                </div>
-                <div>
-                    <label for="content">내용</label>
-                    <pre id="content">{{content}}</pre>
-                </div>
-                <div class="form-group">
-                    <label for="createdDate">작성일</label>
-                    <input type="text" class="form-control" id="createdDate" value="{{createdDate}}" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="modifiedDate">수정일</label>
-                    <input type="text" class="form-control" id="modifiedDate" value="{{modifiedDate}}" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="view">조회수</label>
-                    <input type="text" class="form-control" id="view" value="{{view}}" readonly>
-                </div>
-            </form>
-            {{/post}}
-            <a href="/" role="button" class="btn btn-primary">돌아가기</a>
-            {{#author}}
-                <a href="/posts/update/{{id}}" role="button" class="btn btn-success">수정</a>
-                <button type="button" class="btn btn-danger" id="btn-delete">삭제</button>
-            {{/author}}
-        </div>
-        <p>댓글</p>
-        {{#auth}}
-            <p>{{auth}}</p>
-            <input type="text" class="form-control" id="cmt-content" placeholder="댓글을 입력하세요.">
-            <button type="button" class="btn btn-primary" id="btn-cmt-save">등록</button>
-        {{/auth}}
-        {{^auth}}
-            <input type="text" class="form-control" id="cmt-content" placeholder="댓글을 입력하려면 로그인하세요." readonly>
-        {{/auth}}
-        <div>
-            {{#comments}}
-                <div id="cmt-{{id}}" class="collapse show">
-                    <span>{{author}}</span>
-                    {{#auth}}
-                        <button type="button" class="btn btn-success" data-toggle="collapse" data-target="#cmt-{{id}}">수정</button>
-                        <button type="button" class="btn btn-danger" name="btn-cmt-delete">삭제</button>
-                    {{/auth}}
-                    <div>
-                        <span>작성 {{createdDate}}</span>
-                        {{#modifiedDate}}<span>  수정 {{modifiedDate}}</span>{{/modifiedDate}}
+                <input type="hidden" id="id" value="{{id}}">
+                <div class="title-area">
+                    <div class="top-area">
+                        <span class="date">
+                            작성 {{createdDate}}
+                            {{#modify}}
+                                | 수정 {{modifiedDate}}
+                            {{/modify}}
+                        </span>
+                        <h1 class="title">
+                            <span id="title">{{title}}</span>
+                        </h1>
                     </div>
-                    <p>{{content}}</p>
+                    <div class="btm-area">
+                        <div class="author" id="author">{{author}}</div>
+                        <div class="view">
+                            <span style="padding-left: 10px">조회 수
+                                <span style="padding-left: 2px" id="view">{{view}}</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div id="cmt-{{id}}" class="collapse">
-                    <span>{{author}}</span>
-                    <input type="text" class="form-control" id="cmt-content-{{id}}" value="{{content}}">
-                    <button type="button" class="btn btn-primary" name="btn-cmt-update">수정</button>
-                    <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#cmt-{{id}}">취소</button>
+                <div class="content">
+                    <article>
+                        <pre id="content">{{content}}</pre>
+                    </article>
                 </div>
-            {{/comments}}
+            {{/post}}
+            <div class="btn-area">
+                <a role="button" class="btn" href="/">목록</a>
+                <ul class="hidden-btn">
+                    <li class="dropdown">
+                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
+                        <ul class="dropdown-menu">
+                            {{#author}}
+                                <li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
+                                <li><a role="button" class="last" href="#" id="btn-delete">삭제</a></li>
+                            {{/author}}
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="comments-area">
+                <div class="sum-area">
+                {{#n}}
+                    <span class="sum">댓글 {{n}}개</span>
+                {{/n}}
+                </div>
+                <div class="comments-list">
+                {{#comments}}
+                    <div id="cmt-{{id}}">
+                        <div class="comment">
+                            <span class="author">{{author}}</span>
+                            {{#auth}}
+                            <ul class="btn-area hidden-btn">
+                                <li class="dropdown">
+                                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>
+                                        <li><a role="button" class="last" id="btn-delete" name="btn-cmt-delete" href="#">삭제</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            {{/auth}}
+                            <pre>{{content}}</pre>
+                            <span class="date">작성 {{createdDate}}{{#modifiedDate}} | 수정 {{modifiedDate}}{{/modifiedDate}}</span>
+                        </div>
+                    </div>
+                {{/comments}}
+                </div>
+                <div class="comments-creation">
+                    {{#auth}}<span class="author">{{auth}}</span>{{/auth}}
+                    <textarea class="cmt-content" id="cmt-content"
+                              placeholder={{#auth}}"댓글을 입력하세요."{{/auth}}
+                                            {{^auth}}"댓글을 입력하려면 로그인하세요." disabled{{/auth}}
+                              rows="4"></textarea>
+                    <div class="btn-area">
+                        <button type="button" class="btn" id="btn-cmt-save">등록</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+</div>
+
+<script src="/js/app/comments.js"></script>
 {{>layout/footer}}
