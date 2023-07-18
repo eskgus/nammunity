@@ -16,4 +16,5 @@ public interface TokensRepository extends JpaRepository<Tokens, Long> {
     void updateExpiredAtAllByUser(User user, LocalDateTime now);
 
     void deleteAllByUser(User user);
+    Optional<Tokens> findByUser(User user);
 }

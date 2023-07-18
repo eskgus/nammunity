@@ -1,27 +1,47 @@
 package com.eskgus.nammunity.web;
 
+import com.eskgus.nammunity.domain.tokens.Tokens;
+import com.eskgus.nammunity.domain.tokens.TokensRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
+import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
+import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import lombok.extern.log4j.Log4j2;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@Log4j2
+@AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserApiControllerTest {
     @LocalServerPort
     private int port;
@@ -35,54 +55,198 @@ public class UserApiControllerTest {
     @Autowired
     private BCryptPasswordEncoder encoder;
 
-    @AfterEach
-    public void cleanUp() throws Exception {
-        userRepository.deleteAll();
-    }
+    @Autowired
+    private TokensRepository tokensRepository;
+
+    @Autowired
+    public MockMvc mockMvc;
 
     @Test
-    public void signUpUser() throws Exception {
-        RegistrationDto requestDto = RegistrationDto.builder()
-                .username("username123").password("password123").nickname("nick네ME123").build();
+    @Order(1)
+    public void check() {
+        // 1. "/api/users?username=username111"로 get 요청
+        String url = "http://localhost:" + port + "/api/users?username=username111";
+        ResponseEntity<String> responseEntity = testRestTemplate.getForEntity(url, String.class);
 
-        String url = "http://localhost:" + port + "/api/user";
-        ResponseEntity<Long> responseEntity = testRestTemplate.postForEntity(url, requestDto, Long.class);
-
+        // 2. 응답으로 "OK" 왔나 확인
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity.getBody()).isGreaterThan(0L);
-
-        List<User> all = userRepository.findAll();
-        boolean result = encoder.matches("password123", all.get(0).getPassword());
-        Assertions.assertThat(result).isTrue();
+        Assertions.assertThat(responseEntity.getBody()).isEqualTo("OK");
     }
 
     @Test
-    public void checkUsername() throws Exception {
-        String username = "username123";
-        String password = "password123!";
-        String nickname = "nick네임123";
-        userRepository.save(User.builder().username(username).password(password).nickname(nickname).build());
+    @Order(2)
+    public void signUp() {
+        // 1. username, password, confirmPassword, nickname, email로 RegistrationDto 생성
+        String username = "username111";
+        String password = "password111";
+        RegistrationDto requestDto = RegistrationDto.builder()
+                .username(username).password(password).confirmPassword(password)
+                .nickname("nickname1").email("email111@naver.com").build();
 
-        // username123으로 회원가입 시도하는 다른 사용자1
-        RegistrationDto requestDto1 = RegistrationDto.builder()
-                .username(username).password(password).nickname(nickname).build();
+        // 2. "/api/users"로 registrationDto 담아서 post 요청
+        String url = "http://localhost:" + port + "/api/users";
+        ResponseEntity<Map> responseEntity = testRestTemplate.postForEntity(url, requestDto, Map.class);
 
-        HttpEntity<RegistrationDto> requestEntity1 = new HttpEntity<>(requestDto1);
+        // 3. 응답으로 "OK" 왔나 확인
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(responseEntity.getBody()).containsKey("OK");
 
-        String url1 = "http://localhost:" + port + "/api/exists/username/" + username;
+        // 4. db에 저장됐나 확인
+        Long id = Long.valueOf((String) responseEntity.getBody().get("OK"));
+        Optional<User> result = userRepository.findById(id);
+        Assertions.assertThat(result).isPresent();
 
-        ResponseEntity<Boolean> responseEntity1 = testRestTemplate.exchange(url1, HttpMethod.GET, requestEntity1, Boolean.class);
+        // 5. 저장된 user password 암호화됐나 확인
+        User user = result.get();
+        Assertions.assertThat(encoder.matches(password, user.getPassword())).isTrue();
+    }
 
-        Assertions.assertThat(responseEntity1.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity1.getBody()).isTrue();
+    @Test
+    @Order(3)
+    public void confirmToken() {
+        // 1. 회원가입 후
+        User user = userRepository.findById(1L).get();
 
-        // username1234로 회원가입 시도하는 또 다른 사용자2
-        RegistrationDto requestDto2 = RegistrationDto.builder()
-                .username("username1234").password(password).nickname(nickname).build();
-        HttpEntity<RegistrationDto> requestEntity2 = new HttpEntity<>(requestDto2);
-        String url2 = "http://localhost:" + port + "/api/exists/username/" + "username1234";
-        ResponseEntity<Boolean> responseEntity2 = testRestTemplate.exchange(url2, HttpMethod.GET, requestEntity2, Boolean.class);
-        Assertions.assertThat(responseEntity2.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity2.getBody()).isFalse();
+        // 2. tokensRepository에서 user로 token 찾기
+        Optional<Tokens> result = tokensRepository.findByUser(user);
+        Assertions.assertThat(result).isPresent();
+        Tokens tokens = result.get();
+
+        // 3. token 담아서 "/api/users/confirm"로 get 요청
+        String url = "http://localhost:" + port + "/api/users/confirm?token=" + tokens.getToken();
+        String body = testRestTemplate.getForObject(url, String.class);
+
+        // 4. redirect된 화면에서 "이메일 인증이 완료됐습니다." 있는지 확인
+        Assertions.assertThat(body).contains("<h1 class=\"title\">인증</h1>");
+        Assertions.assertThat(body).contains("이메일 인증이 완료됐습니다.");
+
+        // 5. token confirmed_at이 null이 아닌지 확인
+        user = userRepository.findById(1L).get();
+        tokens = tokensRepository.findByUser(user).get();
+        Assertions.assertThat(tokens.getConfirmedAt()).isNotNull();
+
+        // 6. user enabled true인지 확인
+        Assertions.assertThat(user.isEnabled()).isTrue();
+    }
+
+    @Test
+    @Order(4)
+    @WithMockUser(username = "username111", password = "password111")
+    public void signInUser() throws Exception {
+        // 1. 회원가입하고 user enabled 업데이트
+        User user = userRepository.findById(1L).get();
+
+        // 2. username, password 담아서 "/users/sign-in"으로 post 요청
+        String url = "http://localhost:" + port + "/users/sign-in?username=" + user.getUsername()
+                + "&password=password111";
+        ResponseEntity<Map> responseEntity = testRestTemplate.postForEntity(url, null, Map.class);
+
+        // 3. redirect uri가 "/"이랑 같은지 확인
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        URI redirectUri = responseEntity.getHeaders().getLocation();
+        URI expectUri = URI.create("http://localhost:" + port + "/");
+        Assertions.assertThat(redirectUri).isEqualTo(expectUri);
+
+        // 4. signInUser() 응답으로 redirect된 화면에 user nickname 있나 확인
+        MvcResult mvcResult = mockMvc.perform(get(redirectUri))
+                .andExpect(status().isOk())
+                .andReturn();
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains(user.getNickname());
+    }
+
+    @Test
+    @Order(5)
+    @WithMockUser(username = "username111", password = "password111")
+    public void updatePassword() throws Exception {
+        // 1. 회원가입 + 로그인 후
+        // 2. oldPassword, password, confirmPassword로 PasswordUpdateDto 생성
+        String password = "password222";
+        PasswordUpdateDto requestDto = PasswordUpdateDto.builder()
+                .oldPassword("password111").password(password).confirmPassword(password).build();
+
+        // 3. "/api/users/update/password"로 put 요청
+        MvcResult mvcResult = mockMvc.perform(put("/api/users/update/password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(new ObjectMapper().writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 4. 응답으로 "OK" 왔나 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+
+        // 5. 비밀번호 password로 바뀌었나 확인
+        User user = userRepository.findById(1L).get();
+        Assertions.assertThat(encoder.matches(password, user.getPassword())).isTrue();
+    }
+
+    @Test
+    @Order(6)
+    @WithMockUser(username = "username111", password = "password222")
+    public void updateNickname() throws Exception {
+        // 1. 회원가입 + 로그인 후
+        // 2. nickname으로 NicknameUpdateDto 생성
+        String nickname = "nickname2";
+        NicknameUpdateDto requestDto = new NicknameUpdateDto(nickname);
+
+        // 3. "/api/users/update/nickname"으로 put 요청
+        MvcResult mvcResult = mockMvc.perform(put("/api/users/update/nickname")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(new ObjectMapper().writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 4. 응답으로 "OK" 왔나 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+
+        // 5. 닉네임 nickname으로 바뀌었나 확인
+        User user = userRepository.findById(1L).get();
+        Assertions.assertThat(user.getNickname()).isEqualTo(nickname);
+    }
+
+    @Test
+    @Order(7)
+    @WithMockUser(username = "username111", password = "password222")
+    public void updateEmail() throws Exception {
+        // 1. 회원가입 + 로그인 후
+        // 2. email로 EmailUpdateDto 생성
+        String email = "email222@naver.com";
+        EmailUpdateDto requestDto = new EmailUpdateDto(email);
+
+        // 3. "/api/users/update/email"로 put 요청
+        MvcResult mvcResult = mockMvc.perform(put("/api/users/update/email")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(new ObjectMapper().writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 4. 응답으로 "OK" 왔나 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+
+        // 5. 이메일 email로 바뀌었나 확인
+        User user = userRepository.findById(1L).get();
+        Assertions.assertThat(user.getEmail()).isEqualTo(email);
+    }
+
+    @Test
+    @Order(8)
+    @WithMockUser(username = "username111", password = "password222")
+    public void deleteUser() throws Exception {
+        // 1. 회원가입 + 로그인 후
+        // 2. "/api/users/delete"로 delete 요청
+        MvcResult mvcResult = mockMvc.perform(delete("/api/users/delete"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 3. 응답으로 "OK" 왔나 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+
+        // 4. db에서 지워졌나 확인
+        List<User> result = userRepository.findAll();
+        Assertions.assertThat(result.size()).isZero();
+    }
+
+    public Map<String, Object> parseResponseJSON(String response) {
+        Gson gson = new Gson();
+        return gson.fromJson(response, Map.class);
     }
 }

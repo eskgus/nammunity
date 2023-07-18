@@ -12,4 +12,8 @@ public class NicknameUpdateDto {
     @Pattern(regexp = "(?=[a-zA-Z0-9가-힣])[a-zA-Z0-9가-힣]{3,10}",
             message = "닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하")
     private String nickname;
+
+    public NicknameUpdateDto(String nickname) {
+        this.nickname = nickname;
+    }
 }

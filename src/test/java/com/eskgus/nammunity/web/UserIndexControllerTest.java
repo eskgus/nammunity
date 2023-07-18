@@ -22,4 +22,13 @@ public class UserIndexControllerTest {
 
         Assertions.assertThat(body).contains("회원가입");
     }
+
+    @Test
+    public void loadSignInUserPage() {
+        // 1. "/users/sign-in"으로 get 요청
+        String body = testRestTemplate.getForObject("/users/sign-in", String.class);
+
+        // 2. 화면에 "로그인" 있나 확인
+        Assertions.assertThat(body).contains("로그인");
+    }
 }
