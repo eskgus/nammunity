@@ -1,9 +1,10 @@
-package com.eskgus.nammunity.web;
+package com.eskgus.nammunity.web.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.web.user.UserApiControllerTest;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,7 +56,6 @@ public class PostsApiControllerTest extends UserApiControllerTest {
                 .build();
 
         signUp();
-        confirmToken();
     }
 
     @Test
@@ -102,7 +102,7 @@ public class PostsApiControllerTest extends UserApiControllerTest {
         PostsUpdateDto requestDto = PostsUpdateDto.builder().title(title).content(content).build();
 
         // 3. "/api/posts/1"로 postsUpdateDto 담아서 put 요청
-        MvcResult mvcResult = mockMvc.perform(put("/api/posts/1")
+        MvcResult mvcResult = mockMvc.perform(put("/api/posts/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
@@ -128,7 +128,7 @@ public class PostsApiControllerTest extends UserApiControllerTest {
         save();
 
         // 2. "/api/posts/1"로 delete 요청
-        MvcResult mvcResult = mockMvc.perform(delete("/api/posts/1"))
+        MvcResult mvcResult = mockMvc.perform(delete("/api/posts/{id}", 1))
                 .andExpect(status().isOk())
                 .andReturn();
 

@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web;
+package com.eskgus.nammunity.web.user;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;

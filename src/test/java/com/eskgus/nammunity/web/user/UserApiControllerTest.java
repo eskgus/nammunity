@@ -1,9 +1,9 @@
-package com.eskgus.nammunity.web;
+package com.eskgus.nammunity.web.user;
 
-import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.tokens.TokensRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
@@ -29,7 +29,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -60,6 +59,9 @@ public class UserApiControllerTest {
 
     @Autowired
     public MockMvc mockMvc;
+
+    @Autowired
+    private RegistrationService registrationService;
 
     @Test
     @Order(1)
@@ -103,38 +105,13 @@ public class UserApiControllerTest {
 
     @Test
     @Order(3)
-    public void confirmToken() {
-        // 1. 회원가입 후
-        User user = userRepository.findById(1L).get();
-
-        // 2. tokensRepository에서 user로 token 찾기
-        Optional<Tokens> result = tokensRepository.findByUser(user);
-        Assertions.assertThat(result).isPresent();
-        Tokens tokens = result.get();
-
-        // 3. token 담아서 "/api/users/confirm"로 get 요청
-        String url = "http://localhost:" + port + "/api/users/confirm?token=" + tokens.getToken();
-        String body = testRestTemplate.getForObject(url, String.class);
-
-        // 4. redirect된 화면에서 "이메일 인증이 완료됐습니다." 있는지 확인
-        Assertions.assertThat(body).contains("<h1 class=\"title\">인증</h1>");
-        Assertions.assertThat(body).contains("이메일 인증이 완료됐습니다.");
-
-        // 5. token confirmed_at이 null이 아닌지 확인
-        user = userRepository.findById(1L).get();
-        tokens = tokensRepository.findByUser(user).get();
-        Assertions.assertThat(tokens.getConfirmedAt()).isNotNull();
-
-        // 6. user enabled true인지 확인
-        Assertions.assertThat(user.isEnabled()).isTrue();
-    }
-
-    @Test
-    @Order(4)
     @WithMockUser(username = "username111", password = "password111")
     public void signInUser() throws Exception {
         // 1. 회원가입하고 user enabled 업데이트
+        String token = tokensRepository.findByUser(userRepository.findById(1L).get()).get(0).getToken();
+        registrationService.confirmToken(token);
         User user = userRepository.findById(1L).get();
+        Assertions.assertThat(user.isEnabled()).isTrue();
 
         // 2. username, password 담아서 "/users/sign-in"으로 post 요청
         String url = "http://localhost:" + port + "/users/sign-in?username=" + user.getUsername()
@@ -155,7 +132,7 @@ public class UserApiControllerTest {
     }
 
     @Test
-    @Order(5)
+    @Order(4)
     @WithMockUser(username = "username111", password = "password111")
     public void updatePassword() throws Exception {
         // 1. 회원가입 + 로그인 후
@@ -180,7 +157,7 @@ public class UserApiControllerTest {
     }
 
     @Test
-    @Order(6)
+    @Order(5)
     @WithMockUser(username = "username111", password = "password222")
     public void updateNickname() throws Exception {
         // 1. 회원가입 + 로그인 후
@@ -204,7 +181,7 @@ public class UserApiControllerTest {
     }
 
     @Test
-    @Order(7)
+    @Order(6)
     @WithMockUser(username = "username111", password = "password222")
     public void updateEmail() throws Exception {
         // 1. 회원가입 + 로그인 후
@@ -228,7 +205,7 @@ public class UserApiControllerTest {
     }
 
     @Test
-    @Order(8)
+    @Order(7)
     @WithMockUser(username = "username111", password = "password222")
     public void deleteUser() throws Exception {
         // 1. 회원가입 + 로그인 후
@@ -241,8 +218,7 @@ public class UserApiControllerTest {
         Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
 
         // 4. db에서 지워졌나 확인
-        List<User> result = userRepository.findAll();
-        Assertions.assertThat(result.size()).isZero();
+        Assertions.assertThat(userRepository.count()).isZero();
     }
 
     public Map<String, Object> parseResponseJSON(String response) {

@@ -2,6 +2,7 @@ package com.eskgus.nammunity.web.controller.user;
 
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.service.user.UserUpdateService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class ConfirmationApiController {
     private final RegistrationService registrationService;
     private final UserService userService;
+    private final UserUpdateService userUpdateService;
 
     @GetMapping
     public RedirectView confirmToken(@RequestParam String token,
@@ -52,6 +54,9 @@ public class ConfirmationApiController {
             registrationService.resendToken(id.get("id"));
             response.put("OK", "발송 완료");
         } catch (IllegalArgumentException ex) {
+            if (ex.getMessage().contains("더 이상")) {
+                userUpdateService.deleteUser(userService.findById(id.get("id")).getUsername(), null);
+            }
             response.put("error", ex.getMessage());
         }
         return response;

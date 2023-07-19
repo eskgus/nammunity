@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web;
+package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
@@ -66,7 +66,6 @@ public class UserApiControllerExceptionTest extends UserApiControllerTest {
                 .build();
 
         signUp();
-        confirmToken();
     }
 
     @Test
@@ -196,6 +195,7 @@ public class UserApiControllerExceptionTest extends UserApiControllerTest {
         Assertions.assertThat(mvcResult1.getResponse().getContentAsString()).contains("email");
 
         // 예외 2. email 중복
+        signInUser();
         EmailUpdateDto requestDto2 = new EmailUpdateDto(email);
         MvcResult mvcResult2 = mockMvc.perform(put("/api/users/update/email")
                         .contentType(MediaType.APPLICATION_JSON)

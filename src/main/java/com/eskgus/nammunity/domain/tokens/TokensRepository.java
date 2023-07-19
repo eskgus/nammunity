@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface TokensRepository extends JpaRepository<Tokens, Long> {
@@ -16,5 +17,5 @@ public interface TokensRepository extends JpaRepository<Tokens, Long> {
     void updateExpiredAtAllByUser(User user, LocalDateTime now);
 
     void deleteAllByUser(User user);
-    Optional<Tokens> findByUser(User user);
+    List<Tokens> findByUser(User user);
 }

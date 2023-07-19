@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web;
+package com.eskgus.nammunity.web.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,7 +47,6 @@ public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
                 .build();
 
         signUp();
-        confirmToken();
     }
 
     @Test
@@ -82,8 +80,7 @@ public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
         Assertions.assertThat((String) map.get("title")).contains("100글자 이하");
         Assertions.assertThat((String) map.get("content")).contains("3000글자 이하");
 
-        List<Posts> result = postsRepository.findAll();
-        Assertions.assertThat(result.size()).isZero();
+        Assertions.assertThat(postsRepository.count()).isZero();
     }
 
     @Test
@@ -93,7 +90,7 @@ public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
 
         // 예외 1. 제목/내용 입력 x
         PostsUpdateDto requestDto1 = PostsUpdateDto.builder().title("").content("").build();
-        MvcResult mvcResult1 = mockMvc.perform(put("/api/posts/1")
+        MvcResult mvcResult1 = mockMvc.perform(put("/api/posts/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto1)))
                 .andExpect(status().isOk())
@@ -109,7 +106,7 @@ public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
         PostsUpdateDto requestDto2 = PostsUpdateDto.builder()
                 .title(title.repeat(101))
                 .content(content.repeat(3001)).build();
-        MvcResult mvcResult2 = mockMvc.perform(put("/api/posts/1")
+        MvcResult mvcResult2 = mockMvc.perform(put("/api/posts/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto2)))
                 .andExpect(status().isOk())
@@ -140,7 +137,7 @@ public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
     @WithMockUser(username = "username111", password = "password111")
     public void causeExceptionsInDeletingPosts() throws Exception {
         // 예외 1. 게시글 존재 x
-        MvcResult mvcResult = mockMvc.perform(delete("/api/posts/1"))
+        MvcResult mvcResult = mockMvc.perform(delete("/api/posts/{id}", 1))
                 .andExpect(status().isOk())
                 .andReturn();
         Map<String, Object> map = parseResponseJSON(mvcResult.getResponse().getContentAsString());
