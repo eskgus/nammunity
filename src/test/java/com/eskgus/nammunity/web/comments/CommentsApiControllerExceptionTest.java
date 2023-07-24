@@ -1,10 +1,12 @@
-package com.eskgus.nammunity.web.posts;
+package com.eskgus.nammunity.web.comments;
 
-import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
-import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
+import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
+import com.eskgus.nammunity.web.dto.comments.CommentsUpdateDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.log4j.Log4j2;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,17 +23,20 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import java.util.Map;
-import java.util.Optional;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Log4j2
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
+public class CommentsApiControllerExceptionTest extends CommentsApiControllerTest {
     @Autowired
     private PostsRepository postsRepository;
+
+    @Autowired
+    private CommentsRepository commentsRepository;
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,85 +45,45 @@ public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
     private WebApplicationContext context;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .addFilter(new CharacterEncodingFilter("UTF-8", true))
                 .apply(springSecurity())
                 .build();
 
         signUp();
-    }
-
-    @Test
-    @WithMockUser(username = "username111", password = "password111")
-    public void causeExceptionsInSavingPosts() throws Exception {
-        // 예외 1. 제목/내용 입력 x
-        PostsSaveDto requestDto1 = PostsSaveDto.builder().title("").content("").build();
-        MvcResult mvcResult1 = mockMvc.perform(post("/api/posts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto1)))
-                .andExpect(status().isOk())
-                .andReturn();
-        Map<String, Object> map = parseResponseJSON(mvcResult1.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKeys("title", "content");
-        Assertions.assertThat((String) map.get("title")).contains("입력");
-        Assertions.assertThat((String) map.get("content")).contains("입력");
-
-        // 예외 2. 제목 100글자 초과, 내용 3000글자 초과 입력
-        String title = "t";
-        String content = "c";
-        PostsSaveDto requestDto2 = PostsSaveDto.builder()
-                .title(title.repeat(101))
-                .content(content.repeat(3001)).build();
-        MvcResult mvcResult2 = mockMvc.perform(post("/api/posts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto2)))
-                .andExpect(status().isOk())
-                .andReturn();
-        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKeys("title", "content");
-        Assertions.assertThat((String) map.get("title")).contains("100글자 이하");
-        Assertions.assertThat((String) map.get("content")).contains("3000글자 이하");
-
-        Assertions.assertThat(postsRepository.count()).isZero();
-    }
-
-    @Test
-    @WithMockUser(username = "username111", password = "password111")
-    public void causeExceptionsInUpdatingPosts() throws Exception {
         savePosts();
+    }
 
-        // 예외 1. 제목/내용 입력 x
-        PostsUpdateDto requestDto1 = PostsUpdateDto.builder().title("").content("").build();
-        MvcResult mvcResult1 = mockMvc.perform(put("/api/posts/{id}", 1)
+    @Test
+    @WithMockUser(username = "username111", password = "password111")
+    public void causeExceptionsInSavingComments() throws Exception {
+        // 예외 1. 댓글 입력 x
+        CommentsSaveDto requestDto1 = new CommentsSaveDto("", 1L);
+        MvcResult mvcResult1 = mockMvc.perform(post("/api/comments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto1)))
                 .andExpect(status().isOk())
                 .andReturn();
         Map<String, Object> map = parseResponseJSON(mvcResult1.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKeys("title", "content");
-        Assertions.assertThat((String) map.get("title")).contains("입력");
+        Assertions.assertThat(map).containsKey("content");
         Assertions.assertThat((String) map.get("content")).contains("입력");
 
-        // 예외 2. 제목 100글자 초과, 내용 3000글자 초과 입력
-        String title = "t";
+        // 예외 2. 1500글자 초과 입력
         String content = "c";
-        PostsUpdateDto requestDto2 = PostsUpdateDto.builder()
-                .title(title.repeat(101))
-                .content(content.repeat(3001)).build();
-        MvcResult mvcResult2 = mockMvc.perform(put("/api/posts/{id}", 1)
+        CommentsSaveDto requestDto2 = new CommentsSaveDto(content.repeat(1501), 1L);
+        MvcResult mvcResult2 = mockMvc.perform(post("/api/comments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto2)))
                 .andExpect(status().isOk())
                 .andReturn();
         map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKeys("title", "content");
-        Assertions.assertThat((String) map.get("title")).contains("100글자 이하");
-        Assertions.assertThat((String) map.get("content")).contains("3000글자 이하");
+        Assertions.assertThat(map).containsKey("content");
+        Assertions.assertThat((String) map.get("content")).contains("1500글자 이하");
 
         // 예외 3. 게시글 존재 x
-        PostsUpdateDto requestDto3 = PostsUpdateDto.builder().title(title).content(content).build();
-        MvcResult mvcResult3 = mockMvc.perform(put("/api/posts/{id}", 2)
+        CommentsSaveDto requestDto3 = new CommentsSaveDto(content, 2L);
+        MvcResult mvcResult3 = mockMvc.perform(post("/api/comments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto3)))
                 .andExpect(status().isOk())
@@ -126,24 +91,65 @@ public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
         map = parseResponseJSON(mvcResult3.getResponse().getContentAsString());
         Assertions.assertThat(map).containsKey("error");
         Assertions.assertThat((String) map.get("error")).contains("게시글이 없");
-        Assertions.assertThat(postsRepository.findById(2L)).isNotPresent();
 
-        Posts posts = postsRepository.findById(1L).get();
-        Assertions.assertThat(posts.getTitle()).isEqualTo("title1");
-        Assertions.assertThat(posts.getContent()).isEqualTo("content1");
+        Assertions.assertThat(postsRepository.existsById(2L)).isFalse();
+        Assertions.assertThat(commentsRepository.count()).isZero();
     }
 
     @Test
     @WithMockUser(username = "username111", password = "password111")
-    public void causeExceptionsInDeletingPosts() throws Exception {
-        // 예외 1. 게시글 존재 x
-        MvcResult mvcResult = mockMvc.perform(delete("/api/posts/{id}", 1))
+    public void causeExceptionsInUpdatingComments() throws Exception {
+        saveComments();
+
+        // 예외 1. 댓글 입력 x
+        CommentsUpdateDto requestDto1 = new CommentsUpdateDto("");
+        MvcResult mvcResult1 = mockMvc.perform(put("/api/comments/{id}", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto1)))
+                .andExpect(status().isOk())
+                .andReturn();
+        Map<String, Object> map = parseResponseJSON(mvcResult1.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("content");
+        Assertions.assertThat((String) map.get("content")).contains("입력");
+
+        // 예외 2. 1500글자 초과 입력
+        String content = "c";
+        CommentsUpdateDto requestDto2 = new CommentsUpdateDto(content.repeat(1501));
+        MvcResult mvcResult2 = mockMvc.perform(put("/api/comments/{id}", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto2)))
+                .andExpect(status().isOk())
+                .andReturn();
+        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("content");
+        Assertions.assertThat((String) map.get("content")).contains("1500글자 이하");
+
+        // 예외 3. 게시글 존재 x
+        CommentsUpdateDto requestDto3 = new CommentsUpdateDto(content);
+        MvcResult mvcResult3 = mockMvc.perform(put("/api/comments/{id}", 2)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto3)))
+                .andExpect(status().isOk())
+                .andReturn();
+        map = parseResponseJSON(mvcResult3.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("error");
+        Assertions.assertThat((String) map.get("error")).contains("댓글이 없");
+
+        Assertions.assertThat(commentsRepository.existsById(2L)).isFalse();
+        Comments comments = commentsRepository.findById(1L).get();
+        Assertions.assertThat(comments.getContent()).isEqualTo("comment");
+    }
+
+    @Test
+    @WithMockUser(username = "username111", password = "password111")
+    public void causeExceptionsInDeletingComments() throws Exception {
+        // 예외 1. 댓글 존재 x
+        MvcResult mvcResult = mockMvc.perform(delete("/api/comments/{id}", 1))
                 .andExpect(status().isOk())
                 .andReturn();
         Map<String, Object> map = parseResponseJSON(mvcResult.getResponse().getContentAsString());
         Assertions.assertThat(map).containsKey("error");
-        Assertions.assertThat((String) map.get("error")).contains("게시글이 없");
-        Optional<Posts> result = postsRepository.findById(1L);
-        Assertions.assertThat(result).isNotPresent();
+        Assertions.assertThat((String) map.get("error")).contains("댓글이 없");
+        Assertions.assertThat(commentsRepository.count()).isZero();
     }
 }

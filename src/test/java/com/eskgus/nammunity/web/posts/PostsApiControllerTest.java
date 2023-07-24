@@ -49,7 +49,7 @@ public class PostsApiControllerTest extends UserApiControllerTest {
     private WebApplicationContext context;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .addFilter(new CharacterEncodingFilter("UTF-8", true))
                 .apply(springSecurity())
@@ -60,7 +60,7 @@ public class PostsApiControllerTest extends UserApiControllerTest {
 
     @Test
     @WithMockUser(username = "username111", password = "password111")
-    public void save() throws Exception {
+    public void savePosts() throws Exception {
         // 1. 회원가입 (+ 로그인) 후
         User user = userRepository.findById(1L).get();
 
@@ -92,9 +92,9 @@ public class PostsApiControllerTest extends UserApiControllerTest {
 
     @Test
     @WithMockUser(username = "username111", password = "password111")
-    public void update() throws Exception {
+    public void updatePosts() throws Exception {
         // 1. 회원가입 (+ 로그인) + 게시글 저장 후
-        save();
+        savePosts();
 
         // 2. title, content로 PostsUpdateDto 생성
         String title = "title1 update";
@@ -125,7 +125,7 @@ public class PostsApiControllerTest extends UserApiControllerTest {
     @WithMockUser(username = "username111", password = "password111")
     public void deletePosts() throws Exception {
         // 1. 회원가입 (+ 로그인) + 게시글 저장 후
-        save();
+        savePosts();
 
         // 2. "/api/posts/1"로 delete 요청
         MvcResult mvcResult = mockMvc.perform(delete("/api/posts/{id}", 1))

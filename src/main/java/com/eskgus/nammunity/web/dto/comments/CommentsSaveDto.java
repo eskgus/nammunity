@@ -28,6 +28,11 @@ public class CommentsSaveDto {
         this.user = user;
     }
 
+    public CommentsSaveDto(String content, Long postsId) {
+        this.content = content;
+        this.postsId = postsId;
+    }
+
     public Comments toEntity() {
         return Comments.builder().content(content).posts(posts).user(user).build();
     }

@@ -37,7 +37,7 @@ public class ConfirmationApiControllerTest extends UserApiControllerTest {
     private TokensRepository tokensRepository;
 
     @Autowired
-    public MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @BeforeEach
     public void setup(){

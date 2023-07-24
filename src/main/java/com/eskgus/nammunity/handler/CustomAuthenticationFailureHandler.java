@@ -36,6 +36,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
                     message = "로그인에 5번 이상 실패했습니다. ID 또는 비밀번호 찾기를 하세요.";
                 }
             } catch (Exception ex) {
+                message = ex.getMessage();
             }
         }
 

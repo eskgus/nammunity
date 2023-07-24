@@ -58,7 +58,7 @@ public class UserApiControllerTest {
     private TokensRepository tokensRepository;
 
     @Autowired
-    public MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     @Autowired
     private RegistrationService registrationService;
