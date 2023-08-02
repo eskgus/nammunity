@@ -4,6 +4,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,14 @@ import java.util.stream.Collectors;
 public class PostsSearchService {
     private final PostsRepository postsRepository;
     private final CommentsSearchService commentsSearchService;
+    private final LikesSearchService likesSearchService;
 
     @Transactional(readOnly = true)
     public List<PostsListDto> findAllDesc() {
         return postsRepository.findAllDesc().stream().map(posts -> {
                     int comments = commentsSearchService.countByPosts(posts);
-                    return new PostsListDto(posts, comments);
+                    int likes = likesSearchService.countByPosts(posts);
+                    return PostsListDto.builder().posts(posts).comments(comments).likes(likes).build();
                 }).collect(Collectors.toList());
     }
 
@@ -36,7 +39,8 @@ public class PostsSearchService {
     public List<PostsListDto> findByUser(User user) {
         return postsRepository.findByUser(user).stream().map(posts -> {
                     int comments = commentsSearchService.countByPosts(posts);
-                    return new PostsListDto(posts, comments);
+                    int likes = likesSearchService.countByPosts(posts);
+                    return PostsListDto.builder().posts(posts).comments(comments).likes(likes).build();
                 }).collect(Collectors.toList());
     }
 }

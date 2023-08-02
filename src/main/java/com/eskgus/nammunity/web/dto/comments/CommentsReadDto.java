@@ -13,7 +13,7 @@ public class CommentsReadDto {
     private String createdDate;
     private String modifiedDate = null;
     private String author;
-    private Boolean auth = null;
+    private Boolean cAuth = null;
 
     public CommentsReadDto(Comments comments, User user) {
         this.id = comments.getId();
@@ -26,7 +26,7 @@ public class CommentsReadDto {
         }
 
         if (comments.getUser().equals(user)) {
-            this.auth = true;
+            this.cAuth = true;
         }
     }
 }

@@ -3,6 +3,7 @@
 <div id="container">
     <div class="wrapper">
         <div class="read">
+            <div class="posts-area">
             {{#post}}
                 <input type="hidden" id="id" value="{{id}}">
                 <div class="title-area">
@@ -31,33 +32,38 @@
                         <pre id="content">{{content}}</pre>
                     </article>
                 </div>
-            {{/post}}
-            <div class="btn-area">
-                <a role="button" class="btn" href="/">목록</a>
-                <ul class="hidden-btn">
-                    <li class="dropdown">
-                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
-                        <ul class="dropdown-menu">
-                            {{#author}}
-                                <li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
-                                <li><a role="button" class="last" href="#" id="btn-delete">삭제</a></li>
-                            {{/author}}
-                        </ul>
-                    </li>
-                </ul>
+                <div class="btn-area">
+                    <a role="button" class="btn" style="float: left;" href="/">목록</a>
+                    <button id="btn-posts-like" type="button" class="img-btn">
+                        <img class="like_d {{#lAuth}}like_s_d{{/lAuth}}" alt="좋아요">
+                    </button>
+                    <span class="sum">{{lSum}}</span>
+                    {{/post}}
+                    <ul class="hidden-btn">
+                        <li class="dropdown">
+                            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
+                            <ul class="dropdown-menu">
+                                {{#pAuth}}
+                                    <li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
+                                    <li><a role="button" class="last" href="#" id="btn-delete">삭제</a></li>
+                                {{/pAuth}}
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </div>
             <div class="comments-area">
                 <div class="sum-area">
-                {{#n}}
-                    <span class="sum">댓글 {{n}}개</span>
-                {{/n}}
+                {{#post}}
+                    <span class="sum">댓글 {{cSum}}개</span>
+                {{/post}}
                 </div>
                 <div class="comments-list">
                 {{#comments}}
                     <div id="cmt-{{id}}">
                         <div class="comment">
                             <span class="author">{{author}}</span>
-                            {{#auth}}
+                            {{#cAuth}}
                             <ul class="btn-area hidden-btn">
                                 <li class="dropdown">
                                     <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
@@ -67,7 +73,7 @@
                                     </ul>
                                 </li>
                             </ul>
-                            {{/auth}}
+                            {{/cAuth}}
                             <pre>{{content}}</pre>
                             <span class="date">작성 {{createdDate}}{{#modifiedDate}} | 수정 {{modifiedDate}}{{/modifiedDate}}</span>
                         </div>
@@ -90,4 +96,5 @@
 </div>
 
 <script src="/js/app/comments.js"></script>
+<script src="/js/app/likes.js"></script>
 {{>layout/footer}}

@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PostsUpdateDto {
+    private Long id;
+
     @NotBlank(message = "제목을 입력하세요.")
     @Size(max = 100, message = "글 제목은 100글자 이하여야 합니다.")
     private String title;
@@ -18,7 +20,8 @@ public class PostsUpdateDto {
     private String content;
 
     @Builder
-    public PostsUpdateDto(String title, String content) {
+    public PostsUpdateDto(Long id, String title, String content) {
+        this.id = id;
         this.title = title;
         this.content = content;
     }

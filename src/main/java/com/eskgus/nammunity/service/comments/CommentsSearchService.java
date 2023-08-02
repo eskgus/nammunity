@@ -40,5 +40,4 @@ public class CommentsSearchService {
     public int countByPosts(Posts posts) {
         return commentsRepository.countByPosts(posts);
     }
-
 }

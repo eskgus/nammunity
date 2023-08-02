@@ -631,6 +631,7 @@ textarea:disabled {
     color: #AAC2A9;
 }
 
+#container .read .posts-area,
 #container .read .comments-list div:last-child .comment,
 #container .read .comments-list div:last-child .comments-creation {
     border-bottom: 2px solid #AAC2A9 !important;
@@ -863,4 +864,32 @@ textarea:disabled {
 #container .main .date img.cmt {
     content: url(/images/app/comment_l.png);
 }
+
+#container .read .btn-area .img-btn img.like_d {
+    content: url(/images/app/heart_d.png);
+}
+
+#container .read .btn-area .img-btn img.like_s_d {
+    content: url(/images/app/heart_s_d.png);
+}
 /* 여기까지 img */
+
+/* 여기부터 read */
+.img-btn {
+    border: none;
+    background: none;
+    padding: 0;
+}
+
+#container .read .btn-area .img-btn img {
+    height: 25px;
+    width: 25px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+#container .read .btn-area .sum {
+    font-size: 16px;
+    vertical-align: middle;
+}
+/* 여기까지 read */

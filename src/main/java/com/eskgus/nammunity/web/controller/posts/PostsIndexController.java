@@ -3,11 +3,13 @@ package com.eskgus.nammunity.web.controller.posts;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
+import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +28,7 @@ public class PostsIndexController {
     private final PostsSearchService postsSearchService;
     private final UserService userService;
     private final CommentsSearchService commentsSearchService;
+    private final LikesSearchService likesSearchService;
 
     @GetMapping("/")
     public String mainPage(Model model) {
@@ -53,19 +56,23 @@ public class PostsIndexController {
             if (principal != null) {
                 user = userService.findByUsername(principal.getName());
                 if (user.getId() == authorId) {
-                    attr.put("author", true);
+                    attr.put("pAuth", true);
                 } else {
                     postsService.countViews(posts);
                 }
             } else {
                 postsService.countViews(posts);
             }
+
             List<CommentsReadDto> comments = commentsSearchService.findByPosts(posts, user);
             attr.put("comments", comments);
-            attr.put("n", comments.size());
 
-            PostsReadDto responseDto = new PostsReadDto(posts);
-            attr.put("post", responseDto);
+            PostsReadDto postsReadDto = PostsReadDto.builder()
+                    .posts(posts)
+                    .cSum(comments.size())
+                    .likes(likesSearchService.findByPosts(posts))
+                    .user(user).build();
+            attr.put("post", postsReadDto);
 
             model.addAllAttributes(attr);
         } catch (IllegalArgumentException ex) {
@@ -78,8 +85,11 @@ public class PostsIndexController {
     public String updatePosts(@PathVariable Long id, Model model) {
         try {
             Posts posts = postsSearchService.findById(id);
-            PostsReadDto responseDto = new PostsReadDto(posts);
-            model.addAttribute("post", responseDto);
+            PostsUpdateDto postsUpdateDto = PostsUpdateDto.builder()
+                    .id(id)
+                    .title(posts.getTitle())
+                    .content(posts.getContent()).build();
+            model.addAttribute("post", postsUpdateDto);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
         }
