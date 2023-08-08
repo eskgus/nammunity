@@ -130,13 +130,14 @@ tbody .tit {
 /* 여기까지 table*/
 
 /* 여기부터 main */
-#container .my-page #comments-area td:first-child,
-#container .my-page #posts-area td:first-child,
+#container .my-page #likes-area td:first-child,
+#container .my-page .comments-area td:first-child,
+#container .my-page .posts-area td:first-child,
 #container .main td.no-content {
     text-align: center;
 }
 
-#container .my-page #posts-area .tit,
+#container .my-page .posts-area .tit,
 #container .main .tit {
     margin-bottom: 7px;
     width: 80%;
@@ -146,14 +147,14 @@ tbody .tit {
     font-size: 18px;
 }
 
-#container .my-page #comments-area .date,
-#container .my-page #posts-area .date,
+#container .my-page .comments-area .date,
+#container .my-page .posts-area .date,
 #container .main .date {
     color: #AAC2A9;
 }
 
-#container .my-page #comments-area .date img,
-#container .my-page #posts-area .date img,
+#container .my-page .comments-area .date img,
+#container .my-page .posts-area .date img,
 #container .main .date img {
     width: 13px;
     height:13px;
@@ -260,7 +261,7 @@ tbody .tit {
 }
 
 /* 여기부터 comments-area */
-#container .my-page #comments-area td pre,
+#container .my-page .comments-area td pre,
 #container .read .content pre,
 #container .read .comments-area .comments-list pre {
     font-family: sans-serif;
@@ -268,11 +269,11 @@ tbody .tit {
     margin: 14px 0 7px 0;
 }
 
-#container .my-page #comments-area td pre {
+#container .my-page .comments-area td pre {
     margin: 0 0 7px 0;
 }
 
-#container .my-page #comments-area .tit {
+#container .my-page .comments-area .tit {
     margin-top: 14px;
     border: 1px solid #AAC2A9;
     border-radius: 0.3rem;
@@ -303,6 +304,7 @@ tbody .tit {
     margin-left: 0;
 }
 
+#container .my-page .my-activity-area #likes-area li a:hover,
 #container .btn-area .btn:hover {
     text-decoration: none;
     background-color: #e7f6e7;
@@ -686,56 +688,63 @@ textarea:disabled {
     width: 80%;
 }
 
+#container .my-page .my-activity-area #likes-area,
 #container .my-page .user-info-area #social-area,
 #container .my-page .user-info-area #info-area,
 #container .my-page .user-info-area #password-area,
-#container .my-page .my-activity-area #comments-area,
-#container .my-page .my-activity-area #posts-area {
+#container .my-page .my-activity-area .comments-area,
+#container .my-page .my-activity-area .posts-area {
     margin-bottom: 40px;
 }
 
+#container .my-page .my-activity-area #likes-area h2,
 #container .my-page .user-info-area #social-area h2,
 #container .my-page .user-info-area #info-area h2,
 #container .my-page .user-info-area #password-area h2,
-#container .my-page .my-activity-area #comments-area h2,
-#container .my-page .my-activity-area #posts-area h2 {
+#container .my-page .my-activity-area .comments-area h2,
+#container .my-page .my-activity-area .posts-area h2 {
     font-size: 18px;
 }
 
-#container .my-page #comments-area th,
-#container .my-page #posts-area th {
+#container .my-page #likes-area th,
+#container .my-page .comments-area th,
+#container .my-page .posts-area th {
     padding: 5px;
 }
 
+#container .my-page .my-activity-area #likes-area td:not(:last-child),
+#container .my-page .my-activity-area #likes-area th:not(:last-child),
 #container .my-page .user-info-area #social-area td:not(:last-child),
-#container .my-page .my-activity-area #comments-area td:not(:last-child),
-#container .my-page .my-activity-area #comments-area th:not(:last-child),
-#container .my-page .my-activity-area #posts-area td:not(:last-child),
-#container .my-page .my-activity-area #posts-area th:not(:last-child) {
+#container .my-page .my-activity-area .comments-area td:not(:last-child),
+#container .my-page .my-activity-area .comments-area th:not(:last-child),
+#container .my-page .my-activity-area .posts-area td:not(:last-child),
+#container .my-page .my-activity-area .posts-area th:not(:last-child) {
     border-right: 1px solid #AAC2A9;
 }
 
-#container .my-page #comments-area th.no,
-#container .my-page #posts-area th.no {
+#container .my-page #likes-area th.no,
+#container .my-page .comments-area th.no,
+#container .my-page .posts-area th.no {
     width: 10%;
 }
 
-#container .my-page #comments-area th.cmt,
-#container .my-page #posts-area th.post {
+#container .my-page #likes-area th.like,
+#container .my-page .comments-area th.cmt,
+#container .my-page .posts-area th.post {
     width: 90%;
 }
 
-#container .my-page #comments-area .date,
-#container .my-page #posts-area .date {
+#container .my-page .comments-area .date,
+#container .my-page .posts-area .date {
     font-size: 12px;
 }
 
-#container .my-page #posts-area .date img {
+#container .my-page .posts-area .date img {
     vertical-align: text-bottom;
 }
 
-#container .my-page #comments-area .tit a,
-#container .my-page #posts-area .tit a {
+#container .my-page .comments-area .tit a,
+#container .my-page .posts-area .tit a {
     font-weight: 600;
 }
 /* 여기까지 posts-area */
@@ -849,18 +858,18 @@ textarea:disabled {
 /* 여기까지 sign-up */
 
 /* 여기부터 img */
-#container .my-page #comments-area .date img.like,
-#container .my-page #posts-area .date img.like,
+#container .my-page .comments-area .date img.like,
+#container .my-page .posts-area .date img.like,
 #container .main .date img.like {
     content: url(/images/app/heart_s_l.png);
 }
 
-#container .my-page #posts-area .date img.view,
+#container .my-page .posts-area .date img.view,
 #container .main .date img.view {
     content: url(/images/app/eye_l.png);
 }
 
-#container .my-page #posts-area img.cmt,
+#container .my-page .posts-area img.cmt,
 #container .main .date img.cmt {
     content: url(/images/app/comment_l.png);
 }
@@ -893,3 +902,27 @@ textarea:disabled {
     vertical-align: middle;
 }
 /* 여기까지 read */
+
+/* 여기부터 likes-area */
+#container .my-page .my-activity-area #likes-area li>a:active {
+    color: #205943;
+    background-color: #C1DAC0;
+}
+
+#container .my-page .my-activity-area #likes-area ul {
+    border-bottom: 2px solid #AAC2A9;
+    padding-left: 0;
+    text-align: center;
+}
+
+#container .my-page .my-activity-area #likes-area li {
+    display: inline-block;
+    margin: 0;
+    width: 33.33%;
+}
+
+#container .my-page .my-activity-area #likes-area li>a {
+    display: block;
+    padding:5px 0;
+}
+/* 여기까지 likes-area */

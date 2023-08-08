@@ -2,9 +2,11 @@ package com.eskgus.nammunity.web.controller.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -24,6 +26,7 @@ public class UserIndexController {
     private final UserService userService;
     private final PostsSearchService postsSearchService;
     private final CommentsSearchService commentsSearchService;
+    private final LikesSearchService likesSearchService;
 
     @GetMapping("/sign-up")
     public String signUpUser() {
@@ -86,6 +89,12 @@ public class UserIndexController {
                 attr.put("commentsMore", true);
             }
             attr.put("comments", comments.stream().limit(5).collect(Collectors.toList()));
+
+            List<LikesListDto> likes = likesSearchService.findByUser(user);
+            if (likes.size() > 5) {
+                attr.put("likesMore", true);
+            }
+            attr.put("likes", likes.stream().limit(5).collect(Collectors.toList()));
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -147,5 +156,33 @@ public class UserIndexController {
         }
         model.addAllAttributes(attr);
         return "user/my-page/comments-list";
+    }
+
+    @GetMapping("/my-page/likes")
+    public String listLikes(Principal principal, Model model) {
+        Map<String, Object> attr = new HashMap<>();
+        try {
+            User user = userService.findByUsername(principal.getName());
+            attr.put("likes", likesSearchService.findByUser(user));
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("exception", ex.getMessage());
+            attr.put("signOut", "/users/sign-out");
+        }
+        model.addAllAttributes(attr);
+        return "user/my-page/likes-list";
+    }
+
+    @GetMapping("/my-page/likes/posts")
+    public String listPostsLikes(Principal principal, Model model) {
+        Map<String, Object> attr = new HashMap<>();
+        try {
+            User user = userService.findByUsername(principal.getName());
+            attr.put("likes", likesSearchService.findPostsByUser(user));
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("exception", ex.getMessage());
+            attr.put("signOut", "/users/sign-out");
+        }
+        model.addAllAttributes(attr);
+        return "user/my-page/likes-list-posts";
     }
 }

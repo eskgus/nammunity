@@ -2,7 +2,7 @@ package com.eskgus.nammunity.web.dto.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.web.dto.likes.LikesReadDto;
+import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -24,7 +24,7 @@ public class PostsReadDto {
     private Boolean lAuth = null;
 
     @Builder
-    public PostsReadDto(Posts posts, int cSum, List<LikesReadDto> likes, User user) {
+    public PostsReadDto(Posts posts, int cSum, List<LikesListDto> likes, User user) {
         this.id = posts.getId();
         this.title = posts.getTitle();
         this.content = posts.getContent();

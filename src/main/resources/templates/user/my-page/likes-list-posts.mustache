@@ -7,8 +7,8 @@
                 <div class="top-area">
                     <a class="location" href="/"><img class="icon" src="/images/app/home.png" alt="HOME"></a>
                     <a class="location" href="/users/my-page">마이 페이지</a>
-                    <span class="location">회원 정보</span>
-                    <a class="location" href="/users/my-page/update/password">비밀번호 변경</a>
+                    <span class="location">나의 활동</span>
+                    <a class="location" href="/users/my-page/likes">좋아요</a>
                 </div>
             </div>
             <div class="content-area">
@@ -35,39 +35,43 @@
                         </div>
                     </div>
                 </div>
-                <div class="user-info-area">
-                    <div id="password-area">
-                        <h2>비밀번호 변경</h2>
+                <div class="my-activity-area">
+                    <div id="likes-area">
+                        <div class="title">
+                            <h2>좋아요</h2>
+                            <ul>
+                                <li>
+                                    <a href="/users/my-page/likes">전체</a></li><li>
+                                    <a style="background-color: #C1DAC0;" href="/users/my-page/likes/posts">게시글</a></li><li>
+                                    <a href="/users/my-page/likes/comments">댓글</a></li>
+                            </ul>
+                        </div>
                         <table>
+                            <thead>
+                            <tr>
+                                <th class="no">번호</th>
+                                <th class="like">좋아요</th>
+                            </tr>
+                            </thead>
                             <tbody>
-                            <tr>
-                                <th>현재 비밀번호</th>
-                                <td>
-                                    <input type="password" id="oldPassword" placeholder="현재 비밀번호를 입력하세요">
-                                    <span class="check" id="ch-oldPassword"></span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>새 비밀번호</th>
-                                <td>
-                                    <input type="password" id="password" placeholder="새 비밀번호를 입력하세요">
-                                    <span class="check" id="ch-password"></span>
-                                    <div class="valid">비밀번호는 영어와 숫자 1개 이상 포함, 특수문자 가능, 한글/공백 불가능, 8글자 이상 20글자 이하</div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>새 비밀번호 확인</th>
-                                <td>
-                                    <input type="password" id="confirmPassword" placeholder="새 비밀번호를 입력하세요">
-                                    <span class="check" id="ch-confirmPassword"></span>
-                                </td>
-                            </tr>
+                            {{^likes}}
+                                <tr>
+                                    <td colspan="2">좋아요한 게시글이 없어요.</td>
+                                </tr>
+                            {{/likes}}
+                            {{#likes}}
+                                    <tr class="posts-area">
+                                        <td>{{likesId}}</td>
+                                        <td>
+                                            <div class="tit">
+                                                <a href="/posts/read/{{postsId}}">{{title}}</a>
+                                            </div>
+                                            <span class="date">{{createdDate}}</span>
+                                        </td>
+                                    </tr>
+                            {{/likes}}
                             </tbody>
                         </table>
-                        <div class="btn-area">
-                            <button type="button" class="btn" id="btn-update-password">변경</button>
-                            <a role="button" class="btn" href="/users/my-page">취소</a>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -7,6 +7,8 @@
                 <div class="top-area">
                     <a class="location" href="/"><img class="icon" src="/images/app/home.png" alt="HOME"></a>
                     <a class="location" href="/users/my-page">마이 페이지</a>
+                    <span class="location">나의 활동</span>
+                    <a class="location" href="/users/my-page/likes">좋아요</a>
                 </div>
             </div>
             <div class="content-area">
@@ -34,75 +36,15 @@
                     </div>
                 </div>
                 <div class="my-activity-area">
-                    <div class="posts-area">
-                        <div class="title">
-                            <h2>작성 글</h2>
-                            {{#postsMore}}<a class="more" href="/users/my-page/posts">더 보기<img></a>{{/postsMore}}
-                        </div>
-                        <table>
-                            <thead>
-                            <tr>
-                                <th class="no">번호</th>
-                                <th class="post">게시글</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {{^posts}}
-                                <tr>
-                                    <td colspan="2">작성한 글이 없어요.</td>
-                                </tr>
-                            {{/posts}}
-                            {{#posts}}
-                                <tr>
-                                    <td>{{id}}</td>
-                                    <td>
-                                        <div class="tit">
-                                            <a href="/posts/read/{{id}}">{{title}}</a>
-                                        </div>
-                                        <span class="date">{{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
-                                    </td>
-                                </tr>
-                            {{/posts}}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="comments-area">
-                        <div class="title">
-                            <h2>작성 댓글</h2>
-                            {{#commentsMore}}<a class="more" href="/users/my-page/comments">더 보기<img></a>{{/commentsMore}}
-                        </div>
-                        <table>
-                            <thead>
-                            <tr>
-                                <th class="no">번호</th>
-                                <th class="cmt">댓글</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {{^comments}}
-                                <tr>
-                                    <td colspan="2">작성한 댓글이 없어요.</td>
-                                </tr>
-                            {{/comments}}
-                            {{#comments}}
-                                <tr>
-                                    <td>{{commentsId}}</td>
-                                    <td>
-                                        <a href="/posts/read/{{postsId}}#cmt-{{commentsId}}"><pre>{{content}}</pre></a>
-                                        <span class="date">{{modifiedDate}} | <img class="like"> 3</span>
-                                        <div class="tit">
-                                            <a href="/posts/read/{{postsId}}">{{title}}</a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {{/comments}}
-                            </tbody>
-                        </table>
-                    </div>
                     <div id="likes-area">
                         <div class="title">
                             <h2>좋아요</h2>
-                            {{#likesMore}}<a class="more" href="/users/my-page/likes">더 보기<img></a>{{/likesMore}}
+                            <ul>
+                                <li>
+                                    <a style="background-color: #C1DAC0;" href="/users/my-page/likes">전체</a></li><li>
+                                    <a href="/users/my-page/likes/posts">게시글</a></li><li>
+                                    <a href="/users/my-page/likes/comments">댓글</a></li>
+                            </ul>
                         </div>
                         <table>
                             <thead>

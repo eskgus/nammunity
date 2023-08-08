@@ -13,6 +13,12 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
     @Query("SELECT l FROM Likes l WHERE l.posts = :posts")
     List<Likes> findByPosts(Posts posts);
 
+    @Query("SELECT l FROM Likes l WHERE l.user = :user ORDER BY l.id DESC")
+    List<Likes> findByUser(User user);
+
+    @Query("SELECT l FROM Likes l WHERE l.user = :user AND l.posts IS NOT NULL ORDER BY l.id DESC")
+    List<Likes> findPostsByUser(User user);
+
     @Query("SELECT COUNT(*) FROM Likes l WHERE l.posts = :posts")
     int countByPosts(Posts posts);
 
