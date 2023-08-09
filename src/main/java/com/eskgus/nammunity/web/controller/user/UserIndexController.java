@@ -185,4 +185,18 @@ public class UserIndexController {
         model.addAllAttributes(attr);
         return "user/my-page/likes-list-posts";
     }
+
+    @GetMapping("/my-page/likes/comments")
+    public String listCommentsLikes(Principal principal, Model model) {
+        Map<String, Object> attr = new HashMap<>();
+        try {
+            User user = userService.findByUsername(principal.getName());
+            attr.put("likes", likesSearchService.findCommentsByUser(user));
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("exception", ex.getMessage());
+            attr.put("signOut", "/users/sign-out");
+        }
+        model.addAllAttributes(attr);
+        return "user/my-page/likes-list-comments";
+    }
 }

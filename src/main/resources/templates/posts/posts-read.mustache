@@ -63,17 +63,23 @@
                     <div id="cmt-{{id}}">
                         <div class="comment">
                             <span class="author">{{author}}</span>
-                            {{#cAuth}}
-                            <ul class="btn-area hidden-btn">
-                                <li class="dropdown">
-                                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
-                                    <ul class="dropdown-menu">
-                                        <li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>
-                                        <li><a role="button" class="last" id="btn-delete" name="btn-cmt-delete" href="#">삭제</a></li>
-                                    </ul>
-                                </li>
-                            </ul>
-                            {{/cAuth}}
+                            <div class="btn-area">
+                                <button name="btn-cmts-like" type="button" class="img-btn">
+                                    <img class="like_d {{#lAuth}}like_s_d{{/lAuth}}" alt="좋아요">
+                                </button>
+                                <span class="sum">{{lSum}}</span>
+                                <ul class="hidden-btn">
+                                    <li class="dropdown">
+                                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
+                                        <ul class="dropdown-menu">
+                                            {{#cAuth}}
+                                                <li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>
+                                                <li><a role="button" class="last" id="btn-delete" name="btn-cmt-delete" href="#">삭제</a></li>
+                                            {{/cAuth}}
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
                             <pre>{{content}}</pre>
                             <span class="date">작성 {{createdDate}}{{#modifiedDate}} | 수정 {{modifiedDate}}{{/modifiedDate}}</span>
                         </div>

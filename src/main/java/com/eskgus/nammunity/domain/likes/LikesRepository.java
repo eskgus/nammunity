@@ -16,11 +16,20 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
     @Query("SELECT l FROM Likes l WHERE l.user = :user ORDER BY l.id DESC")
     List<Likes> findByUser(User user);
 
+    @Query("SELECT l FROM Likes l WHERE l.comments = :comments")
+    List<Likes> findByComments(Comments comments);
+
     @Query("SELECT l FROM Likes l WHERE l.user = :user AND l.posts IS NOT NULL ORDER BY l.id DESC")
     List<Likes> findPostsByUser(User user);
 
+    @Query("SELECT l FROM Likes l WHERE l.user = :user AND l.comments IS NOT NULL ORDER BY l.id DESC")
+    List<Likes> findCommentsByUser(User user);
+
     @Query("SELECT COUNT(*) FROM Likes l WHERE l.posts = :posts")
     int countByPosts(Posts posts);
+
+    @Query("SELECT COUNT(*) FROM Likes l WHERE l.comments = :comments")
+    int countByComments(Comments comments);
 
     @Modifying
     @Query("DELETE FROM Likes l WHERE l.posts = :posts AND l.user = :user")
@@ -32,4 +41,5 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
 
     void deleteAllByPosts(Posts posts);
     void deleteAllByUser(User user);
+    void deleteAllByComments(Comments comments);
 }

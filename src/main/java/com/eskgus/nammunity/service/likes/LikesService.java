@@ -68,4 +68,9 @@ public class LikesService {
     public void deleteAllByUser(User user) {
         likesRepository.deleteAllByUser(user);
     }
+
+    @Transactional
+    public void deleteAllByComments(Comments comments) {
+        likesRepository.deleteAllByComments(comments);
+    }
 }
