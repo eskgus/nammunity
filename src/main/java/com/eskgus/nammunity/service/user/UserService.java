@@ -32,22 +32,13 @@ public class UserService {
     }
 
     @Transactional
-    public void resetAttempt(Long id) {
-        userRepository.resetAttempt(id);
-    }
-
-    @Transactional
-    public void updateEnabled(User user) {
-        user.updateEnabled();
-    }
-
-    @Transactional
-    public void delete(User user) {
-        userRepository.delete(user);
+    public void resetAttempt(User user) {
+        user.resetAttempt();
     }
 
     @Transactional
     public void updateCreatedDate(Long id, LocalDateTime createdDate) {
-        userRepository.updateCreatedDate(id, createdDate);
+        User user = userRepository.findById(id).get();
+        user.updateCreatedDate(createdDate);
     }
 }

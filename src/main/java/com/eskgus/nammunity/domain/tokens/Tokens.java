@@ -39,7 +39,13 @@ public class Tokens {
         this.user = user;
     }
 
-    public void update(LocalDateTime confirmedAt) {
+    public void updateConfirmedAt(LocalDateTime confirmedAt) {
         this.confirmedAt = confirmedAt;
+    }
+
+    public void updateExpiredAt(LocalDateTime expiredAt) {
+        if (this.expiredAt.isAfter(expiredAt)) {
+            this.expiredAt = expiredAt;
+        }
     }
 }

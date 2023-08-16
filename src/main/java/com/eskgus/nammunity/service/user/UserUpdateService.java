@@ -2,10 +2,6 @@ package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.service.comments.CommentsService;
-import com.eskgus.nammunity.service.likes.LikesService;
-import com.eskgus.nammunity.service.posts.PostsService;
-import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
@@ -22,13 +18,8 @@ import java.time.LocalDateTime;
 public class UserUpdateService {
     private final BCryptPasswordEncoder encoder;
     private final UserRepository userRepository;
-    private final TokensService tokensService;
     private final RegistrationService registrationService;
-    private final PostsService postsService;
-    private final UserService userService;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final CommentsService commentsService;
-    private final LikesService likesService;
 
     @Transactional
     public void updatePassword(PasswordUpdateDto requestDto, String username) {
@@ -65,7 +56,7 @@ public class UserUpdateService {
             user.updateEnabled();
         }
 
-        tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
+        user.getTokens().forEach(tokens -> tokens.updateExpiredAt(LocalDateTime.now()));
         registrationService.sendToken(user.getId(), email, "update");
         user.updateEmail(email);
     }
@@ -90,14 +81,10 @@ public class UserUpdateService {
 
         User user = userRepository.findByUsername(username).orElseThrow(() -> new
                 IllegalArgumentException("존재하지 않는 ID입니다."));
-        likesService.deleteAllByUser(user);
-        commentsService.deleteAllByUser(user);
-        postsService.deleteAllByUser(user);
-        tokensService.deleteAllByUser(user);
         if (!user.getSocial().equals("none")) {
             cookie = customOAuth2UserService.unlinkSocial(username, user.getSocial(), accessToken);
         }
-        userService.delete(user);
+        userRepository.delete(user);
         return cookie;
     }
 }

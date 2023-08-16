@@ -4,7 +4,6 @@ import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.tokens.TokensRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.service.tokens.TokensService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
@@ -20,6 +19,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
@@ -47,9 +47,6 @@ public class ConfirmationApiControllerExceptionTest extends ConfirmationApiContr
     private MockMvc mockMvc;
 
     @Autowired
-    private TokensService tokensService;
-
-    @Autowired
     private UserService userService;
 
     @Autowired
@@ -65,6 +62,7 @@ public class ConfirmationApiControllerExceptionTest extends ConfirmationApiContr
         signUp();
     }
 
+    @Transactional
     @Test
     public void causeExceptionsInConfirmingToken() throws Exception {
         User user = userRepository.findById(1L).get();
@@ -78,7 +76,7 @@ public class ConfirmationApiControllerExceptionTest extends ConfirmationApiContr
         Assertions.assertThat((String) mvcResult1.getFlashMap().get("error")).contains("인증 링크가 존재하지");
 
         // 예외 2. 인증 링크 만료
-        tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
+        user.getTokens().forEach(tokens -> tokens.updateExpiredAt(LocalDateTime.now()));
         Tokens tokens = tokensRepository.findByUser(user).get(0);
         MvcResult mvcResult2 = mockMvc.perform(get(url).param("token", tokens.getToken()))
                 .andExpect(status().isFound())
@@ -89,8 +87,8 @@ public class ConfirmationApiControllerExceptionTest extends ConfirmationApiContr
         Assertions.assertThat(user.isEnabled()).isFalse();
 
         // 예외 3. 이미 인증된 메일
-        tokensService.updateConfirmedAt(tokens.getToken(), LocalDateTime.now());
-        userService.updateEnabled(user);
+        tokens.updateConfirmedAt(LocalDateTime.now());
+        user.updateEnabled();
         tokens = tokensRepository.findByUser(user).get(0);
         MvcResult mvcResult3 = mockMvc.perform(get(url).param("token", tokens.getToken()))
                 .andExpect(status().isFound())

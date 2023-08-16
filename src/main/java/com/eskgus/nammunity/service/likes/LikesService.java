@@ -9,11 +9,9 @@ import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.likes.LikesSaveDto;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Log4j2
 @RequiredArgsConstructor
 @Service
 public class LikesService {
@@ -24,9 +22,6 @@ public class LikesService {
 
     @Transactional
     public Long save(Long postsId, Long commentsId, String username) {
-        log.info("postsId: " + postsId + ", commentsId: " + commentsId + ", username: " + username);
-        log.info("postsId != null: " + (postsId != null));
-
         User user = userService.findByUsername(username);
 
         Posts posts = null;
@@ -45,9 +40,6 @@ public class LikesService {
 
     @Transactional
     public void delete(Long postsId, Long commentsId, String username) {
-        log.info("postsId: " + postsId + ", commentsId: " + commentsId + ", username: " + username);
-        log.info("postsId != null: " + (postsId != null));
-
         User user = userService.findByUsername(username);
 
         if (postsId != null) {
@@ -57,20 +49,5 @@ public class LikesService {
             Comments comments = commentsSearchService.findById(commentsId);
             likesRepository.deleteByComments(comments, user);
         }
-    }
-
-    @Transactional
-    public void deleteAllByPosts(Posts posts) {
-        likesRepository.deleteAllByPosts(posts);
-    }
-
-    @Transactional
-    public void deleteAllByUser(User user) {
-        likesRepository.deleteAllByUser(user);
-    }
-
-    @Transactional
-    public void deleteAllByComments(Comments comments) {
-        likesRepository.deleteAllByComments(comments);
     }
 }

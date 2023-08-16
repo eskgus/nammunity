@@ -1,11 +1,15 @@
 package com.eskgus.nammunity.domain.posts;
 
 import com.eskgus.nammunity.domain.BaseTimeEntity;
+import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.user.User;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -27,6 +31,12 @@ public class Posts extends BaseTimeEntity {
     @ManyToOne
     @JoinColumn(nullable = false, name = "Users_id")
     private User user;
+
+    @OneToMany(mappedBy = "posts", cascade = CascadeType.REMOVE)
+    private List<Comments> comments;
+
+    @OneToMany(mappedBy = "posts", cascade = CascadeType.REMOVE)
+    private List<Likes> likes;
 
     @Builder
     public Posts(String title, String content, User user) {

@@ -1,10 +1,7 @@
 package com.eskgus.nammunity.domain.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -14,12 +11,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
     Optional<User> findByUsername(String username);
-
-    @Modifying
-    @Query("UPDATE User u SET u.attempt = 0 WHERE u.id = :id")
-    void resetAttempt(Long id);
-
-    @Modifying
-    @Query("UPDATE User u SET u.createdDate = :createdDate WHERE u.id = :id")
-    void updateCreatedDate(Long id, LocalDateTime createdDate);
 }

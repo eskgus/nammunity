@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
@@ -16,6 +17,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
     @Autowired
     UserService userService;
 
+    @Transactional
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication)
@@ -23,7 +25,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
         Long id = ((CustomUserDetails) authentication.getPrincipal()).getId();
         User user = userService.findById(id);
         if (user.getAttempt() != 0) {
-            userService.resetAttempt(id);
+            userService.resetAttempt(user);
         }
 
         Object url = request.getSession().getAttribute("prePage");

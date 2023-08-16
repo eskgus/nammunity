@@ -123,7 +123,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             Long id = userService.signUp(registrationDto);
             user = userService.findById(id);
-            userService.updateEnabled(user);
+            user.updateEnabled();
         }
 
         if (user.getSocial().equals("none")) {
@@ -172,9 +172,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         LocalDateTime exp = LocalDateTime.now().plusMonths(1);
         OAuth2TokensDto oAuth2TokensDto = OAuth2TokensDto.builder()
                 .refreshToken(refreshToken).expiredAt(exp).user(user).build();
-        Optional<OAuth2Tokens> result = oAuth2TokensRepository.findByUser(user);
+        OAuth2Tokens result = user.getOAuth2Tokens();
 
-        if (result.isPresent()) {
+        if (result != null) {
             oAuth2TokensService.update(oAuth2TokensDto);
         } else {
             oAuth2TokensService.save(oAuth2TokensDto);
@@ -222,7 +222,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
         User user = userRepository.findByUsername(username).get();
-        oAuth2TokensService.delete(user);
         user.updateSocial("none");
 
         return cookie;
@@ -255,8 +254,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         log.info("refreshAccessToken.....");
 
         User user = userRepository.findByUsername(username).get();
-        String refreshToken = oAuth2TokensRepository.findByUser(user).get()
-                .getRefreshToken();
+        String refreshToken = user.getOAuth2Tokens().getRefreshToken();
 
         String url = switch (social) {
             case "google" -> "https://oauth2.googleapis.com/token?"

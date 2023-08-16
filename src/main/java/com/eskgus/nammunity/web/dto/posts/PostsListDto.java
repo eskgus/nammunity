@@ -17,13 +17,13 @@ public class PostsListDto {
     private int likes;
 
     @Builder
-    public PostsListDto(Posts posts, int comments, int likes) {
+    public PostsListDto(Posts posts) {
         this.id = posts.getId();
         this.title = posts.getTitle();
         this.author = posts.getUser().getNickname();
         this.modifiedDate = posts.getModifiedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
         this.view = posts.getView();
-        this.comments = comments;
-        this.likes = likes;
+        this.comments = posts.getComments().size();
+        this.likes = posts.getLikes().size();
     }
 }

@@ -2,12 +2,9 @@ package com.eskgus.nammunity.web.dto.comments;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.web.dto.likes.LikesListDto;
-import lombok.Builder;
 import lombok.Getter;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Getter
 public class CommentsReadDto {
@@ -20,13 +17,17 @@ public class CommentsReadDto {
     private int lSum;
     private Boolean lAuth = null;
 
-    @Builder
-    public CommentsReadDto(Comments comments, User user, List<LikesListDto> likes) {
+    public CommentsReadDto(Comments comments, User user) {
         this.id = comments.getId();
         this.content = comments.getContent();
         this.createdDate = comments.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
         this.author = comments.getUser().getNickname();
-        this.lSum = likes.size();
+        this.lSum = comments.getLikes().size();
+        comments.getLikes().forEach(like -> {
+            if (like.getUser().equals(user)) {
+                this.lAuth = true;
+            }
+        });
 
         if (!comments.getCreatedDate().equals(comments.getModifiedDate())) {
             this.modifiedDate = comments.getModifiedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
@@ -35,11 +36,5 @@ public class CommentsReadDto {
         if (comments.getUser().equals(user)) {
             this.cAuth = true;
         }
-
-        likes.forEach(like -> {
-            if (like.getUser().equals(user)) {
-                this.lAuth = true;
-            }
-        });
     }
 }

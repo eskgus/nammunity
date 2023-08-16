@@ -1,10 +1,18 @@
 package com.eskgus.nammunity.domain.user;
 
 import com.eskgus.nammunity.domain.BaseTimeEntity;
+import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.likes.Likes;
+import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.tokens.OAuth2Tokens;
+import com.eskgus.nammunity.domain.tokens.Tokens;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -43,6 +51,21 @@ public class User extends BaseTimeEntity {
     @Column
     private String social = "none";
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private List<Posts> posts;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private List<Comments> comments;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private List<Likes> likes;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private List<Tokens> tokens;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private OAuth2Tokens oAuth2Tokens;
+
     @Builder
     public User(String username, String password, String nickname, String email,
                 Role role) {
@@ -66,6 +89,10 @@ public class User extends BaseTimeEntity {
         return attempt;
     }
 
+    public void resetAttempt() {
+        this.attempt = 0;
+    }
+
     public void updatePassword(String password) {
         this.password = password;
     }
@@ -80,5 +107,9 @@ public class User extends BaseTimeEntity {
 
     public void updateSocial(String social) {
         this.social = social;
+    }
+
+    public void updateCreatedDate(LocalDateTime createdDate) {
+        super.createdDate = createdDate;
     }
 }

@@ -3,7 +3,6 @@ package com.eskgus.nammunity.web.controller.posts;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
@@ -28,7 +27,6 @@ public class PostsIndexController {
     private final PostsSearchService postsSearchService;
     private final UserService userService;
     private final CommentsSearchService commentsSearchService;
-    private final LikesSearchService likesSearchService;
 
     @GetMapping("/")
     public String mainPage(Model model) {
@@ -69,8 +67,6 @@ public class PostsIndexController {
 
             PostsReadDto postsReadDto = PostsReadDto.builder()
                     .posts(posts)
-                    .cSum(comments.size())
-                    .likes(likesSearchService.findByPosts(posts))
                     .user(user).build();
             attr.put("post", postsReadDto);
 

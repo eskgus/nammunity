@@ -1,12 +1,15 @@
 package com.eskgus.nammunity.domain.comments;
 
 import com.eskgus.nammunity.domain.BaseTimeEntity;
+import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -26,6 +29,9 @@ public class Comments extends BaseTimeEntity {
     @ManyToOne
     @JoinColumn(nullable = false, name = "Users_id")
     private User user;
+
+    @OneToMany(mappedBy = "comments", cascade = CascadeType.REMOVE)
+    private List<Likes> likes;
 
     @Builder
     public Comments(String content, Posts posts, User user) {

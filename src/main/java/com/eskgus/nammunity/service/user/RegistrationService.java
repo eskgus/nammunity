@@ -76,8 +76,8 @@ public class RegistrationService {
             throw new IllegalArgumentException("인증 링크가 만료됐습니다.");
         }
 
-        tokensService.updateConfirmedAt(token, LocalDateTime.now());
-        userService.updateEnabled(confirmationToken.getUser());
+        confirmationToken.updateConfirmedAt(LocalDateTime.now());
+        confirmationToken.getUser().updateEnabled();
     }
 
     public boolean check(String type, String value) {
@@ -99,7 +99,7 @@ public class RegistrationService {
             throw new IllegalArgumentException("더 이상 재발송할 수 없어요. 다시 가입해 주세요.");
         }
 
-        tokensService.updateExpiredAtAllByUser(user, LocalDateTime.now());
+        user.getTokens().forEach(tokens -> tokens.updateExpiredAt(LocalDateTime.now()));
         sendToken(id, user.getEmail(), "registration");
     }
 }

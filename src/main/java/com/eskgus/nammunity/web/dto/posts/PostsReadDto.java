@@ -2,12 +2,10 @@ package com.eskgus.nammunity.web.dto.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Getter
 public class PostsReadDto {
@@ -24,7 +22,7 @@ public class PostsReadDto {
     private Boolean lAuth = null;
 
     @Builder
-    public PostsReadDto(Posts posts, int cSum, List<LikesListDto> likes, User user) {
+    public PostsReadDto(Posts posts, User user) {
         this.id = posts.getId();
         this.title = posts.getTitle();
         this.content = posts.getContent();
@@ -33,10 +31,10 @@ public class PostsReadDto {
         this.modifiedDate = posts.getModifiedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
         this.view = posts.getView();
         this.userId = posts.getUser().getId();
-        this.cSum = cSum;
-        this.lSum = likes.size();
+        this.cSum = posts.getComments().size();
+        this.lSum = posts.getLikes().size();
 
-        likes.forEach(like -> {
+        posts.getLikes().forEach(like -> {
             if (like.getUser().equals(user)) {
                 this.lAuth = true;
             }
