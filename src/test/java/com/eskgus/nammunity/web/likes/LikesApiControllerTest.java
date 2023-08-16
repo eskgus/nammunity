@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web.likes;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.web.comments.CommentsApiControllerTest;
+import lombok.extern.log4j.Log4j2;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Log4j2
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class LikesApiControllerTest extends CommentsApiControllerTest {
@@ -48,11 +50,33 @@ public class LikesApiControllerTest extends CommentsApiControllerTest {
         Long id1 = Long.valueOf((String) map.get("OK"));
         Optional<Likes> result1 = likesRepository.findById(id1);
         Assertions.assertThat(result1).isPresent();
-        Likes likes = result1.get();
-        Assertions.assertThat(likes.getUser().getId()).isOne();
-        Assertions.assertThat(likes.getPosts().getId()).isOne();
+        Likes likes1 = result1.get();
+        Assertions.assertThat(likes1.getUser().getId()).isOne();
+        Assertions.assertThat(likes1.getPosts().getId()).isOne();
+        Assertions.assertThat(likes1.getComments()).isNull();
 
         // 일반 2. 댓글 좋아요
+        // 1. 회원가입 + 게시글 작성 + 댓글 작성 후
+        saveComments();
+
+        // 2. "/api/likes"로 commentsId 담아서 post 요청
+        MvcResult mvcResult2 = mockMvc.perform(post("/api/likes")
+                        .param("commentsId", "1"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 3. 응답으로 "OK" 왔는지 확인
+        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("OK");
+
+        // 4. db에 저장됐나 확인
+        Long id2 = Long.valueOf((String) map.get("OK"));
+        Optional<Likes> result2 = likesRepository.findById(id2);
+        Assertions.assertThat(result2).isPresent();
+        Likes likes2 = result2.get();
+        Assertions.assertThat(likes2.getUser().getId()).isOne();
+        Assertions.assertThat(likes2.getPosts()).isNull();
+        Assertions.assertThat(likes2.getComments().getId()).isOne();
     }
 
     @Test
@@ -76,5 +100,18 @@ public class LikesApiControllerTest extends CommentsApiControllerTest {
         Assertions.assertThat(result1).isNotPresent();
 
         // 일반 2. 댓글 좋아요 취소
+        // 1. 회원가입 + 게시글 작성 + 댓글 작성 + 댓글 좋아요 후
+        // 2. "/api/likes"로 commentsId 담아서 delete 요청
+        MvcResult mvcResult2 = mockMvc.perform(delete("/api/likes")
+                        .param("commentsId", "1"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 3. 응답으로 "OK" 왔는지 확인
+        Assertions.assertThat(mvcResult2.getResponse().getContentAsString()).isEqualTo("OK");
+
+        // 4. db에서 likes 지워졌나 확인
+        Optional<Likes> result2 = likesRepository.findById(2L);
+        Assertions.assertThat(result2).isNotPresent();
     }
 }

@@ -58,6 +58,14 @@ public class LikesApiControllerExceptionTest extends LikesApiControllerTest {
         Assertions.assertThat(likesRepository.count()).isZero();
 
         // 예외 2. 댓글 존재 x
+        MvcResult mvcResult2 = mockMvc.perform(post("/api/likes")
+                        .param("commentsId", "1"))
+                .andExpect(status().isOk())
+                .andReturn();
+        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("error");
+        Assertions.assertThat((String) map.get("error")).contains("댓글이 없");
+        Assertions.assertThat(likesRepository.count()).isZero();
     }
 
     @Test
@@ -72,5 +80,11 @@ public class LikesApiControllerExceptionTest extends LikesApiControllerTest {
         Assertions.assertThat(likesRepository.count()).isZero();
 
         // 예외 2. 댓글 존재 x
+        MvcResult mvcResult2 = mockMvc.perform(delete("/api/likes")
+                        .param("commentsId", "1"))
+                .andExpect(status().isOk())
+                .andReturn();
+        Assertions.assertThat(mvcResult2.getResponse().getContentAsString()).contains("댓글이 없");
+        Assertions.assertThat(likesRepository.count()).isZero();
     }
 }
