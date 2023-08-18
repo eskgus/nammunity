@@ -45,9 +45,6 @@ public class PostsIndexController {
 
         try {
             Posts posts = postsSearchService.findById(id);
-            if (!posts.getCreatedDate().equals(posts.getModifiedDate())) {
-                attr.put("modify", true);
-            }
 
             long authorId = posts.getUser().getId();
             User user = null;

@@ -2,9 +2,8 @@ package com.eskgus.nammunity.web.dto.likes;
 
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Getter;
-
-import java.time.format.DateTimeFormatter;
 
 @Getter
 public class LikesListDto {
@@ -20,7 +19,7 @@ public class LikesListDto {
     public LikesListDto(Likes likes) {
         this.likesId = likes.getId();
         this.user = likes.getUser();
-        this.createdDate = likes.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
+        this.createdDate = DateTimeUtil.formatDateTime(likes.getCreatedDate());
 
         if (likes.getPosts() != null) {
             this.postsId = likes.getPosts().getId();

@@ -1,10 +1,9 @@
 package com.eskgus.nammunity.web.dto.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.format.DateTimeFormatter;
 
 @Getter
 public class PostsListDto {
@@ -21,7 +20,7 @@ public class PostsListDto {
         this.id = posts.getId();
         this.title = posts.getTitle();
         this.author = posts.getUser().getNickname();
-        this.modifiedDate = posts.getModifiedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
+        this.modifiedDate = DateTimeUtil.formatDateTime(posts.getModifiedDate());
         this.view = posts.getView();
         this.comments = posts.getComments().size();
         this.likes = posts.getLikes().size();

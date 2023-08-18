@@ -1,9 +1,8 @@
 package com.eskgus.nammunity.web.dto.comments;
 
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Getter;
-
-import java.time.format.DateTimeFormatter;
 
 @Getter
 public class CommentsListDto {
@@ -17,7 +16,7 @@ public class CommentsListDto {
     public CommentsListDto(Comments comments) {
         this.commentsId = comments.getId();
         this.content = comments.getContent();
-        this.modifiedDate = comments.getModifiedDate().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm"));
+        this.modifiedDate = DateTimeUtil.formatDateTime(comments.getModifiedDate());
         this.postsId = comments.getPosts().getId();
         this.title = comments.getPosts().getTitle();
         this.likes = comments.getLikes().size();
