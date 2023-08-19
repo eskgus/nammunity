@@ -69,7 +69,7 @@ public class SecurityConfig {
                                 "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**",
                                 "/api/users/update/**", "/api/users/delete", "/users/my-page/**",
-                                "/api/comments/**", "/api/likes/**")
+                                "/api/comments/**", "/api/likes/**", "/api/reports/**")
                         .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())

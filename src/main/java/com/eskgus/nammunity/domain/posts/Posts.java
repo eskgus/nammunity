@@ -3,6 +3,7 @@ package com.eskgus.nammunity.domain.posts;
 import com.eskgus.nammunity.domain.BaseTimeEntity;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.likes.Likes;
+import com.eskgus.nammunity.domain.reports.CommunityReports;
 import com.eskgus.nammunity.domain.user.User;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -37,6 +38,9 @@ public class Posts extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "posts", cascade = CascadeType.REMOVE)
     private List<Likes> likes;
+
+    @OneToMany(mappedBy = "posts", cascade = CascadeType.REMOVE)
+    private List<CommunityReports> reports;
 
     @Builder
     public Posts(String title, String content, User user) {

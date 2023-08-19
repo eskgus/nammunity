@@ -4,6 +4,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
+    defer-datasource-initialization: true
   h2:
     console:
       enabled: true
