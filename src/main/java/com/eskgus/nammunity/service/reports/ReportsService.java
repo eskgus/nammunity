@@ -30,7 +30,7 @@ public class ReportsService {
         Reasons reasons = reasonsService.findById(requestDto.getReasonsId());
         String otherReasons = requestDto.getOtherReasons();
         if (reasons.getDetail().equals("기타") && (otherReasons == null)) {
-            throw new IllegalArgumentException("otherReasons");
+            throw new IllegalArgumentException("기타 사유를 입력하세요.");
         }
 
         Posts posts = null;
@@ -48,7 +48,7 @@ public class ReportsService {
             user = userService.findById(requestDto.getUserId());
             types = typesService.findByDetail("사용자");
         } else {
-            throw new IllegalArgumentException("types");
+            throw new IllegalArgumentException("신고 분류가 선택되지 않았습니다.");
         }
 
         CommunityReportsSaveDto communityReportsSaveDto = CommunityReportsSaveDto.builder()

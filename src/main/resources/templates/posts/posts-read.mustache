@@ -47,6 +47,9 @@
                                     <li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
                                     <li><a role="button" class="last" href="#" id="btn-delete">삭제</a></li>
                                 {{/pAuth}}
+                                {{^pAuth}}
+                                    <li><a role="button" class="first last" id="btn-report">신고</a></li>
+                                {{/pAuth}}
                             </ul>
                         </li>
                     </ul>
@@ -97,6 +100,21 @@
                     </div>
                 </div>
             </div>
+            <div id="report-popup-container" class="report-popup-container">
+                <div id="report-popup" class="report-popup">
+                    <p>신고하기</p>
+                    {{#reasons}}
+                        <div class="reasons-area">
+                            <input type="checkbox" id="reason{{id}}"><label for="reason{{id}}">{{detail}}</label>
+                        </div>
+                    {{/reasons}}
+                    <textarea id="otherReasons" class="otherReasons" rows="3" placeholder="기타 사유를 입력하세요."></textarea>
+                    <div class="btn-area">
+                        <button type="button" class="btn" id="btn-posts-report">신고</button>
+                        <button type="button" class="btn" id="btn-report-cancel">취소</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -105,5 +123,6 @@
 <script type="module" src="/js/app/posts.js"></script>
 <script src="/js/app/comments.js"></script>
 <script src="/js/app/likes.js"></script>
+<script src="/js/app/reports.js"></script>
 </body>
 </html>

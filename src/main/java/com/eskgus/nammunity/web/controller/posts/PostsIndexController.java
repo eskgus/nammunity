@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.reports.ReasonsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
@@ -27,6 +28,7 @@ public class PostsIndexController {
     private final PostsSearchService postsSearchService;
     private final UserService userService;
     private final CommentsSearchService commentsSearchService;
+    private final ReasonsService reasonsService;
 
     @GetMapping("/")
     public String mainPage(Model model) {
@@ -66,6 +68,8 @@ public class PostsIndexController {
                     .posts(posts)
                     .user(user).build();
             attr.put("post", postsReadDto);
+
+            attr.put("reasons", reasonsService.findAllAsc());
 
             model.addAllAttributes(attr);
         } catch (IllegalArgumentException ex) {

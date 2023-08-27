@@ -9,12 +9,12 @@ var postsMain = {
             _this.savePosts();
         });
 
-        // // 게시글 수정
+        // 게시글 수정
         $('#btn-update').on('click', function() {
             _this.updatePosts();
         });
 
-        // // 게시글 삭제
+        // 게시글 삭제
         $('#btn-delete').on('click', function() {
             _this.deletePosts();
         });
