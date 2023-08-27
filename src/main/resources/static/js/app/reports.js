@@ -2,12 +2,37 @@ var reportsMain = {
     popupContainer: document.getElementById('report-popup-container'),
     reasons: document.querySelectorAll('#report-popup input[type="checkbox"]'),
     otherReasons: document.getElementById('otherReasons'),
+    id: document.getElementById('reportId'),
     init: function() {
         var _this = this;
 
         // 신고 팝업 열기
-        $('#btn-report').on('click', function() {
-            _this.openReportPopup();
+        var openPopupBtns = document.getElementsByName('btn-report');
+        openPopupBtns.forEach(function(openPopupBtn) {
+            openPopupBtn.addEventListener('click', function() {
+                var postsReportBtn = document.getElementById('btn-posts-report');
+                var cmtReportBtn = document.getElementById('btn-cmt-report');
+
+                // 게시글/댓글 신고 버튼 초기화
+                postsReportBtn.style.display = 'none';
+                cmtReportBtn.style.display = 'none';
+
+                var closestPosts = this.closest('.posts-area');
+                var closestComments = this.closest('.comment');
+
+                if (closestPosts) { // 게시글의 신고 버튼이면 신고 팝업 내부의 게시글 신고 버튼 표시 + 신고할 컨텐츠 id 변경
+                    _this.id.value = $('#id').val();
+                    postsReportBtn.style.display = 'inline-block';
+                } else if (closestComments) {   // 댓글의 신고 버튼이면 신고 팝업 내부의 댓글 신고 버튼 표시 + 신고할 컨텐츠 id 변경
+                    var divId = closestComments.parentElement.id;
+                    _this.id.value = divId.slice(divId.indexOf('-') + 1);
+                    cmtReportBtn.style.display = 'inline-block';
+                } else {
+                    alert('신고할 게시글/댓글이 선택되지 않았습니다.');
+                }
+
+                _this.openReportPopup();
+            });
         });
 
         // 신고 팝업 닫기 (취소 버튼)
@@ -47,6 +72,14 @@ var reportsMain = {
                 _this.reportPosts(reasonsId);
             }
         });
+
+        // 댓글 신고
+        $('#btn-cmt-report').on('click', function() {
+            var reasonsId = _this.getReasons();
+            if (reasonsId != null) {
+                _this.reportComments(reasonsId);
+            }
+        });
     },
     openReportPopup: function() {
         // 팝업 열기 전에 체크 박스 초기화
@@ -82,7 +115,7 @@ var reportsMain = {
     },
     reportPosts: function(reasonsId) {
         var data = {
-            postsId: $('#id').val(),
+            postsId: reportsMain.id.value,
             reasonsId: reasonsId,
             otherReasons: reportsMain.otherReasons.value
         };
@@ -109,6 +142,47 @@ var reportsMain = {
                 if (response[Object.keys(response)].includes('ID')) { // reporter 없는 경우
                     window.location.href = '/users/sign-out';
                 } else if (response[Object.keys(response)].includes('게시글')) { // 게시글 없는 경우
+                    window.location.href = '/';
+                }
+            }
+        }).fail(function(response) {
+            if (response.status == 401) {
+                alert('로그인하세요.');
+                reportsMain.closeReportPopup();
+            } else {
+                alert(JSON.stringify(response));
+            }
+        });
+    },
+    reportComments: function(reasonsId) {
+        var data = {
+            commentsId: reportsMain.id.value,
+            reasonsId: reasonsId,
+            otherReasons: reportsMain.otherReasons.value
+        };
+
+        if (data.otherReasons == '') {
+            data.otherReasons = null;
+        }
+        if (data.reasonsId == 0) {
+            data.reasonsId = null;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/api/reports/community',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
+                alert(response[Object.keys(response)]);
+                reportsMain.closeReportPopup();
+            } else {
+                alert(response[Object.keys(response)]);
+                if (response[Object.keys(response)].includes('ID')) { // reporter 없는 경우
+                    window.location.href = '/users/sign-out';
+                } else if (response[Object.keys(response)].includes('댓글')) { // 댓글 없는 경우
                     window.location.href = '/';
                 }
             }
