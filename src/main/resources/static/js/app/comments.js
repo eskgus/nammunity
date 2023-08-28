@@ -132,8 +132,7 @@ var commentsMain = {
     deleteComments: function(btn) {
         var divId;
         if (confirm('정말로 삭제하시겠어요?')) {
-            var href = btn.parentElement.previousElementSibling.children[0].href;
-            divId = href.slice(href.indexOf('#') + 1);
+            divId = btn.closest('.comment').parentElement.id;
             var id = divId.slice(divId.indexOf('-') + 1);
 
             $.ajax({

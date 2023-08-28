@@ -43,13 +43,15 @@
                         <li class="dropdown">
                             <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
                             <ul class="dropdown-menu">
-                                {{#pAuth}}
-                                    <li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
-                                    <li><a role="button" class="last" href="#" id="btn-delete">삭제</a></li>
-                                {{/pAuth}}
-                                {{^pAuth}}
-                                    <li><a role="button" class="first last" name="btn-report">신고</a></li>
-                                {{/pAuth}}
+                                {{^admin}}
+                                    {{#pAuth}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
+                                    <li><a role="button" class="last" id="btn-delete">삭제</a></li>{{/pAuth}}
+                                    {{^pAuth}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/pAuth}}
+                                {{/admin}}
+                                {{#admin}}
+                                    {{#pAuth}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>{{/pAuth}}
+                                    <li><a role="button" class="{{^pAuth}}first {{/pAuth}}last" id="btn-delete">삭제</a></li>
+                                {{/admin}}
                             </ul>
                         </li>
                     </ul>
@@ -75,13 +77,15 @@
                                     <li class="dropdown">
                                         <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
                                         <ul class="dropdown-menu">
-                                            {{#cAuth}}
-                                                <li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>
-                                                <li><a role="button" class="last" id="btn-delete" name="btn-cmt-delete" href="#">삭제</a></li>
-                                            {{/cAuth}}
-                                            {{^cAuth}}
-                                                <li><a role="button" class="first last" name="btn-report">신고</a></li>
-                                            {{/cAuth}}
+                                            {{^admin}}
+                                                {{#cAuth}}<li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>
+                                                <li><a role="button" class="last" name="btn-cmt-delete">삭제</a></li>{{/cAuth}}
+                                                {{^cAuth}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/cAuth}}
+                                            {{/admin}}
+                                            {{#admin}}
+                                                {{#cAuth}}<li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>{{/cAuth}}
+                                                <li><a role="button" class="{{^cAuth}}first {{/cAuth}}last" name="btn-cmt-delete">삭제</a></li>
+                                            {{/admin}}
                                         </ul>
                                     </li>
                                 </ul>

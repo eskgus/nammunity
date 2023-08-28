@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.handler;
 
+import com.eskgus.nammunity.domain.user.Role;
+import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +24,13 @@ public class TemplateAdvice {
 
         if (principal != null) {
             try {
-                String nickname = userService.findByUsername(principal.getName()).getNickname();
+                User user = userService.findByUsername(principal.getName());
+                String nickname = user.getNickname();
                 attr.put("auth", nickname);
+
+                if (user.getRole().equals(Role.ADMIN)) {
+                    attr.put("admin", "true");
+                }
             } catch (IllegalArgumentException ex) {
                 attr.put("error", ex.getMessage());
                 attr.put("signOut", "/users/sign-out");

@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.config.interceptor;
 
+import com.eskgus.nammunity.domain.user.Role;
+import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +30,14 @@ public class PostsAuthInterceptor implements HandlerInterceptor {
 
         if (httpMethod.equals("GET") || httpMethod.equals("PUT") || httpMethod.equals("DELETE")) {
             try {
-                Long userId = userService.findByUsername(request.getUserPrincipal().getName()).getId();
+                User user = userService.findByUsername(request.getUserPrincipal().getName());
+                // http method가 delete고, user의 role이 admin이면 통과
+                if (httpMethod.equals("DELETE") && user.getRole().equals(Role.ADMIN)) {
+                    return true;
+                }
+
+                // 아니면 작성자랑 user가 같은지 확인
+                Long userId = user.getId();
 
                 Map<?, ?> pathVariables = (Map<?, ?>) request
                         .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
