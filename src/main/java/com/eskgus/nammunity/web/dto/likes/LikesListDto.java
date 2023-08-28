@@ -15,6 +15,7 @@ public class LikesListDto {
     private Boolean comments = null;
     private Long commentsId;
     private String content;
+    private String author;
 
     public LikesListDto(Likes likes) {
         this.likesId = likes.getId();
@@ -24,12 +25,14 @@ public class LikesListDto {
         if (likes.getPosts() != null) {
             this.postsId = likes.getPosts().getId();
             this.title = likes.getPosts().getTitle();
+            this.author = likes.getPosts().getUser().getNickname();
         } else {
             this.postsId = likes.getComments().getPosts().getId();
             this.title = likes.getComments().getPosts().getTitle();
             this.comments = true;
             this.commentsId = likes.getComments().getId();
             this.content = likes.getComments().getContent();
+            this.author = likes.getComments().getUser().getNickname();
         }
     }
 }
