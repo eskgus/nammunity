@@ -2,14 +2,14 @@ package com.eskgus.nammunity.service.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.reports.CommunityReportsRepository;
+import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.reports.Reasons;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
-import com.eskgus.nammunity.web.dto.reports.CommunityReportsSaveDto;
+import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 public class ReportsService {
-    private final CommunityReportsRepository communityReportsRepository;
+    private final ContentReportsRepository contentReportsRepository;
     private final UserService userService;
     private final PostsSearchService postsSearchService;
     private final CommentsSearchService commentsSearchService;
@@ -25,7 +25,7 @@ public class ReportsService {
     private final TypesService typesService;
 
     @Transactional
-    public Long saveCommunityReports(CommunityReportsSaveDto requestDto, String username) {
+    public Long saveContentReports(ContentReportsSaveDto requestDto, String username) {
         User reporter = userService.findByUsername(username);
         Reasons reasons = reasonsService.findById(requestDto.getReasonsId());
         String otherReasons = requestDto.getOtherReasons();
@@ -51,12 +51,12 @@ public class ReportsService {
             throw new IllegalArgumentException("신고 분류가 선택되지 않았습니다.");
         }
 
-        CommunityReportsSaveDto communityReportsSaveDto = CommunityReportsSaveDto.builder()
+        ContentReportsSaveDto contentReportsSaveDto = ContentReportsSaveDto.builder()
                 .posts(posts).comments(comments).user(user)
                 .reporter(reporter).types(types)
                 .reasons(reasons).otherReasons(otherReasons)
                 .build();
 
-        return communityReportsRepository.save(communityReportsSaveDto.toEntity()).getId();
+        return contentReportsRepository.save(contentReportsSaveDto.toEntity()).getId();
     }
 }

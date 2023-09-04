@@ -2,7 +2,7 @@ package com.eskgus.nammunity.web.dto.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.reports.CommunityReports;
+import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.reports.Reasons;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class CommunityReportsSaveDto {
+public class ContentReportsSaveDto {
     @NotNull(message = "신고 사유를 선택하세요.")
     private Long reasonsId;
 
@@ -33,8 +33,8 @@ public class CommunityReportsSaveDto {
     private String otherReasons;
 
     @Builder
-    public CommunityReportsSaveDto(Posts posts, Comments comments, User user,
-                                   User reporter, Types types, Reasons reasons, String otherReasons) {
+    public ContentReportsSaveDto(Posts posts, Comments comments, User user,
+                                 User reporter, Types types, Reasons reasons, String otherReasons) {
         this.posts = posts;
         this.comments = comments;
         this.user = user;
@@ -44,8 +44,8 @@ public class CommunityReportsSaveDto {
         this.otherReasons = otherReasons;
     }
 
-    public CommunityReports toEntity() {
-        return CommunityReports.builder()
+    public ContentReports toEntity() {
+        return ContentReports.builder()
                 .posts(posts).comments(comments).user(user)
                 .reporter(reporter).types(types)
                 .reasons(reasons).otherReasons(otherReasons).build();

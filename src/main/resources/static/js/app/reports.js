@@ -129,7 +129,7 @@ var reportsMain = {
 
         $.ajax({
             type: 'POST',
-            url: '/api/reports/community',
+            url: '/api/reports/content',
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)

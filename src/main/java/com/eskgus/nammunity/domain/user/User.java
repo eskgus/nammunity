@@ -4,7 +4,7 @@ import com.eskgus.nammunity.domain.BaseTimeEntity;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.reports.CommunityReports;
+import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.tokens.OAuth2Tokens;
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import jakarta.persistence.*;
@@ -69,11 +69,11 @@ public class User extends BaseTimeEntity {
 
     // 당한 신고
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
-    private List<CommunityReports> reports;
+    private List<ContentReports> reports;
 
     // 한 신고
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
-    private CommunityReports communityReports;
+    private ContentReports contentReports;
 
     @Builder
     public User(String username, String password, String nickname, String email,

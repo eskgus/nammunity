@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @Entity
-public class CommunityReports extends BaseTimeEntity {
+public class ContentReports extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -43,8 +43,8 @@ public class CommunityReports extends BaseTimeEntity {
     private String otherReasons;
 
     @Builder
-    public CommunityReports(Posts posts, Comments comments, User user,
-                            User reporter, Types types, Reasons reasons, String otherReasons) {
+    public ContentReports(Posts posts, Comments comments, User user,
+                          User reporter, Types types, Reasons reasons, String otherReasons) {
         this.posts = posts;
         this.comments = comments;
         this.user = user;

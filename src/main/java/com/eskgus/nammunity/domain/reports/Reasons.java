@@ -16,5 +16,5 @@ public class Reasons {
     private String detail;
 
     @OneToOne(mappedBy = "reasons", cascade = CascadeType.REMOVE)
-    private CommunityReports communityReports;
+    private ContentReports contentReports;
 }
