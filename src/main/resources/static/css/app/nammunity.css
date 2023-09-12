@@ -130,6 +130,9 @@ tbody .tit {
 /* 여기까지 table*/
 
 /* 여기부터 main */
+#container .my-page #reports-area td.date,
+#container .my-page #reports-area td.reporter,
+#container .my-page #reports-area td:first-child,
 #container .my-page #likes-area td:first-child,
 #container .my-page .comments-area td:first-child,
 #container .my-page .posts-area td:first-child,
@@ -147,6 +150,7 @@ tbody .tit {
     font-size: 18px;
 }
 
+#container .my-page .users-area .date,
 #container .my-page .comments-area .date,
 #container .my-page .posts-area .date,
 #container .main .date {
@@ -269,6 +273,7 @@ tbody .tit {
     margin: 14px 0 7px 0;
 }
 
+#container .my-page .users-area td div,
 #container .my-page .comments-area td pre {
     margin: 0 0 7px 0;
 }
@@ -304,6 +309,7 @@ tbody .tit {
     margin-left: 0;
 }
 
+#container .my-page .admin-area #reports-area li a:hover,
 #container .my-page .my-activity-area #likes-area li a:hover,
 #container .btn-area .btn:hover {
     text-decoration: none;
@@ -534,6 +540,7 @@ textarea:disabled {
     display: block !important;
 }
 
+.popup-window .top-area td .author,
 .dropdown {
     margin: 0;
 }
@@ -686,11 +693,13 @@ textarea:disabled {
 /* 여기까지 my-activity-area */
 
 /* 여기부터 posts-area */
+#container .my-page .admin-area,
 #container .my-page .user-info-area,
 #container .my-page .my-activity-area {
     width: 80%;
 }
 
+#container .my-page .admin-area #reports-area,
 #container .my-page .my-activity-area #likes-area,
 #container .my-page .user-info-area #social-area,
 #container .my-page .user-info-area #info-area,
@@ -700,6 +709,7 @@ textarea:disabled {
     margin-bottom: 40px;
 }
 
+#container .my-page .admin-area #reports-area h2,
 #container .my-page .my-activity-area #likes-area h2,
 #container .my-page .user-info-area #social-area h2,
 #container .my-page .user-info-area #info-area h2,
@@ -709,12 +719,16 @@ textarea:disabled {
     font-size: 18px;
 }
 
+#container .my-page #reports-area th,
+.popup-window .bottom-area th,
 #container .my-page #likes-area th,
 #container .my-page .comments-area th,
 #container .my-page .posts-area th {
     padding: 5px;
 }
 
+#container .my-page .admin-area #reports-area td:not(:last-child),
+#container .my-page .admin-area #reports-area th:not(:last-child),
 #container .my-page .my-activity-area #likes-area td:not(:last-child),
 #container .my-page .my-activity-area #likes-area th:not(:last-child),
 #container .my-page .user-info-area #social-area td:not(:last-child),
@@ -725,6 +739,8 @@ textarea:disabled {
     border-right: 1px solid #AAC2A9;
 }
 
+#container .my-page #reports-area th.type,
+.popup-window .bottom-area th.no,
 #container .my-page #likes-area th.no,
 #container .my-page .comments-area th.no,
 #container .my-page .posts-area th.no {
@@ -737,6 +753,7 @@ textarea:disabled {
     width: 90%;
 }
 
+#container .my-page .users-area .date,
 #container .my-page .comments-area .date,
 #container .my-page .posts-area .date {
     font-size: 12px;
@@ -884,6 +901,10 @@ textarea:disabled {
 #container .read .btn-area .img-btn img.like_s_d {
     content: url(/images/app/heart_s_d.png);
 }
+
+#container .my-page #reports-area .img-btn img.detail {
+    content: url(/images/app/square_arrow.png);
+}
 /* 여기까지 img */
 
 /* 여기부터 read */
@@ -924,30 +945,34 @@ textarea:disabled {
 /* 여기까지 read */
 
 /* 여기부터 likes-area */
+#container .my-page .admin-area #reports-area li>a:active,
 #container .my-page .my-activity-area #likes-area li>a:active {
     color: #205943;
     background-color: #C1DAC0;
 }
 
+#container .my-page .admin-area #reports-area ul,
 #container .my-page .my-activity-area #likes-area ul {
     border-bottom: 2px solid #AAC2A9;
     padding-left: 0;
     text-align: center;
 }
 
+#container .my-page .admin-area #reports-area li,
 #container .my-page .my-activity-area #likes-area li {
     display: inline-block;
     margin: 0;
     width: 33.33%;
 }
 
+#container .my-page .admin-area #reports-area li>a,
 #container .my-page .my-activity-area #likes-area li>a {
     display: block;
     padding:5px 0;
 }
 /* 여기까지 likes-area */
 
-/* 여기부터 팝업 */
+/* 여기부터 신고 사유 팝업 */
 #container .read .report-popup-container {
     display: none;
     position: fixed;
@@ -1014,4 +1039,46 @@ textarea:disabled {
 #container .read .report-popup .btn-area {
     border-width: 1px;
 }
-/* 여기까지 팝업 */
+/* 여기까지 신고 사유 팝업 */
+
+/* 여기부터 reports-area */
+#container .my-page .admin-area #reports-area li {
+    width: 25%;
+}
+
+#container .my-page #reports-area th.content {
+    width: 34%;
+}
+
+#container .my-page #reports-area th.date,
+#container .my-page #reports-area th.reporter {
+    width: 13%;
+}
+
+#container .my-page #reports-area th.reason {
+    width: 30%;
+}
+
+#container .my-page #reports-area td {
+    word-wrap: break-word;
+}
+
+#container .my-page #reports-area td.date {
+    color: #205943;
+    font-size: 14px;
+}
+
+#container .my-page #reports-area .comments-area .tit,
+#container .my-page #reports-area .posts-area .tit {
+    width: auto;
+}
+
+#container .my-page #reports-area .img-btn {
+    float: right;
+}
+
+#container .my-page #reports-area .img-btn img {
+    height: 20px;
+    width: 20px;
+}
+/* 여기까지 reports-area */

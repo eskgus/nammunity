@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @Entity
@@ -15,6 +17,6 @@ public class Types {
     @Column
     private String detail;
 
-    @OneToOne(mappedBy = "types", cascade = CascadeType.REMOVE)
-    private ContentReports contentReports;
+    @OneToMany(mappedBy = "types", cascade = CascadeType.REMOVE)
+    private List<ContentReports> contentReports;
 }

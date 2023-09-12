@@ -9,10 +9,16 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto;
+import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -58,5 +64,56 @@ public class ReportsService {
                 .build();
 
         return contentReportsRepository.save(contentReportsSaveDto.toEntity()).getId();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContentReportSummaryDto> findSummary() {
+        List<ContentReportDistinctDto> distinctDtos = contentReportsRepository.findDistinct();
+
+        List<ContentReportSummaryDto> summaryDtos = distinctDtos.stream().map(distinctDto -> {
+            String type = distinctDto.getTypes().getDetail();
+            User reporter;
+            LocalDateTime reportedDate;
+            Reasons reason;
+            String reasonDetail;
+
+            if (type.equals("게시글")) {
+                Posts post = distinctDto.getPosts();
+                reporter = contentReportsRepository.findReporterByPosts(post);
+                reportedDate = contentReportsRepository.findReportedDateByPosts(post);
+                reason = contentReportsRepository.findReasonByPosts(post);
+                reasonDetail = reason.getDetail();
+                if (reasonDetail.equals("기타")) {
+                    reasonDetail += ": " + contentReportsRepository.findOtherReasonByPosts(post, reason);
+                }
+            } else if (type.equals("댓글")) {
+                Comments comment = distinctDto.getComments();
+                reporter = contentReportsRepository.findReporterByComments(comment);
+                reportedDate = contentReportsRepository.findReportedDateByComments(comment);
+                reason = contentReportsRepository.findReasonByComments(comment);
+                reasonDetail = reason.getDetail();
+                if (reasonDetail.equals("기타")) {
+                    reasonDetail += ": " + contentReportsRepository.findOtherReasonByComments(comment, reason);
+                }
+            } else {
+                User user = distinctDto.getUser();
+                reporter = contentReportsRepository.findReporterByUsers(user);
+                reportedDate = contentReportsRepository.findReportedDateByUsers(user);
+                reason = contentReportsRepository.findReasonByUsers(user);
+                reasonDetail = reason.getDetail();
+                if (reasonDetail.equals("기타")) {
+                    reasonDetail += ": " + contentReportsRepository.findOtherReasonByUsers(user, reason);
+                }
+            }
+
+            return ContentReportSummaryDto.builder()
+                    .distinctDto(distinctDto)
+                    .reporter(reporter)
+                    .reportedDate(reportedDate)
+                    .reason(reasonDetail)
+                    .build();
+        }).collect(Collectors.toList());
+
+        return summaryDtos;
     }
 }

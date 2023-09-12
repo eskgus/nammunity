@@ -1,0 +1,131 @@
+{{>layout/header}}
+
+<div id="container">
+    <div class="wrapper">
+        <div class="my-page">
+            <div class="title-area">
+                <div class="top-area">
+                    <a class="location" href="/"><img class="icon" src="/images/app/home.png" alt="HOME"></a>
+                    <a class="location" href="/users/my-page">마이 페이지</a>
+                    <span class="location">관리</span>
+                    <a class="location" href="/users/my-page/content-report">컨텐츠 신고</a>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="category-area">
+                    <div>
+                        <h2 class="title"><a href="/users/my-page">마이 페이지</a></h2>
+                    </div>
+                    <div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/smile.png);">나의 활동</h3>
+                            <ul>
+                                <li><a href="/users/my-page/posts">작성 글</a></li>
+                                <li><a href="/users/my-page/comments">작성 댓글</a></li>
+                                <li><a href="/users/my-page/likes">좋아요</a></li>
+                            </ul>
+                        </div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/lock.png);">회원 정보</h3>
+                            <ul>
+                                <li><a href="/users/my-page/update/user-info">회원 정보 수정</a></li>
+                                <li><a href="/users/my-page/update/password">비밀번호 변경</a></li>
+                                <li><a href="/users/my-page/delete/account">회원 탈퇴</a></li>
+                            </ul>
+                        </div>
+                        <div class="content">
+                            <h3 style="background-image: url(/images/app/settings.png);">관리</h3>
+                            <ul>
+                                <li><a href="/users/my-page/content-report">컨텐츠 신고</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-area">
+                    <div id="reports-area">
+                        <h2>컨텐츠 신고</h2>
+                        <ul>
+                            <li>
+                                <a style="background-color: #C1DAC0;" href="/users/my-page/content-report">전체</a></li><li>
+                                <a href="/users/my-page/content-report/posts">게시글</a></li><li>
+                                <a href="/users/my-page/content-report/comments">댓글</a></li><li>
+                                <a href="/users/my-page/content-report/users">사용자</a></li>
+                        </ul>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th class="type">분류</th>
+                                <th class="content">신고 내용</th>
+                                <th class="reporter">신고자</th>
+                                <th class="date">신고일</th>
+                                <th class="reason">사유</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {{^reports}}
+                                <tr>
+                                    <td colspan="5">신고 내역이 없어요.</td>
+                                </tr>
+                            {{/reports}}
+                            {{#reports}}
+                                {{#postExistence}} {{! 게시글 신고 }}
+                                    <tr class="posts-area">
+                                        <td>{{type}}</td>
+                                        <td>
+                                            <div class="tit">
+                                                <a href="/posts/read/{{postId}}">{{title}}</a>
+                                            </div>
+                                            <span class="date">{{author}} | {{modifiedDate}}</span>
+                                        </td>
+                                        <td class="reporter">{{reporter}}</td>
+                                        <td class="date">{{reportedDate}}</td>
+                                        <td>
+                                            <button class="img-btn" name="report-details"><img class="detail"></button>
+                                            <span>{{reason}}</span>
+                                        </td>
+                                    </tr>
+                                {{/postExistence}}
+                                {{#commentExistence}} {{! 댓글 신고 }}
+                                    <tr class="comments-area">
+                                        <td>{{type}}</td>
+                                        <td>
+                                            <a href="/posts/read/{{postId}}#cmt-{{commentId}}"><pre>{{content}}</pre></a>
+                                            <span class="date">{{author}} | {{modifiedDate}}</span>
+                                            <div class="tit">
+                                                <a href="/posts/read/{{postId}}">{{title}}</a>
+                                            </div>
+                                        </td>
+                                        <td class="reporter">{{reporter}}</td>
+                                        <td class="date">{{reportedDate}}</td>
+                                        <td>
+                                            <button class="img-btn" name="report-details"><img class="detail"></button>
+                                            <span>{{reason}}</span>
+                                        </td>
+                                    </tr>
+                                {{/commentExistence}}
+                                {{#userExistence}} {{! 사용자 신고 }}
+                                    <tr class="users-area">
+                                        <td>{{type}}</td>
+                                        <td data-user-id="{{userId}}">
+                                            <div>{{nickname}}</div>
+                                            <span class="date">{{createdDate}}</span>
+                                        </td>
+                                        <td class="reporter">{{reporter}}</td>
+                                        <td class="date">{{reportedDate}}</td>
+                                        <td>
+                                            <button class="img-btn" name="report-details"><img class="detail"></button>
+                                            <span>{{reason}}</span>
+                                        </td>
+                                    </tr>
+                                {{/userExistence}}
+                            {{/reports}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{>layout/footer}}

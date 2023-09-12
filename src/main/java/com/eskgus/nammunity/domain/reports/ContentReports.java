@@ -24,18 +24,18 @@ public class ContentReports extends BaseTimeEntity {
     private Comments comments;
 
     @ManyToOne
-    @JoinColumn(name = "Users_id")
+    @JoinColumn(name = "users_id")
     private User user;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(nullable = false)
     private User reporter;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(nullable = false)
     private Types types;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(nullable = false)
     private Reasons reasons;
 
