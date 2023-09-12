@@ -64,4 +64,17 @@ public interface ContentReportsRepository extends JpaRepository<ContentReports, 
 
     @Query("SELECT r.otherReasons FROM ContentReports r WHERE r.user = :user and r.reasons = :reasons ORDER BY r.createdDate DESC LIMIT 1")
     String findOtherReasonByUsers(User user, Reasons reasons);
+
+    @Query("SELECT r.otherReasons FROM ContentReports r WHERE r.id = :id")
+    String findOtherReasonById(Long id);
+
+    // reports 검색
+    @Query("SELECT r FROM ContentReports r WHERE r.posts = :posts")
+    List<ContentReports> findByPosts(Posts posts);
+
+    @Query("SELECT r FROM ContentReports r WHERE r.comments = :comments")
+    List<ContentReports> findByComments(Comments comments);
+
+    @Query("SELECT r FROM ContentReports r WHERE r.user = :user")
+    List<ContentReports> findByUser(User user);
 }

@@ -727,6 +727,8 @@ textarea:disabled {
     padding: 5px;
 }
 
+.popup-window .bottom-area td:not(:last-child),
+.popup-window .bottom-area th:not(:last-child),
 #container .my-page .admin-area #reports-area td:not(:last-child),
 #container .my-page .admin-area #reports-area th:not(:last-child),
 #container .my-page .my-activity-area #likes-area td:not(:last-child),
@@ -1082,3 +1084,59 @@ textarea:disabled {
     width: 20px;
 }
 /* 여기까지 reports-area */
+
+/* 여기부터 신고 내역 팝업 */
+#wrap.popup-window {
+    max-width: 750px;
+    min-height: auto;
+}
+
+.popup-window h1 {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.popup-window .bottom-area,
+.popup-window .top-area {
+    margin-bottom: 10px;
+}
+
+.popup-window .top-area tr,
+.popup-window .top-area tbody {
+    border: none;
+}
+
+.popup-window .top-area th {
+    width: 70px;
+    padding: 5px 0;
+    text-align: left;
+    vertical-align: top;
+    font-weight: 500;
+}
+
+.popup-window .top-area td {
+    padding: 5px 0;
+}
+
+.popup-window .top-area td .title {
+    margin: 0 0 5px 0;
+}
+
+.popup-window .bottom-area th.date,
+.popup-window .bottom-area th.reporter {
+    width: 20%;
+}
+
+.popup-window .bottom-area th.reason {
+    width: 50%;
+}
+
+.popup-window .bottom-area tr {
+    text-align: center;
+    vertical-align: text-top;
+}
+
+.popup-window .bottom-area td.reason {
+    text-align: left;
+}
+/* 여기까지 신고 내역 팝업 */

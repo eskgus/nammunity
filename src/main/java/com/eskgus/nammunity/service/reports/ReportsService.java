@@ -2,6 +2,7 @@ package com.eskgus.nammunity.service.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.reports.Reasons;
 import com.eskgus.nammunity.domain.reports.Types;
@@ -9,9 +10,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
-import com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto;
-import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
-import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
+import com.eskgus.nammunity.web.dto.reports.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,5 +114,37 @@ public class ReportsService {
         }).collect(Collectors.toList());
 
         return summaryDtos;
+    }
+
+    @Transactional(readOnly = true)
+    public ContentReportDetailDto findDetails(String type, Long id) {
+        Posts post = null;
+        Comments comment = null;
+        User user = null;
+        List<ContentReports> reports;
+
+        if (type.equals("post")) {
+            post = postsSearchService.findById(id);
+            reports = contentReportsRepository.findByPosts(post);
+        } else if (type.equals("comment")) {
+            comment = commentsSearchService.findById(id);
+            reports = contentReportsRepository.findByComments(comment);
+        } else {
+            user = userService.findById(id);
+            reports = contentReportsRepository.findByUser(user);
+        }
+
+        // 신고 번호, 신고자, 신고일, 신고 사유 목록
+        List<ContentReportDetailListDto> detailListDtos = reports.stream().map(report -> {
+            String reason = report.getReasons().getDetail();
+            if (report.getReasons().getDetail().equals("기타")) {
+                reason += ": " + contentReportsRepository.findOtherReasonById(report.getId());
+            }
+            return ContentReportDetailListDto.builder().report(report).reason(reason).build();
+        }).collect(Collectors.toList());
+
+        // 신고 분류, 신고 내용, 세부 목록
+        return ContentReportDetailDto.builder()
+                .post(post).comment(comment).user(user).detailListDtos(detailListDtos).build();
     }
 }
