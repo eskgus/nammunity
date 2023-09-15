@@ -21,6 +21,24 @@ public class ReportsIndexController {
         return "admin/my-page/content-report";
     }
 
+    @GetMapping("/content-report/posts")
+    public String listPostReports(Model model) {
+        model.addAttribute("reports", reportsService.findSummary());
+        return "admin/my-page/content-report-posts";
+    }
+
+    @GetMapping("/content-report/comments")
+    public String listCommentReports(Model model) {
+        model.addAttribute("reports", reportsService.findSummary());
+        return "admin/my-page/content-report-comments";
+    }
+
+    @GetMapping("/content-report/users")
+    public String listUserReports(Model model) {
+        model.addAttribute("reports", reportsService.findSummary());
+        return "admin/my-page/content-report-users";
+    }
+
     @GetMapping("/content-report/details")
     public String listContentReportDetails(@RequestParam(name = "postId", required = false) Long postId,
                                            @RequestParam(name = "commentId", required = false) Long commentId,

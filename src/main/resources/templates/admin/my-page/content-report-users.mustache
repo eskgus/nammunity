@@ -18,10 +18,10 @@
                         <h2>컨텐츠 신고</h2>
                         <ul>
                             <li>
-                                <a style="background-color: #C1DAC0;" href="/admin/my-page/content-report">전체</a></li><li>
-                                <a href="/admin/my-page/content-report/posts">게시글</a></li><li>
-                                <a href="/admin/my-page/content-report/comments">댓글</a></li><li>
-                                <a href="/admin/my-page/content-report/users">사용자</a></li>
+                                <a href="/admin/my-page/content-report">전체</a></li><li>
+                            <a href="/admin/my-page/content-report/posts">게시글</a></li><li>
+                            <a href="/admin/my-page/content-report/comments">댓글</a></li><li>
+                            <a style="background-color: #C1DAC0;" href="/admin/my-page/content-report/users">사용자</a></li>
                         </ul>
                         <table>
                             <thead>
@@ -40,41 +40,6 @@
                                 </tr>
                             {{/reports}}
                             {{#reports}}
-                                {{#postExistence}} {{! 게시글 신고 }}
-                                    <tr class="posts-area">
-                                        <td>{{type}}</td>
-                                        <td>
-                                            <div class="tit">
-                                                <a href="/posts/read/{{postId}}">{{title}}</a>
-                                            </div>
-                                            <span class="date">{{author}} | {{modifiedDate}}</span>
-                                        </td>
-                                        <td class="reporter">{{reporter}}</td>
-                                        <td class="date">{{reportedDate}}</td>
-                                        <td>
-                                            <button class="img-btn" name="report-details"><img class="detail"></button>
-                                            <span>{{reason}}</span>
-                                        </td>
-                                    </tr>
-                                {{/postExistence}}
-                                {{#commentExistence}} {{! 댓글 신고 }}
-                                    <tr class="comments-area">
-                                        <td>{{type}}</td>
-                                        <td>
-                                            <a href="/posts/read/{{postId}}#cmt-{{commentId}}"><pre>{{content}}</pre></a>
-                                            <span class="date">{{author}} | {{modifiedDate}}</span>
-                                            <div class="tit">
-                                                <a href="/posts/read/{{postId}}">{{title}}</a>
-                                            </div>
-                                        </td>
-                                        <td class="reporter">{{reporter}}</td>
-                                        <td class="date">{{reportedDate}}</td>
-                                        <td>
-                                            <button class="img-btn" name="report-details"><img class="detail"></button>
-                                            <span>{{reason}}</span>
-                                        </td>
-                                    </tr>
-                                {{/commentExistence}}
                                 {{#userExistence}} {{! 사용자 신고 }}
                                     <tr class="users-area">
                                         <td>{{type}}</td>
