@@ -248,7 +248,8 @@ tbody .tit {
 
 #container .read .title-area .btm-area .author {
     display: inline-block;
-    padding: 7px 14px;
+    padding: 7px 0 7px 14px;
+    cursor: pointer;
 }
 
 #container .read .title-area .btm-area .view {
@@ -543,6 +544,7 @@ textarea:disabled {
 .popup-window .top-area td .author,
 .dropdown {
     margin: 0;
+    position: relative;
 }
 
 .dropdown-toggle {
@@ -554,14 +556,24 @@ textarea:disabled {
     padding-left: 0;
     border: 1px solid #AAC2A9;
     border-radius: 0.5rem;
-    left: -15px !important; background-color: #fff;
+    left: -15px !important;
+    background-color: #fff;
+    width: max-content;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#container .read .comments-area .author .dropdown-menu,
+#container .read .posts-area .author .dropdown-menu {
+    left: 100% !important; margin: 0;
+    top: -7px !important;
+    z-index: 1;
 }
 
 .dropdown-menu li {
     margin: 0;
     transition: all 0.15s;
     display: flex;
-    justify-content: center;
 }
 
 .dropdown-menu li .first {
@@ -597,6 +609,8 @@ textarea:disabled {
     text-decoration: none;
     transition: all 0.15s;
     cursor: pointer;
+    width: 100%;
+    text-align: center;
 }
 
 .dropdown-menu li>a:active {
@@ -636,6 +650,8 @@ textarea:disabled {
 
 #container .read .comments-area .author {
     font-weight: 600;
+    cursor: pointer;
+    padding-bottom: 7px;
 }
 
 #container .read .comments-list .date {

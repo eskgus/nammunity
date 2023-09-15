@@ -12,13 +12,13 @@ public class PostsReadDto {
     private String title;
     private String content;
     private String author;
+    private Long authorId;
     private String createdDate;
     private String modifiedDate;
     private int view;
-    private Long userId;
-    private int cSum;
-    private int lSum;
-    private Boolean lAuth = null;
+    private int cSum;   // 댓글 개수
+    private int lSum;   // 좋아요 개수
+    private Boolean lAuth;   // 좋아요 누른 사용자 확인
 
     @Builder
     public PostsReadDto(Posts posts, User user) {
@@ -26,10 +26,10 @@ public class PostsReadDto {
         this.title = posts.getTitle();
         this.content = posts.getContent();
         this.author = posts.getUser().getNickname();
+        this.authorId = posts.getUser().getId();
         this.createdDate = DateTimeUtil.formatDateTime(posts.getCreatedDate());
         this.modifiedDate = DateTimeUtil.formatModifiedDate(posts.getCreatedDate(), posts.getModifiedDate());
         this.view = posts.getView();
-        this.userId = posts.getUser().getId();
         this.cSum = posts.getComments().size();
         this.lSum = posts.getLikes().size();
 

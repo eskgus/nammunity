@@ -12,15 +12,21 @@ var reportsMain = {
             openPopupBtn.addEventListener('click', function() {
                 var postsReportBtn = document.getElementById('btn-posts-report');
                 var cmtReportBtn = document.getElementById('btn-cmt-report');
+                var userReportBtn = document.getElementById('btn-user-report');
 
-                // 게시글/댓글 신고 버튼 초기화
+                // 게시글/댓글/사용자 신고 버튼 초기화
                 postsReportBtn.style.display = 'none';
                 cmtReportBtn.style.display = 'none';
+                userReportBtn.style.display = 'none';
 
                 var closestPosts = this.closest('.posts-area');
                 var closestComments = this.closest('.comment');
+                var closestUsers = this.closest('.author');
 
-                if (closestPosts) { // 게시글의 신고 버튼이면 신고 팝업 내부의 게시글 신고 버튼 표시 + 신고할 컨텐츠 id 변경
+                if (closestUsers) { // 사용자 신고 버튼이면 신고 팝업 내부의 사용자 신고 버튼 표시 + 신고할 컨텐츠 id 변경
+                    _this.id.value = closestUsers.getAttribute('data-user-id');
+                    userReportBtn.style.display = 'inline-block';
+                } else if (closestPosts) { // 게시글의 신고 버튼이면 신고 팝업 내부의 게시글 신고 버튼 표시 + 신고할 컨텐츠 id 변경
                     _this.id.value = $('#id').val();
                     postsReportBtn.style.display = 'inline-block';
                 } else if (closestComments) {   // 댓글의 신고 버튼이면 신고 팝업 내부의 댓글 신고 버튼 표시 + 신고할 컨텐츠 id 변경
@@ -78,6 +84,14 @@ var reportsMain = {
             var reasonsId = _this.getReasons();
             if (reasonsId != null) {
                 _this.reportComments(reasonsId);
+            }
+        });
+
+        // 사용자 신고
+        $('#btn-user-report').on('click', function() {
+            var reasonsId = _this.getReasons();
+            if (reasonsId != null) {
+                _this.reportUsers(reasonsId);
             }
         });
     },
@@ -183,6 +197,47 @@ var reportsMain = {
                 if (response[Object.keys(response)].includes('ID')) { // reporter 없는 경우
                     window.location.href = '/users/sign-out';
                 } else if (response[Object.keys(response)].includes('댓글')) { // 댓글 없는 경우
+                    window.location.href = '/';
+                }
+            }
+        }).fail(function(response) {
+            if (response.status == 401) {
+                alert('로그인하세요.');
+                reportsMain.closeReportPopup();
+            } else {
+                alert(JSON.stringify(response));
+            }
+        });
+    },
+    reportUsers: function(reasonsId) {
+        var data = {
+            userId: reportsMain.id.value,
+            reasonsId: reasonsId,
+            otherReasons: reportsMain.otherReasons.value
+        };
+
+        if (data.otherReasons == '') {
+            data.otherReasons = null;
+        }
+        if (data.reasonsId == 0) {
+            data.reasonsId = null;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/api/reports/content',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data)
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
+                alert(response[Object.keys(response)]);
+                reportsMain.closeReportPopup();
+            } else {
+                alert(response[Object.keys(response)]);
+                if (response[Object.keys(response)].includes('ID')) { // reporter 없는 경우
+                    window.location.href = '/users/sign-out';
+                } else if (response[Object.keys(response)].includes('회원')) { // 사용자 없는 경우
                     window.location.href = '/';
                 }
             }

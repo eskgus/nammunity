@@ -12,9 +12,10 @@ public class CommentsReadDto {
     private String createdDate;
     private String modifiedDate;
     private String author;
-    private Boolean cAuth = null;
-    private int lSum;
-    private Boolean lAuth = null;
+    private Long authorId;
+    private Boolean cAuth;   // 댓글 작성자 확인
+    private int lSum;   // 좋아요 개수
+    private Boolean lAuth;   // 좋아요 누른 사용자 확인
 
     public CommentsReadDto(Comments comments, User user) {
         this.id = comments.getId();
@@ -22,6 +23,7 @@ public class CommentsReadDto {
         this.createdDate = DateTimeUtil.formatDateTime(comments.getCreatedDate());
         this.modifiedDate = DateTimeUtil.formatModifiedDate(comments.getCreatedDate(), comments.getModifiedDate());
         this.author = comments.getUser().getNickname();
+        this.authorId = comments.getUser().getId();
         this.lSum = comments.getLikes().size();
         comments.getLikes().forEach(like -> {
             if (like.getUser().equals(user)) {

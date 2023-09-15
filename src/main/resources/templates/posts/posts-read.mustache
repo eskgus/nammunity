@@ -19,7 +19,13 @@
                         </h1>
                     </div>
                     <div class="btm-area">
-                        <div class="author" id="author">{{author}}</div>
+                        <div class="author dropdown" id="author" data-toggle="dropdown" data-user-id="{{authorId}}">{{author}}
+                            <ul class="dropdown-menu">
+                                {{^admin}}{{^pAuth}}
+                                    <li><a role="button" class="first last" name="btn-report">신고</a></li>
+                                {{/pAuth}}{{/admin}}
+                            </ul>
+                        </div>
                         <div class="view">
                             <span style="padding-left: 10px">조회 수
                                 <span style="padding-left: 2px" id="view">{{view}}</span>
@@ -67,7 +73,13 @@
                 {{#comments}}
                     <div id="cmt-{{id}}">
                         <div class="comment">
-                            <span class="author">{{author}}</span>
+                            <span class="author dropdown" id="author" data-toggle="dropdown" data-user-id="{{authorId}}">{{author}}
+                                <ul class="dropdown-menu">
+                                    {{^admin}}{{^pAuth}}
+                                        <li><a role="button" class="first last" name="btn-report">신고</a></li>
+                                    {{/pAuth}}{{/admin}}
+                                </ul>
+                            </span>
                             <div class="btn-area">
                                 <button name="btn-cmts-like" type="button" class="img-btn">
                                     <img class="like_d {{#lAuth}}like_s_d{{/lAuth}}" alt="좋아요">
@@ -120,6 +132,7 @@
                     <div class="btn-area">
                         <button type="button" class="btn" id="btn-posts-report" style="display: none;">신고</button>
                         <button type="button" class="btn" id="btn-cmt-report" style="display: none; margin-left: 0">신고</button>
+                        <button type="button" class="btn" id="btn-user-report" style="display: none; margin-left: 0">신고</button>
                         <button type="button" class="btn" id="btn-report-cancel">취소</button>
                     </div>
                 </div>
