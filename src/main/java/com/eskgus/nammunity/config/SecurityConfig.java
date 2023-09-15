@@ -71,6 +71,7 @@ public class SecurityConfig {
                                 "/api/users/update/**", "/api/users/delete", "/users/my-page/**",
                                 "/api/comments/**", "/api/likes/**", "/api/reports/**")
                         .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers("/admin/my-page/content-report/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())
                 .formLogin(login -> login

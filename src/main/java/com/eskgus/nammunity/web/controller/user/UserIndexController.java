@@ -4,12 +4,10 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
-import com.eskgus.nammunity.service.reports.ReportsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
-import com.eskgus.nammunity.web.dto.reports.ContentReportDetailDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,7 +27,6 @@ public class UserIndexController {
     private final PostsSearchService postsSearchService;
     private final CommentsSearchService commentsSearchService;
     private final LikesSearchService likesSearchService;
-    private final ReportsService reportsService;
 
     @GetMapping("/sign-up")
     public String signUpUser() {
@@ -201,29 +198,5 @@ public class UserIndexController {
         }
         model.addAllAttributes(attr);
         return "user/my-page/likes-list-comments";
-    }
-
-    @GetMapping("/my-page/content-report")
-    public String listContentReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary());
-        return "user/my-page/content-report";
-    }
-
-    @GetMapping("/my-page/content-report/details")
-    public String listContentReportDetails(@RequestParam(name = "postId", required = false) Long postId,
-                                           @RequestParam(name = "commentId", required = false) Long commentId,
-                                           @RequestParam(name = "userId", required = false) Long userId,
-                                           Model model) {
-        ContentReportDetailDto detailDto;
-        if (postId != null) {
-            detailDto = reportsService.findDetails("post", postId);
-        } else if (commentId != null) {
-            detailDto = reportsService.findDetails("comment", commentId);
-        } else {
-            detailDto = reportsService.findDetails("user", userId);
-        }
-
-        model.addAttribute("details", detailDto);
-        return "user/my-page/content-report-details";
     }
 }

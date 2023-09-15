@@ -10,7 +10,7 @@ var reportDetailsMain = {
                 var report = reportDetail.closest('tr');
                 var type = report.firstElementChild.textContent;
                 var href = null;
-                var url = '/users/my-page/content-report/details?';
+                var url = '/admin/my-page/content-report/details?';
 
                 if (type == '게시글') {
                     // 게시글 세부 신고 내역 url 생성
