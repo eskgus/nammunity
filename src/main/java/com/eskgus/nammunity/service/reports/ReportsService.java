@@ -66,8 +66,8 @@ public class ReportsService {
     }
 
     @Transactional(readOnly = true)
-    public List<ContentReportSummaryDto> findSummary() {
-        List<ContentReportDistinctDto> distinctDtos = contentReportsRepository.findDistinct();
+    public List<ContentReportSummaryDto> findSummary(String endpoint) {
+        List<ContentReportDistinctDto> distinctDtos = findDistinct(endpoint);
 
         List<ContentReportSummaryDto> summaryDtos = distinctDtos.stream().map(distinctDto -> {
             String type = distinctDto.getTypes().getDetail();
@@ -117,6 +117,18 @@ public class ReportsService {
     }
 
     @Transactional(readOnly = true)
+    public List<ContentReportDistinctDto> findDistinct(String endpoint) {
+        List<ContentReportDistinctDto> distinctDtos = switch (endpoint) {
+            case "" -> contentReportsRepository.findDistinct();
+            case "posts" -> contentReportsRepository.findDistinctPosts();
+            case "comments" -> contentReportsRepository.findDistinctComments();
+            default -> contentReportsRepository.findDistinctUsers();
+        };
+
+        return distinctDtos;
+    }
+
+    @Transactional(readOnly = true)
     public ContentReportDetailDto findDetails(String type, Long id) {
         Posts post = null;
         Comments comment = null;
@@ -146,5 +158,27 @@ public class ReportsService {
         // 신고 분류, 신고 내용, 세부 목록
         return ContentReportDetailDto.builder()
                 .post(post).comment(comment).user(user).detailListDtos(detailListDtos).build();
+    }
+
+    @Transactional
+    public void deleteSelectedContentReports(ContentReportsDeleteDto requestDto) {
+        if (requestDto.getPostsId().isEmpty()
+                && requestDto.getCommentsId().isEmpty()
+                && requestDto.getUserId().isEmpty()) {
+            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+        }
+
+        requestDto.getPostsId().forEach(postId -> {
+            Posts post = postsSearchService.findById(postId);
+            contentReportsRepository.deleteByPost(post);
+        });
+        requestDto.getCommentsId().forEach(commentId -> {
+            Comments comment = commentsSearchService.findById(commentId);
+            contentReportsRepository.deleteByComment(comment);
+        });
+        requestDto.getUserId().forEach(userId -> {
+            User user = userService.findById(userId);
+            contentReportsRepository.deleteByUsers(user);
+        });
     }
 }

@@ -5,12 +5,14 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ContentReportsRepository extends JpaRepository<ContentReports, Long> {
+    // type별로 묶어서 검색
     @Query("SELECT NEW com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto(r.types, r.posts, r.comments, r.user) "
             + "FROM ContentReports r "
             + "LEFT JOIN r.types t "
@@ -24,6 +26,45 @@ public interface ContentReportsRepository extends JpaRepository<ContentReports, 
             + ") "
             + "ORDER BY r.id ASC")
     List<ContentReportDistinctDto> findDistinct();
+
+    @Query("SELECT NEW com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto(r.types, r.posts) "
+            + "FROM ContentReports r "
+            + "LEFT JOIN r.types t "
+            + "LEFT JOIN r.posts p "
+            + "WHERE r.id IN ("
+            + "SELECT MIN(rr.id) "
+            + "FROM ContentReports rr "
+            + "WHERE rr.posts IS NOT NULL "
+            + "GROUP BY rr.types, rr.posts"
+            + ") "
+            + "ORDER BY r.id ASC")
+    List<ContentReportDistinctDto> findDistinctPosts();
+
+    @Query("SELECT NEW com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto(r.types, r.comments) "
+            + "FROM ContentReports r "
+            + "LEFT JOIN r.types t "
+            + "LEFT JOIN r.comments c "
+            + "WHERE r.id IN ("
+            + "SELECT MIN(rr.id) "
+            + "FROM ContentReports rr "
+            + "WHERE rr.comments IS NOT NULL "
+            + "GROUP BY rr.types, rr.comments"
+            + ") "
+            + "ORDER BY r.id ASC")
+    List<ContentReportDistinctDto> findDistinctComments();
+
+    @Query("SELECT NEW com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto(r.types, r.user) "
+            + "FROM ContentReports r "
+            + "LEFT JOIN r.types t "
+            + "LEFT JOIN r.user u "
+            + "WHERE r.id IN ("
+            + "SELECT MIN(rr.id) "
+            + "FROM ContentReports rr "
+            + "WHERE rr.user IS NOT NULL "
+            + "GROUP BY rr.types, rr.user"
+            + ") "
+            + "ORDER BY r.id ASC")
+    List<ContentReportDistinctDto> findDistinctUsers();
 
     // reporter 검색
     @Query("SELECT r.reporter FROM ContentReports r WHERE r.posts = :posts GROUP BY r.reporter ORDER BY COUNT(*) DESC, MAX(r.createdDate) DESC LIMIT 1")
@@ -77,4 +118,17 @@ public interface ContentReportsRepository extends JpaRepository<ContentReports, 
 
     @Query("SELECT r FROM ContentReports r WHERE r.user = :user")
     List<ContentReports> findByUser(User user);
+
+    // content id로 reports 삭제
+    @Modifying
+    @Query("DELETE FROM ContentReports r WHERE r.posts = :posts")
+    void deleteByPost(Posts posts);
+
+    @Modifying
+    @Query("DELETE FROM ContentReports r WHERE r.comments = :comments")
+    void deleteByComment(Comments comments);
+
+    @Modifying
+    @Query("DELETE FROM ContentReports r WHERE r.user = :user")
+    void deleteByUsers(User user);
 }

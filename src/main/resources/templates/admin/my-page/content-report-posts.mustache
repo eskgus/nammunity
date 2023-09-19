@@ -23,6 +23,9 @@
                             <a href="/admin/my-page/content-report/comments">댓글</a></li><li>
                             <a href="/admin/my-page/content-report/users">사용자</a></li>
                         </ul>
+                        <div class="checkbox-area">
+                            <input type="checkbox" id="select-all"><label><a id="btn-delete-reports">삭제</a></label>
+                        </div>
                         <table>
                             <thead>
                             <tr>
@@ -36,13 +39,13 @@
                             <tbody>
                             {{^reports}}
                                 <tr>
-                                    <td colspan="5">신고 내역이 없어요.</td>
+                                    <td class="no-content" colspan="5">신고 내역이 없어요.</td>
                                 </tr>
                             {{/reports}}
                             {{#reports}}
                                 {{#postExistence}} {{! 게시글 신고 }}
                                     <tr class="posts-area">
-                                        <td>{{type}}</td>
+                                        <td><input type="checkbox"><label>{{type}}</label></td>
                                         <td>
                                             <div class="tit">
                                                 <a href="/posts/read/{{postId}}">{{title}}</a>

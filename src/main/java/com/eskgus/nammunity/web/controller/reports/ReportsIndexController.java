@@ -17,31 +17,31 @@ public class ReportsIndexController {
 
     @GetMapping("/content-report")
     public String listContentReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary());
+        model.addAttribute("reports", reportsService.findSummary(""));
         return "admin/my-page/content-report";
     }
 
     @GetMapping("/content-report/posts")
     public String listPostReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary());
+        model.addAttribute("reports", reportsService.findSummary("posts"));
         return "admin/my-page/content-report-posts";
     }
 
     @GetMapping("/content-report/comments")
     public String listCommentReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary());
+        model.addAttribute("reports", reportsService.findSummary("comments"));
         return "admin/my-page/content-report-comments";
     }
 
     @GetMapping("/content-report/users")
     public String listUserReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary());
+        model.addAttribute("reports", reportsService.findSummary("users"));
         return "admin/my-page/content-report-users";
     }
 
     @GetMapping("/content-report/details")
-    public String listContentReportDetails(@RequestParam(name = "postId", required = false) Long postId,
-                                           @RequestParam(name = "commentId", required = false) Long commentId,
+    public String listContentReportDetails(@RequestParam(name = "postsId", required = false) Long postId,
+                                           @RequestParam(name = "commentsId", required = false) Long commentId,
                                            @RequestParam(name = "userId", required = false) Long userId,
                                            Model model) {
         ContentReportDetailDto detailDto;

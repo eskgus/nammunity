@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.controller.reports;
 
 import com.eskgus.nammunity.service.reports.ReportsService;
+import com.eskgus.nammunity.web.dto.reports.ContentReportsDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,20 @@ public class ReportsApiController {
         try {
             reportsService.saveContentReports(requestDto, username);
             response.put("OK", "신고되었습니다.");
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
+        }
+
+        return response;
+    }
+
+    @DeleteMapping("/content")
+    public Map<String, String> deleteSelectedContentReports(@RequestBody ContentReportsDeleteDto requestDto) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            reportsService.deleteSelectedContentReports(requestDto);
+            response.put("OK", "삭제됐습니다.");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }

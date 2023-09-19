@@ -21,4 +21,19 @@ public class ContentReportDistinctDto {
         this.comments = comments;
         this.user = user;
     }
+
+    public ContentReportDistinctDto(Types types, Posts posts) {
+        this.types = types;
+        this.posts = posts;
+    }
+
+    public ContentReportDistinctDto(Types types, Comments comments) {
+        this.types = types;
+        this.comments = comments;
+    }
+
+    public ContentReportDistinctDto(Types types, User user) {
+        this.types = types;
+        this.user = user;
+    }
 }
