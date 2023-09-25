@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class PostsService {
@@ -43,5 +45,14 @@ public class PostsService {
         Posts posts = postsRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException("해당 게시글이 없습니다."));
         postsRepository.delete(posts);
+    }
+
+    @Transactional
+    public void deleteSelectedPosts(List<Long> postsId) {
+        if (postsId.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+        }
+
+        postsId.forEach(this::delete);
     }
 }

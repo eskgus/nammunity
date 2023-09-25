@@ -33,7 +33,7 @@ public class ReportsApiController {
         return response;
     }
 
-    @DeleteMapping("/content")
+    @DeleteMapping("/content/selected-delete")
     public Map<String, String> deleteSelectedContentReports(@RequestBody ContentReportsDeleteDto requestDto) {
         Map<String, String> response = new HashMap<>();
 

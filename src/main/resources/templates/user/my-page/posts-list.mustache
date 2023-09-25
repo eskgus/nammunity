@@ -16,6 +16,9 @@
                 <div class="my-activity-area">
                     <div class="posts-area">
                         <h2>작성 글</h2>
+                        <div class="checkbox-area">
+                            <input type="checkbox" id="select-all"><label><a id="btn-delete-posts">삭제</a></label>
+                        </div>
                         <table>
                             <thead>
                             <tr>
@@ -26,12 +29,12 @@
                             <tbody>
                             {{^posts}}
                                 <tr>
-                                    <td colspan="2">작성한 글이 없어요.</td>
+                                    <td class="no-content" colspan="2">작성한 글이 없어요.</td>
                                 </tr>
                             {{/posts}}
                             {{#posts}}
                                 <tr>
-                                    <td>{{id}}</td>
+                                    <td><input type="checkbox"><label>{{id}}</label></td>
                                     <td>
                                         <div class="tit">
                                             <a href="/posts/read/{{id}}">{{title}}</a>
@@ -50,5 +53,6 @@
 </div>
 
 {{>layout/footer}}
+<script src="/js/app/my-page.js"></script>
 </body>
 </html>

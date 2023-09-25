@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class LikesService {
@@ -49,5 +51,14 @@ public class LikesService {
             Comments comments = commentsSearchService.findById(commentsId);
             likesRepository.deleteByComments(comments, user);
         }
+    }
+
+    @Transactional
+    public void deleteSelectedLikes(List<Long> likesId) {
+        if (likesId.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+        }
+
+        likesId.forEach(likesRepository::deleteById);
     }
 }

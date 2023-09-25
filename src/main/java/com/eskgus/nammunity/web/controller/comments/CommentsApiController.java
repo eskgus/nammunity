@@ -5,14 +5,13 @@ import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsUpdateDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-@Log4j2
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/comments")
@@ -57,6 +56,20 @@ public class CommentsApiController {
         try {
             commentsService.delete(id);
             response.put("OK", "삭제 완료");
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
+        }
+
+        return response;
+    }
+
+    @DeleteMapping("/selected-delete")
+    public Map<String, String> deleteSelectedComments(@RequestBody List<Long> commentsId) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            commentsService.deleteSelectedComments(commentsId);
+            response.put("OK", "삭제됐습니다.");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }

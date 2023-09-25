@@ -22,6 +22,9 @@
                                 <a style="background-color: #C1DAC0;" href="/users/my-page/likes/posts">게시글</a></li><li>
                                 <a href="/users/my-page/likes/comments">댓글</a></li>
                         </ul>
+                        <div class="checkbox-area">
+                            <input type="checkbox" id="select-all"><label><a id="btn-delete-likes">삭제</a></label>
+                        </div>
                         <table>
                             <thead>
                             <tr>
@@ -32,12 +35,12 @@
                             <tbody>
                             {{^likes}}
                                 <tr>
-                                    <td colspan="2">좋아요한 게시글이 없어요.</td>
+                                    <td class="no-content" colspan="2">좋아요한 게시글이 없어요.</td>
                                 </tr>
                             {{/likes}}
                             {{#likes}}
                                     <tr class="posts-area">
-                                        <td>{{likesId}}</td>
+                                        <td><input type="checkbox"><label>{{likesId}}</label></td>
                                         <td>
                                             <div class="tit">
                                                 <a href="/posts/read/{{postsId}}">{{title}}</a>
@@ -56,5 +59,6 @@
 </div>
 
 {{>layout/footer}}
+<script src="/js/app/my-page.js"></script>
 </body>
 </html>

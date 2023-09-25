@@ -22,12 +22,14 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(postsAuthInterceptor)
-                .addPathPatterns("/api/posts/**", "/posts/update/**");
+                .addPathPatterns("/api/posts/**", "/posts/update/**")
+                .excludePathPatterns("/api/posts/selected-delete");
 
         registry.addInterceptor(userAuthInterceptor)
                 .addPathPatterns("/users/sign-up", "/users/sign-in", "/users/my-page/update/user-info");
 
         registry.addInterceptor(commentsAuthInterceptor)
-                .addPathPatterns("/api/comments/**");
+                .addPathPatterns("/api/comments/**")
+                .excludePathPatterns("/api/comments/selected-delete");
     }
 }

@@ -130,20 +130,27 @@ tbody .tit {
 /* 여기까지 table*/
 
 /* 여기부터 main */
+#container .my-page #likes-area td:first-child,
+#container .my-page .comments-area td:first-child,
+#container .my-page .posts-area td:first-child,
 #container .my-page #reports-area td:first-child,
 .popup-window .bottom-area td.reason {
     text-align: left;
     vertical-align: text-top;
 }
 
+#container .my-page  #likes-area td.no-checkbox,
+#container .my-page .comments-area td.no-checkbox,
+#container .my-page .posts-area td.no-checkbox,
 #container .my-page #reports-area td.date,
 #container .my-page #reports-area td.reporter,
 #container .my-page #reports-area td.no-content,
-#container .my-page #likes-area td:first-child,
-#container .my-page .comments-area td:first-child,
-#container .my-page .posts-area td:first-child,
+#container .my-page #likes-area td.no-content,
+#container .my-page .comments-area td.no-content,
+#container .my-page .posts-area td.no-content,
 #container .main td.no-content {
     text-align: center;
+    vertical-align: middle;
 }
 
 #container .my-page .checkbox-area,
@@ -1030,6 +1037,9 @@ textarea:disabled {
     margin: 7px 0;
 }
 
+#container .my-page .my-activity-area #likes-area input[type="checkbox"],
+#container .my-page .my-activity-area .comments-area input[type="checkbox"],
+#container .my-page .my-activity-area .posts-area input[type="checkbox"],
 #container .my-page .admin-area #reports-area input[type="checkbox"],
 #container .read .report-popup .reasons-area input[type="checkbox"] {
     appearance: none;
@@ -1041,12 +1051,18 @@ textarea:disabled {
     margin: 3px 0;
 }
 
+#container .my-page .my-activity-area #likes-area input[type="checkbox"]:checked,
+#container .my-page .my-activity-area .comments-area input[type="checkbox"]:checked,
+#container .my-page .my-activity-area .posts-area input[type="checkbox"]:checked,
 #container .my-page .admin-area #reports-area input[type="checkbox"]:checked,
 #container .read .report-popup .reasons-area input[type="checkbox"]:checked {
     background-color: #C1DAC0;
     border-color: #205943;
 }
 
+#container .my-page .my-activity-area #likes-area label,
+#container .my-page .my-activity-area .comments-area label,
+#container .my-page .my-activity-area .posts-area label,
 #container .my-page .admin-area #reports-area label,
 #container .read .report-popup .reasons-area label {
     vertical-align: middle;
@@ -1110,6 +1126,9 @@ textarea:disabled {
     width: 20px;
 }
 
+#container .my-page .my-activity-area #likes-area input[type="checkbox"],
+#container .my-page .my-activity-area .comments-area input[type="checkbox"],
+#container .my-page .my-activity-area .posts-area input[type="checkbox"],
 #container .my-page .admin-area #reports-area input[type="checkbox"] {
     width: 15px;
     height: 15px;

@@ -27,12 +27,12 @@
                             <tbody>
                             {{^posts}}
                                 <tr>
-                                    <td colspan="2">작성한 글이 없어요.</td>
+                                    <td class="no-content" colspan="2">작성한 글이 없어요.</td>
                                 </tr>
                             {{/posts}}
                             {{#posts}}
                                 <tr>
-                                    <td>{{id}}</td>
+                                    <td class="no-checkbox">{{id}}</td>
                                     <td>
                                         <div class="tit">
                                             <a href="/posts/read/{{id}}">{{title}}</a>
@@ -59,12 +59,12 @@
                             <tbody>
                             {{^comments}}
                                 <tr>
-                                    <td colspan="2">작성한 댓글이 없어요.</td>
+                                    <td class="no-content" colspan="2">작성한 댓글이 없어요.</td>
                                 </tr>
                             {{/comments}}
                             {{#comments}}
                                 <tr>
-                                    <td>{{commentsId}}</td>
+                                    <td class="no-checkbox">{{commentsId}}</td>
                                     <td>
                                         <a href="/posts/read/{{postsId}}#cmt-{{commentsId}}"><pre>{{content}}</pre></a>
                                         <span class="date">{{modifiedDate}} | <img class="like"> {{likes}}</span>
@@ -92,13 +92,13 @@
                             <tbody>
                             {{^likes}}
                                 <tr>
-                                    <td colspan="2">좋아요한 게시글/댓글이 없어요.</td>
+                                    <td class="no-content" colspan="2">좋아요한 게시글/댓글이 없어요.</td>
                                 </tr>
                             {{/likes}}
                             {{#likes}}
                                 {{#comments}}
                                     <tr class="comments-area">
-                                        <td>{{likesId}}</td>
+                                        <td class="no-checkbox">{{likesId}}</td>
                                         <td>
                                             <a href="/posts/read/{{postsId}}#cmt-{{commentsId}}"><pre>{{content}}</pre></a>
                                             <span class="date">{{author}} | {{createdDate}}</span>
@@ -110,7 +110,7 @@
                                 {{/comments}}
                                 {{^comments}}
                                     <tr class="posts-area">
-                                        <td>{{likesId}}</td>
+                                        <td class="no-checkbox">{{likesId}}</td>
                                         <td>
                                             <div class="tit">
                                                 <a href="/posts/read/{{postsId}}">{{title}}</a>

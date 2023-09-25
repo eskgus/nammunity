@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class CommentsService {
@@ -43,5 +45,14 @@ public class CommentsService {
         Comments comments = commentsRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException("해당 댓글이 없습니다."));
         commentsRepository.delete(comments);
+    }
+
+    @Transactional
+    public void deleteSelectedComments(List<Long> commentsId) {
+        if (commentsId.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+        }
+
+        commentsId.forEach(this::delete);
     }
 }

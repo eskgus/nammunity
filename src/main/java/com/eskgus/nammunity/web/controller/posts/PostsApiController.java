@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -50,6 +51,20 @@ public class PostsApiController {
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }
+        return response;
+    }
+
+    @DeleteMapping("/selected-delete")
+    public Map<String, String> deleteSelectedPosts(@RequestBody List<Long> postsId) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            postsService.deleteSelectedPosts(postsId);
+            response.put("OK", "삭제됐습니다.");
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
+        }
+
         return response;
     }
 }
