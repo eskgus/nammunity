@@ -22,7 +22,10 @@ public interface ContentReportsRepository extends JpaRepository<ContentReports, 
             + "WHERE r.id IN ("
                 + "SELECT MIN(rr.id) "
                 + "FROM ContentReports rr "
-                + "GROUP BY rr.types, rr.posts, rr.comments, rr.user"
+                + "GROUP BY rr.types, rr.posts, rr.comments, rr.user "
+                + "HAVING COUNT(rr.posts) >= 10 "
+                + "OR COUNT(rr.comments) >= 10 "
+                + "OR COUNT(rr.user) >= 3"
             + ") "
             + "ORDER BY r.id ASC")
     List<ContentReportDistinctDto> findDistinct();
@@ -35,7 +38,8 @@ public interface ContentReportsRepository extends JpaRepository<ContentReports, 
             + "SELECT MIN(rr.id) "
             + "FROM ContentReports rr "
             + "WHERE rr.posts IS NOT NULL "
-            + "GROUP BY rr.types, rr.posts"
+            + "GROUP BY rr.types, rr.posts "
+            + "HAVING COUNT(rr.posts) >= 10"
             + ") "
             + "ORDER BY r.id ASC")
     List<ContentReportDistinctDto> findDistinctPosts();
@@ -48,7 +52,8 @@ public interface ContentReportsRepository extends JpaRepository<ContentReports, 
             + "SELECT MIN(rr.id) "
             + "FROM ContentReports rr "
             + "WHERE rr.comments IS NOT NULL "
-            + "GROUP BY rr.types, rr.comments"
+            + "GROUP BY rr.types, rr.comments "
+            + "HAVING COUNT(rr.comments) >= 10"
             + ") "
             + "ORDER BY r.id ASC")
     List<ContentReportDistinctDto> findDistinctComments();
@@ -61,7 +66,8 @@ public interface ContentReportsRepository extends JpaRepository<ContentReports, 
             + "SELECT MIN(rr.id) "
             + "FROM ContentReports rr "
             + "WHERE rr.user IS NOT NULL "
-            + "GROUP BY rr.types, rr.user"
+            + "GROUP BY rr.types, rr.user "
+            + "HAVING COUNT(rr.user) >= 3"
             + ") "
             + "ORDER BY r.id ASC")
     List<ContentReportDistinctDto> findDistinctUsers();
