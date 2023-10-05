@@ -143,4 +143,26 @@ public class PostsApiControllerTest extends UserApiControllerTest {
         Optional<Posts> result = postsRepository.findById(1L);
         Assertions.assertThat(result).isNotPresent();
     }
+
+    @Test
+    @WithMockUser(username = "username111", password = "password111")
+    public void deleteSelectedPosts() throws Exception {
+        // 1. 회원가입 + 게시글 작성 * 2 후
+        savePosts();
+        savePosts();
+
+        // 2. "/api/posts/selected-delete"로 List<Long> postsId에 1, 2 담아서 delete 요청
+        List<Long> postsId = List.of(1L, 2L);
+        MvcResult mvcResult = mockMvc.perform(delete("/api/posts/selected-delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(postsId)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 3. 응답으로 "OK" 왔는지 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+
+        // 4. db에 저장된 게시글 수 0인지 확인
+        Assertions.assertThat(postsRepository.count()).isZero();
+    }
 }

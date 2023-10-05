@@ -22,6 +22,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -151,5 +153,38 @@ public class CommentsApiControllerExceptionTest extends CommentsApiControllerTes
         Assertions.assertThat(map).containsKey("error");
         Assertions.assertThat((String) map.get("error")).contains("댓글이 없");
         Assertions.assertThat(commentsRepository.count()).isZero();
+    }
+
+    @Test
+    @WithMockUser(username = "username111", password = "password111")
+    public void causeExceptionsInDeletingSelectedComments() throws Exception {
+        saveComments();
+        saveComments();
+
+        List<Long> commentsId = new ArrayList<>();
+
+        // 예외 1. 삭제할 항목 선택 x
+        MvcResult mvcResult1 = mockMvc.perform(delete("/api/comments/selected-delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(commentsId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        Map<String, Object> map = parseResponseJSON(mvcResult1.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("error");
+        Assertions.assertThat((String) map.get("error")).contains("삭제할 항목을 선택");
+
+        // 예외 2. 댓글 존재 x
+        commentsId.add(1L);
+        commentsId.add(3L);
+        MvcResult mvcResult2 = mockMvc.perform(delete("/api/comments/selected-delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(commentsId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("error");
+        Assertions.assertThat((String) map.get("error")).contains("댓글이 없");
+
+        Assertions.assertThat(commentsRepository.count()).isGreaterThan(1L);
     }
 }

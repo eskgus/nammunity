@@ -19,6 +19,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -107,6 +108,28 @@ public class CommentsApiControllerTest extends PostsApiControllerTest {
         Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
 
         // 4. db에 1번 댓글 없나 확인
+        Assertions.assertThat(commentsRepository.count()).isZero();
+    }
+
+    @Test
+    @WithMockUser(username = "username111", password = "password111")
+    public void deleteSelectedComments() throws Exception {
+        // 1. 회원가입 + 게시글 작성 + 댓글 작성 * 2 후
+        saveComments();
+        saveComments();
+
+        // 2. "/api/comments/selected-delete"로 List<Long> commentsId에 1, 2 담아서 delete 요청
+        List<Long> commentsId = List.of(1L, 2L);
+        MvcResult mvcResult = mockMvc.perform(delete("/api/comments/selected-delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(commentsId)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 3. 응답으로 "OK" 왔는지 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+
+        // 4. db에 저장된 댓글 수 0인지 확인
         Assertions.assertThat(commentsRepository.count()).isZero();
     }
 }

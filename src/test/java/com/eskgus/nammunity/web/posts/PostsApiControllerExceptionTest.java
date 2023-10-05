@@ -20,6 +20,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -145,5 +147,38 @@ public class PostsApiControllerExceptionTest extends PostsApiControllerTest {
         Assertions.assertThat((String) map.get("error")).contains("게시글이 없");
         Optional<Posts> result = postsRepository.findById(1L);
         Assertions.assertThat(result).isNotPresent();
+    }
+
+    @Test
+    @WithMockUser(username = "username111", password = "password111")
+    public void causeExceptionsInDeletingSelectedPosts() throws Exception {
+        savePosts();
+        savePosts();
+
+        List<Long> postsId = new ArrayList<>();
+
+        // 예외 1. 삭제할 항목 선택 x
+        MvcResult mvcResult1 = mockMvc.perform(delete("/api/posts/selected-delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(postsId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        Map<String, Object> map = parseResponseJSON(mvcResult1.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("error");
+        Assertions.assertThat((String) map.get("error")).contains("삭제할 항목을 선택");
+
+        // 예외 2. 게시글 존재 x
+        postsId.add(1L);
+        postsId.add(3L);
+        MvcResult mvcResult2 = mockMvc.perform(delete("/api/posts/selected-delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(postsId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("error");
+        Assertions.assertThat((String) map.get("error")).contains("게시글이 없");
+
+        Assertions.assertThat(postsRepository.count()).isGreaterThan(1L);
     }
 }

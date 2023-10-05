@@ -3,17 +3,20 @@ package com.eskgus.nammunity.web.likes;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.web.comments.CommentsApiControllerTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -113,5 +116,26 @@ public class LikesApiControllerTest extends CommentsApiControllerTest {
         // 4. db에서 likes 지워졌나 확인
         Optional<Likes> result2 = likesRepository.findById(2L);
         Assertions.assertThat(result2).isNotPresent();
+    }
+
+    @Test
+    @WithMockUser(username = "username111", password = "password111")
+    public void deleteSelectedLikes() throws Exception {
+        // 1. 회원가입 + 게시글 작성 + 게시글 좋아요 + 댓글 작성 + 댓글 좋아요 후
+        saveLikes();
+
+        // 2. "/api/likes/selected-delete"로 List<Long> likesId에 1, 2 담아서 delete 요청
+        List<Long> likesId = List.of(1L, 2L);
+        MvcResult mvcResult = mockMvc.perform(delete("/api/likes/selected-delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(likesId)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 3. 응답으로 "OK" 왔는지 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+
+        // 4. db에 저장된 좋아요 수 0인지 확인
+        Assertions.assertThat(likesRepository.count()).isZero();
     }
 }
