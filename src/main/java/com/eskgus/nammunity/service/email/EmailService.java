@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.email;
 
+import com.eskgus.nammunity.service.email.dto.BannedUsersEmailDto;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,10 @@ public class EmailService implements EmailSender{
         String title;
         if (text.contains("이메일 인증")) {
             title = "나뮤니티 이메일 인증";
-        } else {
+        } else if (text.contains("임시")) {
             title = "나뮤니티 임시 비밀번호";
+        } else {
+            title = "나뮤니티 계정 정지";
         }
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
@@ -60,5 +63,13 @@ public class EmailService implements EmailSender{
         return "<div style=\"font-size: 18px; font-family: sans-serif\">" +
                 "<p>임시 비밀번호를 복사해서 로그인해 주세요.</p>" +
                 password + "</div>";
+    }
+
+    public String setEmailText(BannedUsersEmailDto emailDto) {
+        return "<div style=\"font-size: 18px; font-family: sans-serif\">" +
+                "<p>안녕하세요, " + emailDto.getUsername() + "님</p>" +
+                "<p>회원님의 나뮤니티 계정이 " + emailDto.getPeriod() + "(" + emailDto.getStartedDate() +
+                " - " + emailDto.getExpiredDate() + ")" + " 정지되었습니다. (사유 - " + emailDto.getReason() + ")</p>" +
+                "<p>해당 기간 동안 로그인이 금지되며, 이의 제기 또는 문의는 본 이메일로 하면 됩니다.</p>";
     }
 }
