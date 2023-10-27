@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.controller.reports;
 
 import com.eskgus.nammunity.service.reports.ReportsService;
+import com.eskgus.nammunity.service.user.BannedUsersService;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import jakarta.validation.Valid;
@@ -16,6 +17,7 @@ import java.util.Map;
 @RequestMapping("/api/reports")
 public class ReportsApiController {
     private final ReportsService reportsService;
+    private final BannedUsersService bannedUsersService;
 
     @PostMapping("/content")
     public Map<String, String> saveContentReports(@Valid @RequestBody ContentReportsSaveDto requestDto,
@@ -45,5 +47,10 @@ public class ReportsApiController {
         }
 
         return response;
+    }
+
+    @PostMapping("/process")
+    public String banUser(@RequestBody Long userId) {
+        return bannedUsersService.banUser(userId).toString();
     }
 }

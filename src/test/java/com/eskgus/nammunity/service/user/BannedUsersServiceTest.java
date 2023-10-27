@@ -2,7 +2,9 @@ package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.user.*;
+import lombok.extern.log4j.Log4j2;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Log4j2
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class BannedUsersServiceTest {
@@ -36,8 +39,10 @@ public class BannedUsersServiceTest {
     @Autowired
     private ReasonsRepository reasonsRepository;
 
-    @Test
-    public void banUser() {
+    @BeforeEach
+    public void setup() {
+        log.info("setup.....");
+
         // 1. user 테이블에 user 저장
         User user = User.builder()
                 .username("username111").password("password111").nickname("nickname1")
@@ -59,9 +64,15 @@ public class BannedUsersServiceTest {
                     .user(user).reporter(user).types(type).reasons(reason).otherReasons(otherReason).build();
             contentReportsRepository.save(contentReport);
         }
+    }
 
-        // 3. banned user 생성 및 업데이트
-        // 3-1. 누적 정지 횟수: 0 (0일 -> 1주)
+    @Test
+    public void banUser() {
+        // 1. user 테이블에 user 저장 + 사용자 신고 * 3
+        User user = userRepository.findById(1L).get();
+
+        // 2. banned user 생성 및 업데이트
+        // 2-1. 누적 정지 횟수: 0 (0일 -> 1주)
         // user id로 bannedUsersService의 banUser() 호출
         Long bannedUserId = bannedUsersService.banUser(user.getId());
 
@@ -70,7 +81,7 @@ public class BannedUsersServiceTest {
         Assertions.assertThat(result1).isPresent();
         BannedUsers bannedUser = result1.get();
 
-        // bannedUser의 user, startedDate, expiredDate, period, count 확인
+        // bannedUser의 user, startedDate, expiredDate, period, count, locked 확인
         LocalDateTime startedDate = bannedUser.getStartedDate();
         LocalDateTime expiredDate = bannedUser.getExpiredDate();
         Period period = bannedUser.getPeriod();
@@ -79,8 +90,9 @@ public class BannedUsersServiceTest {
         Assertions.assertThat(expiredDate).isEqualTo(startedDate.plus(period));
         Assertions.assertThat(period).isEqualTo(Period.ofWeeks(1));
         Assertions.assertThat(count1).isOne();
+        Assertions.assertThat(bannedUser.getUser().isLocked()).isTrue();
 
-        // 3-2. 누적 정지 횟수: 1 (1주 -> 1개월)
+        // 2-2. 누적 정지 횟수: 1 (1주 -> 1개월)
         bannedUserId = bannedUsersService.banUser(user.getId());
         bannedUser = bannedUsersRepository.findById(bannedUserId).get();
 
@@ -92,8 +104,9 @@ public class BannedUsersServiceTest {
         Assertions.assertThat(expiredDate).isEqualTo(startedDate.plus(period));
         Assertions.assertThat(period).isEqualTo(Period.ofMonths(1));
         Assertions.assertThat(count2).isGreaterThan(count1);
+        Assertions.assertThat(bannedUser.getUser().isLocked()).isTrue();
 
-        // 3-3. 누적 정지 횟수: 2 (1개월 -> 1년)
+        // 2-3. 누적 정지 횟수: 2 (1개월 -> 1년)
         bannedUserId = bannedUsersService.banUser(user.getId());
         bannedUser = bannedUsersRepository.findById(bannedUserId).get();
 
@@ -105,8 +118,9 @@ public class BannedUsersServiceTest {
         Assertions.assertThat(expiredDate).isEqualTo(startedDate.plus(period));
         Assertions.assertThat(period).isEqualTo(Period.ofYears(1));
         Assertions.assertThat(count3).isGreaterThan(count2);
+        Assertions.assertThat(bannedUser.getUser().isLocked()).isTrue();
 
-        // 3-4. 누적 정지 횟수: 3 (1년 -> 영구)
+        // 2-4. 누적 정지 횟수: 3 (1년 -> 영구)
         bannedUserId = bannedUsersService.banUser(user.getId());
         bannedUser = bannedUsersRepository.findById(bannedUserId).get();
 
@@ -118,5 +132,35 @@ public class BannedUsersServiceTest {
         Assertions.assertThat(expiredDate).isEqualTo(startedDate.plus(period));
         Assertions.assertThat(period).isEqualTo(Period.ofYears(100));
         Assertions.assertThat(count4).isGreaterThan(count3);
+        Assertions.assertThat(bannedUser.getUser().isLocked()).isTrue();
+    }
+
+    @Test
+    public void existsByUser() {
+        // 1. user 테이블에 user 저장 + 사용자 신고 * 3
+        User user = userRepository.findById(1L).get();
+
+        // 1. false 리턴
+        // 1-1. user로 bannedUserService의 existsByUser() 호출
+        boolean result1 = bannedUsersService.existsByUser(user);
+
+        // 1-2. false 리턴됐나 확인
+        Assertions.assertThat(result1).isFalse();
+
+        // 2. true 리턴
+        // 2-1. user, startedDate, expiredDate, period로 BannedUser 만들어서 저장
+        LocalDateTime startedDate = LocalDateTime.now();
+        Period period = Period.ofWeeks(1);
+        LocalDateTime expiredDate = startedDate.plus(period);
+
+        BannedUsers bannedUser = BannedUsers.builder()
+                .user(user).startedDate(startedDate).expiredDate(expiredDate).period(period).reason("기타 사유").build();
+        bannedUsersRepository.save(bannedUser);
+
+        // 2-2. user로 bannedUserService의 existsByUser() 호출
+        boolean result2 = bannedUsersService.existsByUser(user);
+
+        // 2-3. true 리턴됐나 확인
+        Assertions.assertThat(result2).isTrue();
     }
 }

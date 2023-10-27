@@ -37,18 +37,24 @@ public class BannedUsers {
     @Column(nullable = false)
     private int count = 1;
 
+    // 정지 사유
+    @Column(nullable = false)
+    private String reason;
+
     @Builder
-    public BannedUsers(User user, LocalDateTime startedDate, LocalDateTime expiredDate, Period period) {
+    public BannedUsers(User user, LocalDateTime startedDate, LocalDateTime expiredDate, Period period, String reason) {
         this.user = user;
         this.startedDate = startedDate;
         this.expiredDate = expiredDate;
         this.period = period;
+        this.reason = reason;
     }
 
-    public void update(LocalDateTime startedDate, LocalDateTime expiredDate, Period period) {
+    public void update(LocalDateTime startedDate, LocalDateTime expiredDate, Period period, String reason) {
         this.startedDate = startedDate;
         this.expiredDate = expiredDate;
         this.period = period;
         this.count++;
+        this.reason = reason;
     }
 }

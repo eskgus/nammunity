@@ -1,6 +1,5 @@
 package com.eskgus.nammunity.handler;
 
-import com.eskgus.nammunity.domain.user.CustomUserDetails;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.user.UserService;
 import jakarta.servlet.ServletException;
@@ -22,8 +21,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication)
             throws IOException, ServletException {
-        Long id = ((CustomUserDetails) authentication.getPrincipal()).getId();
-        User user = userService.findById(id);
+        User user = userService.findByUsername(authentication.getName());
         if (user.getAttempt() != 0) {
             userService.resetAttempt(user);
         }

@@ -14,11 +14,11 @@ public class BannedUsersEmailDto {
     private String reason;
 
     @Builder
-    public BannedUsersEmailDto(BannedUsers bannedUser, String reason) {
+    public BannedUsersEmailDto(BannedUsers bannedUser) {
         this.username = bannedUser.getUser().getUsername();
         this.period = DateTimeUtil.convertPeriodToString(bannedUser.getPeriod());
         this.startedDate = DateTimeUtil.formatDateTime(bannedUser.getStartedDate());
         this.expiredDate = DateTimeUtil.formatDateTime(bannedUser.getExpiredDate());
-        this.reason = reason;
+        this.reason = bannedUser.getReason();
     }
 }

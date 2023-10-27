@@ -14,11 +14,10 @@ public class SignInService {
     private final EmailService emailService;
     private final BCryptPasswordEncoder encoder;
     private final UserRepository userRepository;
+    private final BannedUsersService bannedUsersService;
 
     @Transactional
-    public Integer increaseAttempt(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new
-                IllegalArgumentException("존재하지 않는 ID입니다."));
+    public Integer increaseAttempt(User user) {
         int attempt = user.increaseAttempt();
         if (attempt == 5 && !user.isLocked()) {
             user.updateLocked();
@@ -42,6 +41,11 @@ public class SignInService {
     public void findPassword(String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new
                 IllegalArgumentException("존재하지 않는 ID입니다."));
+
+        // 활동 정지된 계정이면 예외 메시지 던지기
+        if (user.isLocked() && bannedUsersService.existsByUser(user)) {
+            throw new IllegalArgumentException("활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.");
+        }
 
         char[] ch = new char[36];
         for (int i = 0; i < 36; i++) {

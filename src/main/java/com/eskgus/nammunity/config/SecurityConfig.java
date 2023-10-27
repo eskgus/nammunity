@@ -69,9 +69,10 @@ public class SecurityConfig {
                                 "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**",
                                 "/api/users/update/**", "/api/users/delete", "/users/my-page/**",
-                                "/api/comments/**", "/api/likes/**", "/api/reports/**")
+                                "/api/comments/**", "/api/likes/**", "/api/reports/content")
                         .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
-                        .requestMatchers("/admin/my-page/content-report/**").hasRole(Role.ADMIN.name())
+                        .requestMatchers("/admin/my-page/content-report/**",
+                                "/api/reports/content/selected-delete", "/api/reports/process").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated())
                 .httpBasic(withDefaults())
                 .formLogin(login -> login
