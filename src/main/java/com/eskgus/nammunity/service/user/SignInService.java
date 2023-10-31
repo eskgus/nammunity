@@ -17,7 +17,9 @@ public class SignInService {
     private final BannedUsersService bannedUsersService;
 
     @Transactional
-    public Integer increaseAttempt(User user) {
+    public Integer increaseAttempt(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new
+                IllegalArgumentException("존재하지 않는 ID입니다."));
         int attempt = user.increaseAttempt();
         if (attempt == 5 && !user.isLocked()) {
             user.updateLocked();
@@ -43,7 +45,7 @@ public class SignInService {
                 IllegalArgumentException("존재하지 않는 ID입니다."));
 
         // 활동 정지된 계정이면 예외 메시지 던지기
-        if (user.isLocked() && bannedUsersService.existsByUser(user)) {
+        if (!bannedUsersService.isAccountNonBanned(username)) {
             throw new IllegalArgumentException("활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.");
         }
 

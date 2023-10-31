@@ -61,12 +61,7 @@ public class BannedUsersService {
             bannedUser.update(startedDate, expiredDate, period, reasonDetail);
         }
 
-        // 4. user locked true로 업데이트
-        if (!user.isLocked()) {
-            user.updateLocked();
-        }
-
-        // 5. 정지 사유 + 정지 기간 담은 메일 발송
+        // 4. 정지 사유 + 정지 기간 담은 메일 발송
         // 메일 내용 생성
         BannedUsersEmailDto emailDto = BannedUsersEmailDto.builder().bannedUser(bannedUser).build();
         // 메일 발송
@@ -77,7 +72,17 @@ public class BannedUsersService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByUser(User user) {
-        return bannedUsersRepository.existsByUser(user);
+    public boolean isAccountNonBanned(String username) {
+        User user = userService.findByUsername(username);
+
+        // BannedUsers 테이블에 user가 없으면 활동 정지 x
+        Optional<BannedUsers> result = bannedUsersRepository.findByUser(user);
+        if (result.isEmpty()) {
+            return true;
+        }
+
+        // BannedUsers 테이블에 있는 user의 활동 정지 종료일이 현재 날짜 이전이면 활동 정지 x, 아니면 활동 정지 o
+        BannedUsers bannedUser = result.get();
+        return bannedUser.getExpiredDate().isBefore(LocalDateTime.now());
     }
 }
