@@ -1,13 +1,16 @@
 package com.eskgus.nammunity.web.reports;
 
-import com.eskgus.nammunity.domain.reports.ContentReports;
-import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
-import com.eskgus.nammunity.domain.reports.ReasonsRepository;
-import com.eskgus.nammunity.web.comments.CommentsApiControllerTest;
+import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.domain.comments.CommentsRepository;
+import com.eskgus.nammunity.domain.posts.PostsRepository;
+import com.eskgus.nammunity.domain.reports.*;
+import com.eskgus.nammunity.domain.user.*;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +21,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.Period;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -27,126 +33,219 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ReportsApiControllerTest extends CommentsApiControllerTest {
+public class ReportsApiControllerTest {
     @Autowired
-    private ReasonsRepository reasonsRepository;
+    private TestDB testDB;
+
+    private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PostsRepository postsRepository;
+
+    @Autowired
+    private CommentsRepository commentsRepository;
 
     @Autowired
     private ContentReportsRepository contentReportsRepository;
 
     @Autowired
-    private MockMvc mockMvc;
+    private BannedUsersRepository bannedUsersRepository;
 
-    @Test
-    @WithMockUser(username = "username111", password = "password111")
-    public void saveContentReports() throws Exception {
-        Long contentsId = 1L;
-        Long reasonsId = reasonsRepository.count();
-        String otherReasons = "기타 사유";
+    @Autowired
+    private ReasonsRepository reasonsRepository;
 
-        // 일반 1. 게시글 신고
-        // 1. 회원가입 + 게시글 작성 후
-        // 2. postsId, reasonsId, otherReasons로 ContentReportsSaveDto 생성
-        ContentReportsSaveDto requestDto = new ContentReportsSaveDto();
-        requestDto.setPostsId(contentsId);
-        requestDto.setReasonsId(reasonsId);
-        requestDto.setOtherReasons(otherReasons);
+    @BeforeEach
+    public void setUp() throws Exception {
+        this.mockMvc = testDB.setUp();
+    }
 
-        // 3. "/api/reports/content"로 contentReportsSaveDto 담아서 post 요청
-        MvcResult mvcResult1 = mockMvc.perform(post("/api/reports/content")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 4. 응답으로 "OK" 왔는지 확인
-        Assertions.assertThat(mvcResult1.getResponse().getContentAsString()).contains("OK");
-
-        // 5. db에 저장됐나 확인
-        Optional<ContentReports> result1 = contentReportsRepository.findById(1L);
-        Assertions.assertThat(result1).isPresent();
-        ContentReports contentReports1 = result1.get();
-        Assertions.assertThat(contentReports1.getPosts().getId()).isEqualTo(contentsId);
-        Assertions.assertThat(contentReports1.getReasons().getId()).isEqualTo(reasonsId);
-        Assertions.assertThat(contentReports1.getOtherReasons()).isEqualTo(otherReasons);
-
-        // 일반 2. 댓글 신고
-        // 1. 회원가입 + 게시글 작성 + 댓글 작성 후
-        saveComments();
-
-        // 2. commentsId, reasonsId, otherReasons로 ContentReportsSaveDto 생성
-        requestDto.setPostsId(null);
-        requestDto.setCommentsId(contentsId);
-
-        // 3. "/api/reports/content"로 contentReportsSaveDto 담아서 post 요청
-        MvcResult mvcResult2 = mockMvc.perform(post("/api/reports/content")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 4. 응답으로 "OK" 왔는지 확인
-        Assertions.assertThat(mvcResult2.getResponse().getContentAsString()).contains("OK");
-
-        // 5. db에 저장됐나 확인
-        Optional<ContentReports> result2 = contentReportsRepository.findById(2L);
-        Assertions.assertThat(result2).isPresent();
-        ContentReports contentReports2 = result2.get();
-        Assertions.assertThat(contentReports2.getComments().getId()).isEqualTo(contentsId);
-        Assertions.assertThat(contentReports2.getReasons().getId()).isEqualTo(reasonsId);
-        Assertions.assertThat(contentReports2.getOtherReasons()).isEqualTo(otherReasons);
-
-        // 일반 3. 사용자 신고
-        // 1. 회원가입 후
-        // 2. userId, reasonsId, otherReasons로 ContentReportsSaveDto 생성
-        requestDto.setCommentsId(null);
-        requestDto.setUserId(contentsId);
-
-        // 3. "/api/reports/content"로 contentReportsSaveDto 담아서 post 요청
-        MvcResult mvcResult3 = mockMvc.perform(post("/api/reports/content")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 4. 응답으로 "OK" 왔는지 확인
-        Assertions.assertThat(mvcResult3.getResponse().getContentAsString()).contains("OK");
-
-        // 5. db에 저장됐나 확인
-        Optional<ContentReports> result3 = contentReportsRepository.findById(3L);
-        Assertions.assertThat(result3).isPresent();
-        ContentReports contentReports3 = result3.get();
-        Assertions.assertThat(contentReports3.getUser().getId()).isEqualTo(contentsId);
-        Assertions.assertThat(contentReports3.getReasons().getId()).isEqualTo(reasonsId);
-        Assertions.assertThat(contentReports3.getOtherReasons()).isEqualTo(otherReasons);
+    @AfterEach
+    public void cleanUp() {
+        testDB.cleanUp();
     }
 
     @Test
-    @WithMockUser(username = "username111", password = "password111")
+    @WithMockUser(username = "username2")
+    public void saveContentReports() throws Exception {
+        // 1. user1 회원가입 + user2 회원가입
+        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        Assertions.assertThat(userRepository.count()).isGreaterThan(1);
+
+        // 2. user1이 게시글 작성
+        Long postsId = testDB.savePosts(user1);
+        Assertions.assertThat(postsRepository.count()).isOne();
+
+        // 3. user1이 댓글 작성
+        Long commentsId = testDB.saveComments(postsId, user1);
+        Assertions.assertThat(commentsRepository.count()).isOne();
+
+        // 일반 1. 게시글 신고
+        requestAndAssertToSaveContentReports("post", postsId, 1L);
+
+        // 일반 2. 댓글 신고
+        requestAndAssertToSaveContentReports("comment", commentsId, 2L);
+
+        // 일반 3. 사용자 신고
+        requestAndAssertToSaveContentReports("user", user1.getId(), 3L);
+    }
+
+    @Test
+    @WithMockUser(username = "username2", roles = {"ADMIN"})
     public void deleteSelectedContentReports() throws Exception {
-        // 1. 회원가입 + 게시글 작성 + 댓글 작성 후
-        // 2. 게시글/댓글/사용자 신고
-        saveContentReports();
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.ADMIN)).get();
+        Assertions.assertThat(userRepository.count()).isGreaterThan(1);
 
-        // 3. List<Long> postsId, List<Long> commentsId, List<Long> userId로 ContentReportsDeleteDto 생성
-        Long contentsId = 1L;
-        List<Long> postsId = List.of(contentsId);
-        List<Long> commentsId = List.of(contentsId);
-        List<Long> userId = List.of(contentsId);
+        // 2. user1이 게시글 작성
+        Long postsId = testDB.savePosts(user1);
+        Assertions.assertThat(postsRepository.count()).isOne();
+
+        // 3. user1이 댓글 작성
+        Long commentsId = testDB.saveComments(postsId, user1);
+        Assertions.assertThat(commentsRepository.count()).isOne();
+
+        // 4. user2가 게시글 신고 * 10, 댓글 신고 * 10, user1 사용자 신고 * 3
+        testDB.savePostReports(postsId, user2);
+        testDB.saveCommentReports(commentsId, user2);
+        testDB.saveUserReports(user1, user2);
+
+        Long numOfReports = contentReportsRepository.count();
+        Assertions.assertThat(numOfReports).isGreaterThan(22);
+
+        // 5. List<Long> postsIdList, List<Long> commentsIdList, List<Long> userIdList(빈 리스트)로 ContentReportsDeleteDto 생성
+        List<Long> postsIdList = List.of(postsId);
+        List<Long> commentsIdList = List.of(commentsId);
+        List<Long> userIdList = new ArrayList<>();
         ContentReportsDeleteDto requestDto = ContentReportsDeleteDto.builder()
-                .postsId(postsId).commentsId(commentsId).userId(userId).build();
+                .postsId(postsIdList).commentsId(commentsIdList).userId(userIdList).build();
 
-        // 4. "/api/reports/content/selected-delete"로 contentReportsDeleteDto 담아서 delete 요청
+        // 6. "/api/reports/content/selected-delete"로 contentReportsDeleteDto 담아서 delete 요청
         MvcResult mvcResult = mockMvc.perform(delete("/api/reports/content/selected-delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // 5. 응답으로 "OK" 왔는지 확인
-        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+        // 7. 응답으로 "OK" 왔는지 확인
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
+        Assertions.assertThat(map.containsKey("OK")).isTrue();
 
-        // 6. db에 저장된 신고 수 0인지 확인
-        Assertions.assertThat(contentReportsRepository.count()).isZero();
+        // 8. db에 저장된 신고 수 3(사용자 신고 * 3)인지 확인
+        Assertions.assertThat(contentReportsRepository.count()).isGreaterThan(2);
+
+        // 9. 남아있는 신고가 사용자 신고인지 확인
+        Optional<ContentReports> result = contentReportsRepository.findById(numOfReports);
+        Assertions.assertThat(result).isPresent();
+        ContentReports contentReport = result.get();
+        Assertions.assertThat(contentReport.getUser().getId()).isEqualTo(user1.getId());
+    }
+
+    @Test
+    @WithMockUser(username = "username2", roles = {"ADMIN"})
+    public void banUser() throws Exception {
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.ADMIN)).get();
+        Assertions.assertThat(userRepository.count()).isGreaterThan(1);
+
+        // 2. user2가 user1 사용자 신고 * 3
+        testDB.saveUserReports(user1, user2);
+        Assertions.assertThat(contentReportsRepository.count()).isGreaterThan(2);
+
+        // 일반 1. 누적 정지 횟수: 0 (0일 -> 1주)
+        Long userId = user1.getId();
+        requestAndAssertToBanUser(userId, Period.ofWeeks(1), 1);
+
+        // 일반 2. 누적 정지 횟수: 1 (1주 -> 1개월)
+        requestAndAssertToBanUser(userId, Period.ofMonths(1), 2);
+
+        // 일반 3. 누적 정지 횟수: 2 (1개월 -> 1년)
+        requestAndAssertToBanUser(userId, Period.ofYears(1), 3);
+
+        // 일반 4. 누적 정지 횟수: 3 (1년 -> 영구)
+        requestAndAssertToBanUser(userId, Period.ofYears(100), 4);
+    }
+
+    private void requestAndAssertToSaveContentReports(String type, Long contentId, Long expectedReportId) throws Exception {
+        Long reasonsId = reasonsRepository.count();
+        String otherReasons = "기타 사유";
+
+        // 1. postsId/commentsId/userId, reasonsId, otherReasons로 ContentReportsSaveDto 생성
+        ContentReportsSaveDto requestDto = new ContentReportsSaveDto();
+        requestDto.setReasonsId(reasonsId);
+        requestDto.setOtherReasons(otherReasons);
+
+        if (type.equals("post")) {
+            requestDto.setPostsId(contentId);
+        } else if (type.equals("comment")) {
+            requestDto.setCommentsId(contentId);
+        } else {
+            requestDto.setUserId(contentId);
+        }
+
+        // 2. user2가 "/api/reports/content"로 contentReportsSaveDto 담아서 post 요청
+        MvcResult mvcResult = mockMvc.perform(post("/api/reports/content")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 3. 응답으로 "OK" 왔는지 확인
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
+        Assertions.assertThat(map.containsKey("OK")).isTrue();
+
+        // 4. "OK"의 값이 1/2/3인지 확인
+        Long reportId = Long.valueOf((String) map.get("OK"));
+        Assertions.assertThat(reportId).isEqualTo(expectedReportId);
+
+        // 5. reportId로 ContentReports 찾고
+        Optional<ContentReports> result = contentReportsRepository.findById(reportId);
+        Assertions.assertThat(result).isPresent();
+        ContentReports contentReport = result.get();
+
+        // 6. db에 저장됐나 posts/comments/user, reasons, otherReasons 확인
+        if (type.equals("post")) {
+            Assertions.assertThat(contentReport.getPosts().getId()).isEqualTo(contentId);
+        } else if (type.equals("comment")) {
+            Assertions.assertThat(contentReport.getComments().getId()).isEqualTo(contentId);
+        } else {
+            Assertions.assertThat(contentReport.getUser().getId()).isEqualTo(contentId);
+        }
+        Assertions.assertThat(contentReport.getReasons().getId()).isEqualTo(reasonsId);
+        Assertions.assertThat(contentReport.getOtherReasons()).isEqualTo(otherReasons);
+    }
+
+    private void requestAndAssertToBanUser(Long userId, Period period, int count) throws Exception {
+        // 1. user2가 Long userId=1(user1의 id) 담아서 "/api/reports/process"로 post 요청
+        MvcResult mvcResult1 = mockMvc.perform(post("/api/reports/process")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(userId)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 2. 응답으로 "OK" 왔나 확인
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult1.getResponse().getContentAsString());
+        Assertions.assertThat(map.containsKey("OK")).isTrue();
+
+        // 3. "OK"의 값이 1인지 확인
+        Long bannedUserId = Long.valueOf((String) map.get("OK"));
+        Assertions.assertThat(bannedUserId).isEqualTo(1);
+
+        // 4. bannedUserId로 BannedUsers 찾고
+        Optional<BannedUsers> result = bannedUsersRepository.findById(bannedUserId);
+        Assertions.assertThat(result).isPresent();
+        BannedUsers bannedUser = result.get();
+
+        // 5. user = user1, period = 1주/1개월/1년/영구, expiredDate = startedDate + period, count = 1/2/3/4인지 확인
+        Assertions.assertThat(bannedUser.getUser().getId()).isEqualTo(userId);
+        Assertions.assertThat(bannedUser.getPeriod()).isEqualTo(period);
+        Assertions.assertThat(bannedUser.getExpiredDate())
+                .isEqualTo(bannedUser.getStartedDate().plus(bannedUser.getPeriod()));
+        Assertions.assertThat(bannedUser.getCount()).isEqualTo(count);
     }
 }

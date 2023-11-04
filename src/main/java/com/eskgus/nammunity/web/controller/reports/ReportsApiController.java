@@ -26,8 +26,8 @@ public class ReportsApiController {
 
         String username = principal.getName();
         try {
-            reportsService.saveContentReports(requestDto, username);
-            response.put("OK", "신고되었습니다.");
+            Long id = reportsService.saveContentReports(requestDto, username);
+            response.put("OK", id.toString());
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }
@@ -50,7 +50,16 @@ public class ReportsApiController {
     }
 
     @PostMapping("/process")
-    public String banUser(@RequestBody Long userId) {
-        return bannedUsersService.banUser(userId).toString();
+    public Map<String, String> banUser(@RequestBody Long userId) {
+        Map<String, String> response = new HashMap<>();
+
+        try {
+            Long id = bannedUsersService.banUser(userId);
+            response.put("OK", id.toString());
+        } catch (IllegalArgumentException ex) {
+            response.put("error", ex.getMessage());
+        }
+
+        return response;
     }
 }

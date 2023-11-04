@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.user;
 
+import com.eskgus.nammunity.domain.user.*;
 import lombok.extern.log4j.Log4j2;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
+import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.Map;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -30,6 +33,12 @@ public class SignInApiControllerExceptionTest extends SignInApiControllerTest {
 
     @Autowired
     private WebApplicationContext context;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BannedUsersRepository bannedUsersRepository;
 
     @BeforeEach
     public void setup() {
@@ -88,5 +97,26 @@ public class SignInApiControllerExceptionTest extends SignInApiControllerTest {
         map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
         Assertions.assertThat(map).containsKey("error");
         Assertions.assertThat((String) map.get("error")).contains("존재하지");
+
+        // 예외 3. 활동 정지된 사용자
+        User user = User.builder()
+                .username("username111").password("password111").nickname("nickname1")
+                .email("email111@naver.com").role(Role.USER).build();
+        userRepository.save(user);
+
+        LocalDateTime startedDate = LocalDateTime.now();
+        Period period = Period.ofWeeks(1);
+        LocalDateTime expiredDate = startedDate.plus(period);
+        BannedUsers bannedUser = BannedUsers.builder()
+                .user(user).startedDate(startedDate).expiredDate(expiredDate).period(period).reason("신고 사유").build();
+        bannedUsersRepository.save(bannedUser);
+
+        MvcResult mvcResult3 = mockMvc.perform(put("/api/users/sign-in")
+                        .param("username", "username111"))
+                .andExpect(status().isOk())
+                .andReturn();
+        map = parseResponseJSON(mvcResult3.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("error");
+        Assertions.assertThat((String) map.get("error")).contains("활동 정지");
     }
 }

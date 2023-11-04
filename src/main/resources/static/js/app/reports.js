@@ -149,7 +149,7 @@ var reportsMain = {
             data: JSON.stringify(data)
         }).done(function(response) {
             if (Object.keys(response) == 'OK') {
-                alert(response[Object.keys(response)]);
+                alert("신고되었습니다.");
                 reportsMain.closeReportPopup();
             } else {
                 alert(response[Object.keys(response)]);

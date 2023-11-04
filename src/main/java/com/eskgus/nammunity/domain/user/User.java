@@ -75,6 +75,9 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "reporter", cascade = CascadeType.REMOVE)
     private List<ContentReports> contentReports;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private BannedUsers bannedUsers;
+
     @Builder
     public User(String username, String password, String nickname, String email,
                 Role role) {

@@ -30,6 +30,10 @@ public class BannedUsersService {
 
         // 1. reports에서 user로 reason 추출해서 정지 사유 생성
         Reasons reason = contentReportsRepository.findReasonByUsers(user);
+        // 신고 되지 않은 사용자면 예외 발생
+        if (reason == null) {
+            throw new IllegalArgumentException("신고 내역이 없는 회원입니다.");
+        }
         String reasonDetail = reason.getDetail();
         if (reasonDetail.equals("기타")) {
             reasonDetail += ": " + contentReportsRepository.findOtherReasonByUsers(user, reason);
@@ -84,5 +88,10 @@ public class BannedUsersService {
         // BannedUsers 테이블에 있는 user의 활동 정지 종료일이 현재 날짜 이전이면 활동 정지 x, 아니면 활동 정지 o
         BannedUsers bannedUser = result.get();
         return bannedUser.getExpiredDate().isBefore(LocalDateTime.now());
+    }
+
+    @Transactional
+    public void updateExpiredDate(User user, LocalDateTime expiredDate) {
+        bannedUsersRepository.updateExpiredDate(user, expiredDate);
     }
 }
