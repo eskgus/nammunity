@@ -2,6 +2,8 @@ package com.eskgus.nammunity;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
+import com.eskgus.nammunity.domain.likes.Likes;
+import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.reports.*;
@@ -45,6 +47,9 @@ public class TestDB {
     private CommentsRepository commentsRepository;
 
     @Autowired
+    private LikesRepository likesRepository;
+
+    @Autowired
     private TypesRepository typesRepository;
 
     @Autowired
@@ -72,6 +77,7 @@ public class TestDB {
                 "ALTER TABLE users AUTO_INCREMENT = 1",
                 "ALTER TABLE posts AUTO_INCREMENT = 1",
                 "ALTER TABLE comments AUTO_INCREMENT = 1",
+                "ALTER TABLE likes AUTO_INCREMENT = 1",
                 "ALTER TABLE content_reports AUTO_INCREMENT = 1",
                 "ALTER TABLE banned_users AUTO_INCREMENT = 1"
         };
@@ -101,6 +107,22 @@ public class TestDB {
         Comments comment = Comments.builder()
                 .content("content").posts(post).user(user).build();
         return commentsRepository.save(comment).getId();
+    }
+
+    public Long savePostLikes(Long postId, User user) {
+        Posts post = postsRepository.findById(postId).get();
+
+        Likes like = Likes.builder()
+                .posts(post).user(user).build();
+        return likesRepository.save(like).getId();
+    }
+
+    public Long saveCommentLikes(Long commentId, User user) {
+        Comments comment = commentsRepository.findById(commentId).get();
+
+        Likes like = Likes.builder()
+                .comments(comment).user(user).build();
+        return likesRepository.save(like).getId();
     }
 
     public void savePostReports(Long postId, User reporter) {

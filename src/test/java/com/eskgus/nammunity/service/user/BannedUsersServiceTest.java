@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.user.*;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,17 @@ public class BannedUsersServiceTest {
     @Autowired
     private BannedUsersService bannedUsersService;
 
+    @BeforeEach
+    public void setUp() {
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.ADMIN)).get();
+
+        // 2. user2가 user1 사용자 신고 * 3
+        testDB.saveUserReports(user1, user2);
+        Assertions.assertThat(contentReportsRepository.count()).isGreaterThan(2);
+    }
+
     @AfterEach
     public void cleanUp() {
         testDB.cleanUp();
@@ -40,14 +52,10 @@ public class BannedUsersServiceTest {
 
     @Test
     public void banUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
-        User user2 = userRepository.findById(testDB.signUp(2L, Role.ADMIN)).get();
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(1L).get();
 
         // 2. user2가 user1 사용자 신고 * 3
-        testDB.saveUserReports(user1, user2);
-        Assertions.assertThat(contentReportsRepository.count()).isGreaterThan(2);
-
         // 3. banned user 생성 및 업데이트
         Long userId = user1.getId();
         // 3-1. 누적 정지 횟수: 0 (0일 -> 1주)
@@ -65,14 +73,10 @@ public class BannedUsersServiceTest {
 
     @Test
     public void isAccountNonBanned() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
-        User user2 = userRepository.findById(testDB.signUp(2L, Role.ADMIN)).get();
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(1L).get();
 
         // 2. user2가 user1 사용자 신고 * 3
-        testDB.saveUserReports(user1, user2);
-        Assertions.assertThat(contentReportsRepository.count()).isGreaterThan(2);
-
         // 3. BannedUsers 테이블에 user 존재 x => 활동 정지 x
         String username = user1.getUsername();
         callAndAssertIsAccountNonBanned(username, true);

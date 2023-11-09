@@ -1,11 +1,21 @@
 package com.eskgus.nammunity.web.likes;
 
+import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
-import com.eskgus.nammunity.web.comments.CommentsApiControllerTest;
+import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.posts.PostsRepository;
+import com.eskgus.nammunity.domain.user.Role;
+import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.domain.user.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.log4j.Log4j2;
+import lombok.Builder;
+import lombok.Getter;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,118 +34,200 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Log4j2
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class LikesApiControllerTest extends CommentsApiControllerTest {
+public class LikesApiControllerTest {
+    @Autowired
+    private TestDB testDB;
+
+    private MockMvc mockMvc;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PostsRepository postsRepository;
+
+    @Autowired
+    private CommentsRepository commentsRepository;
+
     @Autowired
     private LikesRepository likesRepository;
 
-    @Autowired
-    private MockMvc mockMvc;
+    @BeforeEach
+    public void setUp() {
+        this.mockMvc = testDB.setUp();
+
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
+        Assertions.assertThat(userRepository.count()).isOne();
+
+        // 2. user1이 게시글 작성
+        Long postId = testDB.savePosts(user1);
+        Assertions.assertThat(postsRepository.count()).isOne();
+
+        // 3. user1이 댓글 작성
+        Long commentId = testDB.saveComments(postId, user1);
+        Assertions.assertThat(commentsRepository.count()).isOne();
+    }
+
+    @AfterEach
+    public void cleanUp() {
+        testDB.cleanUp();
+    }
 
     @Test
-    @WithMockUser(username = "username111", password = "password111")
+    @WithMockUser(username = "username1")
     public void saveLikes() throws Exception {
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
+
+        // 2. user1이 게시글 작성
+        Posts post = postsRepository.findById(1L).get();
+
+        // 3. user1이 댓글 작성
+        Comments comment = commentsRepository.findById(1L).get();
+
         // 일반 1. 게시글 좋아요
-        // 1. 회원가입 + 게시글 작성 후
-        // 2. "/api/likes"로 postsId 담아서 post 요청
-        MvcResult mvcResult1 = mockMvc.perform(post("/api/likes")
-                        .param("postsId", "1"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 3. 응답으로 "OK" 왔는지 확인
-        Map<String, Object> map = parseResponseJSON(mvcResult1.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("OK");
-
-        // 4. db에 저장됐나 확인
-        Long id1 = Long.valueOf((String) map.get("OK"));
-        Optional<Likes> result1 = likesRepository.findById(id1);
-        Assertions.assertThat(result1).isPresent();
-        Likes likes1 = result1.get();
-        Assertions.assertThat(likes1.getUser().getId()).isOne();
-        Assertions.assertThat(likes1.getPosts().getId()).isOne();
-        Assertions.assertThat(likes1.getComments()).isNull();
+        SavingLikesRequestDto postLikesRequestDto = SavingLikesRequestDto.builder()
+                .content("postsId").contentId(post.getId()).expectedLikeId(1L).expectedUserId(user1.getId()).build();
+        requestAndAssertToSaveLikes(postLikesRequestDto);
 
         // 일반 2. 댓글 좋아요
-        // 1. 회원가입 + 게시글 작성 + 댓글 작성 후
-        saveComments();
-
-        // 2. "/api/likes"로 commentsId 담아서 post 요청
-        MvcResult mvcResult2 = mockMvc.perform(post("/api/likes")
-                        .param("commentsId", "1"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 3. 응답으로 "OK" 왔는지 확인
-        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("OK");
-
-        // 4. db에 저장됐나 확인
-        Long id2 = Long.valueOf((String) map.get("OK"));
-        Optional<Likes> result2 = likesRepository.findById(id2);
-        Assertions.assertThat(result2).isPresent();
-        Likes likes2 = result2.get();
-        Assertions.assertThat(likes2.getUser().getId()).isOne();
-        Assertions.assertThat(likes2.getPosts()).isNull();
-        Assertions.assertThat(likes2.getComments().getId()).isOne();
+        SavingLikesRequestDto commentLikesRequestDto = SavingLikesRequestDto.builder()
+                .content("commentsId").contentId(comment.getId()).expectedLikeId(2L).expectedUserId(user1.getId()).build();
+        requestAndAssertToSaveLikes(commentLikesRequestDto);
     }
 
     @Test
-    @WithMockUser(username = "username111", password = "password111")
+    @WithMockUser(username = "username1")
     public void deleteLikes() throws Exception {
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
+
+        // 2. user1이 게시글 작성
+        Posts post = postsRepository.findById(1L).get();
+
+        // 3. user1이 댓글 작성
+        Comments comment = commentsRepository.findById(1L).get();
+
+        Long postId = post.getId();
+        Long commentId = comment.getId();
+
+        // 4. user1이 게시글 좋아요
+        Long postLikeId = testDB.savePostLikes(postId, user1);
+        Assertions.assertThat(likesRepository.count()).isOne();
+
+        // 5. user1이 댓글 좋아요
+        Long commentLikeId = testDB.saveCommentLikes(commentId, user1);
+        Assertions.assertThat(likesRepository.count()).isGreaterThan(1);
+
         // 일반 1. 게시글 좋아요 취소
-        // 1. 회원가입 + 게시글 작성 + 게시글 좋아요 후
-        saveLikes();
-
-        // 2. "/api/likes"로 postsId 담아서 delete 요청
-        MvcResult mvcResult1 = mockMvc.perform(delete("/api/likes")
-                        .param("postsId", "1"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 3. 응답으로 "OK" 왔는지 확인
-        Assertions.assertThat(mvcResult1.getResponse().getContentAsString()).isEqualTo("OK");
-
-        // 4. db에서 likes 지워졌나 확인
-        Optional<Likes> result1 = likesRepository.findById(1L);
-        Assertions.assertThat(result1).isNotPresent();
+        requestAndAssertToDeleteLikes("postsId", postId, postLikeId);
 
         // 일반 2. 댓글 좋아요 취소
-        // 1. 회원가입 + 게시글 작성 + 댓글 작성 + 댓글 좋아요 후
-        // 2. "/api/likes"로 commentsId 담아서 delete 요청
-        MvcResult mvcResult2 = mockMvc.perform(delete("/api/likes")
-                        .param("commentsId", "1"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 3. 응답으로 "OK" 왔는지 확인
-        Assertions.assertThat(mvcResult2.getResponse().getContentAsString()).isEqualTo("OK");
-
-        // 4. db에서 likes 지워졌나 확인
-        Optional<Likes> result2 = likesRepository.findById(2L);
-        Assertions.assertThat(result2).isNotPresent();
+        requestAndAssertToDeleteLikes("commentsId", commentId, commentLikeId);
     }
 
     @Test
-    @WithMockUser(username = "username111", password = "password111")
+    @WithMockUser(username = "username1")
     public void deleteSelectedLikes() throws Exception {
-        // 1. 회원가입 + 게시글 작성 + 게시글 좋아요 + 댓글 작성 + 댓글 좋아요 후
-        saveLikes();
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
 
-        // 2. "/api/likes/selected-delete"로 List<Long> likesId에 1, 2 담아서 delete 요청
-        List<Long> likesId = List.of(1L, 2L);
+        // 2. user1이 게시글 작성
+        Posts post = postsRepository.findById(1L).get();
+
+        // 3. user1이 댓글 작성
+        Comments comment = commentsRepository.findById(1L).get();
+
+        Long postId = post.getId();
+        Long commentId = comment.getId();
+
+        // 4. user1이 게시글 좋아요
+        Long postLikeId = testDB.savePostLikes(postId, user1);
+        Assertions.assertThat(likesRepository.count()).isOne();
+
+        // 5. user1이 댓글 좋아요
+        Long commentLikeId = testDB.saveCommentLikes(commentId, user1);
+        Assertions.assertThat(likesRepository.count()).isGreaterThan(1);
+
+        // 6. "/api/likes/selected-delete"로 List<Long> likesId에 postLikeId, commentLikeId 담아서 delete 요청
+        List<Long> likesId = List.of(postLikeId, commentLikeId);
+
         MvcResult mvcResult = mockMvc.perform(delete("/api/likes/selected-delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(likesId)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // 3. 응답으로 "OK" 왔는지 확인
-        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+        // 7. 응답으로 "OK" 왔는지 확인
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("OK");
 
-        // 4. db에 저장된 좋아요 수 0인지 확인
+        // 8. db에 저장된 좋아요 수 0인지 확인
         Assertions.assertThat(likesRepository.count()).isZero();
+    }
+
+    @Getter
+    private static class SavingLikesRequestDto {
+        private String content;
+        private Long contentId;
+        private Long expectedLikeId;
+        private Long expectedUserId;
+
+        @Builder
+        public SavingLikesRequestDto(String content, Long contentId, Long expectedLikeId, Long expectedUserId) {
+            this.content = content;
+            this.contentId = contentId;
+            this.expectedLikeId = expectedLikeId;
+            this.expectedUserId = expectedUserId;
+        }
+    }
+
+    private void requestAndAssertToSaveLikes(SavingLikesRequestDto likesRequestDto) throws Exception {
+        // 1. "/api/likes"로 parameter content=contentId 담아서 post 요청
+        MvcResult mvcResult = mockMvc.perform(post("/api/likes")
+                        .param(likesRequestDto.getContent(), likesRequestDto.getContentId().toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 2. 응답으로 "OK" 왔는지 확인
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("OK");
+
+        // 3. "OK"의 값이 1/2인지 확인
+        Long likeId = Long.valueOf((String) map.get("OK"));
+        Assertions.assertThat(likeId).isEqualTo(likesRequestDto.getExpectedLikeId());
+
+        // 4. likeId로 Likes 찾고,
+        Optional<Likes> result = likesRepository.findById(likeId);
+        Assertions.assertThat(result).isPresent();
+        Likes like = result.get();
+
+        // 5. db에 저장됐나 posts/comments, user 확인
+        Long actualContentId;
+        if (likesRequestDto.getContent().contains("post")) {
+            actualContentId = like.getPosts().getId();
+        } else {
+            actualContentId = like.getComments().getId();
+        }
+        Assertions.assertThat(actualContentId).isEqualTo(likesRequestDto.getContentId());
+        Assertions.assertThat(like.getUser().getId()).isEqualTo(likesRequestDto.getExpectedUserId());
+    }
+
+    private void requestAndAssertToDeleteLikes(String content, Long contentId, Long likeId) throws Exception {
+        // 1. "/api/likes"로 parameter content=contentId 담아서 delete 요청
+        MvcResult mvcResult = mockMvc.perform(delete("/api/likes")
+                        .param(content, contentId.toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 2. 응답으로 "OK" 왔는지 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).isEqualTo("OK");
+
+        // 3. likeId로 Likes 찾아서 db에서 지워졌나 확인
+        Optional<Likes> result = likesRepository.findById(likeId);
+        Assertions.assertThat(result).isNotPresent();
     }
 }

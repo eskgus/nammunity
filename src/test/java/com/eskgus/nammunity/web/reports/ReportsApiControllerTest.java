@@ -58,7 +58,7 @@ public class ReportsApiControllerTest {
     private ReasonsRepository reasonsRepository;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
         this.mockMvc = testDB.setUp();
     }
 
@@ -133,7 +133,7 @@ public class ReportsApiControllerTest {
 
         // 7. 응답으로 "OK" 왔는지 확인
         Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
-        Assertions.assertThat(map.containsKey("OK")).isTrue();
+        Assertions.assertThat(map).containsKey("OK");
 
         // 8. db에 저장된 신고 수 3(사용자 신고 * 3)인지 확인
         Assertions.assertThat(contentReportsRepository.count()).isGreaterThan(2);
@@ -197,7 +197,7 @@ public class ReportsApiControllerTest {
 
         // 3. 응답으로 "OK" 왔는지 확인
         Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
-        Assertions.assertThat(map.containsKey("OK")).isTrue();
+        Assertions.assertThat(map).containsKey("OK");
 
         // 4. "OK"의 값이 1/2/3인지 확인
         Long reportId = Long.valueOf((String) map.get("OK"));
@@ -230,7 +230,7 @@ public class ReportsApiControllerTest {
 
         // 2. 응답으로 "OK" 왔나 확인
         Map<String, Object> map = testDB.parseResponseJSON(mvcResult1.getResponse().getContentAsString());
-        Assertions.assertThat(map.containsKey("OK")).isTrue();
+        Assertions.assertThat(map).containsKey("OK");
 
         // 3. "OK"의 값이 1인지 확인
         Long bannedUserId = Long.valueOf((String) map.get("OK"));

@@ -60,7 +60,7 @@ public class ReportsApiControllerExceptionTest {
     private BannedUsersRepository bannedUsersRepository;
 
     @BeforeEach
-    public void setup() throws Exception {
+    public void setUp() {
         this.mockMvc = testDB.setUp();
     }
 
@@ -187,7 +187,7 @@ public class ReportsApiControllerExceptionTest {
 
         // 3. 응답으로 responseKey 왔는지 확인
         Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
-        Assertions.assertThat(map.containsKey(responseKey)).isTrue();
+        Assertions.assertThat(map).containsKey(responseKey);
 
         // 4. responseKey의 값이 responseValue인지 확인
         Assertions.assertThat((String) map.get(responseKey)).contains(responseValue);
@@ -226,7 +226,7 @@ public class ReportsApiControllerExceptionTest {
 
         // 4. 응답으로 "error" 왔는지 확인
         Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
-        Assertions.assertThat(map.containsKey("error")).isTrue();
+        Assertions.assertThat(map).containsKey("error");
 
         // 5. "error"의 값이 responseValue인지 확인
         Assertions.assertThat((String) map.get("error")).contains(responseValue);
@@ -245,7 +245,7 @@ public class ReportsApiControllerExceptionTest {
 
         // 2. 응답으로 "error" 왔나 확인
         Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
-        Assertions.assertThat(map.containsKey("error")).isTrue();
+        Assertions.assertThat(map).containsKey("error");
 
         // 3. "error"의 값이 responseValue인지 확인
         Assertions.assertThat((String) map.get("error")).contains(responseValue);

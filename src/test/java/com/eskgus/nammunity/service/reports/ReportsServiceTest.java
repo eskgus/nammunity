@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.reports;
 
+import com.eskgus.nammunity.TestDB;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -13,8 +14,10 @@ import com.eskgus.nammunity.web.dto.reports.ContentReportDetailDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
-import lombok.extern.log4j.Log4j2;
+import lombok.Builder;
+import lombok.Getter;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,10 +27,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.*;
 
-@Log4j2
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class ReportsServiceTest {
+    @Autowired
+    private TestDB testDB;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -41,255 +46,274 @@ public class ReportsServiceTest {
     private ContentReportsRepository contentReportsRepository;
 
     @Autowired
-    private TypesRepository typesRepository;
-
-    @Autowired
     private ReasonsRepository reasonsRepository;
 
     @Autowired
     private ReportsService reportsService;
 
-    private Long latestUserReportId;
-    private Long latestPostReportId;
-    private Long latestCommentReportId;
+    private Long latestUserReportId = 3L;
+    private Long latestPostReportId = 13L;
+    private Long latestCommentReportId = 23L;
 
     @BeforeEach
-    public void setup() {
-        log.info("setup.....");
+    public void setUp() {
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.ADMIN)).get();
+        Assertions.assertThat(userRepository.count()).isGreaterThan(1);
 
-        // 1. 사용자, 게시글, 댓글 저장
-        User user = User.builder()
-                .username("username111").password("password111").nickname("nickname1")
-                .email("email111@naver.com").role(Role.USER).build();
-        userRepository.save(user);
-        Assertions.assertThat(userRepository.count()).isOne();
-
-        Posts post = Posts.builder().title("title").content("content").user(user).build();
-        postsRepository.save(post);
+        // 2. user1이 게시글 작성
+        Long postsId = testDB.savePosts(user1);
         Assertions.assertThat(postsRepository.count()).isOne();
 
-        Comments comment = Comments.builder().content("content").posts(post).user(user).build();
-        commentsRepository.save(comment);
+        // 3. user1이 댓글 작성
+        Long commentsId = testDB.saveComments(postsId, user1);
         Assertions.assertThat(commentsRepository.count()).isOne();
 
-        // 2. 게시글/댓글 신고 10번 + 사용자 신고 3번 저장
-        Types postType = typesRepository.findById(1L).get();
-        Types commentType = typesRepository.findById(2L).get();
-        Types userType = typesRepository.findById(3L).get();
+        // 4. user2가 user1 사용자 신고 * 3, 게시글 신고 * 10, 댓글 신고 * 10
+        testDB.saveUserReports(user1, user2);
+        testDB.savePostReports(postsId, user2);
+        testDB.saveCommentReports(commentsId, user2);
 
-        Long[] reasonIdArr = {1L, 2L, 8L};
-        List<Reasons> reasons = new ArrayList<>();
-        for (Long id : reasonIdArr) {
-            reasons.add(reasonsRepository.findById(id).get());
-        }
+        Long numOfReports = contentReportsRepository.count();
+        Assertions.assertThat(numOfReports).isGreaterThan(22);
+    }
 
-        // 2-1. 사용자 신고 (신고 사유 8)
-        for (int i = 0; i < 3; i++) {
-            Reasons reason = reasons.get(i);
-            String otherReason = reason.getDetail().equals("기타") ? "기타 사유" : null;
-            ContentReports contentReport = ContentReports.builder()
-                    .user(user).reporter(user).types(userType).reasons(reason).otherReasons(otherReason).build();
-            contentReportsRepository.save(contentReport);
-        }
-        this.latestUserReportId = contentReportsRepository.count();
-        Assertions.assertThat(this.latestUserReportId).isEqualTo(3L);
-
-        // 2-2. 게시글 신고 (신고 사유 1)
-        for (int i = 0; i < 10; i++) {
-            Reasons reason = reasons.get(i % reasons.size());
-            String otherReason = reason.getDetail().equals("기타") ? "기타 사유" : null;
-            ContentReports contentReport = ContentReports.builder()
-                    .posts(post).reporter(user).types(postType).reasons(reason).otherReasons(otherReason).build();
-            contentReportsRepository.save(contentReport);
-        }
-        this.latestPostReportId = contentReportsRepository.count();
-        Assertions.assertThat(this.latestPostReportId).isEqualTo(13L);
-
-        // 2-3. 댓글 신고 (신고 사유 2)
-        Collections.rotate(reasons, -1);
-        for (int i = 0; i < 10; i++) {
-            Reasons reason = reasons.get(i % reasons.size());
-            String otherReason = reason.getDetail().equals("기타") ? "기타 사유" : null;
-            ContentReports contentReport = ContentReports.builder()
-                    .comments(comment).reporter(user).types(commentType).reasons(reason).otherReasons(otherReason).build();
-            contentReportsRepository.save(contentReport);
-        }
-        this.latestCommentReportId = contentReportsRepository.count();
-        Assertions.assertThat(this.latestCommentReportId).isEqualTo(23L);
+    @AfterEach
+    public void cleanUp() {
+        testDB.cleanUp();
     }
 
     @Test
     public void findDistinct() {
-        User user = userRepository.findById(1L).get();
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(1L).get();
+
+        // 2. user1이 게시글 작성
         Posts post = postsRepository.findById(1L).get();
+
+        // 3. user1이 댓글 작성
         Comments comment = commentsRepository.findById(1L).get();
 
-        List<ContentReportDistinctDto> distinctDtos;
-        ContentReportDistinctDto distinctDto;
+        // 4. user2가 user1 사용자 신고 * 3, 게시글 신고 * 10, 댓글 신고 * 10
+        // 5. findDistinct() 호출
+        String username = user1.getUsername();
+        String title = post.getTitle();
+        String content = comment.getContent();
 
-        // 1. endpoint: ""
-        distinctDtos = reportsService.findDistinct("");
-        Assertions.assertThat(distinctDtos.size()).isGreaterThan(2);
+        // 5-1. endpoint = ""
+        List<ContentReportDistinctDto> distinctDtos = callAndAssertFindDistinct("", 3);
+        // 5-1-1. distinctDtos의 0번째 (사용자 신고)
+        assertDistinctDto(distinctDtos.get(0), "사용자", username);
+        // 5-1-2. distinctDtos의 1번째 (게시글 신고)
+        assertDistinctDto(distinctDtos.get(1), "게시글", title);
+        // 5-1-3. distinctDtos의 2번째 (댓글 신고)
+        assertDistinctDto(distinctDtos.get(2), "댓글", content);
 
-        // 1-1. distinctDtos의 0번째 (사용자 신고)
-        distinctDto = distinctDtos.get(0);
-        Assertions.assertThat(distinctDto.getTypes().getDetail()).isEqualTo("사용자");
-        Assertions.assertThat(distinctDto.getUser().getUsername()).isEqualTo(user.getUsername());
+        // 5-2. endpoint = "posts"
+        distinctDtos = callAndAssertFindDistinct("posts", 1);
+        assertDistinctDto(distinctDtos.get(0), "게시글", title);
 
-        // 1-2. distinctDtos의 1번째 (게시글 신고)
-        distinctDto = distinctDtos.get(1);
-        Assertions.assertThat(distinctDto.getTypes().getDetail()).isEqualTo("게시글");
-        Assertions.assertThat(distinctDto.getPosts().getTitle()).isEqualTo(post.getTitle());
+        // 5-3. endpoint = "comments"
+        distinctDtos = callAndAssertFindDistinct("comments", 1);
+        assertDistinctDto(distinctDtos.get(0), "댓글", content);
 
-        // 1-3. distinctDtos의 2번째 (댓글 신고)
-        distinctDto = distinctDtos.get(2);
-        Assertions.assertThat(distinctDto.getTypes().getDetail()).isEqualTo("댓글");
-        Assertions.assertThat(distinctDto.getComments().getContent()).isEqualTo(comment.getContent());
-
-        // 2. endpoint: "posts"
-        distinctDtos = reportsService.findDistinct("posts");
-        Assertions.assertThat(distinctDtos.size()).isOne();
-        distinctDto = distinctDtos.get(0);
-        Assertions.assertThat(distinctDto.getTypes().getDetail()).isEqualTo("게시글");
-        Assertions.assertThat(distinctDto.getPosts().getTitle()).isEqualTo(post.getTitle());
-
-        // 3. endpoint: "comments"
-        distinctDtos = reportsService.findDistinct("comments");
-        Assertions.assertThat(distinctDtos.size()).isOne();
-        distinctDto = distinctDtos.get(0);
-        Assertions.assertThat(distinctDto.getTypes().getDetail()).isEqualTo("댓글");
-        Assertions.assertThat(distinctDto.getComments().getContent()).isEqualTo(comment.getContent());
-
-        // 4. endpoint: "users"
-        distinctDtos = reportsService.findDistinct("users");
-        Assertions.assertThat(distinctDtos.size()).isOne();
-        distinctDto = distinctDtos.get(0);
-        Assertions.assertThat(distinctDto.getTypes().getDetail()).isEqualTo("사용자");
-        Assertions.assertThat(distinctDto.getUser().getUsername()).isEqualTo(user.getUsername());
+        // 5-4. endpoint = "users"
+        distinctDtos = callAndAssertFindDistinct("users", 1);
+        assertDistinctDto(distinctDtos.get(0), "사용자", username);
     }
 
     @Test
     public void findSummary() {
-        User user = userRepository.findById(1L).get();
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(1L).get();
+        User user2 = userRepository.findById(2L).get();
+
+        // 2. user1이 게시글 작성
         Posts post = postsRepository.findById(1L).get();
+
+        // 3. user1이 댓글 작성
         Comments comment = commentsRepository.findById(1L).get();
 
-        String latestUserReportedDate = DateTimeUtil.formatDateTime(
-                contentReportsRepository.findById(this.latestUserReportId).get().getCreatedDate());
+        // 4. user2가 user1 사용자 신고 * 3, 게시글 신고 * 10, 댓글 신고 * 10
+        // 5. findSummary() 호출
+        // expectedReporter
+        String reporter = user2.getNickname();
+
+        // expectedReportedDate
         String latestPostReportedDate = DateTimeUtil.formatDateTime(
                 contentReportsRepository.findById(this.latestPostReportId).get().getCreatedDate());
         String latestCommentReportedDate = DateTimeUtil.formatDateTime(
                 contentReportsRepository.findById(this.latestCommentReportId).get().getCreatedDate());
+        String latestUserReportedDate = DateTimeUtil.formatDateTime(
+                contentReportsRepository.findById(this.latestUserReportId).get().getCreatedDate());
 
+        // expectedReason
         String reason1 = reasonsRepository.findById(1L).get().getDetail();
         String reason2 = reasonsRepository.findById(2L).get().getDetail();
         String otherReason = reasonsRepository.findById(8L).get().getDetail() + ": 기타 사유";
 
-        List<ContentReportSummaryDto> summaryDtos;
-        ContentReportSummaryDto summaryDto;
+        // expected values
+        SummaryExpectedDto postSummaryExpectedDto = SummaryExpectedDto.builder()
+                .expectedType("게시글").expectedReporter(reporter).expectedReportedDate(latestPostReportedDate)
+                .expectedReason(reason1).expectedContentId(post.getId()).build();
+        SummaryExpectedDto commentSummaryExpectedDto = SummaryExpectedDto.builder()
+                .expectedType("댓글").expectedReporter(reporter).expectedReportedDate(latestCommentReportedDate)
+                .expectedReason(reason2).expectedContentId(comment.getId()).build();
+        SummaryExpectedDto userSummaryExpectedDto = SummaryExpectedDto.builder()
+                .expectedType("사용자").expectedReporter(reporter).expectedReportedDate(latestUserReportedDate)
+                .expectedReason(otherReason).expectedContentId(user1.getId()).build();
 
-        // 1. endpoint: ""
-        summaryDtos = reportsService.findSummary("");
-        Assertions.assertThat(summaryDtos.size()).isGreaterThan(2);
-        // 1-1. summaryDtos의 0번째 (사용자 신고)
-        summaryDto = summaryDtos.get(0);
-        Assertions.assertThat(summaryDto.getType()).isEqualTo("사용자");
-        Assertions.assertThat(summaryDto.getReporter()).isEqualTo(user.getNickname());
-        Assertions.assertThat(summaryDto.getReportedDate()).isEqualTo(latestUserReportedDate);
-        Assertions.assertThat(summaryDto.getReason()).isEqualTo(otherReason);
-        Assertions.assertThat(summaryDto.getUserId()).isEqualTo(user.getId());
-        Assertions.assertThat(summaryDto.getUserExistence()).isTrue();
+        // 5-1. endpoint: ""
+        List<ContentReportSummaryDto> summaryDtos = callAndAssertFindSummary("", 3);
+        // 5-1-1. summaryDtos의 0번째 (사용자 신고)
+        assertSummaryDto(summaryDtos.get(0), userSummaryExpectedDto);
+        // 5-1-2. summaryDtos의 1번째 (게시글 신고)
+        assertSummaryDto(summaryDtos.get(1), postSummaryExpectedDto);
+        // 5-1-3. summaryDtos의 2번째 (댓글 신고)
+        assertSummaryDto(summaryDtos.get(2), commentSummaryExpectedDto);
 
-        // 1-2. summaryDtos의 1번째 (게시글 신고)
-        summaryDto = summaryDtos.get(1);
-        Assertions.assertThat(summaryDto.getType()).isEqualTo("게시글");
-        Assertions.assertThat(summaryDto.getReporter()).isEqualTo(user.getNickname());
-        Assertions.assertThat(summaryDto.getReportedDate()).isEqualTo(latestPostReportedDate);
-        Assertions.assertThat(summaryDto.getReason()).isEqualTo(reason1);
-        Assertions.assertThat(summaryDto.getPostId()).isEqualTo(post.getId());
-        Assertions.assertThat(summaryDto.getPostExistence()).isTrue();
+        // 5-2. endpoint: "posts"
+        summaryDtos = callAndAssertFindSummary("posts", 1);
+        assertSummaryDto(summaryDtos.get(0), postSummaryExpectedDto);
 
-        // 1-3. summaryDtos의 2번째 (댓글 신고)
-        summaryDto = summaryDtos.get(2);
-        Assertions.assertThat(summaryDto.getType()).isEqualTo("댓글");
-        Assertions.assertThat(summaryDto.getReporter()).isEqualTo(user.getNickname());
-        Assertions.assertThat(summaryDto.getReportedDate()).isEqualTo(latestCommentReportedDate);
-        Assertions.assertThat(summaryDto.getReason()).isEqualTo(reason2);
-        Assertions.assertThat(summaryDto.getCommentId()).isEqualTo(comment.getId());
-        Assertions.assertThat(summaryDto.getCommentExistence()).isTrue();
+        // 5-3. endpoint = "comments"
+        summaryDtos = callAndAssertFindSummary("comments", 1);
+        assertSummaryDto(summaryDtos.get(0), commentSummaryExpectedDto);
 
-        // 2. endpoint: "posts"
-        summaryDtos = reportsService.findSummary("posts");
-        Assertions.assertThat(summaryDtos.size()).isOne();
-        summaryDto = summaryDtos.get(0);
-        Assertions.assertThat(summaryDto.getType()).isEqualTo("게시글");
-        Assertions.assertThat(summaryDto.getReporter()).isEqualTo(user.getNickname());
-        Assertions.assertThat(summaryDto.getReportedDate()).isEqualTo(latestPostReportedDate);
-        Assertions.assertThat(summaryDto.getReason()).isEqualTo(reason1);
-        Assertions.assertThat(summaryDto.getPostId()).isEqualTo(post.getId());
-        Assertions.assertThat(summaryDto.getPostExistence()).isTrue();
-
-        // 3. endpoint: "comments"
-        summaryDtos = reportsService.findSummary("comments");
-        Assertions.assertThat(summaryDtos.size()).isOne();
-        summaryDto = summaryDtos.get(0);
-        Assertions.assertThat(summaryDto.getType()).isEqualTo("댓글");
-        Assertions.assertThat(summaryDto.getReporter()).isEqualTo(user.getNickname());
-        Assertions.assertThat(summaryDto.getReportedDate()).isEqualTo(latestCommentReportedDate);
-        Assertions.assertThat(summaryDto.getReason()).isEqualTo(reason2);
-        Assertions.assertThat(summaryDto.getCommentId()).isEqualTo(comment.getId());
-        Assertions.assertThat(summaryDto.getCommentExistence()).isTrue();
-
-        // 4. endpoint: "users"
-        summaryDtos = reportsService.findSummary("users");
-        Assertions.assertThat(summaryDtos.size()).isOne();
-        summaryDto = summaryDtos.get(0);
-        Assertions.assertThat(summaryDto.getType()).isEqualTo("사용자");
-        Assertions.assertThat(summaryDto.getReporter()).isEqualTo(user.getNickname());
-        Assertions.assertThat(summaryDto.getReportedDate()).isEqualTo(latestUserReportedDate);
-        Assertions.assertThat(summaryDto.getReason()).isEqualTo(otherReason);
-        Assertions.assertThat(summaryDto.getUserId()).isEqualTo(user.getId());
-        Assertions.assertThat(summaryDto.getUserExistence()).isTrue();
+        // 5-4. endpoint = "users"
+        summaryDtos = callAndAssertFindSummary("users", 1);
+        assertSummaryDto(summaryDtos.get(0), userSummaryExpectedDto);
     }
 
     @Test
     public void findDetails() {
-        // 1. 사용자/게시글/댓글/신고 저장 후
-        User user = userRepository.findById(1L).get();
+        // 1. user1 회원가입 + user2 (관리자) 회원가입
+        User user1 = userRepository.findById(1L).get();
+
+        // 2. user1이 게시글 작성
         Posts post = postsRepository.findById(1L).get();
+
+        // 3. user1이 댓글 작성
         Comments comment = commentsRepository.findById(1L).get();
 
-        ContentReportDetailDto detailDto;
-        List<ContentReportDetailListDto> detailListDtos;
-
-        // 1. type: "post", id = 1L
-        detailDto = reportsService.findDetails("post", 1L);
-        Assertions.assertThat(detailDto.getPost().getId()).isEqualTo(post.getId());
-        Assertions.assertThat(detailDto.getType()).isEqualTo("게시글");
-        Assertions.assertThat(detailDto.getPostExistence()).isTrue();
-        detailListDtos = detailDto.getReports();
+        // 4. user2가 user1 사용자 신고 * 3, 게시글 신고 * 10, 댓글 신고 * 10
+        // 5. findSummary() 호출
+        // 5-1. type: "post", id = post의 id
+        List<ContentReportDetailListDto> detailListDtos = callAndAssertFindDetails("post", post.getId());
         assertDetailListDtos(detailListDtos, (int) (this.latestPostReportId - this.latestUserReportId),
                 this.latestUserReportId);
 
-        // 2. type: "comment", id = 1L
-        detailDto = reportsService.findDetails("comment", 1L);
-        Assertions.assertThat(detailDto.getComment().getId()).isEqualTo(comment.getId());
-        Assertions.assertThat(detailDto.getType()).isEqualTo("댓글");
-        Assertions.assertThat(detailDto.getCommentExistence()).isTrue();
-        detailListDtos = detailDto.getReports();
+        // 5-2. type: "comment", id = comment의 id
+        detailListDtos = callAndAssertFindDetails("comment", comment.getId());
         assertDetailListDtos(detailListDtos, (int) (this.latestCommentReportId - this.latestPostReportId),
                 this.latestPostReportId);
 
-        // 3. type: "user", id = 1L
-        detailDto = reportsService.findDetails("user", 1L);
-        Assertions.assertThat(detailDto.getUser().getId()).isEqualTo(user.getId());
-        Assertions.assertThat(detailDto.getType()).isEqualTo("사용자");
-        Assertions.assertThat(detailDto.getUserExistence()).isTrue();
-        detailListDtos = detailDto.getReports();
+        // 5-3. type: "user", id = user1의 id
+        detailListDtos = callAndAssertFindDetails("user", user1.getId());
         assertDetailListDtos(detailListDtos, this.latestUserReportId.intValue(), 0L);
     }
 
-    public void assertDetailListDtos(List<ContentReportDetailListDto> detailListDtos, int iMax, Long id) {
+    @Getter
+    private static class SummaryExpectedDto {
+        private String expectedType;
+        private String expectedReporter;
+        private String expectedReportedDate;
+        private String expectedReason;
+        private Long expectedContentId;
+
+        @Builder
+        public SummaryExpectedDto(String expectedType, String expectedReporter, String expectedReportedDate,
+                                  String expectedReason, Long expectedContentId) {
+            this.expectedType = expectedType;
+            this.expectedReporter = expectedReporter;
+            this.expectedReportedDate = expectedReportedDate;
+            this.expectedReason = expectedReason;
+            this.expectedContentId = expectedContentId;
+        }
+    }
+
+    private List<ContentReportDistinctDto> callAndAssertFindDistinct(String endpoint, int expectedSize) {
+        // findDistinct() 호출하고 리턴 값 List<ContentReportDistinctDto>의 size가 expectedSize랑 같은지 확인
+        List<ContentReportDistinctDto> distinctDtos = reportsService.findDistinct(endpoint);
+        Assertions.assertThat(distinctDtos.size()).isEqualTo(expectedSize);
+        return distinctDtos;
+    }
+
+    private void assertDistinctDto(ContentReportDistinctDto distinctDto, String expectedType, String expectedContent) {
+        // distinctDto의 type, content(post: title, comment: content, user: username) 확인
+        Assertions.assertThat(distinctDto.getTypes().getDetail()).isEqualTo(expectedType);
+
+        String actualContent;
+        if ("게시글".equals(expectedType)) {
+            actualContent = distinctDto.getPosts().getTitle();
+        } else if ("댓글".equals(expectedType)) {
+            actualContent = distinctDto.getComments().getContent();
+        } else {
+            actualContent = distinctDto.getUser().getUsername();
+        }
+        Assertions.assertThat(actualContent).isEqualTo(expectedContent);
+    }
+
+    private List<ContentReportSummaryDto> callAndAssertFindSummary(String endpoint, int expectedSize) {
+        // findSummary() 호출하고 리턴 값 List<ContentReportSummaryDto>의 size가 expectedSize랑 같은지 확인
+        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary(endpoint);
+        Assertions.assertThat(summaryDtos.size()).isEqualTo(expectedSize);
+        return summaryDtos;
+    }
+
+    private void assertSummaryDto(ContentReportSummaryDto summaryDto, SummaryExpectedDto summaryExpectedDto) {
+        // summaryDto의 type, reporter, reportedDate, reason, content(post, comment, user) id/existence 확인
+        Assertions.assertThat(summaryDto.getType()).isEqualTo(summaryExpectedDto.getExpectedType());
+        Assertions.assertThat(summaryDto.getReporter()).isEqualTo(summaryExpectedDto.getExpectedReporter());
+        Assertions.assertThat(summaryDto.getReportedDate()).isEqualTo(summaryExpectedDto.getExpectedReportedDate());
+        Assertions.assertThat(summaryDto.getReason()).isEqualTo(summaryExpectedDto.getExpectedReason());
+
+        Long actualContentId;
+        boolean actualContentExistence;
+        if ("게시글".equals(summaryExpectedDto.getExpectedType())) {
+            actualContentId = summaryDto.getPostId();
+            actualContentExistence = summaryDto.getPostExistence();
+        } else if ("댓글".equals(summaryExpectedDto.getExpectedType())) {
+            actualContentId = summaryDto.getCommentId();
+            actualContentExistence = summaryDto.getCommentExistence();
+        } else {
+            actualContentId = summaryDto.getUserId();
+            actualContentExistence = summaryDto.getUserExistence();
+        }
+        Assertions.assertThat(actualContentId).isEqualTo(summaryExpectedDto.getExpectedContentId());
+        Assertions.assertThat(actualContentExistence).isTrue();
+    }
+
+    private List<ContentReportDetailListDto> callAndAssertFindDetails(String type, Long expectedContentId) {
+        // findDetails() 호출하고 리턴 값 ContentReportDetailListDto의 content(post, comment, user) id/existence, type 확인
+        ContentReportDetailDto detailDto = reportsService.findDetails(type, expectedContentId);
+
+        Long actualContentId;
+        String expectedType;
+        boolean actualContentExistence;
+        if ("post".equals(type)) {
+            actualContentId = detailDto.getPost().getId();
+            expectedType = "게시글";
+            actualContentExistence = detailDto.getPostExistence();
+        } else if ("comment".equals(type)) {
+            actualContentId = detailDto.getComment().getId();
+            expectedType = "댓글";
+            actualContentExistence = detailDto.getCommentExistence();
+        } else {
+            actualContentId = detailDto.getUser().getId();
+            expectedType = "사용자";
+            actualContentExistence = detailDto.getUserExistence();
+        }
+        Assertions.assertThat(actualContentId).isEqualTo(expectedContentId);
+        Assertions.assertThat(detailDto.getType()).isEqualTo(expectedType);
+        Assertions.assertThat(actualContentExistence).isTrue();
+
+        // ContentReportDetailDto에 들어있는 List<ContentReportDetailListDto> 검증하기 위해 리턴
+        return detailDto.getReports();
+    }
+
+    private void assertDetailListDtos(List<ContentReportDetailListDto> detailListDtos, int iMax, Long id) {
         // ContentReportDetailDto에 들어있는 List<ContentReportDetailListDto>의 size가 i의 최댓값 iMax(마지막 신고의 id)인지 확인
         Assertions.assertThat(detailListDtos.size()).isEqualTo(iMax);
 
