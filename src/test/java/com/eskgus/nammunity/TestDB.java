@@ -7,8 +7,12 @@ import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.reports.*;
+import com.eskgus.nammunity.domain.tokens.Tokens;
+import com.eskgus.nammunity.domain.tokens.TokensRepository;
 import com.eskgus.nammunity.domain.user.*;
 import com.google.gson.Gson;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,6 +27,7 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -39,6 +44,9 @@ public class TestDB {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TokensRepository tokensRepository;
 
     @Autowired
     private PostsRepository postsRepository;
@@ -60,6 +68,9 @@ public class TestDB {
 
     @Autowired
     private BannedUsersRepository bannedUsersRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public MockMvc setUp() {
         return MockMvcBuilders.webAppContextSetup(context)
@@ -93,6 +104,23 @@ public class TestDB {
         User user = User.builder()
                 .username(username).password(password).nickname(nickname).email(email).role(role).build();
         return userRepository.save(user).getId();
+    }
+
+    public Long saveTokens(User user) {
+        String token = UUID.randomUUID().toString();
+        Tokens newToken = Tokens.builder().token(token).createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMinutes(3)).user(user).build();
+        tokensRepository.save(newToken);
+
+        // 이거 해야 user로 tokens 가져오기 가능
+        entityManager.clear();
+
+        return newToken.getId();
+    }
+
+    public void confirmTokens(Tokens token) {
+        token.updateConfirmedAt(LocalDateTime.now());
+        token.getUser().updateEnabled();
     }
 
     public Long savePosts(User user) {

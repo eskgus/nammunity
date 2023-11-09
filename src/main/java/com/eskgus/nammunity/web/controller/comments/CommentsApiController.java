@@ -25,8 +25,8 @@ public class CommentsApiController {
 
         String username = principal.getName();
         try {
-            commentsService.save(requestDto, username);
-            response.put("OK", "댓글 작성 완료");
+            Long id = commentsService.save(requestDto, username);
+            response.put("OK", id.toString());
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }
@@ -40,8 +40,8 @@ public class CommentsApiController {
         Map<String, String> response = new HashMap<>();
 
         try {
-            commentsService.update(id, requestDto.getContent());
-            response.put("OK", "댓글 수정 완료");
+            Long updatedId = commentsService.update(id, requestDto.getContent());
+            response.put("OK", updatedId.toString());
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());
         }
