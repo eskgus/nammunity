@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.web.user;
 
+import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
@@ -7,208 +9,228 @@ import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.log4j.Log4j2;
+import lombok.Builder;
+import lombok.Getter;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
-import java.util.Optional;
 
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Log4j2
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class UserApiControllerExceptionTest extends UserApiControllerTest {
-    @LocalServerPort
-    private int port;
-
+public class UserApiControllerExceptionTest {
     @Autowired
-    private TestRestTemplate testRestTemplate;
+    private TestDB testDB;
+
+    private MockMvc mockMvc;
 
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private BCryptPasswordEncoder encoder;
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private WebApplicationContext context;
-
     @BeforeEach
-    public void setup(){
-        mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .build();
+    public void setUp() {
+        this.mockMvc = testDB.setUp();
 
-        signUp();
+        // 1. user1 회원가입
+        testDB.signUp(1L, Role.USER);
+        Assertions.assertThat(userRepository.count()).isOne();
+    }
+
+    @AfterEach
+    public void cleanUp() {
+        testDB.cleanUp();
     }
 
     @Test
-    public void causeExceptionsInSignUp() {
+    public void causeExceptionsOnSignUp() throws Exception {
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
+
         // 예외 1. username/password/nickname/email 유효성 검사 탈락
-        RegistrationDto requestDto1 = RegistrationDto.builder()
+        // 1-1. 유효하지 않은 값들로 RegistrationDto 생성
+        RegistrationDto inValidRequestDto = RegistrationDto.builder()
                 .username("").password("password").confirmPassword("password")
                 .nickname("nickname!").email("email").build();
-        String url = "http://localhost:" + port + "/api/users";
-        ResponseEntity<Map> responseEntity1 = testRestTemplate.postForEntity(url, requestDto1, Map.class);
-        Assertions.assertThat(responseEntity1.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity1.getBody()).containsKeys("username", "password", "nickname", "email");
-        Optional<User> result = userRepository.findById(2L);
-        Assertions.assertThat(result).isNotPresent();
+        // 1-2. String 배열에 응답 키 값 저장
+        String[] responseKeys = { "username", "password", "nickname", "email" };
+        requestAndAssertForExceptionOnSignUp(inValidRequestDto, responseKeys);
 
         // 예외 2. username 중복
-        RegistrationDto requestDto2 = RegistrationDto.builder()
-                .username("username111").password("password111").confirmPassword("password111")
+        // 1-1. 이미 가입된 username으로 RegistrationDto 생성
+        RegistrationDto existentUsernameRequestDto = RegistrationDto.builder()
+                .username(user1.getUsername()).password("password1").confirmPassword("password1")
                 .nickname("nickname2").email("email222@naver.com").build();
-        ResponseEntity<Map> responseEntity2 = testRestTemplate.postForEntity(url, requestDto2, Map.class);
-        Assertions.assertThat(responseEntity2.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity2.getBody()).containsKey("username");
-        List<User> result2 = userRepository.findAll();
-        Assertions.assertThat(result2.size()).isEqualTo(1);
+        // 1-2. String 배열에서 "username" 빼고 삭제 (username이 중복인지 확인하는 거)
+        responseKeys = Arrays.stream(responseKeys).filter(key -> key.equals("username")).toArray(String[]::new);
+        requestAndAssertForExceptionOnSignUp(existentUsernameRequestDto, responseKeys);
     }
 
     @Test
-    public void causeExceptionsInCheck() {
+    public void causeExceptionsOnCheck() throws Exception {
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
+
         // 예외 1. username 입력 x
-        String url = "http://localhost:" + port + "/api/users?username=";
-        ResponseEntity<String> responseEntity1 = testRestTemplate.getForEntity(url, String.class);
-        Assertions.assertThat(responseEntity1.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity1.getBody()).contains("ID를 입력");
+        requestAndAssertForExceptionOnCheck("", "ID를 입력");
 
         // 예외 2. username 중복
-        ResponseEntity<String> responseEntity2 = testRestTemplate.getForEntity(url + "username111", String.class);
-        Assertions.assertThat(responseEntity2.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity2.getBody()).contains("이미 사용 중인 ID");
+        requestAndAssertForExceptionOnCheck(user1.getUsername(), "이미 사용 중인 ID");
     }
 
     @Test
-    @WithMockUser(username = "username111", password = "password111")
-    public void causeExceptionsInUpdatingPassword() throws Exception {
+    @WithMockUser(username = "username1")
+    public void causeExceptionsOnUpdatingPassword() throws Exception {
+        // 1. user1 회원가입
+        userRepository.findById(1L).get();
+
         // 예외 1. password 유효성 검사 탈락
-        PasswordUpdateDto requestDto1 = PasswordUpdateDto.builder()
-                .oldPassword("password111").password("password").confirmPassword("password").build();
-        MvcResult mvcResult1 = mockMvc.perform(put("/api/users/update/password")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(new ObjectMapper().writeValueAsString(requestDto1)))
-                .andExpect(status().isOk())
-                .andReturn();
-        Map<String, Object> map = parseResponseJSON(mvcResult1.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("password");
-        Assertions.assertThat((String) map.get("password")).contains("비밀번호는");
+        // 1-1. PasswordUpdateDto 생성
+        PasswordUpdateDto invalidPasswordRequestDto = PasswordUpdateDto.builder()
+                .oldPassword("password1").password("password").confirmPassword("password").build();
+
+        // 1-2. passwordUpdateDto로 UpdatingRequestDto 생성
+        UpdatingRequestDto invalidPasswordDto = UpdatingRequestDto.builder()
+                .type("password").requestDto(invalidPasswordRequestDto).responseKey("password").responseValue("비밀번호는").build();
+
+        // 1-3. updatingRequestDto 담아서 요청
+        requestAndAssertForExceptionOnUpdatingInfo(invalidPasswordDto);
 
         // 예외 2. oldPassword랑 현재 password랑 일치 x
-        PasswordUpdateDto requestDto2 = PasswordUpdateDto.builder()
-                .oldPassword("password").password("password222").confirmPassword("password222").build();
-        MvcResult mvcResult2 = mockMvc.perform(put("/api/users/update/password")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto2)))
-                .andExpect(status().isOk())
-                .andReturn();
-        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("oldPassword");
-        Assertions.assertThat((String) map.get("oldPassword")).contains("현재 비밀번호가 일치하지");
-
-        User user = userRepository.findById(1L).get();
-        Assertions.assertThat(encoder.matches("password111", user.getPassword())).isTrue();
+        PasswordUpdateDto mismatchedPasswordRequestDto = PasswordUpdateDto.builder()
+                .oldPassword("password2").password("password2").confirmPassword("password2").build();
+        UpdatingRequestDto mismatchedPasswordDto = UpdatingRequestDto.builder()
+                .type("password").requestDto(mismatchedPasswordRequestDto).responseKey("oldPassword").responseValue("현재 비밀번호가 일치하지").build();
+        requestAndAssertForExceptionOnUpdatingInfo(mismatchedPasswordDto);
     }
 
     @Test
-    @WithMockUser(username = "username111", password = "password111")
-    public void causeExceptionsInUpdatingNickname() throws Exception{
-        String nickname = "nickname2";
-        RegistrationDto registrationDto = RegistrationDto.builder()
-                .username("username222").password("password222").confirmPassword("password222")
-                .nickname(nickname).email("email222@naver.com").build();
-        String url = "http://localhost:" + port + "/api/users";
-        ResponseEntity<Map> responseEntity = testRestTemplate.postForEntity(url, registrationDto, Map.class);
-        Assertions.assertThat(responseEntity.getBody()).containsKey("OK");
+    @WithMockUser(username = "username1")
+    public void causeExceptionsOnUpdatingNickname() throws Exception {
+        // 1. user1 회원가입 + user2 회원가입
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        Assertions.assertThat(userRepository.count()).isEqualTo(2);
 
         // 예외 1. nickname 유효성 검사 탈락
-        NicknameUpdateDto requestDto1 = new NicknameUpdateDto("nickname111");
-        MvcResult mvcResult1 = mockMvc.perform(put("/api/users/update/nickname")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(new ObjectMapper().writeValueAsString(requestDto1)))
-                .andExpect(status().isOk())
-                .andReturn();
-        Assertions.assertThat(mvcResult1.getResponse().getContentAsString()).contains("nickname");
+        // 1-1. NicknameUpdateDto 생성
+        NicknameUpdateDto invalidNicknameRequestDto = new NicknameUpdateDto("nickname111");
+
+        // 1-2. nicknameUpdateDto로 UpdatingRequestDto 생성
+        UpdatingRequestDto invalidNicknameDto = UpdatingRequestDto.builder()
+                .type("nickname").requestDto(invalidNicknameRequestDto).responseKey("nickname").responseValue("닉네임은").build();
+
+        // 1-3. updatingRequestDto 담아서 요청
+        requestAndAssertForExceptionOnUpdatingInfo(invalidNicknameDto);
 
         // 예외 2. nickname 중복
-        NicknameUpdateDto requestDto2 = new NicknameUpdateDto(nickname);
-        MvcResult mvcResult2 = mockMvc.perform(put("/api/users/update/nickname")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto2)))
-                .andExpect(status().isOk())
-                .andReturn();
-        Map<String, Object> map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("error");
-        Assertions.assertThat((String) map.get("error")).contains("이미");
-
-        User user1 = userRepository.findById(1L).get();
-        Assertions.assertThat(user1.getNickname()).isEqualTo("nickname1");
-        User user2 = userRepository.findById(2L).get();
-        Assertions.assertThat(user2.getNickname()).isEqualTo(nickname);
+        NicknameUpdateDto existentNicknameRequestDto = new NicknameUpdateDto(user2.getNickname());
+        UpdatingRequestDto existentNicknameDto = UpdatingRequestDto.builder()
+                .type("nickname").requestDto(existentNicknameRequestDto).responseKey("error").responseValue("이미").build();
+        requestAndAssertForExceptionOnUpdatingInfo(existentNicknameDto);
     }
 
+    @Transactional
     @Test
-    @WithMockUser(username = "username111", password = "password111")
-    public void causeExceptionsInUpdatingEmail() throws Exception {
-        String email = "email222@naver.com";
-        RegistrationDto registrationDto = RegistrationDto.builder()
-                .username("username222").password("password222").confirmPassword("password222")
-                .nickname("nickname2").email(email).build();
-        String url = "http://localhost:" + port + "/api/users";
-        ResponseEntity<Map> responseEntity = testRestTemplate.postForEntity(url, registrationDto, Map.class);
-        Assertions.assertThat(responseEntity.getBody()).containsKey("OK");
+    @WithMockUser(username = "username1")
+    public void causeExceptionsOnUpdatingEmail() throws Exception {
+        // 1. user1 회원가입 + user2 회원가입
+        User user1 = userRepository.findById(1L).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        Assertions.assertThat(userRepository.count()).isEqualTo(2);
+
+        // 2. user1 enabled true로 업데이트 (이메일 바꿀 때 enabled false로 바꾸는데, 그전에 true인지 확인 먼저 해서 enabled를 true로 만들어줘야 함)
+        user1.updateEnabled();
+        Assertions.assertThat(user1.isEnabled()).isTrue();
 
         // 예외 1. email 유효성 검사 탈락
-        EmailUpdateDto requestDto1 = new EmailUpdateDto("email");
-        MvcResult mvcResult1 = mockMvc.perform(put("/api/users/update/email")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto1)))
-                .andExpect(status().isOk())
-                .andReturn();
-        Assertions.assertThat(mvcResult1.getResponse().getContentAsString()).contains("email");
+        // 1-1. EmailUpdateDto 생성
+        EmailUpdateDto invalidEmailRequestDto = new EmailUpdateDto("email");
+
+        // 1-2. emailUpdateDto로 UpdatingRequestDto 생성
+        UpdatingRequestDto invalidEmailDto = UpdatingRequestDto.builder()
+                .type("email").requestDto(invalidEmailRequestDto).responseKey("email").responseValue("이메일 형식").build();
+
+        // 1-3. updatingRequestDto 담아서 요청
+        requestAndAssertForExceptionOnUpdatingInfo(invalidEmailDto);
 
         // 예외 2. email 중복
-        signInUser();
-        EmailUpdateDto requestDto2 = new EmailUpdateDto(email);
-        MvcResult mvcResult2 = mockMvc.perform(put("/api/users/update/email")
+        EmailUpdateDto existentEmailRequestDto = new EmailUpdateDto(user2.getEmail());
+        UpdatingRequestDto existentEmailDto = UpdatingRequestDto.builder()
+                .type("email").requestDto(existentEmailRequestDto).responseKey("error").responseValue("이미").build();
+        requestAndAssertForExceptionOnUpdatingInfo(existentEmailDto);
+    }
+
+    @Getter
+    private static class UpdatingRequestDto {
+        private String type;
+        private String responseKey;
+        private String responseValue;
+        private Object requestDto;
+
+        @Builder
+        public UpdatingRequestDto(String type, String responseKey, String responseValue, Object requestDto) {
+            this.type = type;
+            this.responseKey = responseKey;
+            this.responseValue = responseValue;
+            this.requestDto = requestDto;
+        }
+    }
+
+    private void requestAndAssertForExceptionOnSignUp(RegistrationDto requestDto, String[] responseKeys) throws Exception {
+        // 1. "/api/users"로 registrationDto 담아서 post 요청
+        MvcResult mvcResult = mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto2)))
+                        .content(new ObjectMapper().writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
                 .andReturn();
-        Map<String, Object> map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("error");
-        Assertions.assertThat((String) map.get("error")).contains("이미");
 
-        User user1 = userRepository.findById(1L).get();
-        Assertions.assertThat(user1.getEmail()).contains("email111");
-        User user2 = userRepository.findById(2L).get();
-        Assertions.assertThat(user2.getEmail()).isEqualTo(email);
+        // 2. 응답으로 responseKeys 왔는지 확인
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKeys(responseKeys);
+
+        // 3. db에 저장된 사용자 수 1인지 확인
+        Assertions.assertThat(userRepository.count()).isOne();
+    }
+
+    private void requestAndAssertForExceptionOnCheck(String username, String responseValue) throws Exception {
+        // 1. "/api/users"로 paramter username=username 담아서 get 요청
+        MvcResult mvcResult = mockMvc.perform(get("/api/users")
+                        .param("username", username))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 2. 응답으로 responseValue 왔는지 확인
+        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains(responseValue);
+    }
+
+    private void requestAndAssertForExceptionOnUpdatingInfo(UpdatingRequestDto updatingRequestDto) throws Exception {
+        // 1. "/api/users/update/" + type으로 requestDto 담아서 put 요청
+        MvcResult mvcResult = mockMvc.perform(put("/api/users/update/" + updatingRequestDto.getType())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(updatingRequestDto.getRequestDto())))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 2. 응답으로 responseKey 왔는지 확인
+        String responseKey = updatingRequestDto.getResponseKey();
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey(responseKey);
+
+        // 3. responseKey의 값이 responseValue인지 확인
+        Assertions.assertThat((String) map.get(responseKey)).contains(updatingRequestDto.getResponseValue());
     }
 }

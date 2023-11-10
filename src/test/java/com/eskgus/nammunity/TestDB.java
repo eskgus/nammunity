@@ -86,6 +86,7 @@ public class TestDB {
         // 테이블 id 초기화
         String[] queries = {
                 "ALTER TABLE users AUTO_INCREMENT = 1",
+                "ALTER TABLE tokens AUTO_INCREMENT = 1",
                 "ALTER TABLE posts AUTO_INCREMENT = 1",
                 "ALTER TABLE comments AUTO_INCREMENT = 1",
                 "ALTER TABLE likes AUTO_INCREMENT = 1",

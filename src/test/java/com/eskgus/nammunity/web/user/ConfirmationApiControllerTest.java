@@ -1,11 +1,14 @@
 package com.eskgus.nammunity.web.user;
 
+import com.eskgus.nammunity.TestDB;
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.tokens.TokensRepository;
+import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +19,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,108 +31,137 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ConfirmationApiControllerTest extends UserApiControllerTest {
+public class ConfirmationApiControllerTest {
+    @Autowired
+    private TestDB testDB;
+
+    private MockMvc mockMvc;
+
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private TokensRepository tokensRepository;
 
-    @Autowired
-    private MockMvc mockMvc;
-
     @BeforeEach
-    public void setup(){
-        signUp();
+    public void setUp() {
+        this.mockMvc = testDB.setUp();
+
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
+        Assertions.assertThat(userRepository.count()).isOne();
+
+        // 2. user1 이메일 인증 토큰 저장
+        tokensRepository.findById(testDB.saveTokens(user1)).get();
+        Assertions.assertThat(tokensRepository.count()).isOne();
     }
 
+    @AfterEach
+    public void cleanUp() {
+        testDB.cleanUp();
+    }
+
+    @Transactional
     @Test
     public void confirmToken() throws Exception {
-        // 1. 회원가입 후
-        User user = userRepository.findAll().get(0);
-        Long id = user.getId();
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
 
-        // 2. tokensRepository에서 user로 token 찾기
-        List<Tokens> result = tokensRepository.findByUser(user);
+        // 2. user1 이메일 인증 토큰 저장
+        // 3. user1의 token 찾기
+        List<Tokens> result = tokensRepository.findByUser(user1);
         Assertions.assertThat(result.size()).isGreaterThan(0);
-        Tokens tokens = result.get(0);
+        Tokens token = result.get(0);
 
-        // 3. token 담아서 "/api/users/confirm"으로 get 요청
+        // 4. "/api/users/confirm"으로 parameter token=token 담아서 get 요청
+        // 5. 상태가 302 found인지 확인
         MvcResult mvcResult = mockMvc.perform(get("/api/users/confirm")
-                        .param("token", tokens.getToken()))
+                        .param("token", token.getToken()))
                 .andExpect(status().isFound())
                 .andReturn();
 
-        // 4. 응답 flash attribute에 "error" 없는지 확인
+        // 5. 응답 flash attribute에 "error" 없는지 확인
         Assertions.assertThat(mvcResult.getFlashMap().containsKey("error")).isFalse();
 
-        // 5. token confirmed_at이 null이 아닌지 확인
-        user = userRepository.findById(id).get();
-        tokens = tokensRepository.findByUser(user).get(0);
-        Assertions.assertThat(tokens.getConfirmedAt()).isNotNull();
+        // 6. token confirmedAt이 null이 아닌지 확인
+        Assertions.assertThat(token.getConfirmedAt()).isNotNull();
 
-        // 6. user enabled true인지 확인
-        Assertions.assertThat(user.isEnabled()).isTrue();
+        // 7. user enabled true인지 확인
+        Assertions.assertThat(user1.isEnabled()).isTrue();
     }
 
+    @Transactional
     @Test
-    @WithMockUser(username = "username111", password = "password111")
+    @WithMockUser(username = "username1")
     public void checkUserEnabled() throws Exception {
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
+        Long userId = user1.getId();
+
+        // 2. user1 이메일 인증 토큰 저장
+        Tokens token = tokensRepository.findById(1L).get();
+        Assertions.assertThat(tokensRepository.count()).isOne();
+
+        // 3. user1 이메일 인증
+        testDB.confirmTokens(token);
+        Assertions.assertThat(token.getConfirmedAt()).isNotNull();
+        Assertions.assertThat(token.getUser().isEnabled()).isTrue();
+
+        String referer = "http://localhost:80/users/";
+
         // 일반 1. 회원가입
-        // 1. 회원가입 + 이메일 인증 후
-        confirmToken();
-
-        // 2. header referer에 회원가입 주소 넣어서 "/api/users/confirm/{id}"로 get 요청
-        MvcResult mvcResult1 = mockMvc.perform(get("/api/users/confirm/{id}", 1)
-                        .header("referer", "http://localhost:80/users/sign-up/1"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 3. 응답으로 "OK" 왔나 확인
-        Map<String, Object> map = parseResponseJSON(mvcResult1.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("OK");
-
-        // 4. "OK"에 "sign-in" 있나 확인
-        Assertions.assertThat((String) map.get("OK")).contains("sign-in");
+        requestAndAssertToCheckUserEnabled(userId, referer + "users/sign-up/" + userId, "sign-in");
 
         // 일반 2. 이메일 변경
-        // 1. 회원가입 + 이메일 인증 후
-        // 2. header referer에 마이 페이지 주소 넣어서 "/api/users/confirm/{id}"로 get 요청
-        MvcResult mvcResult2 = mockMvc.perform(get("/api/users/confirm/{id}", 1)
-                        .header("referer", "http://localhost:80/users/my-page/update/user-info"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 3. 응답으로 "OK" 왔나 확인
-        map = parseResponseJSON(mvcResult2.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("OK");
-
-        // 4. "OK"에 "my-page" 있나 확인
-        Assertions.assertThat((String) map.get("OK")).contains("my-page");
+        requestAndAssertToCheckUserEnabled(userId, referer + "my-page/update/user-info", "my-page");
     }
 
     @Test
     public void resendToken() throws Exception {
-        // 1. 회원가입 후
-        // 2. Map에 "id": id 담아서 "/api/users/confirm"으로 post 요청
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
+        Long userId = user1.getId();
+
+        // 2. user1 이메일 인증 토큰 저장
+        Assertions.assertThat(tokensRepository.count()).isOne();
+
+        // 3. user id로 request map 생성
         Map<String, Long> request = new HashMap<>();
-        request.put("id", 1L);
+        request.put("id", userId);
+
+        // 4. "/api/users/confirm"으로 request map 담아서 post 요청
         MvcResult mvcResult = mockMvc.perform(post("/api/users/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // 3. 응답으로 "OK" 왔나 확인
-        Assertions.assertThat(mvcResult.getResponse().getContentAsString()).contains("OK");
+        // 5. 응답으로 "OK" 왔나 확인
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("OK");
 
-        // 4. token confirmedAt null인지 확인
-        User user = userRepository.findById(1L).get();
-        List<Tokens> result = tokensRepository.findByUser(user);
-        Assertions.assertThat(result.size()).isGreaterThan(1);
-        Assertions.assertThat(result.get(1).getConfirmedAt()).isNull();
+        // 6. token confirmedAt null인지 확인
+        List<Tokens> result = tokensRepository.findByUser(user1);
+        int numOfTokens = result.size();
+        Assertions.assertThat(numOfTokens).isEqualTo(2);
+        Assertions.assertThat(result.get(numOfTokens - 1).getConfirmedAt()).isNull();
 
-        // 5. user enabled false인지 확인
-        Assertions.assertThat(user.isEnabled()).isFalse();
+        // 7. user enabled false인지 확인
+        Assertions.assertThat(user1.isEnabled()).isFalse();
+    }
+
+    private void requestAndAssertToCheckUserEnabled(Long userId, String referer, String responseValue) throws Exception {
+        // 1. "/api/users/confirm/{id}"의 pathVariable=userId, header referer=referer로 해서 get 요청
+        MvcResult mvcResult = mockMvc.perform(get("/api/users/confirm/{id}", userId)
+                        .header("referer", referer))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // 2. 응답으로 "OK" 왔나 확인
+        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
+        Assertions.assertThat(map).containsKey("OK");
+
+        // 3. "OK"의 값이 responseValue인지 확인
+        Assertions.assertThat((String) map.get("OK")).contains(responseValue);
     }
 }
