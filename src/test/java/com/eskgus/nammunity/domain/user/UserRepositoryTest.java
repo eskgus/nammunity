@@ -1,35 +1,47 @@
 package com.eskgus.nammunity.domain.user;
 
+import com.eskgus.nammunity.TestDB;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class UserRepositoryTest {
     @Autowired
-    UserRepository userRepository;
+    private TestDB testDB;
 
     @Autowired
-    BCryptPasswordEncoder encoder;
+    private UserRepository userRepository;
 
     @AfterEach
     public void cleanUp() {
-        userRepository.deleteAll();
+        testDB.cleanUp();
     }
 
     @Test
-    public void checkIfUsernameExists() {
-        String password = encoder.encode("password123!");
-        userRepository.save(User.builder().username("username123").password(password).nickname("nick네임123").build());
+    public void existsByUser() {
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
+        Assertions.assertThat(userRepository.count()).isOne();
 
-        boolean check = userRepository.existsByUsername("username123");
+        // 2. 존재하는 username으로 호출
+        String username = user1.getUsername();
+        callAndAssertExistsByUser(username, true);
 
-        Assertions.assertThat(check).isTrue();
+        // 3. 존재하지 않는 username으로 호출
+        callAndAssertExistsByUser(username + 1, false);
+    }
+
+    private void callAndAssertExistsByUser(String username, boolean expectedResult) {
+        // 1. username으로 existsByUsername() 호출
+        boolean result = userRepository.existsByUsername(username);
+
+        // 2. 리턴 값이 expectedValue인지 확인
+        Assertions.assertThat(result).isEqualTo(expectedResult);
     }
 }
