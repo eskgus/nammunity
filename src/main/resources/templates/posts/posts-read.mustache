@@ -19,10 +19,11 @@
                         </h1>
                     </div>
                     <div class="btm-area">
-                        <div class="author dropdown" id="author" data-toggle="dropdown" data-user-id="{{authorId}}">{{author}}
+                        <div class="author dropdown" id="author" data-toggle="dropdown">{{author}}
                             <ul class="dropdown-menu">
+                                <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first {{#admin}}last{{/admin}}{{^admin}}{{#pAuth}}last{{/pAuth}}{{/admin}}" name="btn-history">활동 내역</a></li>
                                 {{^admin}}{{^pAuth}}
-                                    <li><a role="button" class="first last" name="btn-report">신고</a></li>
+                                    <li><a role="button" class="last" name="btn-report">신고</a></li>
                                 {{/pAuth}}{{/admin}}
                             </ul>
                         </div>
@@ -47,7 +48,7 @@
                     {{/post}}
                     <ul class="hidden-btn">
                         <li class="dropdown">
-                            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
+                            <a class="btn dropdown-toggle" data-toggle="dropdown">∙∙∙</a>
                             <ul class="dropdown-menu">
                                 {{^admin}}
                                     {{#pAuth}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
@@ -73,10 +74,11 @@
                 {{#comments}}
                     <div id="cmt-{{id}}">
                         <div class="comment">
-                            <span class="author dropdown" id="author" data-toggle="dropdown" data-user-id="{{authorId}}">{{author}}
+                            <span class="author dropdown" id="author" data-toggle="dropdown">{{author}}
                                 <ul class="dropdown-menu">
+                                    <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first {{#admin}}last{{/admin}}{{^admin}}{{#pAuth}}last{{/pAuth}}{{/admin}}" name="btn-history">활동 내역</a></li>
                                     {{^admin}}{{^cAuth}}
-                                        <li><a role="button" class="first last" name="btn-report">신고</a></li>
+                                        <li><a role="button" class="last" name="btn-report">신고</a></li>
                                     {{/cAuth}}{{/admin}}
                                 </ul>
                             </span>
@@ -87,11 +89,11 @@
                                 <span class="sum">{{lSum}}</span>
                                 <ul class="hidden-btn">
                                     <li class="dropdown">
-                                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">∙∙∙</a>
+                                        <a class="btn dropdown-toggle" data-toggle="dropdown">∙∙∙</a>
                                         <ul class="dropdown-menu">
                                             {{^admin}}
                                                 {{#cAuth}}<li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>
-                                                <li><a role="button" class="last" name="btn-cmt-delete">삭제</a></li>{{/cAuth}}
+                                                    <li><a role="button" class="last" name="btn-cmt-delete">삭제</a></li>{{/cAuth}}
                                                 {{^cAuth}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/cAuth}}
                                             {{/admin}}
                                             {{#admin}}

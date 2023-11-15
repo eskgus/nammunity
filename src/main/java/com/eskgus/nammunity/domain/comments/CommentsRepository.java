@@ -9,4 +9,6 @@ import java.util.List;
 public interface CommentsRepository extends JpaRepository<Comments, Long> {
     @Query("SELECT c FROM Comments c WHERE c.user = :user ORDER BY c.id DESC")
     List<Comments> findByUser(User user);
+
+    long countByUser(User user);
 }

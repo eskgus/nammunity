@@ -31,4 +31,9 @@ public class PostsSearchService {
     public List<PostsListDto> findByUser(User user) {
         return postsRepository.findByUser(user).stream().map(PostsListDto::new).collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public long countByUser(User user) {
+        return postsRepository.countByUser(user);
+    }
 }

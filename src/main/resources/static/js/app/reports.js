@@ -24,7 +24,8 @@ var reportsMain = {
                 var closestUsers = this.closest('.author');
 
                 if (closestUsers) { // 사용자 신고 버튼이면 신고 팝업 내부의 사용자 신고 버튼 표시 + 신고할 컨텐츠 id 변경
-                    _this.id.value = closestUsers.getAttribute('data-user-id');
+                    var href = $(closestUsers).find('a[name="btn-history"]').attr('href');
+                    _this.id.value = href.slice(href.lastIndexOf('/') + 1);
                     userReportBtn.style.display = 'inline-block';
                 } else if (closestPosts) { // 게시글의 신고 버튼이면 신고 팝업 내부의 게시글 신고 버튼 표시 + 신고할 컨텐츠 id 변경
                     _this.id.value = $('#id').val();
@@ -190,7 +191,7 @@ var reportsMain = {
             data: JSON.stringify(data)
         }).done(function(response) {
             if (Object.keys(response) == 'OK') {
-                alert(response[Object.keys(response)]);
+                alert("신고되었습니다.");
                 reportsMain.closeReportPopup();
             } else {
                 alert(response[Object.keys(response)]);
@@ -231,7 +232,7 @@ var reportsMain = {
             data: JSON.stringify(data)
         }).done(function(response) {
             if (Object.keys(response) == 'OK') {
-                alert(response[Object.keys(response)]);
+                alert("신고되었습니다.");
                 reportsMain.closeReportPopup();
             } else {
                 alert(response[Object.keys(response)]);

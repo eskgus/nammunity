@@ -199,4 +199,15 @@ public class UserIndexController {
         model.addAllAttributes(attr);
         return "user/my-page/likes-list-comments";
     }
+
+    @GetMapping("/activity-history/{type}/{id}")
+    public String findActivityHistory(@PathVariable String type, @PathVariable Long id, Model model) {
+        try {
+            model.addAttribute("history", userService.findActivityHistory(id, type));
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("exception", ex.getMessage());
+            // id로 user 검색 안 되면 메인("/")으로 이동 (footer)
+        }
+        return "user/activity-history/activity-history-" + type;
+    }
 }

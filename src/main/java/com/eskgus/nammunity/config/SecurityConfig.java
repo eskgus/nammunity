@@ -68,7 +68,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/posts/read/**",
                                 "/api/users", "/api/users/confirm/**", "/api/users/sign-in",
                                 "/users/sign-up/**", "/users/sign-in", "/users/confirm-email", "/users/find/**",
-                                "/css/**", "/js/**", "/images/**").permitAll()
+                                "/users/activity-history/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**",
                                 "/api/users/update/**", "/api/users/delete", "/users/my-page/**",
                                 "/api/comments/**", "/api/likes/**", "/api/reports/content")

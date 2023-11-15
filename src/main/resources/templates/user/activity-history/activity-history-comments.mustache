@@ -1,0 +1,69 @@
+{{>layout/header}}
+
+<div id="container">
+    <div class="wrapper">
+        <div class="my-page">
+            <div class="title-area">
+                <div class="top-area">
+                    <a class="location" href="/"><img class="icon" src="/images/app/home.png" alt="HOME"></a>
+                    <span class="location">활동 내역</span>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="activity-history-area">
+                    {{#history}}
+                    <h2><a href="/users/activity-history/posts/{{userId}}">{{nickname}}</a> 님의 활동 내역</h2>
+                    <div class="top-area">
+                        <p>가입일: {{createdDate}}</p>
+                        <p>작성 글: {{numOfPosts}}</p>
+                        <p>작성 댓글: {{numOfComments}}</p>
+                        {{#admin}}<p>누적 신고 횟수: 게시글 - {{numOfPostReports}}, 댓글 - {{numOfCommentReports}}, 사용자 - {{numOfUserReports}}</p>
+                        <p class="user-ban">누적 정지 횟수: {{^bannedUsersExistence}}0{{/bannedUsersExistence}}{{#bannedUsersExistence}}{{count}} ({{period}}, {{startedDate}} ~ {{expiredDate}}){{/bannedUsersExistence}}</p>
+                        <div class="btn-area">
+                            <button type="button" class="btn" id="btn-user-ban">활동 정지</button>
+                        </div>{{/admin}}
+                    </div>
+                    <div class="comments-area">
+                        <ul>
+                            <li>
+                                <a href="/users/activity-history/posts/{{userId}}">게시글</a></li><li>
+                            <a style="background-color: #C1DAC0;" href="/users/activity-history/comments/{{userId}}">댓글</a></li>
+                        </ul>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="no">번호</th>
+                                    <th class="cmt">댓글</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {{^comments}}
+                                <tr>
+                                    <td class="no-content" colspan="2">작성한 댓글이 없어요.</td>
+                                </tr>
+                            {{/comments}}
+                            {{#comments}}
+                                <tr>
+                                    <td class="no-checkbox">{{commentsId}}</td>
+                                    <td>
+                                        <a href="/posts/read/{{postsId}}#cmt-{{commentsId}}"><pre>{{content}}</pre></a>
+                                        <span class="date">{{author}} | {{modifiedDate}} | <img class="like"> {{likes}}</span>
+                                        <div class="tit">
+                                            <a href="/posts/read/{{postsId}}">{{title}}</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {{/comments}}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{/history}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{>layout/footer}}
+</body>
+</html>

@@ -139,6 +139,10 @@ tbody .tit {
     vertical-align: text-top;
 }
 
+#container .activity-history-area .comments-area td.no-content,
+#container .activity-history-area .comments-area td.no-checkbox,
+#container .activity-history-area .posts-area td.no-content,
+#container .activity-history-area .posts-area td.no-checkbox,
 #container .my-page  #likes-area td.no-checkbox,
 #container .my-page .comments-area td.no-checkbox,
 #container .my-page .posts-area td.no-checkbox,
@@ -324,6 +328,7 @@ tbody .tit {
     margin-left: 0;
 }
 
+#container .activity-history-area li a:hover,
 #container .my-page .admin-area #reports-area li a:hover,
 #container .my-page .my-activity-area #likes-area li a:hover,
 #container .btn-area .btn:hover {
@@ -640,6 +645,10 @@ textarea:disabled {
     padding: 0 !important;
 }
 
+.hidden-btn li>a {
+    cursor: pointer;
+}
+
 #container .read .comments-area {
     border-top: 2px solid #AAC2A9;
 }
@@ -739,6 +748,7 @@ textarea:disabled {
     margin-bottom: 40px;
 }
 
+#container .activity-history-area h2,
 #container .my-page .admin-area #reports-area h2,
 #container .my-page .my-activity-area #likes-area h2,
 #container .my-page .user-info-area #social-area h2,
@@ -757,6 +767,10 @@ textarea:disabled {
     padding: 5px;
 }
 
+#container .activity-history-area .comments-area td:not(:last-child),
+#container .activity-history-area .comments-area th:not(:last-child),
+#container .activity-history-area .posts-area td:not(:last-child),
+#container .activity-history-area .posts-area th:not(:last-child),
 .popup-window .bottom-area td:not(:last-child),
 .popup-window .bottom-area th:not(:last-child),
 #container .my-page .admin-area #reports-area td:not(:last-child),
@@ -858,6 +872,7 @@ textarea:disabled {
 /* 여기까지 password-area */
 
 /* 여기부터 user-info-area */
+#container .activity-history-area .btn-area,
 #container .my-page .user-info-area #info-area td .btn-area {
     display: inline;
     padding: 0;
@@ -977,12 +992,14 @@ textarea:disabled {
 /* 여기까지 read */
 
 /* 여기부터 likes-area */
+#container .activity-history-area li>a:active,
 #container .my-page .admin-area #reports-area li>a:active,
 #container .my-page .my-activity-area #likes-area li>a:active {
     color: #205943;
     background-color: #C1DAC0;
 }
 
+#container .activity-history-area ul,
 #container .my-page .admin-area #reports-area ul,
 #container .my-page .my-activity-area #likes-area ul {
     border-bottom: 2px solid #AAC2A9;
@@ -990,6 +1007,7 @@ textarea:disabled {
     text-align: center;
 }
 
+#container .activity-history-area li,
 #container .my-page .admin-area #reports-area li,
 #container .my-page .my-activity-area #likes-area li {
     display: inline-block;
@@ -997,6 +1015,7 @@ textarea:disabled {
     width: 33.33%;
 }
 
+#container .activity-history-area li>a,
 #container .my-page .admin-area #reports-area li>a,
 #container .my-page .my-activity-area #likes-area li>a {
     display: block;
@@ -1147,6 +1166,7 @@ textarea:disabled {
     font-weight: 600;
 }
 
+.activity-history-area .top-area,
 .popup-window .bottom-area,
 .popup-window .top-area {
     margin-bottom: 10px;
@@ -1187,3 +1207,18 @@ textarea:disabled {
     vertical-align: text-top;
 }
 /* 여기까지 신고 내역 팝업 */
+
+/* 여기부터 activity-history-area */
+#container .activity-history-area {
+    width: 100%;
+}
+
+#container .activity-history-area li {
+    width: 50%;
+}
+
+#container .activity-history-area .user-ban {
+    display: inline;
+    margin-right: 7px;
+}
+/* 여기까지 activity-history-area */

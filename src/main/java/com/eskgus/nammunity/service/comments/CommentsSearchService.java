@@ -36,4 +36,9 @@ public class CommentsSearchService {
     public List<CommentsListDto> findByUser(User user) {
         return commentsRepository.findByUser(user).stream().map(CommentsListDto::new).collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public long countByUser(User user) {
+        return commentsRepository.countByUser(user);
+    }
 }

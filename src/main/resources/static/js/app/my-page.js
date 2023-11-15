@@ -52,6 +52,13 @@ var reportDetailsMain = {
             var data = { likesId: [] };
             _this.deleteSelectedItems('likes', data);
         });
+
+        // 사용자 활동 정지
+        $('#btn-user-ban').on('click', function() {
+            var href = this.closest('.activity-history-area').querySelector('h2 a').href;
+            var userId = href.slice(href.lastIndexOf('/') + 1);
+            _this.banUser(userId);
+        });
     },
     openReportDetailsPopup: function(url) {
         var width = 800;
@@ -73,8 +80,8 @@ var reportDetailsMain = {
             var comment = closestComments.querySelector('a');
             return { type: 'commentsId', id: comment.href.slice(comment.href.lastIndexOf('-') + 1) };
         } else {
-            var user = closestUsers.children[1];
-            return { type: 'userId', id: user.getAttribute('data-user-id') };
+            var href = $(closestUsers).find('a').attr('href');
+            return { type: 'userId', id: href.slice(href.lastIndexOf('/') + 1) };
         }
     },
     getId: function(checkbox) {
@@ -176,6 +183,24 @@ var reportDetailsMain = {
                 alert(JSON.stringify(response));
             });
         }
+    },
+    banUser: function(userId) {
+        $.ajax({
+            type: 'POST',
+            url: '/api/reports/process',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(userId)
+        }).done(function(response) {
+            if (Object.keys(response) == 'OK') {
+                alert('활동 정지 처리되었습니다.');
+            } else {
+                alert(response[Object.keys(response)]);
+            }
+            window.location.reload();
+        }).fail(function(response) {
+            alert(JSON.stringify(response));
+        });
     }
 };
 

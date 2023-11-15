@@ -12,4 +12,6 @@ public interface PostsRepository extends JpaRepository<Posts, Long> {
 
     @Query("SELECT p FROM Posts p WHERE p.user = :user ORDER BY p.id DESC")
     List<Posts> findByUser(User user);
+
+    long countByUser(User user);
 }

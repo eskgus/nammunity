@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 public class CommentsListDto {
     private Long commentsId;
+    private String author;
     private String content;
     private String modifiedDate;
     private Long postsId;
@@ -15,6 +16,7 @@ public class CommentsListDto {
 
     public CommentsListDto(Comments comments) {
         this.commentsId = comments.getId();
+        this.author = comments.getUser().getNickname();
         this.content = comments.getContent();
         this.modifiedDate = DateTimeUtil.formatDateTime(comments.getModifiedDate());
         this.postsId = comments.getPosts().getId();

@@ -46,8 +46,8 @@
                                 {{#userExistence}} {{! 사용자 신고 }}
                                     <tr class="users-area">
                                         <td><input type="checkbox"><label>{{type}}</label></td>
-                                        <td data-user-id="{{userId}}">
-                                            <div>{{nickname}}</div>
+                                        <td>
+                                            <div><a href="/users/activity-history/posts/{{userId}}">{{nickname}}</a></div>
                                             <span class="date">{{createdDate}}</span>
                                         </td>
                                         <td class="reporter">{{reporter}}</td>

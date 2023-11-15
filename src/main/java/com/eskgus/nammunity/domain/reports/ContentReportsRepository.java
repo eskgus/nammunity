@@ -137,4 +137,13 @@ public interface ContentReportsRepository extends JpaRepository<ContentReports, 
     @Modifying
     @Query("DELETE FROM ContentReports r WHERE r.user = :user")
     void deleteByUsers(User user);
+
+    @Query("SELECT COUNT(r) FROM ContentReports r WHERE r.posts.user = :user")
+    long countPostReportsByUser(User user);
+
+    @Query("SELECT COUNT(r) FROM ContentReports r WHERE r.comments.user = :user")
+    long countCommentReportsByUser(User user);
+
+    @Query("SELECT COUNT(r) FROM ContentReports r WHERE r.user = :user")
+    long countUserReportsByUser(User user);
 }
