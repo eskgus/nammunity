@@ -29,9 +29,11 @@ public class ContentReportDetailDto {
     private Boolean userExistence;
 
     private List<ContentReportDetailListDto> reports;
+    private int numOfReports;   // 신고 세부 내역 개수
 
     @Builder
-    public ContentReportDetailDto(Posts post, Comments comment, User user, List<ContentReportDetailListDto> detailListDtos) {
+    public ContentReportDetailDto(Posts post, Comments comment, User user,
+                                  List<ContentReportDetailListDto> detailListDtos, int numOfReports) {
         if (post != null) {
             this.post = post;
             this.title = this.post.getTitle();
@@ -55,5 +57,6 @@ public class ContentReportDetailDto {
         }
 
         this.reports = detailListDtos;
+        this.numOfReports = numOfReports;
     }
 }

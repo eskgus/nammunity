@@ -164,6 +164,10 @@ tbody .tit {
     width: 80%;
 }
 
+#container .my-page .checkbox-area {
+    width: 100%;
+}
+
 #container .main .tit {
     font-size: 18px;
 }
@@ -1136,6 +1140,7 @@ textarea:disabled {
     width: auto;
 }
 
+#container .my-page .checkbox-area span,
 #container .my-page #reports-area .img-btn {
     float: right;
 }
@@ -1185,6 +1190,7 @@ textarea:disabled {
     font-weight: 500;
 }
 
+.popup-window .top-area span,
 .popup-window .top-area td {
     padding: 5px 0;
 }

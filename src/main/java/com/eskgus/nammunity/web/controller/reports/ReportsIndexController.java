@@ -2,12 +2,17 @@ package com.eskgus.nammunity.web.controller.reports;
 
 import com.eskgus.nammunity.service.reports.ReportsService;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailDto;
+import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -17,25 +22,65 @@ public class ReportsIndexController {
 
     @GetMapping("/content-report")
     public String listContentReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary(""));
+        Map<String, Object> attr = new HashMap<>();
+
+        // 전체 신고 요약 목록
+        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary("");
+        attr.put("reports", summaryDtos);
+
+        // 전체 신고 요약 개수: List가 null이면 0, 아니면 size
+        int numOfReports = (summaryDtos != null) ? summaryDtos.size() : 0;
+        attr.put("numOfReports", numOfReports);
+
+        model.addAllAttributes(attr);
         return "admin/my-page/content-report";
     }
 
     @GetMapping("/content-report/posts")
     public String listPostReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary("posts"));
+        Map<String, Object> attr = new HashMap<>();
+
+        // 게시글 신고 요약 목록
+        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary("posts");
+        attr.put("reports", summaryDtos);
+
+        // 게시글 신고 요약 개수: List가 null이면 0, 아니면 size
+        int numOfReports = (summaryDtos != null) ? summaryDtos.size() : 0;
+        attr.put("numOfReports", numOfReports);
+
+        model.addAllAttributes(attr);
         return "admin/my-page/content-report-posts";
     }
 
     @GetMapping("/content-report/comments")
     public String listCommentReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary("comments"));
+        Map<String, Object> attr = new HashMap<>();
+
+        // 댓글 신고 요약 목록
+        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary("comments");
+        attr.put("reports", summaryDtos);
+
+        // 댓글 신고 요약 개수: List가 null이면 0, 아니면 size
+        int numOfReports = (summaryDtos != null) ? summaryDtos.size() : 0;
+        attr.put("numOfReports", numOfReports);
+
+        model.addAllAttributes(attr);
         return "admin/my-page/content-report-comments";
     }
 
     @GetMapping("/content-report/users")
     public String listUserReports(Model model) {
-        model.addAttribute("reports", reportsService.findSummary("users"));
+        Map<String, Object> attr = new HashMap<>();
+
+        // 사용자 신고 요약 목록
+        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary("users");
+        attr.put("reports", summaryDtos);
+
+        // 사용자 신고 요약 개수: List가 null이면 0, 아니면 size
+        int numOfReports = (summaryDtos != null) ? summaryDtos.size() : 0;
+        attr.put("numOfReports", numOfReports);
+
+        model.addAllAttributes(attr);
         return "admin/my-page/content-report-users";
     }
 

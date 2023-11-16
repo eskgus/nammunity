@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.controller.user;
 
+import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
@@ -27,6 +28,7 @@ public class UserIndexController {
     private final PostsSearchService postsSearchService;
     private final CommentsSearchService commentsSearchService;
     private final LikesSearchService likesSearchService;
+    private final LikesRepository likesRepository;
 
     @GetMapping("/sign-up")
     public String signUpUser() {
@@ -90,7 +92,7 @@ public class UserIndexController {
             }
             attr.put("comments", comments.stream().limit(5).collect(Collectors.toList()));
 
-            List<LikesListDto> likes = likesSearchService.findByUser(user);
+            List<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findByUser);
             if (likes.size() > 5) {
                 attr.put("likesMore", true);
             }
@@ -130,7 +132,12 @@ public class UserIndexController {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
+
+            // 게시글 목록
             attr.put("posts", postsSearchService.findByUser(user));
+
+            // 게시글 개수
+            attr.put("numOfPosts", postsSearchService.countByUser(user));
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -149,7 +156,12 @@ public class UserIndexController {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
+
+            // 댓글 목록
             attr.put("comments", commentsSearchService.findByUser(user));
+
+            // 댓글 개수
+            attr.put("numOfComments", commentsSearchService.countByUser(user));
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -163,7 +175,12 @@ public class UserIndexController {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
-            attr.put("likes", likesSearchService.findByUser(user));
+
+            // 전체 좋아요 목록
+            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findByUser));
+
+            // 전체 좋아요 개수
+            attr.put("numOfLikes", likesSearchService.countLikesByUser(user, likesRepository::countByUser));
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -177,7 +194,11 @@ public class UserIndexController {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
-            attr.put("likes", likesSearchService.findPostsByUser(user));
+            // 게시글 좋아요 목록
+            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findPostsByUser));
+
+            // 게시글 좋아요 개수
+            attr.put("numOfLikes", likesSearchService.countLikesByUser(user, likesRepository::countPostLikesByUser));
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -191,7 +212,12 @@ public class UserIndexController {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
-            attr.put("likes", likesSearchService.findCommentsByUser(user));
+
+            // 댓글 좋아요 목록
+            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findCommentsByUser));
+
+            // 댓글 좋아요 개수
+            attr.put("numOfLikes", likesSearchService.countLikesByUser(user, likesRepository::countCommentLikesByUser));
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");

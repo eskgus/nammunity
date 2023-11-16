@@ -155,9 +155,13 @@ public class ReportsService {
             return ContentReportDetailListDto.builder().report(report).reason(reason).build();
         }).collect(Collectors.toList());
 
+        // 신고 세부 내역 개수: List가 null이면 0, 아니면 size
+        int numOfReports = (detailListDtos != null) ? detailListDtos.size() : 0;
+
         // 신고 분류, 신고 내용, 세부 목록
         return ContentReportDetailDto.builder()
-                .post(post).comment(comment).user(user).detailListDtos(detailListDtos).build();
+                .post(post).comment(comment).user(user)
+                .detailListDtos(detailListDtos).numOfReports(numOfReports).build();
     }
 
     @Transactional

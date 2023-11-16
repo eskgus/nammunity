@@ -26,4 +26,12 @@ public interface LikesRepository extends JpaRepository<Likes, Long> {
     @Modifying
     @Query("DELETE FROM Likes l WHERE l.comments = :comments AND l.user = :user")
     void deleteByComments(Comments comments, User user);
+
+    long countByUser(User user);
+
+    @Query("SELECT COUNT(l) FROM Likes l WHERE l.user = :user AND l.posts IS NOT NULL")
+    long countPostLikesByUser(User user);
+
+    @Query("SELECT COUNT(l) FROM Likes l WHERE l.user = :user AND l.comments IS NOT NULL")
+    long countCommentLikesByUser(User user);
 }

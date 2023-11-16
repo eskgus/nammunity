@@ -14,19 +14,20 @@
     <div class="top-area">
         <table>
             <tbody>
-            <tr>
-                <th>신고 분류:</th>
-                <td>{{type}}</td>
-            </tr>
-            <tr>
-                <th>신고 내용:</th>
-                <td>
-                    <p class="title">{{#postExistence}}{{title}}{{/postExistence}}{{#commentExistence}}{{content}}{{/commentExistence}}{{#userExistence}}{{nickname}}{{/userExistence}}</p>
-                    <p class="author">({{#userExistence}}{{createdDate}}{{/userExistence}}{{^userExistence}}{{author}}, {{modifiedDate}}{{/userExistence}})</p>
-                </td>
-            </tr>
+                <tr>
+                    <th>신고 분류:</th>
+                    <td>{{type}}</td>
+                </tr>
+                <tr>
+                    <th>신고 내용:</th>
+                    <td>
+                        <p class="title">{{#postExistence}}{{title}}{{/postExistence}}{{#commentExistence}}{{content}}{{/commentExistence}}{{#userExistence}}{{nickname}}{{/userExistence}}</p>
+                        <p class="author">({{#userExistence}}{{createdDate}}{{/userExistence}}{{^userExistence}}{{author}}, {{modifiedDate}}{{/userExistence}})</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
+        <span>누적 신고 횟수: {{numOfReports}}</span>
     </div>
     <div class="bottom-area">
         <table>

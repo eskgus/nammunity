@@ -198,20 +198,23 @@ public class ReportsServiceTest {
         Comments comment = commentsRepository.findById(1L).get();
 
         // 4. user2가 user1 사용자 신고 * 3, 게시글 신고 * 10, 댓글 신고 * 10
-        // 5. findSummary() 호출
+        int numOfPostReports = (int) (this.latestPostReportId - this.latestUserReportId);
+        int numOfCommentReports = (int) (this.latestCommentReportId - this.latestPostReportId);
+        int numOfUserReports = this.latestUserReportId.intValue();
+
+        // 5. findDetails() 호출
         // 5-1. type: "post", id = post의 id
-        List<ContentReportDetailListDto> detailListDtos = callAndAssertFindDetails("post", post.getId());
-        assertDetailListDtos(detailListDtos, (int) (this.latestPostReportId - this.latestUserReportId),
-                this.latestUserReportId);
+        List<ContentReportDetailListDto> detailListDtos =
+                callAndAssertFindDetails("post", post.getId(), numOfPostReports);
+        assertDetailListDtos(detailListDtos, numOfPostReports, this.latestUserReportId);
 
         // 5-2. type: "comment", id = comment의 id
-        detailListDtos = callAndAssertFindDetails("comment", comment.getId());
-        assertDetailListDtos(detailListDtos, (int) (this.latestCommentReportId - this.latestPostReportId),
-                this.latestPostReportId);
+        detailListDtos = callAndAssertFindDetails("comment", comment.getId(), numOfCommentReports);
+        assertDetailListDtos(detailListDtos, numOfCommentReports, this.latestPostReportId);
 
         // 5-3. type: "user", id = user1의 id
-        detailListDtos = callAndAssertFindDetails("user", user1.getId());
-        assertDetailListDtos(detailListDtos, this.latestUserReportId.intValue(), 0L);
+        detailListDtos = callAndAssertFindDetails("user", user1.getId(), numOfUserReports);
+        assertDetailListDtos(detailListDtos, numOfUserReports, 0L);
     }
 
     @Getter
@@ -285,7 +288,8 @@ public class ReportsServiceTest {
         Assertions.assertThat(actualContentExistence).isTrue();
     }
 
-    private List<ContentReportDetailListDto> callAndAssertFindDetails(String type, Long expectedContentId) {
+    private List<ContentReportDetailListDto> callAndAssertFindDetails(String type, Long expectedContentId,
+                                                                      int expectedNumOfReports) {
         // findDetails() 호출하고 리턴 값 ContentReportDetailListDto의 content(post, comment, user) id/existence, type 확인
         ContentReportDetailDto detailDto = reportsService.findDetails(type, expectedContentId);
 
@@ -308,17 +312,18 @@ public class ReportsServiceTest {
         Assertions.assertThat(actualContentId).isEqualTo(expectedContentId);
         Assertions.assertThat(detailDto.getType()).isEqualTo(expectedType);
         Assertions.assertThat(actualContentExistence).isTrue();
+        Assertions.assertThat(detailDto.getNumOfReports()).isEqualTo(expectedNumOfReports);
 
         // ContentReportDetailDto에 들어있는 List<ContentReportDetailListDto> 검증하기 위해 리턴
         return detailDto.getReports();
     }
 
-    private void assertDetailListDtos(List<ContentReportDetailListDto> detailListDtos, int iMax, Long id) {
-        // ContentReportDetailDto에 들어있는 List<ContentReportDetailListDto>의 size가 i의 최댓값 iMax(마지막 신고의 id)인지 확인
-        Assertions.assertThat(detailListDtos.size()).isEqualTo(iMax);
+    private void assertDetailListDtos(List<ContentReportDetailListDto> detailListDtos, int numOfReports, Long id) {
+        // ContentReportDetailDto에 들어있는 List<ContentReportDetailListDto>의 size가 numOfReports(신고 세부 내역 개수)인지 확인
+        Assertions.assertThat(detailListDtos.size()).isEqualTo(numOfReports);
 
         // 신고 id로 찾은 신고 내역과 List<ContentReportDetailListDto>가 같은지 확인
-        for (int i = 0; i < iMax; i++) {
+        for (int i = 0; i < numOfReports; i++) {
             ContentReports report = contentReportsRepository.findById(i + 1 + id).get();
             ContentReportDetailListDto detailListDto = detailListDtos.get(i);
             String reason = report.getReasons().getDetail();
