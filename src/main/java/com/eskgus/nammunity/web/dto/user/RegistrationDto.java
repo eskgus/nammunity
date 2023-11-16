@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RegistrationDto {
     @NotBlank(message = "ID를 입력하세요.")
-    @Pattern(regexp = "^(?=[a-z])(?=.*[0-9])[a-z0-9]{4,20}",
-            message = "ID는 영어 소문자로 시작, 숫자 1개 이상 포함, 한글/특수문자/공백 불가능, 4글자 이상 20글자 이하")
+    @Pattern(regexp = "^(?=[a-z])(?=.*[0-9])[a-z0-9]{8,20}",
+            message = "ID는 영어 소문자로 시작, 숫자 1개 이상 포함, 한글/특수문자/공백 불가능, 8글자 이상 20글자 이하")
     private String username;
 
     @NotBlank(message = "비밀번호를 입력하세요.")
