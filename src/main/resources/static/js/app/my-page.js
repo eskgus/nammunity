@@ -185,6 +185,9 @@ var reportDetailsMain = {
         }
     },
     banUser: function(userId) {
+        var button = document.getElementById('btn-user-ban');
+        button.disabled = true;
+
         $.ajax({
             type: 'POST',
             url: '/api/reports/process',
@@ -200,6 +203,7 @@ var reportDetailsMain = {
             window.location.reload();
         }).fail(function(response) {
             alert(JSON.stringify(response));
+            button.disabled = false;
         });
     }
 };

@@ -23,11 +23,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Cookie accessToken = (Cookie) user.getAttributes().get("accessToken");
         response.addCookie(accessToken);
 
-        Object url = request.getSession().getAttribute("prePage");
-        if (url != null) {
-            response.sendRedirect(url.toString());
-        } else {
-            response.sendRedirect("/");
-        }
+        Object prePage = request.getSession().getAttribute("prePage");
+        String url = (prePage != null) ? prePage.toString() : "/";
+        response.sendRedirect(url);
     }
 }

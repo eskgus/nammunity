@@ -26,11 +26,8 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
             userService.resetAttempt(user);
         }
 
-        Object url = request.getSession().getAttribute("prePage");
-        if (url != null) {
-            response.sendRedirect(url.toString());
-        } else {
-            response.sendRedirect("/");
-        }
+        Object prePage = request.getSession().getAttribute("prePage");
+        String url = (prePage != null) ? prePage.toString() : "/";
+        response.sendRedirect(url);
     }
 }

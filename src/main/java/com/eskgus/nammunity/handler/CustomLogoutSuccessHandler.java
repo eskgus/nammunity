@@ -14,11 +14,8 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
                                 HttpServletResponse response,
                                 Authentication authentication)
             throws IOException, ServletException {
-        Object url = request.getHeader("referer");
-        if (url != null && !url.toString().contains("/delete/account")) {
-            response.sendRedirect(url.toString());
-        } else {
-            response.sendRedirect("/");
-        }
+        Object referer = request.getHeader("referer");
+        String url = (referer != null && !referer.toString().contains("/delete/account")) ? referer.toString() : "/";
+        response.sendRedirect(url);
     }
 }
