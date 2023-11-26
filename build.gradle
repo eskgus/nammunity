@@ -16,7 +16,7 @@ apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
-group 'com.eskgus.nasipan'
+group 'com.eskgus.nammunity'
 version '1.0-SNAPSHOT'
 sourceCompatibility = 17
 
@@ -35,15 +35,39 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-validation')
     implementation('org.springframework.boot:spring-boot-starter-mail')
     implementation('org.springframework.boot:spring-boot-starter-oauth2-client')
+    implementation('com.querydsl:querydsl-jpa:5.0.0:jakarta')   // query dsl
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     testImplementation('org.springframework.security:spring-security-test')
     testImplementation('org.projectlombok:lombok')
     testImplementation('com.google.code.gson:gson:2.8.9')
 
     annotationProcessor('org.projectlombok:lombok')
+    annotationProcessor('com.querydsl:querydsl-apt:5.0.0:jakarta')  // querydsl 쿼리 타입
+    annotationProcessor('jakarta.annotation:jakarta.annotation-api')    // querydsl-jpa/apt가 jakarta 사용해서 jakarta api 추가
+    annotationProcessor('jakarta.persistence:jakarta.persistence-api')  // querydsl-jpa/apt가 jakarta 사용해서 jakarta api 추가
     testAnnotationProcessor('org.projectlombok:lombok')
 }
 
 test {
     useJUnitPlatform()
+}
+
+configurations {
+    compileOnly {   // annotationProcessor는 컴파일 시에만 실행, 런타임 x
+        annotationProcessor
+    }
+}
+
+def querydslDir = "$buildDir/generated/querydsl"
+
+tasks.withType(JavaCompile) {
+    options.generatedSourceOutputDirectory = file(querydslDir)  // 쿼리 타입 생성 경로 설정
+}
+
+sourceSets {
+    main.java.srcDirs += [ querydslDir ]    // 생성된 쿼리 타입을 쓸 수 있게(=소스 코드로 인식할 수 있게) 설정
+}
+
+clean.doLast {
+    file(querydslDir).deleteDir()   // 빌드 시 이전에 빌드된 쿼리 타입 삭제(하고 새로 생성)
 }

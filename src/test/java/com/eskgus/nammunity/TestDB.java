@@ -107,6 +107,15 @@ public class TestDB {
         return userRepository.save(user).getId();
     }
 
+    public Long signUp(String username, Long id, Role role) {
+        String password = encoder.encode("password" + id);
+        String email = username + "@naver.com";
+
+        User user = User.builder()
+                .username(username).password(password).nickname(username).email(email).role(role).build();
+        return userRepository.save(user).getId();
+    }
+
     public Long saveTokens(User user) {
         String token = UUID.randomUUID().toString();
         Tokens newToken = Tokens.builder().token(token).createdAt(LocalDateTime.now())
@@ -130,11 +139,25 @@ public class TestDB {
         return postsRepository.save(post).getId();
     }
 
+    public Long savePosts(String title, String content, User user) {
+        Posts post = Posts.builder()
+                .title(title).content(content).user(user).build();
+        return postsRepository.save(post).getId();
+    }
+
     public Long saveComments(Long postId, User user) {
         Posts post = postsRepository.findById(postId).get();
 
         Comments comment = Comments.builder()
                 .content("content").posts(post).user(user).build();
+        return commentsRepository.save(comment).getId();
+    }
+
+    public Long saveComments(Long postId, String content, User user) {
+        Posts post = postsRepository.findById(postId).get();
+
+        Comments comment = Comments.builder()
+                .content(content).posts(post).user(user).build();
         return commentsRepository.save(comment).getId();
     }
 
