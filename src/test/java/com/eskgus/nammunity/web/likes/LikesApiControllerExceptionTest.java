@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.web.likes;
 
-import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;

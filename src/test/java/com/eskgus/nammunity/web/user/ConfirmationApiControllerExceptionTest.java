@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.web.user;
 
-import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.tokens.TokensRepository;
 import com.eskgus.nammunity.domain.user.Role;

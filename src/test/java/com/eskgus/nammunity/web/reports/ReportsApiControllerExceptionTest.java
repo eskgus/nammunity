@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.web.reports;
 
-import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.reports.ContentReportsRepository;

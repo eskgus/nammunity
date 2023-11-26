@@ -1,4 +1,4 @@
-package com.eskgus.nammunity;
+package com.eskgus.nammunity.util;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;

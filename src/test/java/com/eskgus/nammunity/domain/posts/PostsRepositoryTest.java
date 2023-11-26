@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.domain.posts;
 
 import com.eskgus.nammunity.util.SearchUtil;
-import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;

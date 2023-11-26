@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.service.user;
 
-import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.user.*;
 import org.assertj.core.api.Assertions;

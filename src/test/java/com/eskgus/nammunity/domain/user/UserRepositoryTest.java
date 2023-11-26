@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.domain.user;
 
 import com.eskgus.nammunity.util.SearchUtil;
-import com.eskgus.nammunity.TestDB;
+import com.eskgus.nammunity.util.TestDB;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
