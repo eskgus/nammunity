@@ -9,6 +9,7 @@ import lombok.Getter;
 public class PostsListDto {
     private Long id;
     private String title;
+    private String content;
     private String author;
     private String modifiedDate;
     private int view;
@@ -19,6 +20,7 @@ public class PostsListDto {
     public PostsListDto(Posts posts) {
         this.id = posts.getId();
         this.title = posts.getTitle();
+        this.content = posts.getContent();
         this.author = posts.getUser().getNickname();
         this.modifiedDate = DateTimeUtil.formatDateTime(posts.getModifiedDate());
         this.view = posts.getView();

@@ -11,6 +11,7 @@ import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.user.ActivityHistoryDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
+import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,5 +80,10 @@ public class UserService {
                 .user(user).bannedUser(bannedUser).numOfContents(numOfContents)
                 .posts(posts).comments(comments)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsersListDto> searchByNickname(String keywords) {
+        return userRepository.searchByNickname(keywords).stream().map(UsersListDto::new).toList();
     }
 }

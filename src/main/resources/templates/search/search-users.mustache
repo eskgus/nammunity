@@ -1,0 +1,55 @@
+{{>layout/header}}
+
+<div id="container">
+    <div class="wrapper">
+        <div class="search">
+            <div class="title-area">
+                <div class="top-area">
+                    <a class="location" href="/"><img class="icon" src="/images/app/home.png" alt="HOME"></a>
+                    <span class="location">검색</span>
+                    <span class="location">사용자</span>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="search-area">
+                    <input type="search" name="keywords" placeholder="검색어를 입력하세요." value="{{keywords}}">
+                    <button type="button" class="btn-search" name="btn-search"></button>
+                </div>
+                <ul>
+                    <li>
+                        <a href="/search?keywords={{keywords}}">전체</a></li><li>
+                    <a href="/search/posts?keywords={{keywords}}&searchBy=title+content">게시글</a></li><li>
+                    <a href="/search/comments?keywords={{keywords}}">댓글</a></li><li>
+                    <a style="background-color: #C1DAC0;" href="/search/users?keywords={{keywords}}">사용자</a></li>
+                </ul>
+            </div>
+            <div class="results-area">
+                <div class="users-area">
+                    <div class="title">
+                        <h2>사용자</h2>
+                    </div>
+                    <table>
+                        <tbody>
+                        {{^users}}
+                            <tr>
+                                <td class="no-content">검색된 사용자가 없어요.</td>
+                            </tr>
+                        {{/users}}
+                        {{#users}}
+                            <tr>
+                                <td>
+                                    <a href="/users/activity-history/posts/{{id}}">{{nickname}}</a>
+                                </td>
+                            </tr>
+                        {{/users}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{>layout/footer}}
+</body>
+</html>

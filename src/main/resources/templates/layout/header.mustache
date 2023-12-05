@@ -18,6 +18,10 @@
                 </h1>
             </div>
             <div class="btn-area">
+                <div class="search-area">
+                    <input type="search" name="keywords" placeholder="검색어를 입력하세요." {{#keywords}}value="{{keywords}}"{{/keywords}}>
+                    <button type="button" class="btn-search" name="btn-search"></button>
+                </div>
                 <span class="btns">
                     <a class="btn" href="/posts/save">글 등록</a>
                 </span>

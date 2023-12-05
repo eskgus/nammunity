@@ -36,4 +36,19 @@ public class PostsSearchService {
     public long countByUser(User user) {
         return postsRepository.countByUser(user);
     }
+
+    @Transactional(readOnly = true)
+    public List<PostsListDto> searchByTitle(String keywords) {
+        return postsRepository.searchByTitle(keywords).stream().map(PostsListDto::new).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostsListDto> searchByContent(String keywords) {
+        return postsRepository.searchByContent(keywords).stream().map(PostsListDto::new).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostsListDto> searchByTitleAndContent(String keywords) {
+        return postsRepository.searchByTitleAndContent(keywords).stream().map(PostsListDto::new).toList();
+    }
 }

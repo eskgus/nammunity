@@ -1,11 +1,20 @@
 var indexMain = {
     init: function() {
+        var _this = this;
+
         $('#btn-close-window').on('click', function() { // confirmEmail
             window.close();
         });
 
         $('#btn-back').on('click', function() { // 403
             window.history.back();
+        });
+
+        var searchBtns = document.getElementsByName('btn-search');
+        searchBtns.forEach(function(searchBtn) {
+            searchBtn.addEventListener('click', function() {
+                _this.search(this);
+            });
         });
     },
     redBox: function(field, pre) {
@@ -46,6 +55,26 @@ var indexMain = {
         var firstError = Object.keys(data)[firstData];
         alert(response[firstError]);
         document.getElementById(Object.keys(data)[firstData]).focus();
+    },
+    search: function(searchBtn) {
+        var keywords = searchBtn.previousElementSibling.value;
+        var currentLocation = window.location.href;
+        var newLocation;
+
+        // 게시글/댓글/사용자 검색 결과 화면에서 검색한 게 아니면 전체 검색 결과로 이동
+        if (currentLocation.includes('/search/posts') || currentLocation.includes('/search/comments')
+            || currentLocation.includes('/search/users')) {
+            var url1 = currentLocation.slice(0, currentLocation.indexOf('=') + 1);
+            var url2 = '';
+            if (currentLocation.includes('&')) {
+                url2 = currentLocation.slice(currentLocation.indexOf('&'), currentLocation.length);
+            }
+            newLocation = url1 + keywords + url2;
+        } else {
+            newLocation = '/search?keywords=' + keywords;
+        }
+
+        window.location.href = newLocation;
     }
 };
 

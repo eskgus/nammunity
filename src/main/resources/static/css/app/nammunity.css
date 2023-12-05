@@ -87,6 +87,7 @@ a:active {
     font-weight: 600;
 }
 
+#container .search .results-area td a:visited,
 .tlink:visited {
     color: #9AC19F;
     text-decoration-color: #9AC19F;
@@ -139,6 +140,7 @@ tbody .tit {
     vertical-align: text-top;
 }
 
+#container .search .results-area td.no-content,
 #container .activity-history-area .comments-area td.no-content,
 #container .activity-history-area .comments-area td.no-checkbox,
 #container .activity-history-area .posts-area td.no-content,
@@ -157,6 +159,7 @@ tbody .tit {
     vertical-align: middle;
 }
 
+#container .search .results-area .posts-area .tit,
 #container .my-page .checkbox-area,
 #container .my-page .posts-area .tit,
 #container .main .tit {
@@ -164,14 +167,26 @@ tbody .tit {
     width: 80%;
 }
 
+#container .search .results-area .posts-area .tit,
 #container .my-page .checkbox-area {
     width: 100%;
 }
 
+#container .search .results-area h2,
+#container .activity-history-area h2,
+#container .my-page .admin-area #reports-area h2,
+#container .my-page .my-activity-area #likes-area h2,
+#container .my-page .user-info-area #social-area h2,
+#container .my-page .user-info-area #info-area h2,
+#container .my-page .user-info-area #password-area h2,
+#container .my-page .my-activity-area .comments-area h2,
+#container .my-page .my-activity-area .posts-area h2,
+#container .my-page .delete-account-area .title h2,
 #container .main .tit {
     font-size: 18px;
 }
 
+#container .search .results-area .date,
 #container .my-page .users-area .date,
 #container .my-page .comments-area .date,
 #container .my-page .posts-area .date,
@@ -179,6 +194,7 @@ tbody .tit {
     color: #AAC2A9;
 }
 
+#container .search .results-area .date img,
 #container .my-page .comments-area .date img,
 #container .my-page .posts-area .date img,
 #container .main .date img {
@@ -224,6 +240,7 @@ tbody .tit {
     text-decoration-color: #A3F229;
 }
 
+#container .search .title-area,
 #container .read .title-area,
 #container .sign-up .title-area,
 #container .sign-in .title-area,
@@ -288,6 +305,7 @@ tbody .tit {
 }
 
 /* 여기부터 comments-area */
+#container .search .results-area td a pre,
 #container .my-page .comments-area td pre,
 #container .read .content pre,
 #container .read .comments-area .comments-list pre {
@@ -296,11 +314,13 @@ tbody .tit {
     margin: 14px 0 7px 0;
 }
 
+#container .search .results-area td a pre,
 #container .my-page .users-area td div,
 #container .my-page .comments-area td pre {
     margin: 0 0 7px 0;
 }
 
+#container .search .results-area .comments-area .tit,
 #container .my-page .comments-area .tit {
     margin-top: 14px;
     border: 1px solid #AAC2A9;
@@ -332,9 +352,10 @@ tbody .tit {
     margin-left: 0;
 }
 
-#container .activity-history-area li a:hover,
-#container .my-page .admin-area #reports-area li a:hover,
-#container .my-page .my-activity-area #likes-area li a:hover,
+#container .search li>a:hover,
+#container .activity-history-area li>a:hover,
+#container .my-page .admin-area #reports-area li>a:hover,
+#container .my-page .my-activity-area #likes-area li>a:hover,
 #container .btn-area .btn:hover {
     text-decoration: none;
     background-color: #e7f6e7;
@@ -376,6 +397,8 @@ tbody .tit {
     font-family: sans-serif;
 }
 
+#header .btn-area .search-area input[type="search"]:focus,
+#container .search .search-area input[type="search"]:focus,
 #container .read .report-popup .otherReasons:focus,
 #container .read .comments-area .cmt-content:focus,
 #container .save .content-area .content:focus,
@@ -389,6 +412,7 @@ tbody .tit {
     resize: none;
 }
 
+#container .search .title-area .top-area,
 #container .sign-up .title-area .top-area,
 #container .sign-in .title-area .top-area,
 #container .find-username .title-area .top-area,
@@ -402,6 +426,7 @@ tbody .tit {
     font-size: 0;
 }
 
+#container .search .title-area .top-area .location,
 #container .sign-up .title-area .top-area .title,
 #container .sign-in .title-area .top-area .title,
 #container .find-username .title-area .top-area .title,
@@ -426,6 +451,8 @@ tbody .tit {
 }
 
 /* 여기 input 여기 form-data */
+#header .btn-area .search-area,
+#container .search .content-area .search-area,
 #container .sign-up td input,
 #container .my-page .user-info-area td input,
 #container .sign-in .form-area input,
@@ -508,20 +535,24 @@ li {
     width: 80%;
 }
 
+#container .search .results-area .title,
+#container .my-page .my-activity-area .title,
 #container .my-page .delete-account-area .content .title {
     position: relative;
 }
 
-#container .my-page .delete-account-area .title h2 {
+/* #container .my-page .delete-account-area .title h2 {
     font-size: 18px;
-}
+} */
 
+#container .search .location .icon,
 #container .my-page .location .icon {
     float: left;
     width: 20px;
     height: 20px;
 }
 
+#container .search .location:not(:first-child):before,
 #container .my-page .location:not(:first-child):before {
     content: '';
     display: inline-block;
@@ -717,16 +748,14 @@ textarea:disabled {
 
 /* 여기부터 my-page */
 /* 여기부터 my-activity-area */
-#container .my-page .my-activity-area .title {
-    position: relative;
-}
-
+#container .search .results-area .title a.more,
 #container .my-page .my-activity-area .title a.more {
     position: absolute;
     right: 0;
     bottom: 0;
 }
 
+#container .search .results-area .title a.more img,
 #container .my-page .my-activity-area .title a.more img {
     width: 10px;
     height: 10px;
@@ -742,6 +771,9 @@ textarea:disabled {
     width: 80%;
 }
 
+#container .search .results-area .users-area,
+#container .search .results-area .comments-area,
+#container .search .results-area .posts-area,
 #container .my-page .admin-area #reports-area,
 #container .my-page .my-activity-area #likes-area,
 #container .my-page .user-info-area #social-area,
@@ -752,7 +784,7 @@ textarea:disabled {
     margin-bottom: 40px;
 }
 
-#container .activity-history-area h2,
+/* #container .activity-history-area h2,
 #container .my-page .admin-area #reports-area h2,
 #container .my-page .my-activity-area #likes-area h2,
 #container .my-page .user-info-area #social-area h2,
@@ -761,7 +793,7 @@ textarea:disabled {
 #container .my-page .my-activity-area .comments-area h2,
 #container .my-page .my-activity-area .posts-area h2 {
     font-size: 18px;
-}
+} */
 
 #container .my-page #reports-area th,
 .popup-window .bottom-area th,
@@ -803,16 +835,20 @@ textarea:disabled {
     width: 90%;
 }
 
+#container .search .results-area .date,
 #container .my-page .users-area .date,
 #container .my-page .comments-area .date,
 #container .my-page .posts-area .date {
     font-size: 12px;
 }
 
+#container .search .results-area .date img,
 #container .my-page .posts-area .date img {
     vertical-align: text-bottom;
 }
 
+#container .search .results-area .title .search-by-area a.search-by,
+#container .search .results-area .tit a,
 #container .my-page .comments-area .tit a,
 #container .my-page .posts-area .tit a {
     font-weight: 600;
@@ -929,17 +965,20 @@ textarea:disabled {
 /* 여기까지 sign-up */
 
 /* 여기부터 img */
+#container .search .results-area .date img.like,
 #container .my-page .comments-area .date img.like,
 #container .my-page .posts-area .date img.like,
 #container .main .date img.like {
     content: url(/images/app/heart_s_l.png);
 }
 
+#container .search .results-area .date img.view,
 #container .my-page .posts-area .date img.view,
 #container .main .date img.view {
     content: url(/images/app/eye_l.png);
 }
 
+#container .search .results-area .date img.cmt,
 #container .my-page .posts-area img.cmt,
 #container .main .date img.cmt {
     content: url(/images/app/comment_l.png);
@@ -996,6 +1035,7 @@ textarea:disabled {
 /* 여기까지 read */
 
 /* 여기부터 likes-area */
+#container .search li>a:active,
 #container .activity-history-area li>a:active,
 #container .my-page .admin-area #reports-area li>a:active,
 #container .my-page .my-activity-area #likes-area li>a:active {
@@ -1003,6 +1043,7 @@ textarea:disabled {
     background-color: #C1DAC0;
 }
 
+#container .search ul,
 #container .activity-history-area ul,
 #container .my-page .admin-area #reports-area ul,
 #container .my-page .my-activity-area #likes-area ul {
@@ -1011,6 +1052,7 @@ textarea:disabled {
     text-align: center;
 }
 
+#container .search li,
 #container .activity-history-area li,
 #container .my-page .admin-area #reports-area li,
 #container .my-page .my-activity-area #likes-area li {
@@ -1019,11 +1061,12 @@ textarea:disabled {
     width: 33.33%;
 }
 
+#container .search li>a,
 #container .activity-history-area li>a,
 #container .my-page .admin-area #reports-area li>a,
 #container .my-page .my-activity-area #likes-area li>a {
     display: block;
-    padding:5px 0;
+    padding: 5px 0;
 }
 /* 여기까지 likes-area */
 
@@ -1109,6 +1152,7 @@ textarea:disabled {
 /* 여기까지 신고 사유 팝업 */
 
 /* 여기부터 reports-area */
+#container .search li,
 #container .my-page .admin-area #reports-area li {
     width: 25%;
 }
@@ -1227,4 +1271,74 @@ textarea:disabled {
     display: inline;
     margin-right: 7px;
 }
+
 /* 여기까지 activity-history-area */
+
+/* 여기부터 검색 */
+#header .btn-area .search-area {
+    padding: 4px;
+    width: fit-content;
+    display: inline-block;
+}
+
+#container .search .content-area .search-area {
+    padding: 7px;
+    width: fit-content;
+}
+
+#header .btn-area .search-area input[type="search"],
+#container .search .search-area input[type="search"] {
+    border: none;
+    font-size: 14px;
+    border-right: 1px solid #AAC2A9;
+    margin-right: 7px;
+    padding-right: 7px;
+}
+
+#header .btn-area .search-area input[type="search"] {
+    margin-right: 4px;
+    padding-right: 4px;
+}
+
+#header .btn-area .search-area input[type="search"]::-webkit-search-cancel-button,
+#container .search .search-area input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    background-image: url(/images/app/delete_d.png);
+    background-size: 14px;
+    height: 14px;
+    width: 14px;
+    margin-left: 7px;
+}
+
+#header .btn-area .search-area .btn-search,
+#container .search .search-area .btn-search {
+    border: none;
+    background-color: transparent;
+    background-image: url(/images/app/search_d.png);
+    background-size: 20px;
+    height: 20px;
+    width: 20px;
+    vertical-align: sub;
+    margin-right: 5px;
+}
+
+#container .search .results-area td a pre {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+#container .search .results-area .comments-area .tit {
+    width: inherit;
+}
+
+#container .search .results-area .title .search-by-area {
+    margin-bottom: 4px;
+}
+
+#container .search .results-area .title .search-by-area a:not(:last-child) {
+    margin-right: 14px;
+}
+/* 여기까지 검색 */
