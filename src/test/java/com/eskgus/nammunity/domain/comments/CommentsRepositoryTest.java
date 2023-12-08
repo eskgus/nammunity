@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.comments;
 
+import com.eskgus.nammunity.util.FinderUtil;
 import com.eskgus.nammunity.util.SearchUtil;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -16,9 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.eskgus.nammunity.util.FinderUtil.callAndAssertFindContentsByUser;
 import static com.eskgus.nammunity.util.SearchUtil.callAndAssertSearchByField;
 import static com.eskgus.nammunity.util.SearchUtil.getExpectedIdList;
 
@@ -83,10 +86,7 @@ public class CommentsRepositoryTest {
         // 3. user1이 댓글 작성 * 2
         String str1 = "bts, 봉준호, 손흥민, 이나현 let's go";
         String str2 = "붕어빵 3마리 1000원";
-        List<String> strings = Arrays.asList(str1, str2);
-        for (String content : strings) {
-            testDB.saveComments(post.getId(), content, user1);
-        }
+        testDB.saveComments(post.getId(), user1, str1, str2);
         Assertions.assertThat(commentsRepository.count()).isEqualTo(2);
 
         // 4. 예상 결과(List<Comments>) 생성
@@ -115,6 +115,36 @@ public class CommentsRepositoryTest {
         // 5-2. 검색 제외 단어 o
         callAndAssertSearchByField("흥 100 Let -봉,마리", commentsRepository::searchByContent,
                 searchDto2.getIdExtractor(), expectedIdList2);
+    }
+
+    @Test
+    public void findByUser() {
+        // 1. user1 회원가입 + user2 회원가입
+        User user1 = userRepository.findById(1L).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        Assertions.assertThat(userRepository.count()).isEqualTo(2);
+
+        // 2. user1이 게시글 작성
+        Posts post = postsRepository.findById(1L).get();
+
+        // 3. user1이 댓글 작성 * 2 + user2가 댓글 작성 * 2
+        // 4. List<Long> expectedIdList에 user1이 작성한 댓글 id 내림차순 저장
+        List<User> users = Arrays.asList(user1, user2);
+        List<Long> expectedIdList = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            for (User user : users) {
+                Long commentId = testDB.saveComments(post.getId(), user);
+                if (user.equals(user1)) {
+                    expectedIdList.add(commentId);
+                }
+            }
+        }
+        Assertions.assertThat(commentsRepository.count()).isEqualTo(4);
+
+        // 5. user1로 findByUser() 호출 + 검증
+        FinderUtil.FindDto<Comments> findDto = FinderUtil.FindDto.<Comments>builder()
+                .user(user1).finder(commentsRepository::findByUser).expectedIdList(expectedIdList).build();
+        callAndAssertFindContentsByUser(findDto);
     }
 
     private void callAndAssertCountByUser(User user) {

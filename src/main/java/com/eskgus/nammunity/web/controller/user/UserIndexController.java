@@ -195,7 +195,7 @@ public class UserIndexController {
         try {
             User user = userService.findByUsername(principal.getName());
             // 게시글 좋아요 목록
-            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findPostsByUser));
+            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findPostLikesByUser));
 
             // 게시글 좋아요 개수
             attr.put("numOfLikes", likesSearchService.countLikesByUser(user, likesRepository::countPostLikesByUser));
@@ -214,7 +214,7 @@ public class UserIndexController {
             User user = userService.findByUsername(principal.getName());
 
             // 댓글 좋아요 목록
-            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findCommentsByUser));
+            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findCommentLikesByUser));
 
             // 댓글 좋아요 개수
             attr.put("numOfLikes", likesSearchService.countLikesByUser(user, likesRepository::countCommentLikesByUser));

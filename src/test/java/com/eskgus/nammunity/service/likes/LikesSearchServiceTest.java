@@ -79,11 +79,11 @@ public class LikesSearchServiceTest {
         Assertions.assertThat(likes1.size()).isEqualTo(likesRepository.count());
 
         // 5-2. 함수형 인터페이스로 findPostsByUser() 넣어서 호출
-        List<LikesListDto> likes2 = likesSearchService.findLikesByUser(user1, likesRepository::findPostsByUser);
+        List<LikesListDto> likes2 = likesSearchService.findLikesByUser(user1, likesRepository::findPostLikesByUser);
         Assertions.assertThat(likes2.size()).isEqualTo(1);
 
         // 5-3. 함수형 인터페이스로 findCommentsByUser() 넣어서 호출
-        List<LikesListDto> likes3 = likesSearchService.findLikesByUser(user1, likesRepository::findCommentsByUser);
+        List<LikesListDto> likes3 = likesSearchService.findLikesByUser(user1, likesRepository::findCommentLikesByUser);
         Assertions.assertThat(likes3.size()).isEqualTo(1);
     }
 

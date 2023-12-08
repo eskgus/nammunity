@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.posts;
 
+import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.util.KeywordUtil;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.StringExpression;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 
 import java.util.List;
 
+import static com.eskgus.nammunity.util.FindUtil.findContentsByUser;
 import static com.eskgus.nammunity.util.KeywordUtil.searchByField;
 
 public class PostsRepositoryImpl extends QuerydslRepositorySupport implements CustomPostsRepository {
@@ -63,5 +65,19 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
         return query.selectDistinct(post).from(post).where(builder.and(post.in(
                 JPAExpressions.selectFrom(post).where(builderSub)))).orderBy(post.id.desc()).fetch();
+    }
+
+    @Override
+    public List<Posts> findAllDesc() {
+        QPosts post = QPosts.posts;
+
+        JPAQueryFactory query = new JPAQueryFactory(entityManager);
+        return query.selectFrom(post).orderBy(post.id.desc()).fetch();
+    }
+
+    @Override
+    public List<Posts> findByUser(User user) {
+        QPosts post = QPosts.posts;
+        return findContentsByUser(entityManager, post, null, user);
     }
 }

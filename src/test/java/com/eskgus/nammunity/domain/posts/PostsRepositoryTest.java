@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.posts;
 
+import com.eskgus.nammunity.util.FinderUtil;
 import com.eskgus.nammunity.util.SearchUtil;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.user.Role;
@@ -17,6 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static com.eskgus.nammunity.util.FinderUtil.callAndAssertFindContentsByUser;
 import static com.eskgus.nammunity.util.SearchUtil.callAndAssertSearchByField;
 import static com.eskgus.nammunity.util.SearchUtil.getExpectedIdList;
 
@@ -113,11 +115,8 @@ public class PostsRepositoryTest {
         // 2. user1이 게시글 작성 * 2
         String str1 = "bts, 봉준호, 손흥민, 이나현 let's go";
         String str2 = "붕어빵 3마리 1000원";
-        List<String> strings = Arrays.asList(str1, str2);
-        for (String title : strings) {
-            testDB.savePosts(title, "content", user1);
-        }
-        Assertions.assertThat(postsRepository.count()).isEqualTo(2);
+        testDB.savePosts(user1, str1, str2);
+        Assertions.assertThat(postsRepository.count()).isEqualTo(4);
 
         // 3. 예상 결과(List<Posts>) 생성
         // 3-1. 전체 게시글, 검색어, 검색 제외 단어 준비
@@ -155,11 +154,8 @@ public class PostsRepositoryTest {
         // 2. user1이 게시글 작성 * 2
         String str1 = "bts, 봉준호, 손흥민, 이나현 let's go";
         String str2 = "붕어빵 3마리 1000원";
-        List<String> strings = Arrays.asList(str1, str2);
-        for (String content : strings) {
-            testDB.savePosts("title", content, user1);
-        }
-        Assertions.assertThat(postsRepository.count()).isEqualTo(2);
+        testDB.savePosts(user1, str1, str2);
+        Assertions.assertThat(postsRepository.count()).isEqualTo(4);
 
         // 3. 예상 결과(List<Posts>) 생성
         // 3-1. 전체 게시글, 검색어, 검색 제외 단어 준비
@@ -198,12 +194,7 @@ public class PostsRepositoryTest {
         String str1 = "default";
         String str2 = "bts, 봉준호, 손흥민, 이나현 let's go";
         String str3 = "붕어빵 3마리 1000원";
-        List<String> strings = Arrays.asList(str1, str2, str3);
-        for (String title : strings) {
-            for (String content : strings) {
-                testDB.savePosts(title, content, user1);
-            }
-        }
+        testDB.savePosts(user1, str1, str2, str3);
         Assertions.assertThat(postsRepository.count()).isEqualTo(9);
 
         // 3. 예상 결과(List<Posts>) 생성
@@ -232,6 +223,59 @@ public class PostsRepositoryTest {
         // 4-2. 검색 제외 단어 o
         callAndAssertSearchByField("흥 100 Let -봉", postsRepository::searchByTitleAndContent,
                 searchDto2.getIdExtractor(), expectedIdList2);
+    }
+
+    @Test
+    public void findAllDesc() {
+        // 1. user1 회원가입
+        User user1 = userRepository.findById(1L).get();
+
+        // 2. user1이 게시글 작성 * 4
+        String str1 = "title1";
+        String str2 = "title2";
+        testDB.savePosts(user1, str1, str2);
+        Assertions.assertThat(postsRepository.count()).isEqualTo(4);
+
+        long numOfPosts = postsRepository.count();
+
+        // 3. findAllDesc() 호출
+        List<Posts> result = postsRepository.findAllDesc();
+        Assertions.assertThat(result.size()).isEqualTo(numOfPosts);
+
+        // 4. 결과로 얻은 List<Posts>의 id가 내림차순인지 확인
+        List<Long> expectedIdList = new ArrayList<>();
+        for (long i = numOfPosts; i > 0; i--) {
+            expectedIdList.add(i);
+        }
+
+        Assertions.assertThat(result).extracting(Posts::getId).isEqualTo(expectedIdList);
+    }
+
+    @Test
+    public void findByUser() {
+        // 1. user1 회원가입 + user2 회원가입
+        User user1 = userRepository.findById(1L).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        Assertions.assertThat(userRepository.count()).isEqualTo(2);
+
+        // 2. user1이 게시글 작성 * 2 + user2가 게시글 작성 * 2
+        // 3. List<Long> expectedIdList에 user1이 작성한 게시글 id 내림차순 저장
+        List<User> users = Arrays.asList(user1, user2);
+        List<Long> expectedIdList = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            for (User user : users) {
+                Long postId = testDB.savePosts(user);
+                if (user.equals(user1)) {
+                    expectedIdList.add(postId);
+                }
+            }
+        }
+        Assertions.assertThat(postsRepository.count()).isEqualTo(4);
+
+        // 4. user1로 findByUser() 호출 + 검증
+        FinderUtil.FindDto<Posts> findDto = FinderUtil.FindDto.<Posts>builder()
+                .user(user1).finder(postsRepository::findByUser).expectedIdList(expectedIdList).build();
+        callAndAssertFindContentsByUser(findDto);
     }
 
     private void callAndAssertCountByUser(User user) {

@@ -139,10 +139,14 @@ public class TestDB {
         return postsRepository.save(post).getId();
     }
 
-    public Long savePosts(String title, String content, User user) {
-        Posts post = Posts.builder()
-                .title(title).content(content).user(user).build();
-        return postsRepository.save(post).getId();
+    public void savePosts(User user, String... strings) {
+        for (String title : strings) {
+            for (String content :  strings) {
+                Posts post = Posts.builder()
+                        .title(title).content(content).user(user).build();
+                postsRepository.save(post);
+            }
+        }
     }
 
     public Long saveComments(Long postId, User user) {
@@ -153,12 +157,14 @@ public class TestDB {
         return commentsRepository.save(comment).getId();
     }
 
-    public Long saveComments(Long postId, String content, User user) {
+    public void saveComments(Long postId, User user, String... strings) {
         Posts post = postsRepository.findById(postId).get();
 
-        Comments comment = Comments.builder()
-                .content(content).posts(post).user(user).build();
-        return commentsRepository.save(comment).getId();
+        for (String content : strings) {
+            Comments comment = Comments.builder()
+                    .content(content).posts(post).user(user).build();
+            commentsRepository.save(comment);
+        }
     }
 
     public Long savePostLikes(Long postId, User user) {
