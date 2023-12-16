@@ -120,9 +120,9 @@ public class ReportsService {
     public List<ContentReportDistinctDto> findDistinct(String endpoint) {
         List<ContentReportDistinctDto> distinctDtos = switch (endpoint) {
             case "" -> contentReportsRepository.findDistinct();
-            case "posts" -> contentReportsRepository.findDistinctPosts();
-            case "comments" -> contentReportsRepository.findDistinctComments();
-            default -> contentReportsRepository.findDistinctUsers();
+            case "posts" -> contentReportsRepository.findDistinctByPosts();
+            case "comments" -> contentReportsRepository.findDistinctByComments();
+            default -> contentReportsRepository.findDistinctByUsers();
         };
 
         return distinctDtos;
@@ -143,7 +143,7 @@ public class ReportsService {
             reports = contentReportsRepository.findByComments(comment);
         } else {
             user = userService.findById(id);
-            reports = contentReportsRepository.findByUser(user);
+            reports = contentReportsRepository.findByUsers(user);
         }
 
         // 신고 번호, 신고자, 신고일, 신고 사유 목록
@@ -174,11 +174,11 @@ public class ReportsService {
 
         requestDto.getPostsId().forEach(postId -> {
             Posts post = postsSearchService.findById(postId);
-            contentReportsRepository.deleteByPost(post);
+            contentReportsRepository.deleteByPosts(post);
         });
         requestDto.getCommentsId().forEach(commentId -> {
             Comments comment = commentsSearchService.findById(commentId);
-            contentReportsRepository.deleteByComment(comment);
+            contentReportsRepository.deleteByComments(comment);
         });
         requestDto.getUserId().forEach(userId -> {
             User user = userService.findById(userId);

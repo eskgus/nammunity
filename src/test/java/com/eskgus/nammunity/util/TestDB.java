@@ -183,7 +183,7 @@ public class TestDB {
         return likesRepository.save(like).getId();
     }
 
-    public void savePostReports(Long postId, User reporter) {
+    public Long savePostReports(Long postId, User reporter) {
         Posts post = postsRepository.findById(postId).get();
 
         Types type = typesRepository.findById(1L).get();
@@ -200,9 +200,22 @@ public class TestDB {
                     .posts(post).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
             contentReportsRepository.save(contentReport);
         }
+
+        return contentReportsRepository.count();    // 마지막 신고 id 반환
     }
 
-    public void saveCommentReports(Long commentId, User reporter) {
+    public Long savePostReportsWithOtherReason(Long postId, User reporter, String otherReason) {
+        Posts post = postsRepository.findById(postId).get();
+
+        Types type = typesRepository.findById(1L).get();
+        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+
+        ContentReports contentReport = ContentReports.builder()
+                .posts(post).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
+        return contentReportsRepository.save(contentReport).getId();
+    }
+
+    public Long saveCommentReports(Long commentId, User reporter) {
         Comments comment = commentsRepository.findById(commentId).get();
 
         Types type = typesRepository.findById(2L).get();
@@ -219,9 +232,22 @@ public class TestDB {
                     .comments(comment).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
             contentReportsRepository.save(contentReport);
         }
+
+        return contentReportsRepository.count();    // 마지막 신고 id 반환
     }
 
-    public void saveUserReports(User user, User reporter) {
+    public Long saveCommentReportsWithOtherReason(Long commentId, User reporter, String otherReason) {
+        Comments comment = commentsRepository.findById(commentId).get();
+
+        Types type = typesRepository.findById(2L).get();
+        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+
+        ContentReports contentReport = ContentReports.builder()
+                .comments(comment).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
+        return contentReportsRepository.save(contentReport).getId();
+    }
+
+    public Long saveUserReports(User user, User reporter) {
         Types type = typesRepository.findById(3L).get();
         Long[] reasonIdArr = {1L, 2L, 8L};
         List<Reasons> reasons = new ArrayList<>();
@@ -236,6 +262,17 @@ public class TestDB {
                     .user(user).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
             contentReportsRepository.save(contentReport);
         }
+
+        return contentReportsRepository.count();    // 마지막 신고 id 반환
+    }
+
+    public Long saveUserReportsWithOtherReason(User user, User reporter, String otherReason) {
+        Types type = typesRepository.findById(3L).get();
+        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+
+        ContentReports contentReport = ContentReports.builder()
+                .user(user).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
+        return contentReportsRepository.save(contentReport).getId();
     }
 
     public void saveBannedUsers(User user, Period period) {

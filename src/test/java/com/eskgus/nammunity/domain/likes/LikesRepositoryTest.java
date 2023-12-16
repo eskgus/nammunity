@@ -223,7 +223,7 @@ public class LikesRepositoryTest {
     }
 
     private <T> void callAndAssertDeleteByField(BiFunction<Long, User, Long> likesSaver,
-                                                BiConsumer<T, User> likesDeletor,
+                                                BiConsumer<T, User> likesDeleter,
                                                 T content, User user) {
         // 1. 들어온 content의 id 구하기
         long contentId;
@@ -237,7 +237,7 @@ public class LikesRepositoryTest {
         Long likeId = likesSaver.apply(contentId, user);
 
         // 3. post/comment, user로 deleteBy@@() 호출
-        likesDeletor.accept(content, user);
+        likesDeleter.accept(content, user);
 
         // 4. user의 post/comment 좋아요가 db에 존재하지 않는지 확인
         Optional<Likes> result = likesRepository.findById(likeId);
