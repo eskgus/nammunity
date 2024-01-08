@@ -2,13 +2,13 @@ package com.eskgus.nammunity.domain.likes;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.util.FinderUtil;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.FinderUtil.callAndAssertFindContentsByUser;
+import static com.eskgus.nammunity.util.FinderUtil.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -111,46 +111,57 @@ public class LikesRepositoryTest {
     @Test
     public void findByUser() {
         // 1. user1 회원가입 + user2 회원가입
-        User user = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
         Assertions.assertThat(userRepository.count()).isEqualTo(2);
 
-        // 2. expectedIdList 가져오기
-        List<Long> expectedIdList = getExpectedIdList("post comment", user);
+        // 2. 좋아요 저장 + 페이징 처리되지 않은 검색 결과의 id list 가져오기
+        int limit = 3;
+        List<Long> totalElementIdList = getTotalElementIdList("post comment", user2);
+
+        // 3. expectedIdList 가져오기
+        int expectedTotalElements = totalElementIdList.size();
+        List<Long> expectedIdList = totalElementIdList.subList(expectedTotalElements - limit, expectedTotalElements);
 
         // 3. user2로 findByUser() 호출 + 검증
-        FinderUtil.FindDto<Likes> findDto = FinderUtil.FindDto.<Likes>builder()
-                .user(user).finder(likesRepository::findByUser).expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(findDto);
+        FinderParams<LikesListDto> finderParams = FinderParams.<LikesListDto>builder()
+                .currentPage(1).limit(limit).finder(likesRepository::findByUser).user(user2)
+                .expectedTotalElements(expectedTotalElements)
+                .expectedIdList(expectedIdList).build();
+        callAndAssertFindContentsByUser(finderParams);
     }
 
     @Test
     public void findPostLikesByUser() {
         // 1. user1 회원가입 + user2 회원가입
-        User user = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
         Assertions.assertThat(userRepository.count()).isEqualTo(2);
 
-        // 2. expectedIdList 가져오기
-        List<Long> expectedIdList = getExpectedIdList("post", user);
+        // 2. 좋아요 저장 + expectedIdList 가져오기
+        List<Long> expectedIdList = getTotalElementIdList("post", user2);
 
         // 3. user2로 findPostLikesByUser() 호출 + 검증
-        FinderUtil.FindDto<Likes> findDto = FinderUtil.FindDto.<Likes>builder()
-                .user(user).finder(likesRepository::findPostLikesByUser).expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(findDto);
+        FinderParams<LikesListDto> finderParams = FinderParams.<LikesListDto>builder()
+                .currentPage(1).limit(3).finder(likesRepository::findPostLikesByUser).user(user2)
+                .expectedTotalElements(expectedIdList.size())
+                .expectedIdList(expectedIdList).build();
+        callAndAssertFindContentsByUser(finderParams);
     }
 
     @Test
     public void findCommentLikesByUser() {
         // 1. user1 회원가입 + user2 회원가입
-        User user = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
         Assertions.assertThat(userRepository.count()).isEqualTo(2);
 
-        // 2. expectedIdList 가져오기
-        List<Long> expectedIdList = getExpectedIdList("comment", user);
+        // 2. 좋아요 저장 + expectedIdList 가져오기
+        List<Long> expectedIdList = getTotalElementIdList("comment", user2);
 
         // 3. user2로 findCommentLikesByUser() 호출 + 검증
-        FinderUtil.FindDto<Likes> findDto = FinderUtil.FindDto.<Likes>builder()
-                .user(user).finder(likesRepository::findCommentLikesByUser).expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(findDto);
+        FinderParams<LikesListDto> finderParams = FinderParams.<LikesListDto>builder()
+                .currentPage(1).limit(3).finder(likesRepository::findCommentLikesByUser).user(user2)
+                .expectedTotalElements(expectedIdList.size())
+                .expectedIdList(expectedIdList).build();
+        callAndAssertFindContentsByUser(finderParams);
     }
 
     @Test
@@ -188,13 +199,13 @@ public class LikesRepositoryTest {
         Assertions.assertThat(actualCount).isEqualTo(expectedCount);
     }
 
-    private List<Long> getExpectedIdList(String content, User user) {
+    private List<Long> getTotalElementIdList(String content, User user) {
         // 1. user1이 게시글 작성 + user2가 게시글 작성
         Posts post1 = postsRepository.findById(1L).get();
         Posts post2 = postsRepository.findById(testDB.savePosts(user)).get();
         Assertions.assertThat(postsRepository.count()).isEqualTo(2);
 
-        // 2. user1이 댓글 작성 * 2
+        // 2. user1이 댓글 작성 + user2가 댓글 작성
         Comments comment1 = commentsRepository.findById(1L).get();
         Comments comment2 = commentsRepository.findById(testDB.saveComments(post2.getId(), user)).get();
         Assertions.assertThat(commentsRepository.count()).isEqualTo(2);
@@ -203,23 +214,23 @@ public class LikesRepositoryTest {
         // 4. user2가 게시글 좋아요 * 2 + 댓글 좋아요 * 2
         List<Posts> posts = Arrays.asList(post1, post2);
         List<Comments> comments = Arrays.asList(comment1, comment2);
-        List<Long> expectedIdList = new ArrayList<>();
+        List<Long> totalElementIdList = new ArrayList<>();
 
         for (int i = 0; i < 2; i++) {
             Long postLikeId = testDB.savePostLikes(posts.get(i).getId(), user);
             Long commentLikeId = testDB.saveCommentLikes(comments.get(i).getId(), user);
 
-            // 5. List<Long> expectedIdList에 user2의 댓글 좋아요 id 내림차순 저장
+            // 5. List<Long> totalElementIdList에 user2의 댓글 좋아요 id 저장
             if (content.contains("post")) {
-                expectedIdList.add(postLikeId);
+                totalElementIdList.add(postLikeId);
             }
-            if (content.contains("comment")){
-                expectedIdList.add(commentLikeId);
+            if (content.contains("comment")) {
+                totalElementIdList.add(commentLikeId);
             }
         }
         Assertions.assertThat(likesRepository.count()).isEqualTo(6);
 
-        return expectedIdList;
+        return totalElementIdList;
     }
 
     private <T> void callAndAssertDeleteByField(BiFunction<Long, User, Long> likesSaver,

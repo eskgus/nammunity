@@ -8,13 +8,17 @@ import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.reports.ReasonsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
+import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -30,9 +34,18 @@ public class PostsIndexController {
     private final CommentsSearchService commentsSearchService;
     private final ReasonsService reasonsService;
 
-    @GetMapping("/")
-    public String mainPage(Model model) {
-        model.addAttribute("posts", postsSearchService.findAllDesc());
+    @GetMapping({"/", "/main"})
+    public String mainPage(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
+        Map<String, Object> attr = new HashMap<>();
+
+        Page<PostsListDto> posts = postsSearchService.findAllDesc(page);
+        attr.put("posts", posts);
+
+        PaginationDto<PostsListDto> paginationDto = PaginationDto.<PostsListDto>builder()
+                .page(posts).display(10).build();
+        attr.put("pages", paginationDto);
+
+        model.addAllAttributes(attr);
         return "main-page";
     }
 

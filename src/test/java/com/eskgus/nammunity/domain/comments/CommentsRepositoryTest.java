@@ -1,6 +1,5 @@
 package com.eskgus.nammunity.domain.comments;
 
-import com.eskgus.nammunity.util.FinderUtil;
 import com.eskgus.nammunity.util.SearchUtil;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -8,6 +7,7 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.eskgus.nammunity.util.FinderUtil.callAndAssertFindContentsByUser;
+import static com.eskgus.nammunity.util.FinderUtil.*;
 import static com.eskgus.nammunity.util.SearchUtil.callAndAssertSearchByField;
 import static com.eskgus.nammunity.util.SearchUtil.getExpectedIdList;
 
@@ -128,7 +128,7 @@ public class CommentsRepositoryTest {
         Posts post = postsRepository.findById(1L).get();
 
         // 3. user1이 댓글 작성 * 2 + user2가 댓글 작성 * 2
-        // 4. List<Long> expectedIdList에 user1이 작성한 댓글 id 내림차순 저장
+        // 4. List<Long> expectedIdList에 user1이 작성한 댓글 id 저장
         List<User> users = Arrays.asList(user1, user2);
         List<Long> expectedIdList = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
@@ -142,9 +142,11 @@ public class CommentsRepositoryTest {
         Assertions.assertThat(commentsRepository.count()).isEqualTo(4);
 
         // 5. user1로 findByUser() 호출 + 검증
-        FinderUtil.FindDto<Comments> findDto = FinderUtil.FindDto.<Comments>builder()
-                .user(user1).finder(commentsRepository::findByUser).expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(findDto);
+        FinderParams<CommentsListDto> finderParams = FinderParams.<CommentsListDto>builder()
+                .currentPage(1).limit(3).finder(commentsRepository::findByUser).user(user1)
+                .expectedTotalElements(expectedIdList.size())
+                .expectedIdList(expectedIdList).build();
+        callAndAssertFindContentsByUser(finderParams);
     }
 
     private void callAndAssertCountByUser(User user) {

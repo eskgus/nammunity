@@ -25,12 +25,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^posts}}
+                            {{^posts.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">작성한 글이 없어요.</td>
                                 </tr>
-                            {{/posts}}
-                            {{#posts}}
+                            {{/posts.content}}
+                            {{#posts.content}}
                                 <tr>
                                     <td class="no-checkbox">{{id}}</td>
                                     <td>
@@ -40,7 +40,7 @@
                                         <span class="date">{{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
                                     </td>
                                 </tr>
-                            {{/posts}}
+                            {{/posts.content}}
                             </tbody>
                         </table>
                     </div>
@@ -57,12 +57,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^comments}}
+                            {{^comments.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">작성한 댓글이 없어요.</td>
                                 </tr>
-                            {{/comments}}
-                            {{#comments}}
+                            {{/comments.content}}
+                            {{#comments.content}}
                                 <tr>
                                     <td class="no-checkbox">{{commentsId}}</td>
                                     <td>
@@ -73,7 +73,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            {{/comments}}
+                            {{/comments.content}}
                             </tbody>
                         </table>
                     </div>
@@ -90,13 +90,13 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^likes}}
+                            {{^likes.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">좋아요한 게시글/댓글이 없어요.</td>
                                 </tr>
-                            {{/likes}}
-                            {{#likes}}
-                                {{#comments}}
+                            {{/likes.content}}
+                            {{#likes.content}}
+                                {{#isCommentLikes}}
                                     <tr class="comments-area">
                                         <td class="no-checkbox">{{likesId}}</td>
                                         <td>
@@ -107,8 +107,8 @@
                                             </div>
                                         </td>
                                     </tr>
-                                {{/comments}}
-                                {{^comments}}
+                                {{/isCommentLikes}}
+                                {{^isCommentLikes}}
                                     <tr class="posts-area">
                                         <td class="no-checkbox">{{likesId}}</td>
                                         <td>
@@ -118,8 +118,8 @@
                                             <span class="date">{{author}} | {{createdDate}}</span>
                                         </td>
                                     </tr>
-                                {{/comments}}
-                            {{/likes}}
+                                {{/isCommentLikes}}
+                            {{/likes.content}}
                             </tbody>
                         </table>
                     </div>

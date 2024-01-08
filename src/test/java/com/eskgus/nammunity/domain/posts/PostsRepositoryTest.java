@@ -1,11 +1,11 @@
 package com.eskgus.nammunity.domain.posts;
 
-import com.eskgus.nammunity.util.FinderUtil;
 import com.eskgus.nammunity.util.SearchUtil;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +13,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static com.eskgus.nammunity.util.FinderUtil.callAndAssertFindContentsByUser;
+import static com.eskgus.nammunity.util.FinderUtil.*;
 import static com.eskgus.nammunity.util.SearchUtil.callAndAssertSearchByField;
 import static com.eskgus.nammunity.util.SearchUtil.getExpectedIdList;
 
@@ -235,20 +237,20 @@ public class PostsRepositoryTest {
         String str2 = "title2";
         testDB.savePosts(user1, str1, str2);
         Assertions.assertThat(postsRepository.count()).isEqualTo(4);
-
         long numOfPosts = postsRepository.count();
 
         // 3. findAllDesc() 호출
-        List<Posts> result = postsRepository.findAllDesc();
-        Assertions.assertThat(result.size()).isEqualTo(numOfPosts);
+        Pageable pageable = createPageable(1, 3);
+        Page<PostsListDto> result = postsRepository.findAllDesc(pageable);
 
-        // 4. 결과로 얻은 List<Posts>의 id가 내림차순인지 확인
+        // 4. 검증
         List<Long> expectedIdList = new ArrayList<>();
-        for (long i = numOfPosts; i > 0; i--) {
+        for (long i = numOfPosts; i > numOfPosts - pageable.getPageSize(); i--) {
             expectedIdList.add(i);
         }
-
-        Assertions.assertThat(result).extracting(Posts::getId).isEqualTo(expectedIdList);
+        FinderParams<PostsListDto> finderParams = FinderParams.<PostsListDto>builder()
+                .expectedIdList(expectedIdList).build();
+        assertPageForRepositoryTest(result, numOfPosts, finderParams);
     }
 
     @Test
@@ -259,7 +261,7 @@ public class PostsRepositoryTest {
         Assertions.assertThat(userRepository.count()).isEqualTo(2);
 
         // 2. user1이 게시글 작성 * 2 + user2가 게시글 작성 * 2
-        // 3. List<Long> expectedIdList에 user1이 작성한 게시글 id 내림차순 저장
+        // 3. List<Long> expectedIdList에 user1이 작성한 게시글 id 저장
         List<User> users = Arrays.asList(user1, user2);
         List<Long> expectedIdList = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
@@ -273,9 +275,11 @@ public class PostsRepositoryTest {
         Assertions.assertThat(postsRepository.count()).isEqualTo(4);
 
         // 4. user1로 findByUser() 호출 + 검증
-        FinderUtil.FindDto<Posts> findDto = FinderUtil.FindDto.<Posts>builder()
-                .user(user1).finder(postsRepository::findByUser).expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(findDto);
+        FinderParams<PostsListDto> finderParams = FinderParams.<PostsListDto>builder()
+                .currentPage(1).limit(3).finder(postsRepository::findByUser).user(user1)
+                .expectedTotalElements(expectedIdList.size())
+                .expectedIdList(expectedIdList).build();
+        callAndAssertFindContentsByUser(finderParams);
     }
 
     private void callAndAssertCountByUser(User user) {

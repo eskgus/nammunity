@@ -65,7 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**"))
                         .permitAll()
-                        .requestMatchers("/", "/posts/read/**",
+                        .requestMatchers("/", "/main", "/posts/read/**",
                                 "/api/users", "/api/users/confirm/**", "/api/users/sign-in",
                                 "/users/sign-up/**", "/users/sign-in", "/users/confirm-email", "/users/find/**",
                                 "/users/activity-history/**", "/search/**", "/css/**", "/js/**", "/images/**").permitAll()

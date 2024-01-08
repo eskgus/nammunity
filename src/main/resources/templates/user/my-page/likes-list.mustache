@@ -24,7 +24,7 @@
                         </ul>
                         <div class="checkbox-area">
                             <input type="checkbox" id="select-all"><label><a id="btn-delete-likes">삭제</a></label>
-                            {{#numOfLikes}}<span>전체 {{numOfLikes}}개</span>{{/numOfLikes}}
+                            <span>전체 {{likes.totalElements}}개</span>
                         </div>
                         <table>
                             <thead>
@@ -34,13 +34,13 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^likes}}
+                            {{^likes.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">좋아요한 게시글/댓글이 없어요.</td>
                                 </tr>
-                            {{/likes}}
-                            {{#likes}}
-                                {{#comments}}
+                            {{/likes.content}}
+                            {{#likes.content}}
+                                {{#isCommentLikes}}
                                     <tr class="comments-area">
                                         <td><input type="checkbox"><label>{{likesId}}</label></td>
                                         <td>
@@ -51,8 +51,8 @@
                                             </div>
                                         </td>
                                     </tr>
-                                {{/comments}}
-                                {{^comments}}
+                                {{/isCommentLikes}}
+                                {{^isCommentLikes}}
                                     <tr class="posts-area">
                                         <td><input type="checkbox"><label>{{likesId}}</label></td>
                                         <td>
@@ -62,10 +62,28 @@
                                             <span class="date">{{author}} | {{createdDate}}</span>
                                         </td>
                                     </tr>
-                                {{/comments}}
-                            {{/likes}}
+                                {{/isCommentLikes}}
+                            {{/likes.content}}
                             </tbody>
                         </table>
+                        {{#pages}}
+                            <div>
+                                {{#hasPrevious}}
+                                    첫 페이지: <a href="/users/my-page/likes?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/users/my-page/likes?page={{previousPage}}">{{previousPage}}</a> |
+                                {{/hasPrevious}}
+                                {{#displayPages}}
+                                    {{#isCurrentPage}}
+                                        | 현재 페이지: {{page}}
+                                    {{/isCurrentPage}}
+                                    {{^isCurrentPage}}
+                                        | <a href="/users/my-page/likes?page={{page}}">{{page}}</a>
+                                    {{/isCurrentPage}}
+                                {{/displayPages}}
+                                {{#hasNext}}
+                                    | | 다음 페이지: <a href="/users/my-page/likes?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/users/my-page/likes?page={{lastPage}}">{{lastPage}}</a>
+                                {{/hasNext}}
+                            </div>
+                        {{/pages}}
                     </div>
                 </div>
             </div>

@@ -2,18 +2,21 @@ package com.eskgus.nammunity.domain.posts;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.util.KeywordUtil;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.dsl.StringExpression;
+import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 
 import java.util.List;
 
-import static com.eskgus.nammunity.util.FindUtil.findContentsByUser;
 import static com.eskgus.nammunity.util.KeywordUtil.searchByField;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.*;
 
 public class PostsRepositoryImpl extends QuerydslRepositorySupport implements CustomPostsRepository {
     @Autowired
@@ -68,16 +71,23 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
     }
 
     @Override
-    public List<Posts> findAllDesc() {
+    public Page<PostsListDto> findAllDesc(Pageable pageable) {
         QPosts post = QPosts.posts;
 
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        return query.selectFrom(post).orderBy(post.id.desc()).fetch();
+        QueryParams<Posts> queryParams = QueryParams.<Posts>builder()
+                .entityManager(entityManager).queryType(post).pageable(pageable).build();
+        List<PostsListDto> posts = createBaseQueryForPagination(queryParams, PostsListDto.class).fetch();
+        return createPage(queryParams, posts);
     }
 
     @Override
-    public List<Posts> findByUser(User user) {
+    public Page<PostsListDto> findByUser(User user, Pageable pageable) {
         QPosts post = QPosts.posts;
-        return findContentsByUser(entityManager, post, null, user);
+
+        BooleanBuilder whereCondition = createWhereConditionForPagination(post.user.id, user, null);
+        QueryParams<Posts> queryParams = QueryParams.<Posts>builder()
+                .entityManager(entityManager).queryType(post).pageable(pageable).whereCondition(whereCondition).build();
+        List<PostsListDto> posts = createBaseQueryForPagination(queryParams, PostsListDto.class).fetch();
+        return createPage(queryParams, posts);
     }
 }

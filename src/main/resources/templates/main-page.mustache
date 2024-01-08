@@ -5,10 +5,10 @@
         <div class="main">
             <table>
                 <tbody>
-                {{^posts}}
+                {{^posts.content}}
                     <tr><td class="no-content">글이 없어요.</td></tr>
-                {{/posts}}
-                {{#posts}}
+                {{/posts.content}}
+                {{#posts.content}}
                     <tr>
                         <td>
                             <div class="tit">
@@ -17,9 +17,27 @@
                             <span class="date">{{author}} | {{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
                         </td>
                     </tr>
-                {{/posts}}
+                {{/posts.content}}
                 </tbody>
             </table>
+            {{#pages}}
+                <div>
+                {{#hasPrevious}}
+                        첫 페이지: <a href="/main?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/main?page={{previousPage}}">{{previousPage}}</a> |
+                {{/hasPrevious}}
+                {{#displayPages}}
+                    {{#isCurrentPage}}
+                        | 현재 페이지: {{page}}
+                    {{/isCurrentPage}}
+                    {{^isCurrentPage}}
+                        | <a href="/main?page={{page}}">{{page}}</a>
+                    {{/isCurrentPage}}
+                {{/displayPages}}
+                {{#hasNext}}
+                     | | 다음 페이지: <a href="/main?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/main?page={{lastPage}}">{{lastPage}}</a>
+                {{/hasNext}}
+                </div>
+            {{/pages}}
         </div>
     </div>
 </div>

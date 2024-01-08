@@ -12,7 +12,7 @@ public class LikesListDto {
     private String createdDate;
     private Long postsId;
     private String title;
-    private Boolean comments = null;
+    private Boolean isCommentLikes = false;
     private Long commentsId;
     private String content;
     private String author;
@@ -29,7 +29,7 @@ public class LikesListDto {
         } else {
             this.postsId = likes.getComments().getPosts().getId();
             this.title = likes.getComments().getPosts().getTitle();
-            this.comments = true;
+            this.isCommentLikes = true;
             this.commentsId = likes.getComments().getId();
             this.content = likes.getComments().getContent();
             this.author = likes.getComments().getUser().getNickname();

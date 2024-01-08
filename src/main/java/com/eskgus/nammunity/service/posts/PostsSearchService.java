@@ -5,11 +5,13 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -17,8 +19,9 @@ public class PostsSearchService {
     private final PostsRepository postsRepository;
 
     @Transactional(readOnly = true)
-    public List<PostsListDto> findAllDesc() {
-        return postsRepository.findAllDesc().stream().map(PostsListDto::new).collect(Collectors.toList());
+    public Page<PostsListDto> findAllDesc(int page) {
+        Pageable pageable = PageRequest.of(page - 1, 20);
+        return postsRepository.findAllDesc(pageable);
     }
 
     @Transactional(readOnly = true)
@@ -28,8 +31,9 @@ public class PostsSearchService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostsListDto> findByUser(User user) {
-        return postsRepository.findByUser(user).stream().map(PostsListDto::new).collect(Collectors.toList());
+    public Page<PostsListDto> findByUser(User user, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return postsRepository.findByUser(user, pageable);
     }
 
     @Transactional(readOnly = true)

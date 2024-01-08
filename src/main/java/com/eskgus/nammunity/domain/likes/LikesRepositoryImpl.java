@@ -3,17 +3,21 @@ package com.eskgus.nammunity.domain.likes;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.web.dto.likes.LikesListDto;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.EntityPathBase;
 import com.querydsl.jpa.impl.JPADeleteClause;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.eskgus.nammunity.util.FindUtil.findContentsByUser;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.*;
 
 public class LikesRepositoryImpl extends QuerydslRepositorySupport implements CustomLikesRepository {
     @Autowired
@@ -24,21 +28,37 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
     }
 
     @Override
-    public List<Likes> findByUser(User user) {
+    public Page<LikesListDto> findByUser(User user, Pageable pageable) {
         QLikes like = QLikes.likes;
-        return findContentsByUser(entityManager, like, null, user);
+
+        BooleanBuilder whereCondition = createWhereConditionForPagination(like.user.id, user, null);
+        QueryParams<Likes> queryParams = QueryParams.<Likes>builder()
+                .entityManager(entityManager).queryType(like).pageable(pageable).whereCondition(whereCondition).build();
+        List<LikesListDto> likes = createBaseQueryForPagination(queryParams, LikesListDto.class).fetch();
+        return createPage(queryParams, likes);
     }
 
     @Override
-    public List<Likes> findPostLikesByUser(User user) {
+    public Page<LikesListDto> findPostLikesByUser(User user, Pageable pageable) {
         QLikes like = QLikes.likes;
-        return findContentsByUser(entityManager, like, like.posts, user);
+
+        BooleanBuilder whereCondition = createWhereConditionForPagination(like.user.id, user, like.posts);
+        QueryParams<Likes> queryParams = QueryParams.<Likes>builder()
+                .entityManager(entityManager).queryType(like).pageable(pageable).whereCondition(whereCondition).build();
+        List<LikesListDto> likes = createBaseQueryForPagination(queryParams, LikesListDto.class).fetch();
+        return createPage(queryParams, likes);
     }
 
+
     @Override
-    public List<Likes> findCommentLikesByUser(User user) {
+    public Page<LikesListDto> findCommentLikesByUser(User user, Pageable pageable) {
         QLikes like = QLikes.likes;
-        return findContentsByUser(entityManager, like, like.comments, user);
+
+        BooleanBuilder whereCondition = createWhereConditionForPagination(like.user.id, user, like.comments);
+        QueryParams<Likes> queryParams = QueryParams.<Likes>builder()
+                .entityManager(entityManager).queryType(like).pageable(pageable).whereCondition(whereCondition).build();
+        List<LikesListDto> likes = createBaseQueryForPagination(queryParams, LikesListDto.class).fetch();
+        return createPage(queryParams, likes);
     }
 
     @Override

@@ -7,6 +7,9 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,8 +34,9 @@ public class CommentsSearchService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentsListDto> findByUser(User user) {
-        return commentsRepository.findByUser(user).stream().map(CommentsListDto::new).collect(Collectors.toList());
+    public Page<CommentsListDto> findByUser(User user, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return commentsRepository.findByUser(user, pageable);
     }
 
     @Transactional(readOnly = true)

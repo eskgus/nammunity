@@ -37,12 +37,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            {{^posts}}
+                            {{^posts.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">작성한 글이 없어요.</td>
                                 </tr>
-                            {{/posts}}
-                            {{#posts}}
+                            {{/posts.content}}
+                            {{#posts.content}}
                                 <tr>
                                     <td class="no-checkbox">{{id}}</td>
                                     <td>
@@ -52,9 +52,27 @@
                                         <span class="date">{{author}} | {{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
                                     </td>
                                 </tr>
-                            {{/posts}}
+                            {{/posts.content}}
                             </tbody>
                         </table>
+                        {{#pages}}
+                            <div>
+                                {{#hasPrevious}}
+                                    첫 페이지: <a href="/users/activity-history/posts/{{userId}}?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/users/activity-history/posts/{{userId}}?page={{previousPage}}">{{previousPage}}</a> |
+                                {{/hasPrevious}}
+                                {{#displayPages}}
+                                    {{#isCurrentPage}}
+                                        | 현재 페이지: {{page}}
+                                    {{/isCurrentPage}}
+                                    {{^isCurrentPage}}
+                                        | <a href="/users/activity-history/posts/{{userId}}?page={{page}}">{{page}}</a>
+                                    {{/isCurrentPage}}
+                                {{/displayPages}}
+                                {{#hasNext}}
+                                    | | 다음 페이지: <a href="/users/activity-history/posts/{{userId}}?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/users/activity-history/posts/{{userId}}?page={{lastPage}}">{{lastPage}}</a>
+                                {{/hasNext}}
+                            </div>
+                        {{/pages}}
                     </div>
                     {{/history}}
                 </div>

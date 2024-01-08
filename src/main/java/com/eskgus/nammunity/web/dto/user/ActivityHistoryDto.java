@@ -4,11 +4,12 @@ import com.eskgus.nammunity.domain.user.BannedUsers;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.util.DateTimeUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -25,8 +26,8 @@ public class ActivityHistoryDto {
     private String expiredDate;
 
     // 작성 글/댓글
-    private List<PostsListDto> posts;
-    private List<CommentsListDto> comments;
+    private Page<PostsListDto> posts;
+    private Page<CommentsListDto> comments;
 
     // 작성 글/댓글 수
     private long numOfPosts;
@@ -37,14 +38,16 @@ public class ActivityHistoryDto {
     private long numOfCommentReports;
     private long numOfUserReports;
 
+    // 페이지 번호
+    private PaginationDto<?> pages;
+
     @Builder
     public ActivityHistoryDto(User user, BannedUsers bannedUser, Map<String, Long> numOfContents,
-                              List<PostsListDto> posts, List<CommentsListDto> comments) {
+                              Page<PostsListDto> posts, Page<CommentsListDto> comments,
+                              PaginationDto<?> paginationDto) {
         this.userId = user.getId();
         this.nickname = user.getNickname();
         this.createdDate = DateTimeUtil.formatDateTime(user.getCreatedDate());
-        this.numOfPosts = numOfContents.get("posts");
-        this.numOfComments = numOfContents.get("comments");
         this.numOfPostReports = numOfContents.get("postReports");
         this.numOfCommentReports = numOfContents.get("commentReports");
         this.numOfUserReports = numOfContents.get("userReports");
@@ -57,10 +60,16 @@ public class ActivityHistoryDto {
             this.expiredDate = DateTimeUtil.formatDateTime(bannedUser.getExpiredDate());
         }
 
-        if ((posts != null) && !posts.isEmpty()) {
+        if (posts != null) {
             this.posts = posts;
-        } else if ((comments != null) && !comments.isEmpty()) {
+            this.numOfPosts = posts.getTotalElements();
+            this.numOfComments = numOfContents.get("comments");
+        } else if (comments != null) {
             this.comments = comments;
+            this.numOfPosts = numOfContents.get("posts");
+            this.numOfComments = comments.getTotalElements();
         }
+
+        this.pages = paginationDto;
     }
 }

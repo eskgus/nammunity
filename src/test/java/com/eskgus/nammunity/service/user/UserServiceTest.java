@@ -2,7 +2,6 @@ package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
-import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.user.BannedUsersRepository;
@@ -19,6 +18,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Period;
+
+import static com.eskgus.nammunity.util.FinderUtil.assertPageForServiceTest;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -55,30 +56,30 @@ public class UserServiceTest {
         User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
         User user2 = userRepository.findById(testDB.signUp(2L, Role.ADMIN)).get();
 
-        // 2. user1이 게시글 작성
-        Posts post1 = postsRepository.findById(testDB.savePosts(user1)).get();
+        // 2. user1이 게시글 작성 * 11 + 댓글 작성 * 11
+        for (int i = 0; i < 11; i++) {
+            Long postId = testDB.savePosts(user1);
+            testDB.saveComments(postId, user1);
+        }
 
-        // 3. user1이 댓글 작성
-        commentsRepository.findById(testDB.saveComments(post1.getId(), user1)).get();
-
-        // 4. user2가 user1 사용자 신고 * 3
+        // 3. user2가 user1 사용자 신고 * 3
         testDB.saveUserReports(user1, user2);
         Assertions.assertThat(contentReportsRepository.count()).isEqualTo(3);
 
-        // 5. user1 활동 정지
+        // 4. user1 활동 정지
         testDB.saveBannedUsers(user1, Period.ofWeeks(1));
         Assertions.assertThat(bannedUsersRepository.count()).isOne();
 
-        // 6. type을 "posts"로 해서 findActivityHistory() 호출
+        // 5. type을 "posts"로 해서 findActivityHistory() 호출
         callAndAssertFindActivityHistory(user1, "posts");
 
-        // 7. type을 "comments"로 해서 findActivityHistory() 호출
+        // 6. type을 "comments"로 해서 findActivityHistory() 호출
         callAndAssertFindActivityHistory(user1, "comments");
     }
 
     private void callAndAssertFindActivityHistory(User user, String type) {
-        // 1. user id, type으로 findActivityHistory() 호출
-        ActivityHistoryDto activityHistoryDto = userService.findActivityHistory(user.getId(), type);
+        // 1. user id, type, page = 2로 findActivityHistory() 호출
+        ActivityHistoryDto activityHistoryDto = userService.findActivityHistory(user.getId(), type, 2);
 
         // 2. activityHistoryDto 검증
         long expectedNumOfPosts = postsRepository.countByUser(user);
@@ -103,11 +104,11 @@ public class UserServiceTest {
         Assertions.assertThat(activityHistoryDto.getBannedUsersExistence()).isTrue();
         Assertions.assertThat(activityHistoryDto.getCount()).isEqualTo(expectedCount);
 
-        // 2-4. 컨텐츠 List dto 확인
+        // 2-4. 컨텐츠 Page<~ListDto> 확인
         if (type.equals("posts")) {
-            Assertions.assertThat(activityHistoryDto.getPosts().size()).isEqualTo(expectedNumOfPosts);
+            assertPageForServiceTest(activityHistoryDto.getPosts(), expectedNumOfPosts);
         } else {
-            Assertions.assertThat(activityHistoryDto.getComments().size()).isEqualTo(expectedNumOfComments);
+            assertPageForServiceTest(activityHistoryDto.getComments(), expectedNumOfComments);
         }
     }
 }

@@ -8,17 +8,17 @@ import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
+import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Controller
@@ -75,28 +75,32 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page")
-    public String myPage(Principal principal, Model model) {
+    public String myPage(@RequestParam(name = "page", defaultValue = "1") int page,
+                         Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
 
-            List<PostsListDto> posts = postsSearchService.findByUser(user);
-            if (posts.size() > 5) {
+            // 작성 글
+            Page<PostsListDto> posts = postsSearchService.findByUser(user, page, 5);
+            if (posts.getTotalElements() > 5) {
                 attr.put("postsMore", true);
             }
-            attr.put("posts", posts.stream().limit(5).collect(Collectors.toList()));
+            attr.put("posts", posts);
 
-            List<CommentsListDto> comments = commentsSearchService.findByUser(user);
-            if (comments.size() > 5) {
+            // 작성 댓글
+            Page<CommentsListDto> comments = commentsSearchService.findByUser(user, page, 5);
+            if (comments.getTotalElements() > 5) {
                 attr.put("commentsMore", true);
             }
-            attr.put("comments", comments.stream().limit(5).collect(Collectors.toList()));
+            attr.put("comments", comments);
 
-            List<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findByUser);
-            if (likes.size() > 5) {
+            // 좋아요
+            Page<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findByUser, page, 5);
+            if (likes.getTotalElements() > 5) {
                 attr.put("likesMore", true);
             }
-            attr.put("likes", likes.stream().limit(5).collect(Collectors.toList()));
+            attr.put("likes", likes);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -128,16 +132,20 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page/posts")
-    public String listPosts(Principal principal, Model model) {
+    public String listPosts(@RequestParam(name = "page", defaultValue = "1") int page,
+                            Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
 
             // 게시글 목록
-            attr.put("posts", postsSearchService.findByUser(user));
+            Page<PostsListDto> posts = postsSearchService.findByUser(user, page, 20);
+            attr.put("posts", posts);
 
-            // 게시글 개수
-            attr.put("numOfPosts", postsSearchService.countByUser(user));
+            // 페이지 번호
+            PaginationDto<PostsListDto> paginationDto = PaginationDto.<PostsListDto>builder()
+                    .page(posts).display(10).build();
+            attr.put("pages", paginationDto);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -152,16 +160,20 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page/comments")
-    public String listComments(Principal principal, Model model) {
+    public String listComments(@RequestParam(name = "page", defaultValue = "1") int page,
+                               Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
 
             // 댓글 목록
-            attr.put("comments", commentsSearchService.findByUser(user));
+            Page<CommentsListDto> comments = commentsSearchService.findByUser(user, page, 20);
+            attr.put("comments", comments);
 
-            // 댓글 개수
-            attr.put("numOfComments", commentsSearchService.countByUser(user));
+            // 페이지 번호
+            PaginationDto<CommentsListDto> paginationDto = PaginationDto.<CommentsListDto>builder()
+                    .page(comments).display(10).build();
+            attr.put("pages", paginationDto);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -171,16 +183,20 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page/likes")
-    public String listLikes(Principal principal, Model model) {
+    public String listLikes(@RequestParam(name = "page", defaultValue = "1") int page,
+                            Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
 
             // 전체 좋아요 목록
-            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findByUser));
+            Page<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findByUser, page, 20);
+            attr.put("likes", likes);
 
-            // 전체 좋아요 개수
-            attr.put("numOfLikes", likesSearchService.countLikesByUser(user, likesRepository::countByUser));
+            // 페이지 번호
+            PaginationDto<LikesListDto> paginationDto = PaginationDto.<LikesListDto>builder()
+                    .page(likes).display(10).build();
+            attr.put("pages", paginationDto);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -190,15 +206,20 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page/likes/posts")
-    public String listPostsLikes(Principal principal, Model model) {
+    public String listPostLikes(@RequestParam(name = "page", defaultValue = "1") int page,
+                                 Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
-            // 게시글 좋아요 목록
-            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findPostLikesByUser));
 
-            // 게시글 좋아요 개수
-            attr.put("numOfLikes", likesSearchService.countLikesByUser(user, likesRepository::countPostLikesByUser));
+            // 게시글 좋아요 목록
+            Page<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findPostLikesByUser, page, 20);
+            attr.put("likes", likes);
+
+            // 페이지 번호
+            PaginationDto<LikesListDto> paginationDto = PaginationDto.<LikesListDto>builder()
+                    .page(likes).display(10).build();
+            attr.put("pages", paginationDto);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -208,16 +229,20 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page/likes/comments")
-    public String listCommentsLikes(Principal principal, Model model) {
+    public String listCommentLikes(@RequestParam(name = "page", defaultValue = "1") int page,
+                                    Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
             User user = userService.findByUsername(principal.getName());
 
             // 댓글 좋아요 목록
-            attr.put("likes", likesSearchService.findLikesByUser(user, likesRepository::findCommentLikesByUser));
+            Page<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findCommentLikesByUser, page, 20);
+            attr.put("likes", likes);
 
-            // 댓글 좋아요 개수
-            attr.put("numOfLikes", likesSearchService.countLikesByUser(user, likesRepository::countCommentLikesByUser));
+            // 페이지 번호
+            PaginationDto<LikesListDto> paginationDto = PaginationDto.<LikesListDto>builder()
+                    .page(likes).display(2).build();
+            attr.put("pages", paginationDto);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -227,9 +252,11 @@ public class UserIndexController {
     }
 
     @GetMapping("/activity-history/{type}/{id}")
-    public String findActivityHistory(@PathVariable String type, @PathVariable Long id, Model model) {
+    public String findActivityHistory(@PathVariable String type, @PathVariable Long id,
+                                      @RequestParam(name = "page", defaultValue = "1") int page,
+                                      Model model) {
         try {
-            model.addAttribute("history", userService.findActivityHistory(id, type));
+            model.addAttribute("history", userService.findActivityHistory(id, type, page));
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             // id로 user 검색 안 되면 메인("/")으로 이동 (footer)
