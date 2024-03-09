@@ -1,7 +1,12 @@
 package com.eskgus.nammunity.domain.likes;
 
+import com.eskgus.nammunity.converter.EntityConverterForTest;
+import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.enums.ContentTypeForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -19,14 +24,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.FinderUtil.*;
+import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
+import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -46,24 +53,39 @@ public class LikesRepositoryTest {
     @Autowired
     private LikesRepository likesRepository;
 
+    private User[] users;
+    private Posts post1;
+    private Comments comment1;
+    private Likes post1Like;
+    private Likes comment1Like;
+
     @BeforeEach
     public void setUp() {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
-        Assertions.assertThat(userRepository.count()).isOne();
+        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user2Id = testDB.signUp(2L, Role.USER);
+        assertThat(userRepository.count()).isEqualTo(user2Id);
 
-        // 2. user1이 게시글 작성
-        Long postId = testDB.savePosts(user1);
-        Assertions.assertThat(postsRepository.count()).isOne();
+        User user1 = userRepository.findById(user1Id).get();
+        User user2 = userRepository.findById(user2Id).get();
 
-        // 3. user1이 댓글 작성
-        Long commentId = testDB.saveComments(postId, user1);
-        Assertions.assertThat(commentsRepository.count()).isOne();
+        this.users = new User[]{ user1, user2 };
 
-        // 4. user1이 게시글 좋아요 + 댓글 좋아요
-        testDB.savePostLikes(postId, user1);
-        Long latestLikeId = testDB.saveCommentLikes(commentId, user1);
-        Assertions.assertThat(likesRepository.count()).isEqualTo(latestLikeId);
+        Long post1Id = testDB.savePosts(user1);
+        assertThat(postsRepository.count()).isEqualTo(post1Id);
+
+        this.post1 = postsRepository.findById(post1Id).get();
+
+        Long comment1Id = testDB.saveComments(post1Id, user1);
+        assertThat(commentsRepository.count()).isEqualTo(comment1Id);
+
+        this.comment1 = commentsRepository.findById(comment1Id).get();
+
+        Long post1LikeId = testDB.savePostLikes(post1Id, user1);
+        Long comment1LikeId = testDB.saveCommentLikes(comment1Id, user1);
+        assertThat(likesRepository.count()).isEqualTo(comment1LikeId);
+
+        this.post1Like = likesRepository.findById(post1LikeId).get();
+        this.comment1Like = likesRepository.findById(comment1LikeId).get();
     }
 
     @AfterEach
@@ -73,185 +95,134 @@ public class LikesRepositoryTest {
 
     @Test
     public void countByUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
+        // 1. user2가 좋아요 x 후 호출
+        callAndAssertCountLikesByUser(users[1], likesRepository::countByUser, 0);
 
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        // 4. user2가 좋아요 x 후 호출
-        callAndAssertCountLikesByUser(user2, likesRepository::countByUser, 0);
+        // 2. user1이 게시글 좋아요 + 댓글 좋아요 후 호출
+        callAndAssertCountLikesByUser(users[0], likesRepository::countByUser, comment1Like.getId());
+    }
 
-        // 5. user1이 게시글 좋아요 + 댓글 좋아요 후 호출
-        callAndAssertCountLikesByUser(user1, likesRepository::countByUser, likesRepository.count());
+    private void callAndAssertCountLikesByUser(User user, Function<User, Long> counter, long expectedCount) {
+        long actualCount = counter.apply(user);
+        Assertions.assertThat(actualCount).isEqualTo(expectedCount);
     }
 
     @Test
     public void countPostLikesByUser() {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
-
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        // 4. user1이 게시글 좋아요 + 댓글 좋아요 후 호출, 리턴 값이 1(게시글 좋아요 1개)인지 확인
-        callAndAssertCountLikesByUser(user1, likesRepository::countPostLikesByUser, 1);
+        callAndAssertCountLikesByUser(users[0], likesRepository::countPostLikesByUser, post1Like.getId());
     }
 
     @Test
     public void countCommentLikesByUser() {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
-
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        // 4. user1이 게시글 좋아요 + 댓글 좋아요 후 호출, 리턴 값이 1(댓글 좋아요 1개)인지 확인
-        callAndAssertCountLikesByUser(user1, likesRepository::countCommentLikesByUser, 1);
+        callAndAssertCountLikesByUser(users[0], likesRepository::countCommentLikesByUser,
+                comment1Like.getId() - post1Like.getId());
     }
 
     @Test
     public void findByUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
-        Assertions.assertThat(userRepository.count()).isEqualTo(2);
+        callAndAssertFindLikesByUser(likesRepository::findByUser, null);
+    }
 
-        // 2. 좋아요 저장 + 페이징 처리되지 않은 검색 결과의 id list 가져오기
-        int limit = 3;
-        List<Long> totalElementIdList = getTotalElementIdList("post comment", user2);
+    private void callAndAssertFindLikesByUser(RepositoryBiFinderForTest<LikesListDto> finder,
+                                              ContentTypeForTest contentTypeOfLikes) {
+        saveLikes();
 
-        // 3. expectedIdList 가져오기
-        int expectedTotalElements = totalElementIdList.size();
-        List<Long> expectedIdList = totalElementIdList.subList(expectedTotalElements - limit, expectedTotalElements);
+        FindHelperForTest<RepositoryBiFinderForTest<LikesListDto>, Likes, LikesListDto> findHelper =
+                createBiFindHelper(finder, contentTypeOfLikes);
+        callAndAssertFindLikes(findHelper);
+    }
 
-        // 3. user2로 findByUser() 호출 + 검증
-        FinderParams<LikesListDto> finderParams = FinderParams.<LikesListDto>builder()
-                .currentPage(1).limit(limit).finder(likesRepository::findByUser).user(user2)
-                .expectedTotalElements(expectedTotalElements)
-                .expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(finderParams);
+    private void saveLikes() {
+        List<Posts> posts = new ArrayList<>();
+        List<Comments> comments = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            posts.add(savePost());
+            comments.add(saveComment());
+        }
+
+        for (int i = 0; i < posts.size(); i++) {
+            testDB.savePostLikes(posts.get(i).getId(), users[1]);
+            testDB.saveCommentLikes(comments.get(i).getId(), users[1]);
+        }
+        assertThat(likesRepository.count()).isEqualTo(posts.size() + comments.size() + comment1Like.getId());
+    }
+
+    private Posts savePost() {
+        Long postId = testDB.savePosts(users[0]);
+        assertThat(postsRepository.count()).isEqualTo(postId);
+
+        return postsRepository.findById(postId).get();
+    }
+
+    private Comments saveComment() {
+        Long commentId = testDB.saveComments(post1.getId(), users[0]);
+        assertThat(commentsRepository.count()).isEqualTo(commentId);
+
+        return commentsRepository.findById(commentId).get();
+    }
+
+    private FindHelperForTest<RepositoryBiFinderForTest<LikesListDto>, Likes, LikesListDto>
+        createBiFindHelper(RepositoryBiFinderForTest<LikesListDto> finder,
+                           ContentTypeForTest contentTypeOfLikes) {
+        EntityConverterForTest<Likes, LikesListDto> entityConverter = new LikesConverterForTest();
+        return FindHelperForTest.<RepositoryBiFinderForTest<LikesListDto>, Likes, LikesListDto>builder()
+                .finder(finder).user(users[0])
+                .contentTypeOfLikes(contentTypeOfLikes)
+                .entityStream(likesRepository.findAll().stream())
+                .page(1).limit(3)
+                .entityConverter(entityConverter).build();
+    }
+
+    private void callAndAssertFindLikes(FindHelperForTest<RepositoryBiFinderForTest<LikesListDto>, Likes, LikesListDto>
+                                                findHelper) {
+        initializeFindHelper(findHelper);
+        callAndAssertFind();
     }
 
     @Test
     public void findPostLikesByUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
-        Assertions.assertThat(userRepository.count()).isEqualTo(2);
-
-        // 2. 좋아요 저장 + expectedIdList 가져오기
-        List<Long> expectedIdList = getTotalElementIdList("post", user2);
-
-        // 3. user2로 findPostLikesByUser() 호출 + 검증
-        FinderParams<LikesListDto> finderParams = FinderParams.<LikesListDto>builder()
-                .currentPage(1).limit(3).finder(likesRepository::findPostLikesByUser).user(user2)
-                .expectedTotalElements(expectedIdList.size())
-                .expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(finderParams);
+        callAndAssertFindLikesByUser(likesRepository::findPostLikesByUser, ContentTypeForTest.POSTS);
     }
 
     @Test
     public void findCommentLikesByUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
-        Assertions.assertThat(userRepository.count()).isEqualTo(2);
-
-        // 2. 좋아요 저장 + expectedIdList 가져오기
-        List<Long> expectedIdList = getTotalElementIdList("comment", user2);
-
-        // 3. user2로 findCommentLikesByUser() 호출 + 검증
-        FinderParams<LikesListDto> finderParams = FinderParams.<LikesListDto>builder()
-                .currentPage(1).limit(3).finder(likesRepository::findCommentLikesByUser).user(user2)
-                .expectedTotalElements(expectedIdList.size())
-                .expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(finderParams);
+        callAndAssertFindLikesByUser(likesRepository::findCommentLikesByUser, ContentTypeForTest.COMMENTS);
     }
 
     @Test
     public void deleteByPosts() {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
+        Posts post2 = savePost();
 
-        // 2. user1이 게시글 작성 * 2
-        Posts post2 = postsRepository.findById(testDB.savePosts(user1)).get();
-        Assertions.assertThat(postsRepository.count()).isEqualTo(2);
-
-        // 3. user1, post2로 deleteByPosts() 호출 + 검증
-        callAndAssertDeleteByField(testDB::savePostLikes, likesRepository::deleteByPosts, post2, user1);
-    }
-
-    @Test
-    public void deleteByComments() {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
-
-        // 2. user1이 게시글 작성 + 댓글 작성 * 2
-        Posts post1 = postsRepository.findById(1L).get();
-        Comments comment2 = commentsRepository.findById(testDB.saveComments(post1.getId(), user1)).get();
-        Assertions.assertThat(commentsRepository.count()).isEqualTo(2);
-
-        // 3. user1, comment2로 deleteByComments() 호출 + 검증
-        callAndAssertDeleteByField(testDB::saveCommentLikes, likesRepository::deleteByComments, comment2, user1);
-    }
-
-    private void callAndAssertCountLikesByUser(User user, Function<User, Long> function, long expectedCount) {
-        // 1. user로 function 호출
-        long actualCount = function.apply(user);
-
-        // 2. 리턴 값이 expectedCount랑 같은지 확인
-        Assertions.assertThat(actualCount).isEqualTo(expectedCount);
-    }
-
-    private List<Long> getTotalElementIdList(String content, User user) {
-        // 1. user1이 게시글 작성 + user2가 게시글 작성
-        Posts post1 = postsRepository.findById(1L).get();
-        Posts post2 = postsRepository.findById(testDB.savePosts(user)).get();
-        Assertions.assertThat(postsRepository.count()).isEqualTo(2);
-
-        // 2. user1이 댓글 작성 + user2가 댓글 작성
-        Comments comment1 = commentsRepository.findById(1L).get();
-        Comments comment2 = commentsRepository.findById(testDB.saveComments(post2.getId(), user)).get();
-        Assertions.assertThat(commentsRepository.count()).isEqualTo(2);
-
-        // 3. user1이 게시글 좋아요 + 댓글 좋아요
-        // 4. user2가 게시글 좋아요 * 2 + 댓글 좋아요 * 2
-        List<Posts> posts = Arrays.asList(post1, post2);
-        List<Comments> comments = Arrays.asList(comment1, comment2);
-        List<Long> totalElementIdList = new ArrayList<>();
-
-        for (int i = 0; i < 2; i++) {
-            Long postLikeId = testDB.savePostLikes(posts.get(i).getId(), user);
-            Long commentLikeId = testDB.saveCommentLikes(comments.get(i).getId(), user);
-
-            // 5. List<Long> totalElementIdList에 user2의 댓글 좋아요 id 저장
-            if (content.contains("post")) {
-                totalElementIdList.add(postLikeId);
-            }
-            if (content.contains("comment")) {
-                totalElementIdList.add(commentLikeId);
-            }
-        }
-        Assertions.assertThat(likesRepository.count()).isEqualTo(6);
-
-        return totalElementIdList;
+        callAndAssertDeleteByField(testDB::savePostLikes, likesRepository::deleteByPosts, post2);
     }
 
     private <T> void callAndAssertDeleteByField(BiFunction<Long, User, Long> likesSaver,
                                                 BiConsumer<T, User> likesDeleter,
-                                                T content, User user) {
-        // 1. 들어온 content의 id 구하기
-        long contentId;
+                                                T content) {
+        Long contentId = getContentId(content);
+
+        Long likeId = likesSaver.apply(contentId, users[0]);
+        likesDeleter.accept(content, users[0]);
+        assertDeleteByField(likeId);
+    }
+
+    private <T> Long getContentId(T content) {
         if (content instanceof Posts) {
-            contentId = ((Posts) content).getId();
+            return ((Posts) content).getId();
         } else {
-            contentId = ((Comments) content).getId();
+            return  ((Comments) content).getId();
         }
+    }
 
-        // 2. user가 post/comment 좋아요 (* 2)
-        Long likeId = likesSaver.apply(contentId, user);
-
-        // 3. post/comment, user로 deleteBy@@() 호출
-        likesDeleter.accept(content, user);
-
-        // 4. user의 post/comment 좋아요가 db에 존재하지 않는지 확인
+    private void assertDeleteByField(Long likeId) {
         Optional<Likes> result = likesRepository.findById(likeId);
         Assertions.assertThat(result).isNotPresent();
+    }
+
+    @Test
+    public void deleteByComments() {
+        Comments comment2 = saveComment();
+
+        callAndAssertDeleteByField(testDB::saveCommentLikes, likesRepository::deleteByComments, comment2);
     }
 }
