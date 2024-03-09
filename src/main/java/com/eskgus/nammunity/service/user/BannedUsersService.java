@@ -29,14 +29,14 @@ public class BannedUsersService {
         Optional<BannedUsers> result = bannedUsersRepository.findByUser(user);
 
         // 1. reports에서 user로 reason 추출해서 정지 사유 생성
-        Reasons reason = contentReportsRepository.findReasonByUsers(user);
+        Reasons reason = contentReportsRepository.findReasonByContents(user);
         // 신고 되지 않은 사용자면 예외 발생
         if (reason == null) {
             throw new IllegalArgumentException("신고 내역이 없는 회원입니다.");
         }
         String reasonDetail = reason.getDetail();
         if (reasonDetail.equals("기타")) {
-            reasonDetail += ": " + contentReportsRepository.findOtherReasonByUsers(user, reason);
+            reasonDetail += ": " + contentReportsRepository.findOtherReasonByContents(user, reason);
         }
 
         LocalDateTime startedDate = LocalDateTime.now();

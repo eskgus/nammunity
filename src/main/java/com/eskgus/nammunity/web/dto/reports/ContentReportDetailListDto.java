@@ -13,10 +13,12 @@ public class ContentReportDetailListDto {
     private String reason;
 
     @Builder
-    public ContentReportDetailListDto(ContentReports report, String reason) {
+    public ContentReportDetailListDto(ContentReports report) {
         this.id = report.getId();
         this.reporter = report.getReporter().getNickname();
         this.reportedDate = DateTimeUtil.formatDateTime(report.getCreatedDate());
-        this.reason = reason;
+
+        String reasonDetail = report.getReasons().getDetail();
+        this.reason = reasonDetail.equals("기타") ? reasonDetail + ": " + report.getOtherReasons() : reasonDetail;
     }
 }

@@ -8,7 +8,7 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.web.dto.reports.ContentReportDistinctDto;
+import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +25,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -45,20 +44,36 @@ public class ContentReportsRepositoryTest {
     @Autowired
     private ContentReportsRepository contentReportsRepository;
 
+    private User user1;
+    private User user2;
+    private Posts post;
+    private Comments comment;
+
+    private ContentReports latestPostReport;
+    private ContentReports latestCommentReport;
+    private ContentReports latestUserReport;
+
     @BeforeEach
     public void setUp() {
         // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
-        testDB.signUp(2L, Role.USER);
-        Assertions.assertThat(userRepository.count()).isEqualTo(2);
+        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user2Id = testDB.signUp(2L, Role.USER);
+        Assertions.assertThat(userRepository.count()).isEqualTo(user2Id);
+
+        this.user1 = userRepository.findById(user1Id).get();
+        this.user2 = userRepository.findById(user2Id).get();
 
         // 2. user1이 게시글 작성
-        Long postId = testDB.savePosts(user1);
-        Assertions.assertThat(postsRepository.count()).isOne();
+        Long postId = testDB.savePosts(this.user1);
+        Assertions.assertThat(postsRepository.count()).isEqualTo(postId);
+
+        this.post = postsRepository.findById(postId).get();
 
         // 3. user1이 댓글 작성
-        testDB.saveComments(postId, user1);
-        Assertions.assertThat(commentsRepository.count()).isOne();
+        Long commentId = testDB.saveComments(postId, this.user1);
+        Assertions.assertThat(commentsRepository.count()).isEqualTo(commentId);
+
+        this.comment = commentsRepository.findById(commentId).get();
     }
 
     @AfterEach
@@ -67,341 +82,152 @@ public class ContentReportsRepositoryTest {
     }
 
     @Test
-    public void findDistinct() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
+    public void findReporterByContents() {
+        // 게시글 신고 + 댓글 신고 + 사용자 신고
+        saveReports();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
+        callAndAssertFindReporterByContents(this.post, this.latestPostReport);
+        callAndAssertFindReporterByContents(this.comment, this.latestCommentReport);
+        callAndAssertFindReporterByContents(this.user1, this.latestUserReport);
+    }
 
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
+    private void saveReports() {
+        Long postReportId = testDB.savePostReports(this.post.getId(), this.user2);
+        Long commentReportId = testDB.saveCommentReports(this.comment.getId(), this.user2);
+        Long userReportId = testDB.saveUserReports(this.user1, this.user2);
+        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(userReportId);
 
-        // 4. user2가 user1이 작성한 게시글 신고 * 10, 댓글 신고 * 10, user1 사용자 신고 * 3
-        saveReportsForFindingDistinctByTypes(post, comment, user1, user2);
+        this.latestPostReport = contentReportsRepository.findById(postReportId).get();
+        this.latestCommentReport = contentReportsRepository.findById(commentReportId).get();
+        this.latestUserReport = contentReportsRepository.findById(userReportId).get();
+    }
 
-        // 5. findDistinct() 호출 + 검증
-        String[] expectedTypes = { "게시글", "댓글", "사용자" };
-        Long[] expectedIds = { post.getId(), comment.getId(), user1.getId() };
-        callAndAssertFindDistinctByTypes(contentReportsRepository::findDistinct, 3, expectedTypes, expectedIds);
+    private <T> void callAndAssertFindReporterByContents(T contents, ContentReports expectedReport) {
+        User actualReporter = contentReportsRepository.findReporterByContents(contents);
+        Assertions.assertThat(actualReporter.getId()).isEqualTo(expectedReport.getReporter().getId());
     }
 
     @Test
-    public void findDistinctByPosts() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
+    public void findReportedDateByContents() {
+        saveReports();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
+        callAndAssertFindReportedDateByContents(this.post, this.latestPostReport);
+        callAndAssertFindReportedDateByContents(this.comment, this.latestCommentReport);
+        callAndAssertFindReportedDateByContents(this.user1, this.latestUserReport);
+    }
 
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 게시글 신고 * 10, 댓글 신고 * 10, user1 사용자 신고 * 3
-        saveReportsForFindingDistinctByTypes(post, comment, user1, user2);
-
-        // 5. findDistinctByPosts() 호출 + 검증
-        String[] expectedTypes = { "게시글" };
-        Long[] expectedIds = { post.getId() };
-        callAndAssertFindDistinctByTypes(contentReportsRepository::findDistinctByPosts, 1, expectedTypes, expectedIds);
+    private <T> void callAndAssertFindReportedDateByContents(T contents, ContentReports expectedReport) {
+        LocalDateTime actualReportedDate = contentReportsRepository.findReportedDateByContents(contents);
+        Assertions.assertThat(actualReportedDate).isEqualTo(expectedReport.getCreatedDate());
     }
 
     @Test
-    public void findDistinctByComments() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
+    public void findReasonByContents() {
+        saveReports();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
+        callAndAssertFindReasonByContents(this.post, this.latestPostReport);
+        callAndAssertFindReasonByContents(this.comment, this.latestCommentReport);
+        callAndAssertFindReasonByContents(this.user1, this.latestUserReport);
+    }
 
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 게시글 신고 * 10, 댓글 신고 * 10, user1 사용자 신고 * 3
-        saveReportsForFindingDistinctByTypes(post, comment, user1, user2);
-
-        // 5. findDistinctByComments() 호출
-        String[] expectedTypes = { "댓글" };
-        Long[] expectedIds = { comment.getId() };
-        callAndAssertFindDistinctByTypes(contentReportsRepository::findDistinctByComments, 1, expectedTypes, expectedIds);
+    public <T> void callAndAssertFindReasonByContents(T contents, ContentReports expectedReport) {
+        Reasons actualReason = contentReportsRepository.findReasonByContents(contents);
+        Assertions.assertThat(actualReason.getId()).isEqualTo(expectedReport.getReasons().getId());
     }
 
     @Test
-    public void findDistinctByUsers() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
+    public void findOtherReasonByContents() {
+        saveReportsWithOtherReason();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 게시글 신고 * 10, 댓글 신고 * 10, user1 사용자 신고 * 3
-        saveReportsForFindingDistinctByTypes(post, comment, user1, user2);
-
-        // 5. findDistinctByUsers() 호출
-        String[] expectedTypes = { "사용자" };
-        Long[] expectedIds = { user1.getId() };
-        callAndAssertFindDistinctByTypes(contentReportsRepository::findDistinctByUsers, 1, expectedTypes, expectedIds);
+        callAndAssertFindOtherReasonByContents(this.post, this.latestPostReport);
+        callAndAssertFindOtherReasonByContents(this.comment, this.latestCommentReport);
+        callAndAssertFindOtherReasonByContents(this.user1, this.latestUserReport);
     }
 
-    @Test
-    public void findReporterByPosts() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-
-        // 3. user2가 user1이 작성한 게시글 신고 * 10
-        saveReportsAndGetLatestReportId(testDB::savePostReports, post.getId(), user2);
-
-        // 4. post로 findReporterByPosts() 호출 + 검증
-        callAndAssertFindReporterByTypes(post, contentReportsRepository::findReporterByPosts, user2);
-    }
-
-    @Test
-    public void findReporterByComments() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 댓글 신고 * 10
-        saveReportsAndGetLatestReportId(testDB::saveCommentReports, comment.getId(), user2);
-
-        // 5. comment로 findReporterByComments() 호출 + 검증
-        callAndAssertFindReporterByTypes(comment, contentReportsRepository::findReporterByComments, user2);
-    }
-
-    @Test
-    public void findReporterByUsers() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user2가 user1 사용자 신고 * 3
-        saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
-
-        // 3. user1로 findReporterByUsers() 호출 + 검증
-        callAndAssertFindReporterByTypes(user1, contentReportsRepository::findReporterByUsers, user2);
-    }
-
-    @Test
-    public void findReportedDateByPosts() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-
-        // 3. user2가 user1이 작성한 게시글 신고 * 10
-        Long latestReportId = saveReportsAndGetLatestReportId(testDB::savePostReports, post.getId(), user2);
-
-        // 4. post로 findReportedDateByPosts() 호출 + 검증
-        callAndAssertFindReportedDateByTypes(post, contentReportsRepository::findReportedDateByPosts, latestReportId);
-    }
-
-    @Test
-    public void findReportedDateByComments() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 댓글 신고 * 10
-        Long latestReportId = saveReportsAndGetLatestReportId(testDB::saveCommentReports, comment.getId(), user2);
-
-        // 5. comment로 findReportedDateByComments() 호출 + 검증
-        callAndAssertFindReportedDateByTypes(comment, contentReportsRepository::findReportedDateByComments, latestReportId);
-    }
-
-    @Test
-    public void findReportedDateByUsers() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user2가 user1 사용자 신고 * 3
-        Long latestReportId = saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
-
-        // 3. user1로 findReportedDateByUsers() 호출 + 검증
-        callAndAssertFindReportedDateByTypes(user1, contentReportsRepository::findReportedDateByUsers, latestReportId);
-    }
-
-    @Test
-    public void findReasonByPosts() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-
-        // 3. user2가 user1이 작성한 게시글 신고 * 10
-        Long latestReportId = saveReportsAndGetLatestReportId(testDB::savePostReports, post.getId(), user2);
-
-        // 4. post로 findReasonByPosts() 호출 + 검증
-        callAndAssertFindReasonByTypes(post, contentReportsRepository::findReasonByPosts, latestReportId);
-    }
-
-    @Test
-    public void findReasonByComments() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 댓글 신고 * 10
-        Long latestReportId = saveReportsAndGetLatestReportId(testDB::saveCommentReports, comment.getId(), user2);
-
-        // 5. comment로 findReasonByComments() 호출 + 검증
-        callAndAssertFindReasonByTypes(comment, contentReportsRepository::findReasonByComments, latestReportId);
-    }
-
-    @Test
-    public void findReasonByUsers() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user2가 user1 사용자 신고 * 3
-        Long latestReportId = saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
-
-        // 3. user1로 findReasonByUsers() 호출 + 검증
-        callAndAssertFindReasonByTypes(user1, contentReportsRepository::findReasonByUsers, latestReportId);
-    }
-
-    @Test
-    public void findOtherReasonByPosts() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-
-        // 3. user2가 user1이 작성한 게시글 기타 사유로 신고 * 3
+    private void saveReportsWithOtherReason() {
         String[] otherReasons = { "기타 사유 1", "기타 사유 2", "기타 사유 3" };
-        Long latestReportId = null;
+        Long postReportId = 0L;
+        Long commentReportId = 0L;
+        Long userReportId = 0L;
         for (String otherReason : otherReasons) {
-            latestReportId = testDB.savePostReportsWithOtherReason(post.getId(), user2, otherReason);
+            postReportId = testDB.savePostReportsWithOtherReason(this.post.getId(), this.user2, otherReason);
+            commentReportId = testDB.saveCommentReportsWithOtherReason(this.comment.getId(), this.user2, otherReason);
+            userReportId = testDB.saveUserReportsWithOtherReason(this.user1, this.user2, otherReason);
         }
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
+        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(userReportId);
 
-        // 4. post, reason(기타)로 findOtherReasonByPosts() 호출 + 검증
-        callAndAssertFindOtherReasonByTypes(post, contentReportsRepository::findOtherReasonByPosts, latestReportId);
+        this.latestPostReport = contentReportsRepository.findById(postReportId).get();
+        this.latestCommentReport = contentReportsRepository.findById(commentReportId).get();
+        this.latestUserReport = contentReportsRepository.findById(userReportId).get();
     }
 
-    @Test
-    public void findOtherReasonByComments() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 댓글 기타 사유로 신고 * 3
-        String[] otherReasons = { "기타 사유 1", "기타 사유 2", "기타 사유 3" };
-        Long latestReportId = null;
-        for (String otherReason : otherReasons) {
-            latestReportId = testDB.saveCommentReportsWithOtherReason(comment.getId(), user2, otherReason);
-        }
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
-
-        // 5. comment, reason(기타)로 findOtherReasonByComments() 호출 + 검증
-        callAndAssertFindOtherReasonByTypes(comment, contentReportsRepository::findOtherReasonByComments, latestReportId);
+    private <T> void callAndAssertFindOtherReasonByContents(T contents, ContentReports expectedReport) {
+        Reasons reason = expectedReport.getReasons();
+        String actualOtherReason = contentReportsRepository.findOtherReasonByContents(contents, reason);
+        Assertions.assertThat(actualOtherReason).isEqualTo(expectedReport.getOtherReasons());
     }
 
-    @Test
-    public void findOtherReasonByUsers() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user2가 user1 사용자 기타 사유로 신고 * 3
-        String[] otherReasons = { "기타 사유 1", "기타 사유 2", "기타 사유 3" };
-        Long latestReportId = null;
-        for (String otherReason : otherReasons) {
-            latestReportId = testDB.saveUserReportsWithOtherReason(user1, user2, otherReason);
-        }
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
-
-        // 3. user1, reason(기타)로 findOtherReasonByUsers() 호출 + 검증
-        callAndAssertFindOtherReasonByTypes(user1, contentReportsRepository::findOtherReasonByUsers, latestReportId);
-    }
-
+    // TODO: reportsRepo.findOtherReasonById 테스트 수정 (findDetails() 수정 후)
     @Test
     public void findOtherReasonById() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user2가 user1 사용자 신고 * 3 (마지막 신고: 기타 사유)
-        Long latestReportId = saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
-
-        // 3. latestReportId로 ContentReports 찾기
-        ContentReports report = getContentReportsById(latestReportId);
-
-        // 4. latestReportId로 findOtherReasonById() 호출
-        String actualOtherReason = contentReportsRepository.findOtherReasonById(latestReportId);
-
-        // 5. actualOtherReason이 report의 otherReasons랑랑 같은지 확인
-        Assertions.assertThat(actualOtherReason).isEqualTo(report.getOtherReasons());
+//        // 1. user1 회원가입 + user2 회원가입
+//        User user1 = userRepository.findById(1L).get();
+//        User user2 = userRepository.findById(2L).get();
+//
+//        // 2. user2가 user1 사용자 신고 * 3 (마지막 신고: 기타 사유)
+//        Long latestReportId = saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
+//
+//        // 3. latestReportId로 ContentReports 찾기
+//        ContentReports report = getContentReportsById(latestReportId);
+//
+//        // 4. latestReportId로 findOtherReasonById() 호출
+//        String actualOtherReason = contentReportsRepository.findOtherReasonById(latestReportId);
+//
+//        // 5. actualOtherReason이 report의 otherReasons랑 같은지 확인
+//        Assertions.assertThat(actualOtherReason).isEqualTo(report.getOtherReasons());
     }
 
     @Test
-    public void findByPosts() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
+    public void findByContents() {
+        saveReports();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-
-        // 3. user2가 user1이 작성한 게시글 신고 * 10
-        saveReportsAndGetLatestReportId(testDB::savePostReports, post.getId(), user2);
-
-        // 5. post로 findByPosts() 호출 + 검증
-        callAndAssertFindByTypes(post, contentReportsRepository::findByPosts, post.getId());
+        callAndAssertFindByContents(this.post, this.latestPostReport);
+        callAndAssertFindByContents(this.comment, this.latestCommentReport);
+        callAndAssertFindByContents(this.user1, this.latestUserReport);
     }
 
-    @Test
-    public void findByComments() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
+    private <T> void callAndAssertFindByContents(T contents, ContentReports expectedLatestReport) {
+        List<ContentReportDetailListDto> expectedReports = getExpectedReports(expectedLatestReport);
+        List<ContentReportDetailListDto> actualReports = contentReportsRepository.findByContents(contents);
 
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 댓글 신고 * 10
-        saveReportsAndGetLatestReportId(testDB::saveCommentReports, comment.getId(), user2);
-
-        // 5. comment로 findByComments() 호출 + 검증
-        callAndAssertFindByTypes(comment, contentReportsRepository::findByComments, comment.getId());
+        Assertions.assertThat(actualReports.size()).isEqualTo(expectedReports.size());
+        for (int i = 0; i < actualReports.size(); i++) {
+            Assertions.assertThat(actualReports.get(i).getId()).isEqualTo(expectedReports.get(i).getId());
+        }
     }
 
-    @Test
-    public void findByUsers() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
+    private List<ContentReportDetailListDto> getExpectedReports(ContentReports expectedLatestReport) {
+        long startIndex = getStartIndex(expectedLatestReport) + 1;
+        long endIndex = expectedLatestReport.getId();
+        List<ContentReportDetailListDto> reports = new ArrayList<>();
 
-        // 2. user2가 user1 사용자 신고 * 3
-        saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
+        for (long id = startIndex; id <= endIndex; id++) {
+            ContentReports report = contentReportsRepository.findById(id).get();
+            ContentReportDetailListDto detailListDto = ContentReportDetailListDto.builder().report(report).build();
+            reports.add(detailListDto);
+        }
+        return reports;
+    }
 
-        // 3. user1로 findByUser() 호출 + 검증
-        callAndAssertFindByTypes(user1, contentReportsRepository::findByUsers, user1.getId());
+    private long getStartIndex(ContentReports expectedLatestReport) {
+        String type = expectedLatestReport.getTypes().getDetail();
+
+        if (type.equals("게시글")) {
+            return 0;
+        } else if (type.equals("댓글")) {
+            return this.latestPostReport.getId();
+        }
+        return this.latestCommentReport.getId();
     }
 
     @Test
@@ -500,11 +326,26 @@ public class ContentReportsRepositoryTest {
         callAndAssertCountByUserInTypes(user1, contentReportsRepository::countUserReportsByUser);
     }
 
-    private void saveReportsForFindingDistinctByTypes(Posts post, Comments comment, User user, User reporter) {
-        testDB.savePostReports(post.getId(), reporter);
-        testDB.saveCommentReports(comment.getId(), reporter);
-        Long latestReportId = testDB.saveUserReports(user, reporter);
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
+    @Test
+    public void countByContents() {
+        // 1. 신고 x 후 호출
+        callAndAssertCountByContents(this.post, 0L);
+        callAndAssertCountByContents(this.comment, 0L);
+        callAndAssertCountByContents(this.user1, 0L);
+
+        // 2. 신고 후 호출
+        saveReports();
+
+        callAndAssertCountByContents(this.post, this.latestPostReport.getId());
+        callAndAssertCountByContents(this.comment,
+                this.latestCommentReport.getId() - this.latestPostReport.getId());
+        callAndAssertCountByContents(this.user1,
+                this.latestUserReport.getId() - this.latestCommentReport.getId());
+    }
+
+    private <T> void callAndAssertCountByContents(T contents, long expectedCountByContents) {
+        long actualCountByContents = contentReportsRepository.countByContents(contents);
+        Assertions.assertThat(actualCountByContents).isEqualTo(expectedCountByContents);
     }
 
     private <T> Long saveReportsAndGetLatestReportId(BiFunction<T, User, Long> saver,
@@ -512,111 +353,6 @@ public class ContentReportsRepositoryTest {
         Long latestReportId = saver.apply(t, user);
         Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
         return latestReportId;
-    }
-
-    private void callAndAssertFindDistinctByTypes(Supplier<List<ContentReportDistinctDto>> finder, int expectedSize,
-                                                  String[] expectedTypes, Long[] expectedIds) {
-        // 1. findDistinctBy@@() 호출
-        List<ContentReportDistinctDto> result = finder.get();
-
-        // 2. result의 size가 expectedSize인지 확인
-        Assertions.assertThat(result.size()).isEqualTo(expectedSize);
-
-        for (int i = 0; i < expectedSize; i++) {
-            ContentReportDistinctDto distinctDto = result.get(i);
-
-            // 3. result의 type 확인
-            Assertions.assertThat(distinctDto.getTypes().getDetail()).isEqualTo(expectedTypes[i]);
-
-            // 4. result의 posts/comments/user 확인
-            Long actualId = switch (expectedTypes[i]) {
-                case "게시글" -> distinctDto.getPosts().getId();
-                case "댓글" -> distinctDto.getComments().getId();
-                default -> distinctDto.getUser().getId();
-            };
-            Assertions.assertThat(actualId).isEqualTo(expectedIds[i]);
-        }
-    }
-
-    private <T> void callAndAssertFindReporterByTypes(T type, Function<T, User> finder, User expectedReporter) {
-        // 1. type으로 findReporterBy@@() 호출
-        User actualReporter = finder.apply(type);
-
-        // 2. actualReporter가 expectedReporter인지 확인
-        Assertions.assertThat(actualReporter.getId()).isEqualTo(expectedReporter.getId());
-    }
-
-    private <T> void callAndAssertFindReportedDateByTypes(T type, Function<T, LocalDateTime> finder,
-                                                          Long latestReportId) {
-        // 1. latestReportId로 ContentReports 찾기
-        ContentReports report = getContentReportsById(latestReportId);
-
-        // 2. report의 createdDate 가져와서 expectedReportedDate에 저장
-        LocalDateTime expectedReportedDate = report.getCreatedDate();
-
-        // 3. type으로 findReportedDateBy@@() 호출
-        LocalDateTime actualReportedDate = finder.apply(type);
-
-        // 4. actualReportedDate가 expectedReportedDate랑 같은지 확인
-        Assertions.assertThat(actualReportedDate).isEqualTo(expectedReportedDate);
-    }
-
-    public <T> void callAndAssertFindReasonByTypes(T type, Function<T, Reasons> finder, Long latestReportId) {
-        // 1. latestReportId로 ContentReports 찾기
-        ContentReports report = getContentReportsById(latestReportId);
-
-        // 2. report의 reason 가져와서 expectedReason에 저장
-        Reasons expectedReason = report.getReasons();
-
-        // 3. type으로 findReasonBy@@() 호출
-        Reasons actualReason = finder.apply(type);
-
-        // 4. actualReason이 expectedReason이랑 같은지 확인
-        Assertions.assertThat(actualReason.getId()).isEqualTo(expectedReason.getId());
-    }
-
-    private <T> void callAndAssertFindOtherReasonByTypes(T type, BiFunction<T, Reasons, String> finder,
-                                                            Long latestReportId) {
-        // 1. latestReportId로 ContentReports 찾기
-        ContentReports report = getContentReportsById(latestReportId);
-
-        // 2. report의 otherReason 가져와서 expectedOtherReason에 저장
-        String expectedOtherReason = report.getOtherReasons();
-
-        // 3. type, report의 reasons로 findOtherReasonBy@@() 호출
-        String actualOtherReason = finder.apply(type, report.getReasons());
-
-        // 4. actualOtherReason이 expectedOtherReason이랑 같은지 확인
-        Assertions.assertThat(actualOtherReason).isEqualTo(expectedOtherReason);
-    }
-
-    private <T> void callAndAssertFindByTypes(T type, Function<T, List<ContentReports>> finder,
-                                              Long expectedContentId) {
-        // 1. expectedIdList 저장
-        List<Long> expectedIdList = new ArrayList<>();
-        for (long i = 1; i <= contentReportsRepository.count(); i++) {
-            expectedIdList.add(i);
-        }
-
-        // 2. type으로 findBy@@() 호출
-        List<ContentReports> result = finder.apply(type);
-        Assertions.assertThat(result.size()).isEqualTo(expectedIdList.size());
-
-        // 3. result의 각 id가 expectedIdList랑 같은지 확인
-        Assertions.assertThat(result).extracting(ContentReports::getId).isEqualTo(expectedIdList);
-
-        // 4. result의 type이 type이랑 같은지 확인
-        for (ContentReports report : result) {
-            Long actualContentId;
-            if (type instanceof Posts) {
-                actualContentId = report.getPosts().getId();
-            } else if (type instanceof Comments) {
-                actualContentId = report.getComments().getId();
-            } else {
-                actualContentId = report.getUser().getId();
-            }
-            Assertions.assertThat(actualContentId).isEqualTo(expectedContentId);
-        }
     }
 
     private <T> void callAndAssertDeleteByTypes(T type, Consumer<T> deleter) {

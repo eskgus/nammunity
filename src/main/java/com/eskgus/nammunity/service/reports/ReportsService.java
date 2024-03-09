@@ -2,7 +2,6 @@ package com.eskgus.nammunity.service.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.reports.Reasons;
 import com.eskgus.nammunity.domain.reports.Types;
@@ -10,14 +9,16 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.reports.*;
+import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -28,6 +29,7 @@ public class ReportsService {
     private final CommentsSearchService commentsSearchService;
     private final ReasonsService reasonsService;
     private final TypesService typesService;
+    private final ReportSummaryService reportSummaryService;
 
     @Transactional
     public Long saveContentReports(ContentReportsSaveDto requestDto, String username) {
@@ -45,123 +47,105 @@ public class ReportsService {
 
         if (requestDto.getPostsId() != null) {
             posts = postsSearchService.findById(requestDto.getPostsId());
-            types = typesService.findByDetail("게시글");
+            types = typesService.findByClass(Posts.class);
         } else if (requestDto.getCommentsId() != null) {
             comments = commentsSearchService.findById(requestDto.getCommentsId());
-            types = typesService.findByDetail("댓글");
+            types = typesService.findByClass(Comments.class);
         } else if (requestDto.getUserId() != null){
             user = userService.findById(requestDto.getUserId());
-            types = typesService.findByDetail("사용자");
+            types = typesService.findByClass(User.class);
         } else {
             throw new IllegalArgumentException("신고 분류가 선택되지 않았습니다.");
         }
 
-        ContentReportsSaveDto contentReportsSaveDto = ContentReportsSaveDto.builder()
+        ContentReportsSaveDto saveDto = ContentReportsSaveDto.builder()
                 .posts(posts).comments(comments).user(user)
                 .reporter(reporter).types(types)
                 .reasons(reasons).otherReasons(otherReasons)
                 .build();
 
-        return contentReportsRepository.save(contentReportsSaveDto.toEntity()).getId();
-    }
+        Long reportId = contentReportsRepository.save(saveDto.toEntity()).getId();
 
-    @Transactional(readOnly = true)
-    public List<ContentReportSummaryDto> findSummary(String endpoint) {
-        List<ContentReportDistinctDto> distinctDtos = findDistinct(endpoint);
-
-        List<ContentReportSummaryDto> summaryDtos = distinctDtos.stream().map(distinctDto -> {
-            String type = distinctDto.getTypes().getDetail();
-            User reporter;
-            LocalDateTime reportedDate;
-            Reasons reason;
-            String reasonDetail;
-
-            if (type.equals("게시글")) {
-                Posts post = distinctDto.getPosts();
-                reporter = contentReportsRepository.findReporterByPosts(post);
-                reportedDate = contentReportsRepository.findReportedDateByPosts(post);
-                reason = contentReportsRepository.findReasonByPosts(post);
-                reasonDetail = reason.getDetail();
-                if (reasonDetail.equals("기타")) {
-                    reasonDetail += ": " + contentReportsRepository.findOtherReasonByPosts(post, reason);
-                }
-            } else if (type.equals("댓글")) {
-                Comments comment = distinctDto.getComments();
-                reporter = contentReportsRepository.findReporterByComments(comment);
-                reportedDate = contentReportsRepository.findReportedDateByComments(comment);
-                reason = contentReportsRepository.findReasonByComments(comment);
-                reasonDetail = reason.getDetail();
-                if (reasonDetail.equals("기타")) {
-                    reasonDetail += ": " + contentReportsRepository.findOtherReasonByComments(comment, reason);
-                }
-            } else {
-                User user = distinctDto.getUser();
-                reporter = contentReportsRepository.findReporterByUsers(user);
-                reportedDate = contentReportsRepository.findReportedDateByUsers(user);
-                reason = contentReportsRepository.findReasonByUsers(user);
-                reasonDetail = reason.getDetail();
-                if (reasonDetail.equals("기타")) {
-                    reasonDetail += ": " + contentReportsRepository.findOtherReasonByUsers(user, reason);
-                }
-            }
-
-            return ContentReportSummaryDto.builder()
-                    .distinctDto(distinctDto)
-                    .reporter(reporter)
-                    .reportedDate(reportedDate)
-                    .reason(reasonDetail)
-                    .build();
-        }).collect(Collectors.toList());
-
-        return summaryDtos;
-    }
-
-    @Transactional(readOnly = true)
-    public List<ContentReportDistinctDto> findDistinct(String endpoint) {
-        List<ContentReportDistinctDto> distinctDtos = switch (endpoint) {
-            case "" -> contentReportsRepository.findDistinct();
-            case "posts" -> contentReportsRepository.findDistinctByPosts();
-            case "comments" -> contentReportsRepository.findDistinctByComments();
-            default -> contentReportsRepository.findDistinctByUsers();
-        };
-
-        return distinctDtos;
-    }
-
-    @Transactional(readOnly = true)
-    public ContentReportDetailDto findDetails(String type, Long id) {
-        Posts post = null;
-        Comments comment = null;
-        User user = null;
-        List<ContentReports> reports;
-
-        if (type.equals("post")) {
-            post = postsSearchService.findById(id);
-            reports = contentReportsRepository.findByPosts(post);
-        } else if (type.equals("comment")) {
-            comment = commentsSearchService.findById(id);
-            reports = contentReportsRepository.findByComments(comment);
-        } else {
-            user = userService.findById(id);
-            reports = contentReportsRepository.findByUsers(user);
+        // 누적 신고 개수 10개 (or 3개) 이상이면 신고 요약 저장/수정
+        if (shouldCreateSummary(saveDto)) {
+            createAndSaveSummary(saveDto);
         }
 
-        // 신고 번호, 신고자, 신고일, 신고 사유 목록
-        List<ContentReportDetailListDto> detailListDtos = reports.stream().map(report -> {
-            String reason = report.getReasons().getDetail();
-            if (report.getReasons().getDetail().equals("기타")) {
-                reason += ": " + contentReportsRepository.findOtherReasonById(report.getId());
-            }
-            return ContentReportDetailListDto.builder().report(report).reason(reason).build();
-        }).collect(Collectors.toList());
+        return reportId;
+    }
 
-        // 신고 세부 내역 개수: List가 null이면 0, 아니면 size
-        int numOfReports = (detailListDtos != null) ? detailListDtos.size() : 0;
+    private <T> boolean shouldCreateSummary(ContentReportsSaveDto saveDto) {
+        T contents = getContentsFromSaveDto(saveDto);
+        long countByContents = contentReportsRepository.countByContents(contents);
 
-        // 신고 분류, 신고 내용, 세부 목록
-        return ContentReportDetailDto.builder()
-                .post(post).comment(comment).user(user)
-                .detailListDtos(detailListDtos).numOfReports(numOfReports).build();
+        if (contents instanceof User) {
+            return countByContents >= 3;
+        }
+        return countByContents >= 10;
+    }
+
+    private void createAndSaveSummary(ContentReportsSaveDto saveDto) {
+        ContentReportSummarySaveDto summarySaveDto = findSummary(saveDto);
+        reportSummaryService.saveOrUpdateContentReportSummary(summarySaveDto);
+    }
+
+    private <T> ContentReportSummarySaveDto findSummary(ContentReportsSaveDto saveDto) {
+        // types, 컨텐츠(posts, comments, user)는 saveDto에서 꺼내서 사용, 나머지는 테이블에서 검색
+        T contents = getContentsFromSaveDto(saveDto);
+
+        LocalDateTime reportedDate = contentReportsRepository.findReportedDateByContents(contents);
+        User reporter = contentReportsRepository.findReporterByContents(contents);
+        Reasons reason = contentReportsRepository.findReasonByContents(contents);
+        String otherReason = reason.getDetail().equals("기타") ?
+                contentReportsRepository.findOtherReasonByContents(contents, reason) : null;
+
+        return ContentReportSummarySaveDto.builder()
+                .posts(saveDto.getPosts()).comments(saveDto.getComments()).user(saveDto.getUser())
+                .types(saveDto.getTypes()).reportedDate(reportedDate).reporter(reporter)
+                .reasons(reason).otherReasons(otherReason).build();
+    }
+
+    private <T> T getContentsFromSaveDto(ContentReportsSaveDto saveDto) {
+        if (saveDto.getPosts() != null) {
+            return (T) saveDto.getPosts();
+        } else if (saveDto.getComments() != null) {
+            return (T) saveDto.getComments();
+        }
+        return (T) saveDto.getUser();
+    }
+
+    @Transactional(readOnly = true)
+    public <T> ContentReportDetailDto findDetails(Class<T> classOfType, Long contentId) {
+        T contents = getContentsFromContentId(classOfType, contentId);
+        return createDetailDto(contents);
+    }
+
+    protected <T> T getContentsFromContentId(Class<T> classOfType, Long contentId) {
+        if (classOfType.equals(Posts.class)) {
+            return (T) postsSearchService.findById(contentId);
+        } else if (classOfType.equals(Comments.class)) {
+            return (T) commentsSearchService.findById(contentId);
+        }
+        return (T) userService.findById(contentId);
+    }
+
+    @Transactional(readOnly = true)
+    protected <T, U> ContentReportDetailDto createDetailDto(T contents) {
+        List<ContentReportDetailListDto> detailListDtos = contentReportsRepository.findByContents(contents);
+        Types type = typesService.findByClass(contents.getClass());
+        U contentListDto = createContentListDto(contents);
+
+        return ContentReportDetailDto.builder().type(type).dto(contentListDto).reports(detailListDtos).build();
+    }
+
+    @Transactional(readOnly = true)
+    protected <T, U> U createContentListDto(T contents) {
+        if (contents instanceof Posts) {
+            return (U) new PostsListDto((Posts) contents);
+        } else if (contents instanceof Comments) {
+            return (U) new CommentsListDto((Comments) contents);
+        }
+        return (U) new UsersListDto((User) contents);
     }
 
     @Transactional
