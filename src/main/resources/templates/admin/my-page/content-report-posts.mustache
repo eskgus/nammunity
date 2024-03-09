@@ -44,7 +44,7 @@
                                 </tr>
                             {{/reports}}
                             {{#reports}}
-                                {{#postExistence}} {{! 게시글 신고 }}
+                                {{#isPostReportSummary}} {{! 게시글 신고 }}
                                     <tr class="posts-area">
                                         <td><input type="checkbox"><label>{{type}}</label></td>
                                         <td>
@@ -60,7 +60,7 @@
                                             <span>{{reason}}</span>
                                         </td>
                                     </tr>
-                                {{/postExistence}}
+                                {{/isPostReportSummary}}
                             {{/reports}}
                             </tbody>
                         </table>

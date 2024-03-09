@@ -44,7 +44,7 @@
                                 </tr>
                             {{/reports}}
                             {{#reports}}
-                                {{#postExistence}} {{! 게시글 신고 }}
+                                {{#isPostReportSummary}} {{! 게시글 신고 }}
                                     <tr class="posts-area">
                                         <td><input type="checkbox"><label>{{type}}</label></td>
                                         <td>
@@ -60,8 +60,8 @@
                                             <span>{{reason}}</span>
                                         </td>
                                     </tr>
-                                {{/postExistence}}
-                                {{#commentExistence}} {{! 댓글 신고 }}
+                                {{/isPostReportSummary}}
+                                {{#isCommentReportSummary}} {{! 댓글 신고 }}
                                     <tr class="comments-area">
                                         <td><input type="checkbox"><label>{{type}}</label></td>
                                         <td>
@@ -78,8 +78,8 @@
                                             <span>{{reason}}</span>
                                         </td>
                                     </tr>
-                                {{/commentExistence}}
-                                {{#userExistence}} {{! 사용자 신고 }}
+                                {{/isCommentReportSummary}}
+                                {{#isUserReportSummary}} {{! 사용자 신고 }}
                                     <tr class="users-area">
                                         <td><input type="checkbox"><label>{{type}}</label></td>
                                         <td>
@@ -93,7 +93,7 @@
                                             <span>{{reason}}</span>
                                         </td>
                                     </tr>
-                                {{/userExistence}}
+                                {{/isUserReportSummary}}
                             {{/reports}}
                             </tbody>
                         </table>
