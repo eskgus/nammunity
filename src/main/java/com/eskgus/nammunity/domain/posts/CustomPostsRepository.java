@@ -8,9 +8,9 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface CustomPostsRepository {
-    List<Posts> searchByTitle(String keywords);
-    List<Posts> searchByContent(String keywords);
-    List<Posts> searchByTitleAndContent(String keywords);
+    List<PostsListDto> searchByTitle(String keywords);
+    List<PostsListDto> searchByContent(String keywords);
+    List<PostsListDto> searchByTitleAndContent(String keywords);
     Page<PostsListDto> findAllDesc(Pageable pageable);
     Page<PostsListDto> findByUser(User user, Pageable pageable);
 }

@@ -43,16 +43,16 @@ public class PostsSearchService {
 
     @Transactional(readOnly = true)
     public List<PostsListDto> searchByTitle(String keywords) {
-        return postsRepository.searchByTitle(keywords).stream().map(PostsListDto::new).toList();
+        return postsRepository.searchByTitle(keywords);
     }
 
     @Transactional(readOnly = true)
     public List<PostsListDto> searchByContent(String keywords) {
-        return postsRepository.searchByContent(keywords).stream().map(PostsListDto::new).toList();
+        return postsRepository.searchByContent(keywords);
     }
 
     @Transactional(readOnly = true)
     public List<PostsListDto> searchByTitleAndContent(String keywords) {
-        return postsRepository.searchByTitleAndContent(keywords).stream().map(PostsListDto::new).toList();
+        return postsRepository.searchByTitleAndContent(keywords);
     }
 }

@@ -1,12 +1,15 @@
 package com.eskgus.nammunity.domain.posts;
 
+import com.eskgus.nammunity.domain.comments.QComments;
+import com.eskgus.nammunity.domain.likes.QLikes;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.util.KeywordUtil;
+import com.eskgus.nammunity.helper.EssentialQuery;
+import com.eskgus.nammunity.helper.FindQueries;
+import com.eskgus.nammunity.helper.SearchQueries;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
-import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.*;
-import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.querydsl.jpa.impl.JPAQuery;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,79 +18,87 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 
 import java.util.List;
 
-import static com.eskgus.nammunity.util.KeywordUtil.searchByField;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.*;
 
 public class PostsRepositoryImpl extends QuerydslRepositorySupport implements CustomPostsRepository {
     @Autowired
     private EntityManager entityManager;
 
+    private final QPosts qPosts = QPosts.posts;
+    private final QComments qComments = QComments.comments;
+    private final QLikes qLikes = QLikes.likes;
+
     public PostsRepositoryImpl() {
         super(Posts.class);
     }
 
     @Override
-    public List<Posts> searchByTitle(String keywords) {
-        QPosts post = QPosts.posts;
-        return searchByField(entityManager, post, post.title, keywords);
+    public List<PostsListDto> searchByTitle(String keywords) {
+        return searchPostsByFields(keywords, qPosts.title);
+    }
+
+    private List<PostsListDto> searchPostsByFields(String keywords, StringPath... fields) {
+        EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQueryForPosts();
+        SearchQueries<PostsListDto, Posts> searchQueries = SearchQueries.<PostsListDto, Posts>builder()
+                .essentialQuery(essentialQuery)
+                .keywords(keywords).fields(fields).build();
+        JPAQuery<PostsListDto> query = searchQueries.createQueryForSearchContents();
+        return createLeftJoinClauseForPosts(query).fetch();
+    }
+
+    private EssentialQuery<PostsListDto, Posts> createEssentialQueryForPosts() {
+        Expression[] constructorParams = { qPosts, qComments.id.countDistinct(), qLikes.id.countDistinct() };
+
+        return EssentialQuery.<PostsListDto, Posts>builder()
+                .entityManager(entityManager).queryType(qPosts)
+                .classOfListDto(PostsListDto.class).constructorParams(constructorParams).build();
+    }
+
+    private JPAQuery<PostsListDto> createLeftJoinClauseForPosts(JPAQuery<PostsListDto> query) {
+        return query.leftJoin(qPosts.comments, qComments)
+                .leftJoin(qPosts.likes, qLikes);
     }
 
     @Override
-    public List<Posts> searchByContent(String keywords) {
-        QPosts post = QPosts.posts;
-        return searchByField(entityManager, post, post.content, keywords);
+    public List<PostsListDto> searchByContent(String keywords) {
+        return searchPostsByFields(keywords, qPosts.content);
     }
 
     @Override
-    public List<Posts> searchByTitleAndContent(String keywords) {
-        // keywords를 includeKeywordList(검색어)와 excludeKeywordList(검색 제외 단어)로 분리
-        KeywordUtil.KeywordLists keywordLists = KeywordUtil.extractKeywords(keywords);
-        List<String> includeKeywordList = keywordLists.getIncludeKeywordList();
-        List<String> excludeKeywordList = keywordLists.getExcludeKeywordList();
-
-        // main query에 사용할 거
-        QPosts post = QPosts.posts;
-        BooleanBuilder builder = new BooleanBuilder();
-        // subquery에 사용할 거
-        BooleanBuilder builderSub = new BooleanBuilder();
-
-        StringExpression title = post.title.toLowerCase();
-        StringExpression content = post.content.toLowerCase();
-
-        // main query 생성: title이나 content에 includeKeywordList 중 하나라도 포함돼있으면 추출
-        for (String includeKeyword : includeKeywordList) {
-            builder.or(title.contains(includeKeyword).or(content.contains(includeKeyword)));
-        }
-
-        // subquery 생성: title이나 content에 excludeKeywordList 중 하나라도 포함돼있으면 추출 x
-        for (String excludeKeyword : excludeKeywordList) {
-            builderSub.and(title.contains(excludeKeyword).not().and(content.contains(excludeKeyword).not()));
-        }
-
-        // 쿼리 생성 + 실행
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        return query.selectDistinct(post).from(post).where(builder.and(post.in(
-                JPAExpressions.selectFrom(post).where(builderSub)))).orderBy(post.id.desc()).fetch();
+    public List<PostsListDto> searchByTitleAndContent(String keywords) {
+        return searchPostsByFields(keywords, qPosts.title, qPosts.content);
     }
 
     @Override
     public Page<PostsListDto> findAllDesc(Pageable pageable) {
-        QPosts post = QPosts.posts;
+        return findPostsByFields(null, pageable);
+    }
 
-        QueryParams<Posts> queryParams = QueryParams.<Posts>builder()
-                .entityManager(entityManager).queryType(post).pageable(pageable).build();
-        List<PostsListDto> posts = createBaseQueryForPagination(queryParams, PostsListDto.class).fetch();
-        return createPage(queryParams, posts);
+    private Page<PostsListDto> findPostsByFields(User user, Pageable pageable) {
+        EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQueryForPosts();
+        JPAQuery<PostsListDto> query = createQueryForFindPosts(essentialQuery, user, pageable);
+        return createPostsPage(query, essentialQuery, pageable);
+    }
+
+    private JPAQuery<PostsListDto> createQueryForFindPosts(EssentialQuery<PostsListDto, Posts> essentialQuery,
+                                                           User user, Pageable pageable) {
+        FindQueries<PostsListDto, Posts> findQueries = FindQueries.<PostsListDto, Posts>builder()
+                .essentialQuery(essentialQuery).userId(qPosts.user.id).user(user).build();
+        JPAQuery<PostsListDto> query = findQueries.createQueryForFindContents();
+
+        return addPageToQuery(query, pageable);
+    }
+
+    private Page<PostsListDto> createPostsPage(JPAQuery<PostsListDto> query,
+                                               EssentialQuery<PostsListDto, Posts> essentialQuery,
+                                               Pageable pageable) {
+        List<PostsListDto> posts = createLeftJoinClauseForPosts(query).fetch();
+        JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
+        return createPage(posts, pageable, totalQuery);
     }
 
     @Override
     public Page<PostsListDto> findByUser(User user, Pageable pageable) {
-        QPosts post = QPosts.posts;
-
-        BooleanBuilder whereCondition = createWhereConditionForPagination(post.user.id, user, null);
-        QueryParams<Posts> queryParams = QueryParams.<Posts>builder()
-                .entityManager(entityManager).queryType(post).pageable(pageable).whereCondition(whereCondition).build();
-        List<PostsListDto> posts = createBaseQueryForPagination(queryParams, PostsListDto.class).fetch();
-        return createPage(queryParams, posts);
+        return findPostsByFields(user, pageable);
     }
 }

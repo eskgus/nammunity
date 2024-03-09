@@ -13,18 +13,26 @@ public class PostsListDto {
     private String author;
     private String modifiedDate;
     private int view;
-    private int comments;
-    private int likes;
+    private Long comments;
+    private Long likes;
 
     @Builder
-    public PostsListDto(Posts posts) {
-        this.id = posts.getId();
-        this.title = posts.getTitle();
-        this.content = posts.getContent();
-        this.author = posts.getUser().getNickname();
-        this.modifiedDate = DateTimeUtil.formatDateTime(posts.getModifiedDate());
-        this.view = posts.getView();
-        this.comments = posts.getComments().size();
-        this.likes = posts.getLikes().size();
+    public PostsListDto(Posts post, Long comments, Long likes) {
+        generatePosts(post);
+        this.view = post.getView();
+        this.comments = comments;
+        this.likes = likes;
+    }
+
+    public PostsListDto(Posts post) {
+        generatePosts(post);
+    }
+
+    private void generatePosts(Posts post) {
+        this.id = post.getId();
+        this.title = post.getTitle();
+        this.content = post.getContent();
+        this.author = post.getUser().getNickname();
+        this.modifiedDate = DateTimeUtil.formatDateTime(post.getModifiedDate());
     }
 }
