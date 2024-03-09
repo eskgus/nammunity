@@ -95,6 +95,6 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UsersListDto> searchByNickname(String keywords) {
-        return userRepository.searchByNickname(keywords).stream().map(UsersListDto::new).toList();
+        return userRepository.searchByNickname(keywords);
     }
 }
