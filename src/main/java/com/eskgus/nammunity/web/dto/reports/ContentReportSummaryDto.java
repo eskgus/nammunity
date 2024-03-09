@@ -2,12 +2,11 @@ package com.eskgus.nammunity.web.dto.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
 
 @Getter
 public class ContentReportSummaryDto {
@@ -31,41 +30,43 @@ public class ContentReportSummaryDto {
     private String reportedDate;    // 신고일
     private String reason;
 
-    private Boolean postExistence;  // 게시글/댓글/사용자 존재 여부 (mustache에서 사용)
-    private Boolean commentExistence;
-    private Boolean userExistence;
+    private Boolean isPostReportSummary = false;  // 게시글/댓글/사용자 존재 여부 (mustache에서 사용)
+    private Boolean isCommentReportSummary = false;
+    private Boolean isUserReportSummary = false;
 
     @Builder
-    public ContentReportSummaryDto(ContentReportDistinctDto distinctDto,
-                                   User reporter, LocalDateTime reportedDate, String reason) {
-        this.type = distinctDto.getTypes().getDetail();
-        this.reporter = reporter.getNickname();
-        this.reportedDate = DateTimeUtil.formatDateTime(reportedDate);
-        this.reason = reason;
+    public ContentReportSummaryDto(ContentReportSummary reportSummary) {
+        this.type = reportSummary.getTypes().getDetail();
+        this.reporter = reportSummary.getReporter().getNickname();
+        this.reportedDate = DateTimeUtil.formatDateTime(reportSummary.getReportedDate());
 
-        if (distinctDto.getPosts() != null) {
-            this.post = distinctDto.getPosts();
+        String reasonDetail = reportSummary.getReasons().getDetail();
+        this.reason = reasonDetail.equals("기타") ? reasonDetail + ": " + reportSummary.getOtherReasons() : reasonDetail;
+
+        if (this.type.equals("게시글")) {
+            this.isPostReportSummary = true;
+            this.post = reportSummary.getPosts();
             this.postId = this.post.getId();
             this.title = this.post.getTitle();
             this.author = this.post.getUser().getNickname();
             this.modifiedDate = DateTimeUtil.formatDateTime(this.post.getModifiedDate());
-            this.postExistence = true;
-        } else if (distinctDto.getComments() != null) {
-            this.comment = distinctDto.getComments();
+        } else if (this.type.equals("댓글")) {
+            this.isCommentReportSummary = true;
+            this.comment = reportSummary.getComments();
             this.commentId = this.comment.getId();
             this.content = this.comment.getContent();
             this.author = this.comment.getUser().getNickname();
             this.modifiedDate = DateTimeUtil.formatDateTime(this.comment.getModifiedDate());
+
             this.post = this.comment.getPosts();
             this.postId = this.post.getId();
             this.title = this.post.getTitle();
-            this.commentExistence = true;
         } else {
-            this.user = distinctDto.getUser();
+            this.isUserReportSummary = true;
+            this.user = reportSummary.getUser();
             this.userId = this.user.getId();
             this.nickname = this.user.getNickname();
             this.createdDate = DateTimeUtil.formatDateTime(this.user.getCreatedDate());
-            this.userExistence = true;
         }
     }
 }

@@ -67,6 +67,9 @@ public class TestDB {
     private ContentReportsRepository contentReportsRepository;
 
     @Autowired
+    private ContentReportSummaryRepository contentReportSummaryRepository;
+
+    @Autowired
     private BannedUsersRepository bannedUsersRepository;
 
     @PersistenceContext
@@ -91,6 +94,7 @@ public class TestDB {
                 "ALTER TABLE comments AUTO_INCREMENT = 1",
                 "ALTER TABLE likes AUTO_INCREMENT = 1",
                 "ALTER TABLE content_reports AUTO_INCREMENT = 1",
+                "ALTER TABLE content_report_summary AUTO_INCREMENT = 1",
                 "ALTER TABLE banned_users AUTO_INCREMENT = 1"
         };
         jdbcTemplate.batchUpdate(queries);
@@ -275,20 +279,50 @@ public class TestDB {
         return contentReportsRepository.save(contentReport).getId();
     }
 
-    public void saveBannedUsers(User user, Period period) {
+    public Long savePostReportSummary(Posts post, User reporter) {
+        Types type = typesRepository.findById(1L).get();
+        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+
+        ContentReportSummary reportSummary = ContentReportSummary.builder()
+                .posts(post).types(type).reportedDate(LocalDateTime.now()).reporter(reporter)
+                .reasons(reason).otherReasons("기타 사유").build();
+        return contentReportSummaryRepository.save(reportSummary).getId();
+    }
+
+    public Long saveCommentReportSummary(Comments comment, User reporter) {
+        Types type = typesRepository.findById(2L).get();
+        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+
+        ContentReportSummary reportSummary = ContentReportSummary.builder()
+                .comments(comment).types(type).reportedDate(LocalDateTime.now()).reporter(reporter)
+                .reasons(reason).otherReasons("기타 사유").build();
+        return contentReportSummaryRepository.save(reportSummary).getId();
+    }
+
+    public Long saveUserReportSummary(User user, User reporter) {
+        Types type = typesRepository.findById(3L).get();
+        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+
+        ContentReportSummary reportSummary = ContentReportSummary.builder()
+                .user(user).types(type).reportedDate(LocalDateTime.now()).reporter(reporter)
+                .reasons(reason).otherReasons("기타 사유").build();
+        return contentReportSummaryRepository.save(reportSummary).getId();
+    }
+
+    public Long saveBannedUsers(User user, Period period) {
         LocalDateTime startedDate = LocalDateTime.now();
         LocalDateTime expiredDate = startedDate.plus(period);
 
-        Reasons reason = contentReportsRepository.findReasonByUsers(user);
+        Reasons reason = contentReportsRepository.findReasonByContents(user);
         String reasonDetail = reason.getDetail();
         if (reasonDetail.equals("기타")) {
-            reasonDetail += ": " + contentReportsRepository.findOtherReasonByUsers(user, reason);
+            reasonDetail += ": " + contentReportsRepository.findOtherReasonByContents(user, reason);
         }
 
         BannedUsers bannedUser = BannedUsers.builder()
                 .user(user).startedDate(startedDate).expiredDate(expiredDate).period(period).reason(reasonDetail)
                 .build();
-        bannedUsersRepository.save(bannedUser);
+        return bannedUsersRepository.save(bannedUser).getId();
     }
 
     public Map<String, Object> parseResponseJSON(String response) {

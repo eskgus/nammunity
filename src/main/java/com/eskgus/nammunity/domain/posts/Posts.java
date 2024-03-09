@@ -3,6 +3,7 @@ package com.eskgus.nammunity.domain.posts;
 import com.eskgus.nammunity.domain.BaseTimeEntity;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.likes.Likes;
+import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.user.User;
 import jakarta.persistence.*;
@@ -40,7 +41,10 @@ public class Posts extends BaseTimeEntity {
     private List<Likes> likes;
 
     @OneToMany(mappedBy = "posts", cascade = CascadeType.REMOVE)
-    private List<ContentReports> reports;
+    private List<ContentReports> receivedReports;
+
+    @OneToOne(mappedBy = "posts", cascade = CascadeType.REMOVE)
+    private ContentReportSummary receivedReportSummary;
 
     @Builder
     public Posts(String title, String content, User user) {

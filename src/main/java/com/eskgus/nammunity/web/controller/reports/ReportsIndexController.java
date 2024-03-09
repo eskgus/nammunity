@@ -1,5 +1,9 @@
 package com.eskgus.nammunity.web.controller.reports;
 
+import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.service.reports.ReportSummaryService;
 import com.eskgus.nammunity.service.reports.ReportsService;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
@@ -19,17 +23,18 @@ import java.util.Map;
 @RequestMapping("/admin/my-page")
 public class ReportsIndexController {
     private final ReportsService reportsService;
+    private final ReportSummaryService reportSummaryService;
 
     @GetMapping("/content-report")
     public String listContentReports(Model model) {
         Map<String, Object> attr = new HashMap<>();
 
         // 전체 신고 요약 목록
-        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary("");
+        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findAllDesc();
         attr.put("reports", summaryDtos);
 
-        // 전체 신고 요약 개수: List가 null이면 0, 아니면 size
-        int numOfReports = (summaryDtos != null) ? summaryDtos.size() : 0;
+        // 전체 신고 요약 개수
+        int numOfReports = summaryDtos.size();
         attr.put("numOfReports", numOfReports);
 
         model.addAllAttributes(attr);
@@ -41,11 +46,11 @@ public class ReportsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         // 게시글 신고 요약 목록
-        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary("posts");
+        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(Posts.class);
         attr.put("reports", summaryDtos);
 
-        // 게시글 신고 요약 개수: List가 null이면 0, 아니면 size
-        int numOfReports = (summaryDtos != null) ? summaryDtos.size() : 0;
+        // 게시글 신고 요약 개수
+        int numOfReports = summaryDtos.size();
         attr.put("numOfReports", numOfReports);
 
         model.addAllAttributes(attr);
@@ -57,11 +62,11 @@ public class ReportsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         // 댓글 신고 요약 목록
-        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary("comments");
+        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(Comments.class);
         attr.put("reports", summaryDtos);
 
-        // 댓글 신고 요약 개수: List가 null이면 0, 아니면 size
-        int numOfReports = (summaryDtos != null) ? summaryDtos.size() : 0;
+        // 댓글 신고 요약 개수
+        int numOfReports = summaryDtos.size();
         attr.put("numOfReports", numOfReports);
 
         model.addAllAttributes(attr);
@@ -73,11 +78,11 @@ public class ReportsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         // 사용자 신고 요약 목록
-        List<ContentReportSummaryDto> summaryDtos = reportsService.findSummary("users");
+        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(User.class);
         attr.put("reports", summaryDtos);
 
-        // 사용자 신고 요약 개수: List가 null이면 0, 아니면 size
-        int numOfReports = (summaryDtos != null) ? summaryDtos.size() : 0;
+        // 사용자 신고 요약 개수
+        int numOfReports = summaryDtos.size();
         attr.put("numOfReports", numOfReports);
 
         model.addAllAttributes(attr);
@@ -91,11 +96,11 @@ public class ReportsIndexController {
                                            Model model) {
         ContentReportDetailDto detailDto;
         if (postId != null) {
-            detailDto = reportsService.findDetails("post", postId);
+            detailDto = reportsService.findDetails(Posts.class, postId);
         } else if (commentId != null) {
-            detailDto = reportsService.findDetails("comment", commentId);
+            detailDto = reportsService.findDetails(Comments.class, commentId);
         } else {
-            detailDto = reportsService.findDetails("user", userId);
+            detailDto = reportsService.findDetails(User.class, userId);
         }
 
         model.addAttribute("details", detailDto);

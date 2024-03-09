@@ -4,6 +4,7 @@ import com.eskgus.nammunity.domain.BaseTimeEntity;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.tokens.OAuth2Tokens;
 import com.eskgus.nammunity.domain.tokens.Tokens;
@@ -69,11 +70,17 @@ public class User extends BaseTimeEntity {
 
     // 당한 신고
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
-    private List<ContentReports> reports;
+    private List<ContentReports> receivedReports;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private ContentReportSummary receivedReportSummary;
 
     // 한 신고
     @OneToMany(mappedBy = "reporter", cascade = CascadeType.REMOVE)
-    private List<ContentReports> contentReports;
+    private List<ContentReports> sentReports;
+
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.REMOVE)
+    private List<ContentReportSummary> sentReportSummary;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
     private BannedUsers bannedUsers;
