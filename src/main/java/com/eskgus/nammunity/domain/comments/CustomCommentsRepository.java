@@ -8,6 +8,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface CustomCommentsRepository {
-    List<Comments> searchByContent(String keywords);
+    List<CommentsListDto> searchByContent(String keywords);
     Page<CommentsListDto> findByUser(User user, Pageable pageable);
 }

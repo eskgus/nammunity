@@ -2,6 +2,7 @@ package com.eskgus.nammunity.web.dto.comments;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.util.DateTimeUtil;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
@@ -12,15 +13,24 @@ public class CommentsListDto {
     private String modifiedDate;
     private Long postsId;
     private String title;
-    private int likes;
+    private Long likes;
 
-    public CommentsListDto(Comments comments) {
-        this.commentsId = comments.getId();
-        this.author = comments.getUser().getNickname();
-        this.content = comments.getContent();
-        this.modifiedDate = DateTimeUtil.formatDateTime(comments.getModifiedDate());
-        this.postsId = comments.getPosts().getId();
-        this.title = comments.getPosts().getTitle();
-        this.likes = comments.getLikes().size();
+    @Builder
+    public CommentsListDto(Comments comment, Long likes) {
+        generateComments(comment);
+        this.likes = likes;
+    }
+
+    public CommentsListDto(Comments comment) {
+        generateComments(comment);
+    }
+
+    private void generateComments(Comments comment) {
+        this.commentsId = comment.getId();
+        this.author = comment.getUser().getNickname();
+        this.content = comment.getContent();
+        this.modifiedDate = DateTimeUtil.formatDateTime(comment.getModifiedDate());
+        this.postsId = comment.getPosts().getId();
+        this.title = comment.getPosts().getTitle();
     }
 }

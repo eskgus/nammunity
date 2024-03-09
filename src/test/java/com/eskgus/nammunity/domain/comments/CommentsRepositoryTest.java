@@ -1,6 +1,10 @@
 package com.eskgus.nammunity.domain.comments;
 
-import com.eskgus.nammunity.util.SearchUtil;
+import com.eskgus.nammunity.converter.CommentsConverterForTest;
+import com.eskgus.nammunity.converter.EntityConverterForTest;
+import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.SearchHelperForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -8,22 +12,22 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.FinderUtil.*;
-import static com.eskgus.nammunity.util.SearchUtil.callAndAssertSearchByField;
-import static com.eskgus.nammunity.util.SearchUtil.getExpectedIdList;
+import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
+import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -40,15 +44,24 @@ public class CommentsRepositoryTest {
     @Autowired
     private CommentsRepository commentsRepository;
 
+    private User[] users;
+    private Posts post;
+
     @BeforeEach
     public void setUp() {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
-        Assertions.assertThat(userRepository.count()).isOne();
+        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user2Id = testDB.signUp(2L, Role.USER);
+        assertThat(userRepository.count()).isEqualTo(user2Id);
 
-        // 2. user1이 게시글 작성
-        testDB.savePosts(user1);
-        Assertions.assertThat(postsRepository.count()).isOne();
+        User user1 = userRepository.findById(user1Id).get();
+        User user2 = userRepository.findById(user2Id).get();
+
+        this.users = new User[]{ user1, user2 };
+
+        Long postId = testDB.savePosts(user1);
+        assertThat(postsRepository.count()).isEqualTo(postId);
+
+        this.post = postsRepository.findById(postId).get();
     }
 
     @AfterEach
@@ -58,105 +71,92 @@ public class CommentsRepositoryTest {
 
     @Test
     public void countByUser() {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
+        // 1. 댓글 작성 x 후 호출
+        callAndAssertCountByUser(0L);
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
+        // 2. 댓글 1개 작성 후 호출
+        Comments comment = saveCommentAndGetSavedComment();
+        callAndAssertCountByUser(comment.getId());
+    }
 
-        // 3. 댓글 작성 x 후 호출
-        callAndAssertCountByUser(user1);
+    private void callAndAssertCountByUser(Long expectedCount) {
+        Long actualCount = commentsRepository.countByUser(users[0]);
+        assertThat(actualCount).isEqualTo(expectedCount);
+    }
 
-        // 4. 댓글 1개 작성 후 호출
-        // 4-1. user1이 댓글 작성
-        testDB.saveComments(post.getId(), user1);
-        Assertions.assertThat(commentsRepository.count()).isOne();
+    private Comments saveCommentAndGetSavedComment() {
+        Long commentId = testDB.saveComments(post.getId(), users[0]);
+        return getSavedComment(commentId);
+    }
 
-        callAndAssertCountByUser(user1);
+    private Comments getSavedComment(Long commentId) {
+        Optional<Comments> result = commentsRepository.findById(commentId);
+        assertThat(result).isPresent();
+        return result.get();
     }
 
     @Test
     public void searchByContent() {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
+        saveComments();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
+        // 1. 검색 제외 단어 x
+        callAndAssertSearchCommentsByFields("흥 100 Let", commentsRepository::searchByContent,
+                Comments::getContent);
 
-        // 3. user1이 댓글 작성 * 2
+        // 2. 검색 제외 단어 o
+        callAndAssertSearchCommentsByFields("흥 100 Let -봉,마리", commentsRepository::searchByContent,
+                Comments::getContent);
+    }
+
+    private void saveComments() {
         String str1 = "bts, 봉준호, 손흥민, 이나현 let's go";
         String str2 = "붕어빵 3마리 1000원";
-        testDB.saveComments(post.getId(), user1, str1, str2);
-        Assertions.assertThat(commentsRepository.count()).isEqualTo(2);
+        String[] strings = { str1, str2 };
+        for (User user : users) {
+            testDB.saveComments(post.getId(), user, strings);
+        }
+        assertThat(commentsRepository.count()).isEqualTo(strings.length * users.length);
+    }
 
-        // 4. 예상 결과(List<Comments>) 생성
-        // 4-1. 전체 댓글, 검색어, 검색 제외 단어 준비
-        List<Comments> comments = commentsRepository.findAll();
-        String[] includeKeywords = { "흥", "100", "Let" };
-        String[] excludeKeywords = { "봉", "마리" };
+    private void callAndAssertSearchCommentsByFields(String keywords,
+                                                     Function<String, List<CommentsListDto>> searcher,
+                                                     Function<Comments, String>... fieldExtractors) {
+        SearchHelperForTest<CommentsListDto, Comments> searchHelper =
+                createSearchHelper(keywords, searcher, fieldExtractors);
+        searchHelper.callAndAssertSearchByField();
+    }
 
-        // 4-2. 검색 제외 단어 없이 호출할 때 예상 결과
-        SearchUtil.SearchDto<Comments> searchDto1 = SearchUtil.SearchDto.<Comments>builder()
-                .contents(comments).fieldExtractor(Comments::getContent).idExtractor(Comments::getId)
-                .includeKeywords(includeKeywords).build();
-        List<Long> expectedIdList1 = getExpectedIdList(searchDto1);
-
-        // 4-3. 검색 제외 단어 포함해서 호출할 때 예상 결과
-        SearchUtil.SearchDto<Comments> searchDto2 = SearchUtil.SearchDto.<Comments>builder()
-                .contents(comments).fieldExtractor(Comments::getContent).idExtractor(Comments::getId)
-                .includeKeywords(includeKeywords).excludeKeywords(excludeKeywords).build();
-        List<Long> expectedIdList2 = getExpectedIdList(searchDto2);
-
-        // 5. searchByContent() 호출
-        // 5-1. 검색 제외 단어 x
-        callAndAssertSearchByField("흥 100 Let", commentsRepository::searchByContent,
-                searchDto1.getIdExtractor(), expectedIdList1);
-
-        // 5-2. 검색 제외 단어 o
-        callAndAssertSearchByField("흥 100 Let -봉,마리", commentsRepository::searchByContent,
-                searchDto2.getIdExtractor(), expectedIdList2);
+    private SearchHelperForTest<CommentsListDto, Comments> createSearchHelper(String keywords,
+                                                                              Function<String, List<CommentsListDto>> searcher,
+                                                                              Function<Comments, String>[] fieldExtractors) {
+        return SearchHelperForTest.<CommentsListDto, Comments>builder()
+                .keywords(keywords).searcher(searcher)
+                .totalContents(commentsRepository.findAll(Sort.by(Sort.Order.desc("id"))))
+                .fieldExtractors(fieldExtractors).build();
     }
 
     @Test
     public void findByUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
-        Assertions.assertThat(userRepository.count()).isEqualTo(2);
+        saveComments();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-
-        // 3. user1이 댓글 작성 * 2 + user2가 댓글 작성 * 2
-        // 4. List<Long> expectedIdList에 user1이 작성한 댓글 id 저장
-        List<User> users = Arrays.asList(user1, user2);
-        List<Long> expectedIdList = new ArrayList<>();
-        for (int i = 0; i < 2; i++) {
-            for (User user : users) {
-                Long commentId = testDB.saveComments(post.getId(), user);
-                if (user.equals(user1)) {
-                    expectedIdList.add(commentId);
-                }
-            }
-        }
-        Assertions.assertThat(commentsRepository.count()).isEqualTo(4);
-
-        // 5. user1로 findByUser() 호출 + 검증
-        FinderParams<CommentsListDto> finderParams = FinderParams.<CommentsListDto>builder()
-                .currentPage(1).limit(3).finder(commentsRepository::findByUser).user(user1)
-                .expectedTotalElements(expectedIdList.size())
-                .expectedIdList(expectedIdList).build();
-        callAndAssertFindContentsByUser(finderParams);
+        FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto>, Comments, CommentsListDto> findHelper
+                = createBiFindHelper();
+        callAndAssertFindComments(findHelper);
     }
 
-    private void callAndAssertCountByUser(User user) {
-        // 1. expectedCount에 현재 저장된 댓글 수 저장
-        long expectedCount = commentsRepository.count();
+    private FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto>, Comments, CommentsListDto>
+        createBiFindHelper() {
+        EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
+        return FindHelperForTest.<RepositoryBiFinderForTest<CommentsListDto>, Comments, CommentsListDto>builder()
+                .finder(commentsRepository::findByUser).user(users[0])
+                .entityStream(commentsRepository.findAll().stream())
+                .page(1).limit(4)
+                .entityConverter(entityConverter).build();
+    }
 
-        // 2. user로 countByUser() 호출하고 리턴 값 actualCount에 저장
-        long actualCount = commentsRepository.countByUser(user);
-
-        // 3. actualCount가 expectedCount랑 같은지 확인
-        Assertions.assertThat(actualCount).isEqualTo(expectedCount);
+    private void callAndAssertFindComments(FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto>,
+                                            Comments, CommentsListDto> findHelper) {
+        initializeFindHelper(findHelper);
+        callAndAssertFind();
     }
 }

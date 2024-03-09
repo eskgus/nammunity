@@ -46,6 +46,6 @@ public class CommentsSearchService {
 
     @Transactional(readOnly = true)
     public List<CommentsListDto> searchByContent(String keywords) {
-        return commentsRepository.searchByContent(keywords).stream().map(CommentsListDto::new).toList();
+        return commentsRepository.searchByContent(keywords);
     }
 }
