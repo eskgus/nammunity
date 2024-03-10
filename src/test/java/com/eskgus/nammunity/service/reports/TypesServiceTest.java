@@ -1,16 +1,15 @@
 package com.eskgus.nammunity.service.reports;
 
-import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.reports.TypesRepository;
-import com.eskgus.nammunity.domain.user.User;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -22,26 +21,20 @@ public class TypesServiceTest {
     private TypesService typesService;
 
     @Test
-    public void findByClass() {
-        callAndAssertFindByClass(Posts.class);
-        callAndAssertFindByClass(Comments.class);
-        callAndAssertFindByClass(User.class);
+    public void findByContentType() {
+        callAndAssertFindByContentType(ContentType.POSTS);
+        callAndAssertFindByContentType(ContentType.COMMENTS);
+        callAndAssertFindByContentType(ContentType.USERS);
     }
 
-    private <T> void callAndAssertFindByClass(Class<T> classOfType) {
-        Types expectedType = getExpectedType(classOfType);
+    private void callAndAssertFindByContentType(ContentType contentType) {
+        Types expectedType = getExpectedType(contentType);
+        Types actualType = typesService.findByContentType(contentType);
 
-        Types actualType = typesService.findByClass(classOfType);
-
-        Assertions.assertThat(actualType.getId()).isEqualTo(expectedType.getId());
+        assertThat(actualType.getId()).isEqualTo(expectedType.getId());
     }
 
-    private <T> Types getExpectedType(Class<T> classOfType) {
-        if (classOfType.equals(Posts.class)) {
-            return typesRepository.findByDetail("게시글").get();
-        } else if (classOfType.equals(Comments.class)) {
-            return typesRepository.findByDetail("댓글").get();
-        }
-        return typesRepository.findByDetail("사용자").get();
+    private Types getExpectedType(ContentType contentType) {
+        return typesRepository.findByDetail(contentType.getDetail()).get();
     }
 }

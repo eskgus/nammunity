@@ -6,7 +6,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.helper.enums.ContentTypeForTest;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.helper.repository.ServiceQuadFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
@@ -104,12 +104,12 @@ public class LikesSearchServiceTest {
 
         // 2. findPostLikesByUser()
         FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto> findHelper2
-                = createFindHelper(2, ContentTypeForTest.POSTS, likesRepository::findPostLikesByUser);
+                = createFindHelper(2, ContentType.POSTS, likesRepository::findPostLikesByUser);
         callAndAssertFindLikesByUser(findHelper2);
 
         // 3. findCommentLikesByUser()
         FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto> findHelper3
-                = createFindHelper(2, ContentTypeForTest.COMMENTS, likesRepository::findCommentLikesByUser);
+                = createFindHelper(2, ContentType.COMMENTS, likesRepository::findCommentLikesByUser);
         callAndAssertFindLikesByUser(findHelper3);
     }
 
@@ -146,7 +146,7 @@ public class LikesSearchServiceTest {
 
     private FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto>
     createFindHelper(int limit,
-                     ContentTypeForTest contentTypeOfLikes,
+                     ContentType contentTypeOfLikes,
                      BiFunction<User, Pageable, Page<LikesListDto>> likesFinder) {
         EntityConverterForTest<Likes, LikesListDto> entityConverter = new LikesConverterForTest();
         return FindHelperForTest.<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto>builder()

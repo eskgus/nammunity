@@ -4,7 +4,7 @@ import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.helper.enums.ContentTypeForTest;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.helper.repository.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,7 +19,7 @@ public class FindHelperForTest<T, U, V> {  // T: Page<entity>, U: entity, V: lis
     private T finder;
     private User user;
 
-    private ContentTypeForTest contentTypeOfLikes;
+    private ContentType contentTypeOfLikes;
     private Stream<U> entityStream;
 
     private int page;
@@ -32,7 +32,7 @@ public class FindHelperForTest<T, U, V> {  // T: Page<entity>, U: entity, V: lis
 
     @Builder
     public FindHelperForTest(T finder, User user,
-                             ContentTypeForTest contentTypeOfLikes, Stream<U> entityStream,
+                             ContentType contentTypeOfLikes, Stream<U> entityStream,
                              int page, int limit,
                              EntityConverterForTest<U, V> entityConverter,
                              BiFunction<User, Pageable, Page<V>> likesFinder) {
@@ -58,7 +58,7 @@ public class FindHelperForTest<T, U, V> {  // T: Page<entity>, U: entity, V: lis
     }
 
     private Stream<U> addLikesFilterToStream(Stream<U> entityStream) {
-        if (contentTypeOfLikes.equals(ContentTypeForTest.POSTS)) {
+        if (contentTypeOfLikes.equals(ContentType.POSTS)) {
             return entityStream.filter(entity -> ((LikesConverterForTest) entityConverter).getPosts((Likes) entity) != null);
         } else {
             return entityStream.filter(entity -> ((LikesConverterForTest) entityConverter).getComments((Likes) entity) != null);

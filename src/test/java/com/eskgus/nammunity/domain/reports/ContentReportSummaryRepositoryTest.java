@@ -2,6 +2,7 @@ package com.eskgus.nammunity.domain.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
@@ -10,7 +11,6 @@ import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.service.reports.TypesService;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +20,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -42,8 +44,7 @@ public class ContentReportSummaryRepositoryTest {
     @Autowired
     private TypesService typesService;
 
-    private User user1;
-    private User user2;
+    private User[] users;
     private Posts post;
     private Comments comment;
 
@@ -51,23 +52,22 @@ public class ContentReportSummaryRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        // 1. user1 회원가입 + user2 회원가입
         Long user1Id = testDB.signUp(1L, Role.USER);
         Long user2Id = testDB.signUp(2L, Role.USER);
-        Assertions.assertThat(userRepository.count()).isEqualTo(user2Id);
+        assertThat(userRepository.count()).isEqualTo(user2Id);
 
-        this.user1 = userRepository.findById(user1Id).get();
-        this.user2 = userRepository.findById(user2Id).get();
+        User user1 = userRepository.findById(user1Id).get();
+        User user2 = userRepository.findById(user2Id).get();
 
-        // 2. user1이 게시글 작성
-        Long postId = testDB.savePosts(this.user1);
-        Assertions.assertThat(postsRepository.count()).isEqualTo(postId);
+        this.users = new User[]{ user1, user2 };
+
+        Long postId = testDB.savePosts(user1);
+        assertThat(postsRepository.count()).isEqualTo(postId);
 
         this.post = postsRepository.findById(postId).get();
 
-        // 3. user1이 댓글 작성
-        Long commentId = testDB.saveComments(postId, this.user1);
-        Assertions.assertThat(commentsRepository.count()).isEqualTo(commentId);
+        Long commentId = testDB.saveComments(postId, user1);
+        assertThat(commentsRepository.count()).isEqualTo(commentId);
 
         this.comment = commentsRepository.findById(commentId).get();
     }
@@ -79,57 +79,54 @@ public class ContentReportSummaryRepositoryTest {
 
     @Test
     public void existsByContents() {
-        // 1. user1 회원가입 + user2 회원가입
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        // 4. 신고 요약 저장 x 후 existsByContents() 호출
-        callAndAssertExistsByContents(this.post, false);
-        callAndAssertExistsByContents(this.comment, false);
-        callAndAssertExistsByContents(this.user1, false);
+        // 1. 신고 요약 저장 x 후 호출
+        callAndAssertExistsByContents(post, false);
+        callAndAssertExistsByContents(comment, false);
+        callAndAssertExistsByContents(users[0], false);
 
-        // 5. 신고 요약 저장 후 existsByContents() 호출
+        // 2. 신고 요약 저장 후 호출
         saveReportSummaries();
 
-        callAndAssertExistsByContents(this.post, true);
-        callAndAssertExistsByContents(this.comment, true);
-        callAndAssertExistsByContents(this.user1, true);
+        callAndAssertExistsByContents(post, true);
+        callAndAssertExistsByContents(comment, true);
+        callAndAssertExistsByContents(users[0], true);
     }
 
     private <T> void callAndAssertExistsByContents(T contents, boolean expectedResult) {
-        boolean doesReportSummaryExist = contentReportSummaryRepository.existsByContents(contents);
-        Assertions.assertThat(doesReportSummaryExist).isEqualTo(expectedResult);
+        boolean actualResult = contentReportSummaryRepository.existsByContents(contents);
+        assertThat(actualResult).isEqualTo(expectedResult);
     }
 
     private void saveReportSummaries() {
-        testDB.savePostReportSummary(this.post, this.user2);
-        testDB.saveCommentReportSummary(this.comment, this.user2);
-        this.userReportSummaryId = testDB.saveUserReportSummary(this.user1, this.user2);
-        Assertions.assertThat(contentReportSummaryRepository.count()).isEqualTo(this.userReportSummaryId);
+        testDB.savePostReportSummary(post, users[1]);
+        testDB.saveCommentReportSummary(comment, users[1]);
+        this.userReportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
+        assertThat(contentReportSummaryRepository.count()).isEqualTo(userReportSummaryId);
     }
 
     @Test
     public void findByContents() {
-        // 1. user1 회원가입 + user2 회원가입
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        // 4. 신고 요약 저장 후 findByContents() 호출
         saveReportSummaries();
 
-        callAndAssertFindByContents(this.post);
-        callAndAssertFindByContents(this.comment);
-        callAndAssertFindByContents(this.user1);
+        callAndAssertFindByContents(post);
+        callAndAssertFindByContents(comment);
+        callAndAssertFindByContents(users[0]);
     }
 
     private <T> void callAndAssertFindByContents(T contents) {
         ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
-        Assertions.assertThat(reportSummary).isNotNull();
+        assertFindByContents(reportSummary, contents);
+    }
+
+    private <T> void assertFindByContents(ContentReportSummary reportSummary, T contents) {
+        assertThat(reportSummary).isNotNull();
         assertContentId(reportSummary, contents);
     }
 
     private <T> void assertContentId(ContentReportSummary reportSummary, T contents) {
         Long actualId = getActualId(reportSummary);
         Long expectedId = getExpectedId(contents);
-        Assertions.assertThat(actualId).isEqualTo(expectedId);
+        assertThat(actualId).isEqualTo(expectedId);
     }
 
     private Long getActualId(ContentReportSummary reportSummary) {
@@ -154,35 +151,43 @@ public class ContentReportSummaryRepositoryTest {
 
     @Test
     public void findAllDesc() {
-        // 1. user1 회원가입 + user2 회원가입
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        // 4. 신고 요약 저장 후 findAllDesc() 호출
         saveReportSummaries();
 
-        List<ContentReportSummaryDto> summaryDtos = contentReportSummaryRepository.findAllDesc();
+        callAndAssertFindAllDesc();
+    }
 
-        Assertions.assertThat(summaryDtos.size()).isEqualTo(this.userReportSummaryId.intValue());
-        Assertions.assertThat(summaryDtos.get(0).getUserId()).isEqualTo(this.user1.getId());
-        Assertions.assertThat(summaryDtos.get(1).getCommentId()).isEqualTo(this.comment.getId());
-        Assertions.assertThat(summaryDtos.get(2).getPostId()).isEqualTo(this.post.getId());
+    private void callAndAssertFindAllDesc() {
+        List<ContentReportSummaryDto> summaryDtos = contentReportSummaryRepository.findAllDesc();
+        assertFindAllDesc(summaryDtos);
+    }
+
+    private void assertFindAllDesc(List<ContentReportSummaryDto> summaryDtos) {
+        assertThat(summaryDtos.size()).isEqualTo(userReportSummaryId.intValue());
+        assertThat(summaryDtos.get(0).getUserId()).isEqualTo(users[0].getId());
+        assertThat(summaryDtos.get(1).getCommentId()).isEqualTo(comment.getId());
+        assertThat(summaryDtos.get(2).getPostId()).isEqualTo(post.getId());
     }
 
     @Test
     public void findByTypes() {
         saveReportSummaries();
 
-        callAndAssertFindByTypes(Posts.class);
-        callAndAssertFindByTypes(Comments.class);
-        callAndAssertFindByTypes(User.class);
+        callAndAssertFindByTypes(ContentType.POSTS);
+        callAndAssertFindByTypes(ContentType.COMMENTS);
+        callAndAssertFindByTypes(ContentType.USERS);
     }
 
-    private <T> void callAndAssertFindByTypes(Class<T> classOfType) {
-        Types type = typesService.findByClass(classOfType);
-        List<ContentReportSummaryDto> summaryDtos = contentReportSummaryRepository.findByTypes(type);
-        Assertions.assertThat(summaryDtos.size()).isOne();
+    private void callAndAssertFindByTypes(ContentType contentType) {
+        Types expectedType = typesService.findByContentType(contentType);
+        List<ContentReportSummaryDto> summaryDtos = contentReportSummaryRepository.findByTypes(expectedType);
+
+        assertFindByTypes(summaryDtos, expectedType);
+    }
+
+    private void assertFindByTypes(List<ContentReportSummaryDto> summaryDtos, Types expectedType) {
+        assertThat(summaryDtos.size()).isOne();
 
         ContentReportSummaryDto summaryDto = summaryDtos.get(0);
-        Assertions.assertThat(summaryDto.getType()).isEqualTo(type.getDetail());
+        assertThat(summaryDto.getType()).isEqualTo(expectedType.getDetail());
     }
 }

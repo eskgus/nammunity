@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.reports;
 
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.domain.reports.Types;
@@ -58,10 +59,8 @@ public class ReportSummaryService {
     }
 
     @Transactional(readOnly = true)
-    public <T> List<ContentReportSummaryDto> findByTypes(Class<T> classOfType) {
-        Types type = typesService.findByClass(classOfType);
-
-        List<ContentReportSummaryDto> summaryDtos = contentReportSummaryRepository.findByTypes(type);
-        return summaryDtos;
+    public List<ContentReportSummaryDto> findByTypes(ContentType contentType) {
+        Types type = typesService.findByContentType(contentType);
+        return contentReportSummaryRepository.findByTypes(type);
     }
 }

@@ -1,8 +1,6 @@
 package com.eskgus.nammunity.web.controller.reports;
 
-import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.service.reports.ReportSummaryService;
 import com.eskgus.nammunity.service.reports.ReportsService;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailDto;
@@ -46,7 +44,7 @@ public class ReportsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         // 게시글 신고 요약 목록
-        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(Posts.class);
+        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(ContentType.POSTS);
         attr.put("reports", summaryDtos);
 
         // 게시글 신고 요약 개수
@@ -62,7 +60,7 @@ public class ReportsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         // 댓글 신고 요약 목록
-        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(Comments.class);
+        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(ContentType.COMMENTS);
         attr.put("reports", summaryDtos);
 
         // 댓글 신고 요약 개수
@@ -78,7 +76,7 @@ public class ReportsIndexController {
         Map<String, Object> attr = new HashMap<>();
 
         // 사용자 신고 요약 목록
-        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(User.class);
+        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(ContentType.USERS);
         attr.put("reports", summaryDtos);
 
         // 사용자 신고 요약 개수
@@ -96,11 +94,11 @@ public class ReportsIndexController {
                                            Model model) {
         ContentReportDetailDto detailDto;
         if (postId != null) {
-            detailDto = reportsService.findDetails(Posts.class, postId);
+            detailDto = reportsService.findDetails(ContentType.POSTS, postId);
         } else if (commentId != null) {
-            detailDto = reportsService.findDetails(Comments.class, commentId);
+            detailDto = reportsService.findDetails(ContentType.COMMENTS, commentId);
         } else {
-            detailDto = reportsService.findDetails(User.class, userId);
+            detailDto = reportsService.findDetails(ContentType.USERS, userId);
         }
 
         model.addAttribute("details", detailDto);
