@@ -41,16 +41,16 @@ public class ReportSummaryService {
     }
 
     @Transactional
-    public Long saveContentReportSummary(ContentReportSummarySaveDto requestDto) {
-        return contentReportSummaryRepository.save(requestDto.toEntity()).getId();
-    }
-
-    @Transactional
     public <T> Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, T contents) {
         ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
         reportSummary.update(requestDto.getReportedDate(), requestDto.getReporter(),
                 requestDto.getReasons(), requestDto.getOtherReasons());
         return reportSummary.getId();
+    }
+
+    @Transactional
+    public Long saveContentReportSummary(ContentReportSummarySaveDto requestDto) {
+        return contentReportSummaryRepository.save(requestDto.toEntity()).getId();
     }
 
     @Transactional(readOnly = true)

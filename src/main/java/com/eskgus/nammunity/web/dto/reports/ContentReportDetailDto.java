@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.dto.reports;
 
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
@@ -17,9 +18,9 @@ public class ContentReportDetailDto <U> {
 
     private String type;
 
-    private Boolean postExistence = false;  // 게시글/댓글/사용자 존재 여부 (mustache에서 사용)
-    private Boolean commentExistence = false;
-    private Boolean userExistence = false;
+    private boolean isPostReport = false;  // 게시글/댓글/사용자 존재 여부 (mustache에서 사용)
+    private boolean isCommentReport = false;
+    private boolean isUserReport = false;
 
     private List<ContentReportDetailListDto> reports;
     private int numOfReports;   // 신고 세부 내역 개수
@@ -29,15 +30,15 @@ public class ContentReportDetailDto <U> {
                                   List<ContentReportDetailListDto> reports) {
         this.type = type.getDetail();
 
-        if (this.type.equals("게시글")) {
+        if (this.type.equals(ContentType.POSTS.getDetail())) {
             this.post = (PostsListDto) dto;
-            this.postExistence = true;
-        } else if (this.type.equals("댓글")) {
+            this.isPostReport = true;
+        } else if (this.type.equals(ContentType.COMMENTS.getDetail())) {
             this.comment = (CommentsListDto) dto;
-            this.commentExistence = true;
+            this.isCommentReport = true;
         } else {
             this.user = (UsersListDto) dto;
-            this.userExistence = true;
+            this.isUserReport = true;
         }
 
         this.reports = reports;

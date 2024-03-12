@@ -34,6 +34,18 @@ public class ReportsService {
 
     @Transactional
     public Long saveContentReports(ContentReportsSaveDto requestDto, String username) {
+        ContentReportsSaveDto saveDto = createContentReportsSaveDto(requestDto, username);
+        Long reportId = contentReportsRepository.save(saveDto.toEntity()).getId();
+
+        // 누적 신고 개수 10개 (or 3개) 이상이면 신고 요약 저장/수정
+        if (shouldCreateSummary(saveDto)) {
+            createAndSaveSummary(saveDto);
+        }
+
+        return reportId;
+    }
+
+    private ContentReportsSaveDto createContentReportsSaveDto(ContentReportsSaveDto requestDto, String username) {
         User reporter = userService.findByUsername(username);
         Reasons reasons = reasonsService.findById(requestDto.getReasonsId());
         String otherReasons = requestDto.getOtherReasons();
@@ -60,24 +72,15 @@ public class ReportsService {
         }
         Types types = typesService.findByContentType(contentType);
 
-        ContentReportsSaveDto saveDto = ContentReportsSaveDto.builder()
+        return ContentReportsSaveDto.builder()
                 .posts(posts).comments(comments).user(user)
                 .reporter(reporter).types(types)
                 .reasons(reasons).otherReasons(otherReasons)
                 .build();
-
-        Long reportId = contentReportsRepository.save(saveDto.toEntity()).getId();
-
-        // 누적 신고 개수 10개 (or 3개) 이상이면 신고 요약 저장/수정
-        if (shouldCreateSummary(saveDto)) {
-            createAndSaveSummary(saveDto);
-        }
-
-        return reportId;
     }
 
     private <T> boolean shouldCreateSummary(ContentReportsSaveDto saveDto) {
-        T contents = getContentsFromSaveDto(saveDto);
+        T contents = getContentsFromReportsSaveDto(saveDto);
         long countByContents = contentReportsRepository.countByContents(contents);
 
         if (contents instanceof User) {
@@ -86,7 +89,7 @@ public class ReportsService {
         return countByContents >= 10;
     }
 
-    private <T> T getContentsFromSaveDto(ContentReportsSaveDto saveDto) {
+    private <T> T getContentsFromReportsSaveDto(ContentReportsSaveDto saveDto) {
         if (saveDto.getPosts() != null) {
             return (T) saveDto.getPosts();
         } else if (saveDto.getComments() != null) {
@@ -96,13 +99,13 @@ public class ReportsService {
     }
 
     private void createAndSaveSummary(ContentReportsSaveDto saveDto) {
-        ContentReportSummarySaveDto summarySaveDto = createSummary(saveDto);
+        ContentReportSummarySaveDto summarySaveDto = createSummarySaveDto(saveDto);
         reportSummaryService.saveOrUpdateContentReportSummary(summarySaveDto);
     }
 
-    private <T> ContentReportSummarySaveDto createSummary(ContentReportsSaveDto saveDto) {
+    private <T> ContentReportSummarySaveDto createSummarySaveDto(ContentReportsSaveDto saveDto) {
         // types, 컨텐츠(posts, comments, user)는 saveDto에서 꺼내서 사용, 나머지는 테이블에서 검색
-        T contents = getContentsFromSaveDto(saveDto);
+        T contents = getContentsFromReportsSaveDto(saveDto);
 
         LocalDateTime reportedDate = contentReportsRepository.findReportedDateByContents(contents);
         User reporter = contentReportsRepository.findReporterByContents(contents);
@@ -122,7 +125,7 @@ public class ReportsService {
         return createDetailDto(contentType, contents);
     }
 
-    protected <T> T getContentsFromContentId(ContentType contentType, Long contentId) {
+    private <T> T getContentsFromContentId(ContentType contentType, Long contentId) {
         if (contentType.equals(ContentType.POSTS)) {
             return (T) postsSearchService.findById(contentId);
         } else if (contentType.equals(ContentType.COMMENTS)) {
@@ -132,7 +135,7 @@ public class ReportsService {
     }
 
     @Transactional(readOnly = true)
-    protected <T, U> ContentReportDetailDto createDetailDto(ContentType contentType, T contents) {
+    private <T, U> ContentReportDetailDto createDetailDto(ContentType contentType, T contents) {
         List<ContentReportDetailListDto> detailListDtos = contentReportsRepository.findByContents(contents);
         Types type = typesService.findByContentType(contentType);
         U contentListDto = createContentListDto(contents);
@@ -141,7 +144,7 @@ public class ReportsService {
     }
 
     @Transactional(readOnly = true)
-    protected <T, U> U createContentListDto(T contents) {
+    private <T, U> U createContentListDto(T contents) {
         if (contents instanceof Posts) {
             return (U) new PostsListDto((Posts) contents);
         } else if (contents instanceof Comments) {
