@@ -4,6 +4,7 @@ import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.domain.reports.Types;
+import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummarySaveDto;
 import lombok.RequiredArgsConstructor;
@@ -62,5 +63,11 @@ public class ReportSummaryService {
     public List<ContentReportSummaryDto> findByTypes(ContentType contentType) {
         Types type = typesService.findByContentType(contentType);
         return contentReportSummaryRepository.findByTypes(type);
+    }
+
+    @Transactional(readOnly = true)
+    public ContentReportSummary findByUser(User user) {
+        return contentReportSummaryRepository.findByUser(user)
+                .orElseThrow(() -> new IllegalArgumentException("신고 요약 내역이 존재하지 않는 회원입니다."));
     }
 }

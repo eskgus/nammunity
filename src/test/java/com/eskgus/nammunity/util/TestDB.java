@@ -313,10 +313,10 @@ public class TestDB {
         LocalDateTime startedDate = LocalDateTime.now();
         LocalDateTime expiredDate = startedDate.plus(period);
 
-        Reasons reason = contentReportsRepository.findReasonByContents(user);
-        String reasonDetail = reason.getDetail();
+        ContentReportSummary reportSummary = contentReportSummaryRepository.findByUser(user).get();
+        String reasonDetail = reportSummary.getReasons().getDetail();
         if (reasonDetail.equals("기타")) {
-            reasonDetail += ": " + contentReportsRepository.findOtherReasonByContents(user, reason);
+            reasonDetail += ": " + reportSummary.getOtherReasons();
         }
 
         BannedUsers bannedUser = BannedUsers.builder()

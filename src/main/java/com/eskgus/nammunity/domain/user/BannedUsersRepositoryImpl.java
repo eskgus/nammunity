@@ -4,6 +4,7 @@ import com.querydsl.jpa.impl.JPAUpdateClause;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -16,10 +17,11 @@ public class BannedUsersRepositoryImpl extends QuerydslRepositorySupport impleme
     }
 
     @Override
-    public void updateExpiredDate(User user, LocalDateTime expiredDate) {
-        QBannedUsers bannedUser = QBannedUsers.bannedUsers;
+    @Transactional
+    public void updateExpiredDate(Long id, LocalDateTime expiredDate) {
+        QBannedUsers qBannedUser = QBannedUsers.bannedUsers;
 
-        JPAUpdateClause query = new JPAUpdateClause(entityManager, bannedUser);
-        query.set(bannedUser.expiredDate, expiredDate).where(bannedUser.user.eq(user)).execute();
+        JPAUpdateClause query = new JPAUpdateClause(entityManager, qBannedUser);
+        query.set(qBannedUser.expiredDate, expiredDate).where(qBannedUser.id.eq(id)).execute();
     }
 }

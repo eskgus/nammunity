@@ -21,8 +21,8 @@
                 <tr>
                     <th>신고 내용:</th>
                     <td>
-                        <p class="title">{{#isPostReport}}{{title}}{{/isPostReport}}{{#isCommentReport}}{{content}}{{/isCommentReport}}{{#isUserReport}}{{nickname}}{{/isUserReport}}</p>
-                        <p class="author">({{#isUserReport}}{{createdDate}}{{/isUserReport}}{{^isUserReport}}{{author}}, {{modifiedDate}}{{/isUserReport}})</p>
+                        <p class="title">{{#isPostReport}}{{post.title}}{{/isPostReport}}{{#isCommentReport}}{{comment.content}}{{/isCommentReport}}{{#isUserReport}}{{user.nickname}}{{/isUserReport}}</p>
+                        <p class="author">{{#isPostReport}}{{post.author}}, {{post.modifiedDate}}{{/isPostReport}}{{#isCommentReport}}{{comment.author}}, {{comment.modifiedDate}}{{/isCommentReport}}{{#isUserReport}}{{user.createdDate}}{{/isUserReport}}</p>
                     </td>
                 </tr>
             </tbody>

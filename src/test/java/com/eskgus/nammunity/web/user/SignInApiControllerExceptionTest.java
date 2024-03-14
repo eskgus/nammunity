@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.user;
 
+import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.user.*;
@@ -37,6 +38,9 @@ public class SignInApiControllerExceptionTest {
 
     @Autowired
     private BannedUsersRepository bannedUsersRepository;
+
+    @Autowired
+    private ContentReportSummaryRepository reportSummaryRepository;
 
     @BeforeEach
     public void setUp() {
@@ -78,6 +82,9 @@ public class SignInApiControllerExceptionTest {
         // 1-2. user2가 user1 사용자 신고 * 3
         testDB.saveUserReports(user1, user2);
         Assertions.assertThat(contentReportsRepository.count()).isEqualTo(3);
+
+        Long reportSummaryId = testDB.saveUserReportSummary(user1, user2);
+        Assertions.assertThat(reportSummaryRepository.count()).isEqualTo(reportSummaryId);
 
         // 1-3. user1 활동 정지
         testDB.saveBannedUsers(user1, Period.ofWeeks(1));

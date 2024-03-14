@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.dto.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.user.User;
@@ -43,14 +44,14 @@ public class ContentReportSummaryDto {
         String reasonDetail = reportSummary.getReasons().getDetail();
         this.reason = reasonDetail.equals("기타") ? reasonDetail + ": " + reportSummary.getOtherReasons() : reasonDetail;
 
-        if (this.type.equals("게시글")) {
+        if (this.type.equals(ContentType.POSTS.getDetail())) {
             this.isPostReportSummary = true;
             this.post = reportSummary.getPosts();
             this.postId = this.post.getId();
             this.title = this.post.getTitle();
             this.author = this.post.getUser().getNickname();
             this.modifiedDate = DateTimeUtil.formatDateTime(this.post.getModifiedDate());
-        } else if (this.type.equals("댓글")) {
+        } else if (this.type.equals(ContentType.COMMENTS.getDetail())) {
             this.isCommentReportSummary = true;
             this.comment = reportSummary.getComments();
             this.commentId = this.comment.getId();

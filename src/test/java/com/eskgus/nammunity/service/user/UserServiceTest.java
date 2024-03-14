@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -49,6 +50,9 @@ public class UserServiceTest {
     private BannedUsersRepository bannedUsersRepository;
 
     @Autowired
+    private ContentReportSummaryRepository reportSummaryRepository;
+
+    @Autowired
     private UserService userService;
 
     private User[] users;
@@ -76,6 +80,7 @@ public class UserServiceTest {
     public void findActivityHistory() {
         savePostsAndComments();
         reportUser();
+        saveUserReportSummary();
         banUser();
 
         int page = 2;
@@ -101,6 +106,11 @@ public class UserServiceTest {
     private void reportUser() {
         Long latestUserReportId = testDB.saveUserReports(users[0], users[1]);
         assertThat(contentReportsRepository.count()).isEqualTo(latestUserReportId);
+    }
+
+    private void saveUserReportSummary() {
+        Long reportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
+        assertThat(reportSummaryRepository.count()).isEqualTo(reportSummaryId);
     }
 
     private void banUser() {

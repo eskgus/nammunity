@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -189,5 +190,17 @@ public class ContentReportSummaryRepositoryTest {
 
         ContentReportSummaryDto summaryDto = summaryDtos.get(0);
         assertThat(summaryDto.getType()).isEqualTo(expectedType.getDetail());
+    }
+
+    @Test
+    public void findByUser() {
+        callAndAssertFindByUser(false);
+
+        saveReportSummaries();
+        callAndAssertFindByUser(true);    }
+
+    private void callAndAssertFindByUser(boolean expectedResult) {
+        Optional<ContentReportSummary> result = contentReportSummaryRepository.findByUser(users[0]);
+        assertThat(result.isPresent()).isEqualTo(expectedResult);
     }
 }

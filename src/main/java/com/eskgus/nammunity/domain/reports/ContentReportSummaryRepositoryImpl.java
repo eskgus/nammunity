@@ -17,72 +17,66 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
     @Autowired
     private EntityManager entityManager;
 
+    private final QContentReportSummary qReportSummary = QContentReportSummary.contentReportSummary;
+
     public ContentReportSummaryRepositoryImpl() {
         super(ContentReportSummary.class);
     }
 
     @Override
     public <T> boolean existsByContents(T contents) {
-        QContentReportSummary reportSummary = QContentReportSummary.contentReportSummary;
-
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
 
-        Predicate whereCondition = createWhereConditionByContents(reportSummary, contents);
+        Predicate whereCondition = createWhereConditionByContents(contents);
 
-        return query.selectFrom(reportSummary)
+        return query.selectFrom(qReportSummary)
                 .where(whereCondition)
                 .fetchFirst() != null;
     }
 
-    @Override
-    public <T> ContentReportSummary findByContents(T contents) {
-        QContentReportSummary reportSummary = QContentReportSummary.contentReportSummary;
-
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
-
-        Predicate whereCondition = createWhereConditionByContents(reportSummary, contents);
-
-        return query.selectFrom(reportSummary)
-                .where(whereCondition).fetchOne();
-    }
-
-    private <T> Predicate createWhereConditionByContents(QContentReportSummary reportSummary, T contents) {
+    private <T> Predicate createWhereConditionByContents(T contents) {
         Predicate whereCondition;
         if (contents instanceof Posts) {
-            whereCondition = reportSummary.posts.eq((Posts) contents);
+            whereCondition = qReportSummary.posts.eq((Posts) contents);
         } else if (contents instanceof Comments) {
-            whereCondition = reportSummary.comments.eq((Comments) contents);
+            whereCondition = qReportSummary.comments.eq((Comments) contents);
         } else {
-            whereCondition = reportSummary.user.eq((User) contents);
+            whereCondition = qReportSummary.user.eq((User) contents);
         }
 
         return whereCondition;
     }
 
     @Override
-    public List<ContentReportSummaryDto> findAllDesc() {
-        QContentReportSummary reportSummary = QContentReportSummary.contentReportSummary;
+    public <T> ContentReportSummary findByContents(T contents) {
+        JPAQueryFactory query = new JPAQueryFactory(entityManager);
 
+        Predicate whereCondition = createWhereConditionByContents(contents);
+
+        return query.selectFrom(qReportSummary)
+                .where(whereCondition).fetchOne();
+    }
+
+    @Override
+    public List<ContentReportSummaryDto> findAllDesc() {
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
 
         List<ContentReportSummaryDto> reportSummaries = query.select(
-                    Projections.constructor(ContentReportSummaryDto.class, reportSummary))
-                .from(reportSummary)
-                .orderBy(reportSummary.id.desc()).fetch();
+                    Projections.constructor(ContentReportSummaryDto.class, qReportSummary))
+                .from(qReportSummary)
+                .orderBy(qReportSummary.id.desc()).fetch();
         return reportSummaries;
     }
 
     @Override
     public List<ContentReportSummaryDto> findByTypes(Types type) {
-        QContentReportSummary reportSummary = QContentReportSummary.contentReportSummary;
-
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
 
         List<ContentReportSummaryDto> reportSummaries = query.select(
-                    Projections.constructor(ContentReportSummaryDto.class, reportSummary))
-                .from(reportSummary)
-                .where(reportSummary.types.eq(type))
-                .orderBy(reportSummary.id.desc()).fetch();
+                    Projections.constructor(ContentReportSummaryDto.class, qReportSummary))
+                .from(qReportSummary)
+                .where(qReportSummary.types.eq(type))
+                .orderBy(qReportSummary.id.desc()).fetch();
         return reportSummaries;
     }
 }
