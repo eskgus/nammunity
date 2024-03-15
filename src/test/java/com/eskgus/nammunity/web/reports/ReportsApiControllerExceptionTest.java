@@ -1,5 +1,9 @@
 package com.eskgus.nammunity.web.reports;
 
+import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.enums.ContentType;
+import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -9,7 +13,7 @@ import com.eskgus.nammunity.domain.user.BannedUsersRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.web.dto.reports.ContentReportsDeleteDto;
+import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.Assertions;
@@ -58,6 +62,9 @@ public class ReportsApiControllerExceptionTest {
 
     @Autowired
     private BannedUsersRepository bannedUsersRepository;
+
+    @Autowired
+    private ContentReportSummaryRepository reportSummaryRepository;
 
     @BeforeEach
     public void setUp() {
@@ -111,29 +118,29 @@ public class ReportsApiControllerExceptionTest {
         Long commentsId = testDB.saveComments(postsId, user1);
         Assertions.assertThat(commentsRepository.count()).isOne();
 
-        // 4. user2가 게시글 신고 * 10, 댓글 신고 * 10, user1 사용자 신고 * 3
-        testDB.savePostReports(postsId, user2);
-        testDB.saveCommentReports(commentsId, user2);
-        testDB.saveUserReports(user1, user2);
+        // 4. user2가 게시글 신고, 댓글 신고, user1 사용자 신고 요약 저장
+        Posts post = postsRepository.findById(postsId).get();
+        Comments comment = commentsRepository.findById(commentsId).get();
+        testDB.savePostReportSummary(post, user2);
+        testDB.saveCommentReportSummary(comment, user2);
+        Long numOfReportSummary = testDB.saveUserReportSummary(user1, user2);
 
-        Long numOfReports = contentReportsRepository.count();
-        Assertions.assertThat(numOfReports).isGreaterThan(22);
 
         // 예외 1. 삭제할 항목 선택 x
         requestAndAssertForExceptionOnDeletingSelectedContentReports(
-                "empty", "삭제할 항목을 선택", numOfReports);
+                null, "삭제할 항목을 선택", numOfReportSummary);
 
         // 예외 2. 게시글 존재 x
         requestAndAssertForExceptionOnDeletingSelectedContentReports(
-                "post", "게시글이 없", numOfReports);
+                ContentType.POSTS, "게시글이 없", numOfReportSummary);
 
         // 예외 3. 댓글 존재 x
         requestAndAssertForExceptionOnDeletingSelectedContentReports(
-                "comment", "댓글이 없", numOfReports);
+                ContentType.COMMENTS, "댓글이 없", numOfReportSummary);
 
         // 예외 4. 사용자 존재 x
         requestAndAssertForExceptionOnDeletingSelectedContentReports(
-                "user", "존재하지 않는 회원", numOfReports);
+                ContentType.USERS, "존재하지 않는 회원", numOfReportSummary);
     }
 
     @Test
@@ -196,25 +203,25 @@ public class ReportsApiControllerExceptionTest {
         Assertions.assertThat(contentReportsRepository.count()).isZero();
     }
 
-    private void requestAndAssertForExceptionOnDeletingSelectedContentReports(String exceptionReason,
+    private void requestAndAssertForExceptionOnDeletingSelectedContentReports(ContentType reasonType,
                                                                               String responseValue,
-                                                                              Long numOfReports) throws Exception {
-        Long contentsId = 3L;
+                                                                              Long numOfReportSummary) throws Exception {
+        Long contentsId = 3L;   // 존재하지 않는 컨텐츠 id
         List<Long> postsIdList = new ArrayList<>();
         List<Long> commentsIdList = new ArrayList<>();
         List<Long> userIdList = new ArrayList<>();
 
-        // 1. exceptionReason에 따라 -IdList에 id 추가
-        if (exceptionReason.equals("post")) {
+        // 1. reasonType에 따라 -IdList에 id 추가
+        if (ContentType.POSTS.equals(reasonType)) {
             postsIdList.add(contentsId);
-        } else if (exceptionReason.equals("comment")) {
+        } else if (ContentType.COMMENTS.equals(reasonType)) {
             commentsIdList.add(contentsId);
-        } else if (exceptionReason.equals("user")) {
+        } else if (ContentType.USERS.equals(reasonType)) {
             userIdList.add(contentsId);
         }
 
-        // 2. -IdList로 ContentReportsDeleteDto 생성
-        ContentReportsDeleteDto requestDto = ContentReportsDeleteDto.builder()
+        // 2. -IdList로 ContentReportSummaryDeleteDto 생성
+        ContentReportSummaryDeleteDto requestDto = ContentReportSummaryDeleteDto.builder()
                 .postsId(postsIdList).commentsId(commentsIdList).userId(userIdList).build();
 
         // 3. "/api/reports/content/selected-delete"로 contentReportsDeleteDto 담아서 delete 요청
@@ -231,8 +238,7 @@ public class ReportsApiControllerExceptionTest {
         // 5. "error"의 값이 responseValue인지 확인
         Assertions.assertThat((String) map.get("error")).contains(responseValue);
 
-        // 6. db에 저장된 신고 수 23인지 확인
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(numOfReports);
+        Assertions.assertThat(reportSummaryRepository.count()).isEqualTo(numOfReportSummary);
     }
 
     private void requestAndAssertForExceptionOnBanUser(Long userId, String responseValue) throws Exception {

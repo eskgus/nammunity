@@ -10,6 +10,7 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummarySaveDto;
 import org.junit.jupiter.api.AfterEach;
@@ -277,5 +278,26 @@ public class ReportSummaryServiceTest {
 
         ContentReportSummaryDto summaryDto = summaryDtos.get(0);
         assertThat(summaryDto.getType()).isEqualTo(expectedType.getDetail());
+    }
+
+    @Test
+    public void deleteSelectedReportSummary() {
+        saveReportSummaries();
+
+        callAndAssertDeleteSelectedReportSummary();
+    }
+
+    private void callAndAssertDeleteSelectedReportSummary() {
+        ContentReportSummaryDeleteDto deleteDto = createDeleteDto();
+        reportSummaryService.deleteSelectedReportSummary(deleteDto);
+
+        assertThat(contentReportSummaryRepository.count()).isZero();
+    }
+
+    private ContentReportSummaryDeleteDto createDeleteDto() {
+        return ContentReportSummaryDeleteDto.builder()
+                .postsId(List.of(post.getId()))
+                .commentsId(List.of(comment.getId()))
+                .userId(List.of(users[0].getId())).build();
     }
 }

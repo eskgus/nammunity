@@ -9,4 +9,5 @@ public interface CustomContentReportSummaryRepository {
     <T> ContentReportSummary findByContents(T contents);
     List<ContentReportSummaryDto> findAllDesc();
     List<ContentReportSummaryDto> findByTypes(Types type);
+    <T> void deleteByContents(T contents);
 }

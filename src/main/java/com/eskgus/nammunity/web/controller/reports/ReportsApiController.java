@@ -1,8 +1,9 @@
 package com.eskgus.nammunity.web.controller.reports;
 
+import com.eskgus.nammunity.service.reports.ReportSummaryService;
 import com.eskgus.nammunity.service.reports.ReportsService;
 import com.eskgus.nammunity.service.user.BannedUsersService;
-import com.eskgus.nammunity.web.dto.reports.ContentReportsDeleteDto;
+import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class ReportsApiController {
     private final ReportsService reportsService;
     private final BannedUsersService bannedUsersService;
+    private final ReportSummaryService reportSummaryService;
 
     @PostMapping("/content")
     public Map<String, String> saveContentReports(@Valid @RequestBody ContentReportsSaveDto requestDto,
@@ -36,11 +38,11 @@ public class ReportsApiController {
     }
 
     @DeleteMapping("/content/selected-delete")
-    public Map<String, String> deleteSelectedContentReports(@RequestBody ContentReportsDeleteDto requestDto) {
+    public Map<String, String> deleteSelectedContentReports(@RequestBody ContentReportSummaryDeleteDto requestDto) {
         Map<String, String> response = new HashMap<>();
 
         try {
-            reportsService.deleteSelectedContentReports(requestDto);
+            reportSummaryService.deleteSelectedReportSummary(requestDto);
             response.put("OK", "삭제됐습니다.");
         } catch (IllegalArgumentException ex) {
             response.put("error", ex.getMessage());

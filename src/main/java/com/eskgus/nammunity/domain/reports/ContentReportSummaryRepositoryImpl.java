@@ -6,10 +6,12 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.impl.JPADeleteClause;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -78,5 +80,14 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
                 .where(qReportSummary.types.eq(type))
                 .orderBy(qReportSummary.id.desc()).fetch();
         return reportSummaries;
+    }
+
+    @Override
+    @Transactional
+    public <T> void deleteByContents(T contents) {
+        Predicate whereCondition = createWhereConditionByContents(contents);
+
+        JPADeleteClause query = new JPADeleteClause(entityManager, qReportSummary);
+        query.where(whereCondition).execute();
     }
 }

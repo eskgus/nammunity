@@ -6,13 +6,11 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
 import com.querydsl.core.types.*;
 import com.querydsl.core.types.dsl.EntityPathBase;
-import com.querydsl.jpa.impl.JPADeleteClause;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -82,24 +80,6 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
     }
 
     @Override
-    @Transactional
-    public void deleteByPosts(Posts post) {
-        deleteByTypes(post);
-    }
-
-    @Override
-    @Transactional
-    public void deleteByComments(Comments comment) {
-        deleteByTypes(comment);
-    }
-
-    @Override
-    @Transactional
-    public void deleteByUsers(User user) {
-        deleteByTypes(user);
-    }
-
-    @Override
     public long countPostReportsByUser(User user) {
         return countByUserInTypes(QContentReports.contentReports.posts.user, user);
     }
@@ -120,15 +100,6 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
         Predicate whereCondition = createWhereConditionByContents(report, contents);
         return query.select(report.count()).from(report).where(whereCondition).fetchOne();
-    }
-
-    private <T> void deleteByTypes(T type) {
-        QContentReports report = QContentReports.contentReports;
-
-        Predicate whereCondition = createWhereConditionByContents(report, type);
-
-        JPADeleteClause query = new JPADeleteClause(entityManager, report);
-        query.where(whereCondition).execute();
     }
 
     private long countByUserInTypes(EntityPathBase<User> qUser, User user) {

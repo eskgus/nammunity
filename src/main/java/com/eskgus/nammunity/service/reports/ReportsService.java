@@ -152,26 +152,4 @@ public class ReportsService {
         }
         return (U) new UsersListDto((User) contents);
     }
-
-    @Transactional
-    public void deleteSelectedContentReports(ContentReportsDeleteDto requestDto) {
-        if (requestDto.getPostsId().isEmpty()
-                && requestDto.getCommentsId().isEmpty()
-                && requestDto.getUserId().isEmpty()) {
-            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
-        }
-
-        requestDto.getPostsId().forEach(postId -> {
-            Posts post = postsSearchService.findById(postId);
-            contentReportsRepository.deleteByPosts(post);
-        });
-        requestDto.getCommentsId().forEach(commentId -> {
-            Comments comment = commentsSearchService.findById(commentId);
-            contentReportsRepository.deleteByComments(comment);
-        });
-        requestDto.getUserId().forEach(userId -> {
-            User user = userService.findById(userId);
-            contentReportsRepository.deleteByUsers(user);
-        });
-    }
 }

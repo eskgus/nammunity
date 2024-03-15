@@ -1,11 +1,13 @@
 package com.eskgus.nammunity.web.reports;
 
+import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.user.*;
-import com.eskgus.nammunity.web.dto.reports.ContentReportsDeleteDto;
+import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.Assertions;
@@ -56,6 +58,9 @@ public class ReportsApiControllerTest {
 
     @Autowired
     private ReasonsRepository reasonsRepository;
+
+    @Autowired
+    private ContentReportSummaryRepository reportSummaryRepository;
 
     @BeforeEach
     public void setUp() {
@@ -109,19 +114,18 @@ public class ReportsApiControllerTest {
         Long commentsId = testDB.saveComments(postsId, user1);
         Assertions.assertThat(commentsRepository.count()).isOne();
 
-        // 4. user2가 게시글 신고 * 10, 댓글 신고 * 10, user1 사용자 신고 * 3
-        testDB.savePostReports(postsId, user2);
-        testDB.saveCommentReports(commentsId, user2);
-        testDB.saveUserReports(user1, user2);
+        // 4. user2가 게시글, 댓글, 사용자 신고 요약 저장
+        Posts post = postsRepository.findById(postsId).get();
+        Comments comment = commentsRepository.findById(commentsId).get();
+        Long postReportSummaryId = testDB.savePostReportSummary(post, user2);
+        Long commentReportSummaryId = testDB.saveCommentReportSummary(comment, user2);
+        Long userReportSummaryId = testDB.saveUserReportSummary(user1, user2);
 
-        Long numOfReports = contentReportsRepository.count();
-        Assertions.assertThat(numOfReports).isGreaterThan(22);
-
-        // 5. List<Long> postsIdList, List<Long> commentsIdList, List<Long> userIdList(빈 리스트)로 ContentReportsDeleteDto 생성
+        // 5. List<Long> postsIdList, List<Long> commentsIdList, List<Long> userIdList(빈 리스트)로 ContentReportSummaryDeleteDto 생성
         List<Long> postsIdList = List.of(postsId);
         List<Long> commentsIdList = List.of(commentsId);
         List<Long> userIdList = new ArrayList<>();
-        ContentReportsDeleteDto requestDto = ContentReportsDeleteDto.builder()
+        ContentReportSummaryDeleteDto requestDto = ContentReportSummaryDeleteDto.builder()
                 .postsId(postsIdList).commentsId(commentsIdList).userId(userIdList).build();
 
         // 6. "/api/reports/content/selected-delete"로 contentReportsDeleteDto 담아서 delete 요청
@@ -135,14 +139,13 @@ public class ReportsApiControllerTest {
         Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
         Assertions.assertThat(map).containsKey("OK");
 
-        // 8. db에 저장된 신고 수 3(사용자 신고 * 3)인지 확인
-        Assertions.assertThat(contentReportsRepository.count()).isGreaterThan(2);
-
-        // 9. 남아있는 신고가 사용자 신고인지 확인
-        Optional<ContentReports> result = contentReportsRepository.findById(numOfReports);
-        Assertions.assertThat(result).isPresent();
-        ContentReports contentReport = result.get();
-        Assertions.assertThat(contentReport.getUser().getId()).isEqualTo(user1.getId());
+        // 8. 게시글/댓글 신고 요약 존재 x, 사용자 신고 요약 존재 o 확인
+        Optional<ContentReportSummary> postResult = reportSummaryRepository.findById(postReportSummaryId);
+        Assertions.assertThat(postResult).isNotPresent();
+        Optional<ContentReportSummary> commentResult = reportSummaryRepository.findById(commentReportSummaryId);
+        Assertions.assertThat(commentResult).isNotPresent();
+        Optional<ContentReportSummary> userResult = reportSummaryRepository.findById(userReportSummaryId);
+        Assertions.assertThat(userResult).isPresent();
     }
 
     @Test

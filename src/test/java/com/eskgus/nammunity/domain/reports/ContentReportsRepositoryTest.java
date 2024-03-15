@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 @ExtendWith(SpringExtension.class)
@@ -167,26 +166,6 @@ public class ContentReportsRepositoryTest {
         Assertions.assertThat(actualOtherReason).isEqualTo(expectedReport.getOtherReasons());
     }
 
-    // TODO: reportsRepo.findOtherReasonById 테스트 수정 (findDetails() 수정 후)
-    @Test
-    public void findOtherReasonById() {
-//        // 1. user1 회원가입 + user2 회원가입
-//        User user1 = userRepository.findById(1L).get();
-//        User user2 = userRepository.findById(2L).get();
-//
-//        // 2. user2가 user1 사용자 신고 * 3 (마지막 신고: 기타 사유)
-//        Long latestReportId = saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
-//
-//        // 3. latestReportId로 ContentReports 찾기
-//        ContentReports report = getContentReportsById(latestReportId);
-//
-//        // 4. latestReportId로 findOtherReasonById() 호출
-//        String actualOtherReason = contentReportsRepository.findOtherReasonById(latestReportId);
-//
-//        // 5. actualOtherReason이 report의 otherReasons랑 같은지 확인
-//        Assertions.assertThat(actualOtherReason).isEqualTo(report.getOtherReasons());
-    }
-
     @Test
     public void findByContents() {
         saveReports();
@@ -228,50 +207,6 @@ public class ContentReportsRepositoryTest {
             return this.latestPostReport.getId();
         }
         return this.latestCommentReport.getId();
-    }
-
-    @Test
-    public void deleteByPosts() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-
-        // 3. user2가 user1이 작성한 게시글 신고 * 10
-        saveReportsAndGetLatestReportId(testDB::savePostReports, post.getId(), user2);
-
-        // 4. post로 deleteByPosts() 호출 + 검증
-        callAndAssertDeleteByTypes(post, contentReportsRepository::deleteByPosts);
-    }
-
-    @Test
-    public void deleteByComments() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. user2가 user1이 작성한 댓글 신고 * 10
-        saveReportsAndGetLatestReportId(testDB::saveCommentReports, comment.getId(), user2);
-
-        // 5. comment로 deleteByComments() 호출 + 검증
-        callAndAssertDeleteByTypes(comment, contentReportsRepository::deleteByComments);
-    }
-
-    @Test
-    public void deleteByUsers() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user2가 user1 사용자 신고 * 3
-        saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
-
-        // 3. user1로 deleteByUsers() 호출 + 검증
-        callAndAssertDeleteByTypes(user1, contentReportsRepository::deleteByUsers);
     }
 
     @Test
@@ -353,14 +288,6 @@ public class ContentReportsRepositoryTest {
         Long latestReportId = saver.apply(t, user);
         Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
         return latestReportId;
-    }
-
-    private <T> void callAndAssertDeleteByTypes(T type, Consumer<T> deleter) {
-        // 1. type으로 deleteBy@@() 호출
-        deleter.accept(type);
-
-        // 2. db에 남은 신고 수가 0인지 확인
-        Assertions.assertThat(contentReportsRepository.count()).isZero();
     }
 
     private void callAndAssertCountByUserInTypes(User user, Function<User, Long> function) {

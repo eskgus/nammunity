@@ -203,4 +203,23 @@ public class ContentReportSummaryRepositoryTest {
         Optional<ContentReportSummary> result = contentReportSummaryRepository.findByUser(users[0]);
         assertThat(result.isPresent()).isEqualTo(expectedResult);
     }
+
+    @Test
+    public void deleteByContents() {
+        saveReportSummaries();
+
+        callAndAssertDeleteByContents(post);
+        callAndAssertDeleteByContents(comment);
+        callAndAssertDeleteByContents(users[0]);
+    }
+
+    private <T> void callAndAssertDeleteByContents(T contents) {
+        contentReportSummaryRepository.deleteByContents(contents);
+        assertDeleteByContents(contents);
+    }
+
+    private <T> void assertDeleteByContents(T contents) {
+        ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
+        assertThat(reportSummary).isNull();
+    }
 }

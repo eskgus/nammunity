@@ -5,6 +5,10 @@ import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummarySaveDto;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +16,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.function.Function;
 
 @RequiredArgsConstructor
 @Service
 public class ReportSummaryService {
     private final ContentReportSummaryRepository contentReportSummaryRepository;
     private final TypesService typesService;
+    private final PostsSearchService postsSearchService;
+    private final CommentsSearchService commentsSearchService;
+    private final UserService userService;
 
     @Transactional
     public <T> Long saveOrUpdateContentReportSummary(ContentReportSummarySaveDto requestDto) {
@@ -69,5 +77,30 @@ public class ReportSummaryService {
     public ContentReportSummary findByUser(User user) {
         return contentReportSummaryRepository.findByUser(user)
                 .orElseThrow(() -> new IllegalArgumentException("신고 요약 내역이 존재하지 않는 회원입니다."));
+    }
+
+    @Transactional
+    public void deleteSelectedReportSummary(ContentReportSummaryDeleteDto deleteDto) {
+        validateDeleteDto(deleteDto);
+
+        deleteByContents(deleteDto.getPostsId(), postsSearchService::findById);
+        deleteByContents(deleteDto.getCommentsId(), commentsSearchService::findById);
+        deleteByContents(deleteDto.getUserId(), userService::findById);
+    }
+
+    private void validateDeleteDto(ContentReportSummaryDeleteDto deleteDto) {
+        if (deleteDto.getPostsId().isEmpty()
+                && deleteDto.getCommentsId().isEmpty()
+                && deleteDto.getUserId().isEmpty()) {
+            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+        }
+    }
+
+    @Transactional
+    private <T> void deleteByContents(List<Long> contentIds, Function<Long, T> finder) {
+        contentIds.forEach(id -> {
+            T content = finder.apply(id);
+            contentReportSummaryRepository.deleteByContents(content);
+        });
     }
 }
