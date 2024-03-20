@@ -150,9 +150,9 @@ public class ReportsServiceTest {
 
     private Long getContentIdFromReport(ContentReports report) {
         String type = report.getTypes().getDetail();
-        if (type.equals(ContentType.POSTS.getDetail())) {
+        if (type.equals(ContentType.POSTS.getDetailInKor())) {
             return report.getPosts().getId();
-        } else if (type.equals(ContentType.COMMENTS.getDetail())) {
+        } else if (type.equals(ContentType.COMMENTS.getDetailInKor())) {
             return report.getComments().getId();
         }
         return report.getUser().getId();
@@ -208,15 +208,15 @@ public class ReportsServiceTest {
         long expectedNumberOfReports;
         if (contentType.equals(ContentType.POSTS)) {
             isContentReport = detailDto.isPostReport();
-            expectedType = ContentType.POSTS.getDetail();
+            expectedType = ContentType.POSTS.getDetailInKor();
             expectedNumberOfReports = latestPostReportId.intValue();
         } else if (contentType.equals(ContentType.COMMENTS)) {
             isContentReport = detailDto.isCommentReport();
-            expectedType = ContentType.COMMENTS.getDetail();
+            expectedType = ContentType.COMMENTS.getDetailInKor();
             expectedNumberOfReports = latestCommentReportId - latestPostReportId;
         } else {
             isContentReport = detailDto.isUserReport();
-            expectedType = ContentType.USERS.getDetail();
+            expectedType = ContentType.USERS.getDetailInKor();
             expectedNumberOfReports = latestUserReportId - latestCommentReportId;
         }
 

@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.domain.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
@@ -21,9 +22,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -210,55 +209,43 @@ public class ContentReportsRepositoryTest {
     }
 
     @Test
-    public void countPostReportsByUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
+    public void countReportsByContentTypeAndUser() {
+        ContentType postType = ContentType.POSTS;
+        ContentType commentType = ContentType.COMMENTS;
+        ContentType userType = ContentType.USERS;
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
+        // 1. 게시글
+        // 1-1. 게시글 신고 x 후 호출
+        callAndAssertCountReportsByContentTypeAndUser(postType, 0);
+        // 1-2. 게시글 신고 후 호출
+        Long postReportId = saveReportsAndGetLatestReportId(testDB::savePostReports, post.getId(), user2);
+        callAndAssertCountReportsByContentTypeAndUser(postType, postReportId);
 
-        // 3. 게시글 신고 x 후 호출
-        callAndAssertCountByUserInTypes(user1, contentReportsRepository::countPostReportsByUser);
+        // 2. 댓글
+        // 2-1. 댓글 신고 x 후 호출
+        callAndAssertCountReportsByContentTypeAndUser(commentType, 0);
+        // 2-2. 댓글 신고 후 호출
+        Long commentReportId = saveReportsAndGetLatestReportId(testDB::saveCommentReports, comment.getId(), user2);
+        callAndAssertCountReportsByContentTypeAndUser(commentType, commentReportId - postReportId);
 
-        // 4. user2가 user1이 작성한 게시글 신고 * 10 후 호출
-        saveReportsAndGetLatestReportId(testDB::savePostReports, post.getId(), user2);
 
-        callAndAssertCountByUserInTypes(user1, contentReportsRepository::countPostReportsByUser);
+        // 3. 사용자
+        // 3-1. 사용자 신고 x 후 호출
+        callAndAssertCountReportsByContentTypeAndUser(userType, 0);
+        // 3-2. 사용자 신고 후 호출
+        Long userReportId = saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
+        callAndAssertCountReportsByContentTypeAndUser(userType, userReportId - commentReportId);
     }
 
-    @Test
-    public void countCommentReportsByUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. user1이 게시글 작성
-        // 3. user1이 댓글 작성
-        Comments comment = commentsRepository.findById(1L).get();
-
-        // 4. 댓글 신고 x 후 호출
-        callAndAssertCountByUserInTypes(user1, contentReportsRepository::countCommentReportsByUser);
-
-        // 5. user2가 user1이 작성한 댓글 신고 * 10 후 호출
-        saveReportsAndGetLatestReportId(testDB::saveCommentReports, comment.getId(), user2);
-
-        callAndAssertCountByUserInTypes(user1, contentReportsRepository::countCommentReportsByUser);
+    private <T> void callAndAssertCountReportsByContentTypeAndUser(ContentType contentType, long expectedCount) {
+        long actualCount = contentReportsRepository.countReportsByContentTypeAndUser(contentType, user1);
+        Assertions.assertThat(actualCount).isEqualTo(expectedCount);
     }
 
-    @Test
-    public void countUserReportsByUser() {
-        // 1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(1L).get();
-        User user2 = userRepository.findById(2L).get();
-
-        // 2. 사용자 신고 x 후 호출
-        callAndAssertCountByUserInTypes(user1, contentReportsRepository::countUserReportsByUser);
-
-        // 3. user2가 user1 사용자 신고 * 3 후 호출
-        saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
-
-        callAndAssertCountByUserInTypes(user1, contentReportsRepository::countUserReportsByUser);
+    private <T> Long saveReportsAndGetLatestReportId(BiFunction<T, User, Long> saver, T t, User user) {
+        Long latestReportId = saver.apply(t, user);
+        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
+        return latestReportId;
     }
 
     @Test
@@ -281,29 +268,5 @@ public class ContentReportsRepositoryTest {
     private <T> void callAndAssertCountByContents(T contents, long expectedCountByContents) {
         long actualCountByContents = contentReportsRepository.countByContents(contents);
         Assertions.assertThat(actualCountByContents).isEqualTo(expectedCountByContents);
-    }
-
-    private <T> Long saveReportsAndGetLatestReportId(BiFunction<T, User, Long> saver,
-                                                     T t, User user) {
-        Long latestReportId = saver.apply(t, user);
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
-        return latestReportId;
-    }
-
-    private void callAndAssertCountByUserInTypes(User user, Function<User, Long> function) {
-        // 1. expectedCount에 현재 저장된 (게시글/댓글/사용자) 신고 수 저장
-        long expectedCount = contentReportsRepository.count();
-
-        // 2. user로 function 호출
-        long actualCount = function.apply(user);
-
-        // 3. 리턴 값이 expectedCount랑 같은지 확인
-        Assertions.assertThat(actualCount).isEqualTo(expectedCount);
-    }
-
-    private ContentReports getContentReportsById(Long id) {
-        Optional<ContentReports> result = contentReportsRepository.findById(id);
-        Assertions.assertThat(result).isPresent();
-        return result.get();
     }
 }

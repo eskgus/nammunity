@@ -12,68 +12,73 @@
             <div class="content-area">
                 <div class="activity-history-area">
                     {{#history}}
-                    <h2><a href="/users/activity-history/posts/{{userId}}">{{nickname}}</a> 님의 활동 내역</h2>
-                    <div class="top-area">
-                        <p>가입일: {{createdDate}}</p>
-                        <p>작성 글: {{numOfPosts}}</p>
-                        <p>작성 댓글: {{numOfComments}}</p>
-                        {{#admin}}<p>누적 신고 횟수: 게시글 - {{numOfPostReports}}, 댓글 - {{numOfCommentReports}}, 사용자 - {{numOfUserReports}}</p>
-                        <p class="user-ban">누적 정지 횟수: {{^bannedUsersExistence}}0{{/bannedUsersExistence}}{{#bannedUsersExistence}}{{count}} ({{period}}, {{startedDate}} ~ {{expiredDate}}){{/bannedUsersExistence}}</p>
-                        <div class="btn-area">
-                            <button type="button" class="btn" id="btn-user-ban">활동 정지</button>
-                        </div>{{/admin}}
-                    </div>
-                    <div class="posts-area">
-                        <ul>
-                            <li>
-                                <a style="background-color: #C1DAC0;" href="/users/activity-history/posts/{{userId}}">게시글</a></li><li>
-                            <a href="/users/activity-history/comments/{{userId}}">댓글</a></li>
-                        </ul>
-                        <table>
-                            <thead>
+                        <h2><a href="/users/activity-history/posts/{{usersListDto.id}}">{{usersListDto.nickname}}</a> 님의 활동 내역</h2>
+                        <div class="top-area">
+                            <p>가입일: {{usersListDto.createdDate}}</p>
+                            <p>작성 글: {{postsHistoryDto.numberOfPosts}}</p>
+                            <p>작성 댓글: {{postsHistoryDto.numberOfComments}}</p>
+                            {{#admin}}
+                            <p>누적 신고 횟수: {{#numberOfReports}}{{key}}({{value}}) {{/numberOfReports}}</p>
+                            <p class="user-ban">누적 정지 횟수: {{^bannedHistoryDto}}0{{/bannedHistoryDto}}{{#bannedHistoryDto}}{{count}} ({{period}}, {{startedDate}} ~ {{expiredDate}}){{/bannedHistoryDto}}</p>
+                            <div class="btn-area">
+                                <button type="button" class="btn" id="btn-user-ban">활동 정지</button>
+                            </div>
+                            {{/admin}}
+                        </div>
+                        {{#postsHistoryDto}}
+                        <div class="posts-area">
+                            <ul>
+                                <li>
+                                    <a style="background-color: #C1DAC0;" href="/users/activity-history/posts/{{usersListDto.id}}">게시글</a></li><li>
+                                <a href="/users/activity-history/comments/{{usersListDto.id}}">댓글</a></li>
+                            </ul>
+                            <table>
+                                <thead>
                                 <tr>
                                     <th class="no">번호</th>
                                     <th class="post">게시글</th>
                                 </tr>
-                            </thead>
-                            <tbody>
-                            {{^posts.content}}
-                                <tr>
-                                    <td class="no-content" colspan="2">작성한 글이 없어요.</td>
-                                </tr>
-                            {{/posts.content}}
-                            {{#posts.content}}
-                                <tr>
-                                    <td class="no-checkbox">{{id}}</td>
-                                    <td>
-                                        <div class="tit">
-                                            <a href="/posts/read/{{id}}">{{title}}</a>
-                                        </div>
-                                        <span class="date">{{author}} | {{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
-                                    </td>
-                                </tr>
-                            {{/posts.content}}
-                            </tbody>
-                        </table>
-                        {{#pages}}
+                                </thead>
+                                <tbody>
+                                {{^posts.content}}
+                                    <tr>
+                                        <td class="no-content" colspan="2">작성한 글이 없어요.</td>
+                                    </tr>
+                                {{/posts.content}}
+                                {{#posts.content}}
+                                    <tr>
+                                        <td class="no-checkbox">{{id}}</td>
+                                        <td>
+                                            <div class="tit">
+                                                <a href="/posts/read/{{id}}">{{title}}</a>
+                                            </div>
+                                            <span class="date">{{author}} | {{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
+                                        </td>
+                                    </tr>
+                                {{/posts.content}}
+                                </tbody>
+                            </table>
+                            {{#pages}}
                             <div>
                                 {{#hasPrevious}}
-                                    첫 페이지: <a href="/users/activity-history/posts/{{userId}}?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/users/activity-history/posts/{{userId}}?page={{previousPage}}">{{previousPage}}</a> |
+                                    첫 페이지: <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{previousPage}}">{{previousPage}}</a> |
                                 {{/hasPrevious}}
                                 {{#displayPages}}
                                     {{#isCurrentPage}}
                                         | 현재 페이지: {{page}}
                                     {{/isCurrentPage}}
                                     {{^isCurrentPage}}
-                                        | <a href="/users/activity-history/posts/{{userId}}?page={{page}}">{{page}}</a>
+                                        | <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{page}}">{{page}}</a>
                                     {{/isCurrentPage}}
                                 {{/displayPages}}
                                 {{#hasNext}}
-                                    | | 다음 페이지: <a href="/users/activity-history/posts/{{userId}}?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/users/activity-history/posts/{{userId}}?page={{lastPage}}">{{lastPage}}</a>
+                                    | | 다음 페이지: <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{lastPage}}">{{lastPage}}</a>
                                 {{/hasNext}}
                             </div>
-                        {{/pages}}
-                    </div>
+                            {{/pages}}
+                        </div>
+                        {{/postsHistoryDto}}
+                        </div>
                     {{/history}}
                 </div>
             </div>

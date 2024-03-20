@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
@@ -10,6 +11,9 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.user.ActivityHistoryDto;
+import com.eskgus.nammunity.web.dto.user.BannedHistoryDto;
+import com.eskgus.nammunity.web.dto.user.CommentsHistoryDto;
+import com.eskgus.nammunity.web.dto.user.PostsHistoryDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +26,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.Period;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import static com.eskgus.nammunity.util.PaginationUtilForTest.assertActualPageEqualsExpectedPage;
@@ -58,6 +64,9 @@ public class UserServiceTest {
     private User[] users;
     private Pageable pageable;
     private ActivityHistoryDto activityHistoryDto;
+    private final ContentType postType = ContentType.POSTS;
+    private final ContentType commentType = ContentType.COMMENTS;
+    private final ContentType userType = ContentType.USERS;
 
     @BeforeEach
     public void setUp() {
@@ -87,10 +96,10 @@ public class UserServiceTest {
         this.pageable = createPageable(page);
 
         // 1. type = "posts"
-        callAndAssertFindActivityHistory("posts",  page);
+        callAndAssertFindActivityHistory(postType.getDetailInEng(),  page);
 
         // 2. type = "comments"
-        callAndAssertFindActivityHistory("comments", page);
+        callAndAssertFindActivityHistory(commentType.getDetailInEng(), page);
     }
 
     private void savePostsAndComments() {
@@ -128,39 +137,62 @@ public class UserServiceTest {
     }
 
     private void assertActivityHistoryDto(String type) {
-        assertThat(activityHistoryDto.getUserId()).isEqualTo(users[0].getId());
-        assertNumberOfContents();
-        assertUserBan();
+        assertThat(activityHistoryDto.getUsersListDto().getId()).isEqualTo(users[0].getId());
+        assertNumberOfContents(type);
+        assertNumberOfReports();
+        assertUserBan(activityHistoryDto.getBannedHistoryDto());
         assertPages(type);
     }
 
-    private void assertNumberOfContents() {
-        assertNumberOfContent(activityHistoryDto.getNumOfPosts(), postsRepository::countByUser);
-        assertNumberOfContent(activityHistoryDto.getNumOfComments(), commentsRepository::countByUser);
-        assertNumberOfContent(activityHistoryDto.getNumOfPostReports(), contentReportsRepository::countPostReportsByUser);
-        assertNumberOfContent(activityHistoryDto.getNumOfCommentReports(), contentReportsRepository::countCommentReportsByUser);
-        assertNumberOfContent(activityHistoryDto.getNumOfUserReports(), contentReportsRepository::countUserReportsByUser);
+    private void assertNumberOfContents(String type) {
+        Long actualNumberOfPosts;
+        Long actualNumberOfComments;
+        if (type.equals(ContentType.POSTS.getDetailInEng())) {
+            PostsHistoryDto postsHistoryDto = activityHistoryDto.getPostsHistoryDto();
+            actualNumberOfPosts = postsHistoryDto.getNumberOfPosts();
+            actualNumberOfComments = postsHistoryDto.getNumberOfComments();
+        } else {
+            CommentsHistoryDto commentsHistoryDto = activityHistoryDto.getCommentsHistoryDto();
+            actualNumberOfPosts = commentsHistoryDto.getNumberOfPosts();
+            actualNumberOfComments = commentsHistoryDto.getNumberOfComments();
+        }
+
+        assertNumberOfContent(actualNumberOfPosts, postsRepository::countByUser);
+        assertNumberOfContent(actualNumberOfComments, commentsRepository::countByUser);
     }
 
     private void assertNumberOfContent(long actualNumberOfContent, Function<User, Long> expectedCounter) {
         assertThat(actualNumberOfContent).isEqualTo(expectedCounter.apply(users[0]));
     }
 
-    private void assertUserBan() {
-        assertThat(activityHistoryDto.getBannedUsersExistence()).isTrue();
+    private void assertNumberOfReports() {
+        Set<Map.Entry<String, Long>> numberOfReports = activityHistoryDto.getNumberOfReports();
+        ContentType[] contentTypes = { postType, commentType, userType };
+        int i = 0;
+        for (Map.Entry<String, Long> numberOfReport : numberOfReports) {
+            assertNumberOfReport(numberOfReport.getValue(), contentTypes[i]);
+            i++;
+        }
+    }
 
+    private void assertNumberOfReport(long actualNumberOfReport, ContentType contentType) {
+        long expectedNumberOfReport = contentReportsRepository.countReportsByContentTypeAndUser(contentType, users[0]);
+        assertThat(actualNumberOfReport).isEqualTo(expectedNumberOfReport);
+    }
+
+    private void assertUserBan(BannedHistoryDto bannedHistoryDto) {
         int expectedCount = bannedUsersRepository.findByUser(users[0]).get().getCount();
-        assertThat(activityHistoryDto.getCount()).isEqualTo(expectedCount);
+        assertThat(bannedHistoryDto.getCount()).isEqualTo(expectedCount);
     }
 
     private <V> void assertPages(String type) {
         Page<V> actualPage;
         Page<V> expectedPage;
-        if (type.equals("posts")) {
-            actualPage = (Page<V>) activityHistoryDto.getPosts();
+        if (type.equals(postType.getDetailInEng())) {
+            actualPage = (Page<V>) activityHistoryDto.getPostsHistoryDto().getPosts();
             expectedPage = (Page<V>) postsRepository.findByUser(users[0], pageable);
         } else {
-            actualPage = (Page<V>) activityHistoryDto.getComments();
+            actualPage = (Page<V>) activityHistoryDto.getCommentsHistoryDto().getComments();
             expectedPage = (Page<V>) commentsRepository.findByUser(users[0], pageable);
         }
         initializePaginationUtil(actualPage, expectedPage);

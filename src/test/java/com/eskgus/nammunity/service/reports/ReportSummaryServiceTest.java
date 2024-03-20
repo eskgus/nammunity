@@ -121,13 +121,13 @@ public class ReportSummaryServiceTest {
 
         if (contents instanceof Posts) {
             post = (Posts) contents;
-            type = typesRepository.findByDetail(ContentType.POSTS.getDetail()).get();
+            type = typesRepository.findByDetail(ContentType.POSTS.getDetailInKor()).get();
         } else if (contents instanceof Comments) {
             comment = (Comments) contents;
-            type = typesRepository.findByDetail(ContentType.COMMENTS.getDetail()).get();
+            type = typesRepository.findByDetail(ContentType.COMMENTS.getDetailInKor()).get();
         } else {
             user = (User) contents;
-            type = typesRepository.findByDetail(ContentType.USERS.getDetail()).get();
+            type = typesRepository.findByDetail(ContentType.USERS.getDetailInKor()).get();
         }
 
         return ContentReportSummarySaveDto.builder()

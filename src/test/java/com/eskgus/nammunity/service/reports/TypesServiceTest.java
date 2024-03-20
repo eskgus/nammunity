@@ -35,6 +35,6 @@ public class TypesServiceTest {
     }
 
     private Types getExpectedType(ContentType contentType) {
-        return typesRepository.findByDetail(contentType.getDetail()).get();
+        return typesRepository.findByDetail(contentType.getDetailInKor()).get();
     }
 }

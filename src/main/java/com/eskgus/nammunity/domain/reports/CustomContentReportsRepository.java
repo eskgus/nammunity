@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.reports;
 
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
 
@@ -11,13 +12,7 @@ public interface CustomContentReportsRepository {
     <T> LocalDateTime findReportedDateByContents(T contents);
     <T> Reasons findReasonByContents(T contents);
     <T> String findOtherReasonByContents(T contents, Reasons reason);
-//    String findOtherReasonById(Long id);
     <T> List<ContentReportDetailListDto> findByContents(T contents);
-
-    // content의 user로 reports 검색
-    long countPostReportsByUser(User user);
-    long countCommentReportsByUser(User user);
-    long countUserReportsByUser(User user);
-
+    long countReportsByContentTypeAndUser(ContentType contentType, User user);
     <T> long countByContents(T contents);
 }

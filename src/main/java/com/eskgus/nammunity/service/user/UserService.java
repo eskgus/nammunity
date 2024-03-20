@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
-import com.eskgus.nammunity.domain.user.BannedUsers;
 import com.eskgus.nammunity.domain.user.BannedUsersRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
@@ -10,17 +10,13 @@ import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
-import com.eskgus.nammunity.web.dto.user.ActivityHistoryDto;
-import com.eskgus.nammunity.web.dto.user.RegistrationDto;
-import com.eskgus.nammunity.web.dto.user.UsersListDto;
+import com.eskgus.nammunity.web.dto.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -58,39 +54,63 @@ public class UserService {
         User user = userRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException("존재하지 않는 회원입니다."));
 
-        // pathVariable type이 posts든 comments든 게시글/댓글/신고 수 표시해야 함 ! (너무 많아서 map으로 넣는 거)
-        Map<String, Long> numOfContents = new HashMap<>();
-        numOfContents.put("postReports", contentReportsRepository.countPostReportsByUser(user));
-        numOfContents.put("commentReports", contentReportsRepository.countCommentReportsByUser(user));
-        numOfContents.put("userReports", contentReportsRepository.countUserReportsByUser(user));
-
-        // BannedUsers에 없는 사용자면 bannedUser = null
-        BannedUsers bannedUser = bannedUsersRepository.findByUser(user).orElse(null);
-
-        Page<PostsListDto> posts = null;
-        Page<CommentsListDto> comments = null;
-        PaginationDto<?> paginationDto;
-        // type에 따라 게시글/댓글 목록 추가
-        if (type.equals("posts")) {
-            posts = postsSearchService.findByUser(user, page, 10);
-            numOfContents.put("comments", commentsSearchService.countByUser(user));
-
-            // 페이지 번호
-            paginationDto = PaginationDto.<PostsListDto>builder()
-                    .page(posts).display(10).build();
-        } else {
-            comments = commentsSearchService.findByUser(user, page, 10);
-            numOfContents.put("posts", postsSearchService.countByUser(user));
-
-            // 페이지 번호
-            paginationDto = PaginationDto.<CommentsListDto>builder()
-                    .page(comments).display(10).build();
-        }
+        UsersListDto usersListDto = new UsersListDto(user);
+        BannedHistoryDto bannedHistoryDto = getBannedHistoryDto(user);
+        PostsHistoryDto postsHistoryDto = getPostsHistoryDto(type, user, page);
+        CommentsHistoryDto commentsHistoryDto = getCommentsHistoryDto(type, user, page);
+        Set<Map.Entry<String, Long>> numberOfReports = getNumberOfReports(user);
 
         return ActivityHistoryDto.builder()
-                .user(user).bannedUser(bannedUser).numOfContents(numOfContents)
-                .posts(posts).comments(comments).paginationDto(paginationDto)
-                .build();
+                .usersListDto(usersListDto).bannedHistoryDto(bannedHistoryDto)
+                .postsHistoryDto(postsHistoryDto).commentsHistoryDto(commentsHistoryDto)
+                .numberOfReports(numberOfReports).build();
+    }
+
+    private BannedHistoryDto getBannedHistoryDto(User user) {
+        return bannedUsersRepository.findByUser(user).map(BannedHistoryDto::new).orElse(null);
+    }
+
+    private PostsHistoryDto getPostsHistoryDto(String type, User user, int page) {
+        if (!type.equals(ContentType.POSTS.getDetailInEng())) {
+            return null;
+        }
+
+        Page<PostsListDto> posts = postsSearchService.findByUser(user, page, 10);
+        PaginationDto<PostsListDto> pages = createPaginationDto(posts);
+        long numberOfComments = commentsSearchService.countByUser(user);
+
+        return PostsHistoryDto.builder()
+                .posts(posts).pages(pages).numberOfComments(numberOfComments).build();
+    }
+
+    private <T> PaginationDto<T> createPaginationDto(Page<T> page) {
+        return PaginationDto.<T>builder().page(page).display(10).build();
+    }
+
+    private CommentsHistoryDto getCommentsHistoryDto(String type, User user, int page) {
+        if (!type.equals(ContentType.COMMENTS.getDetailInEng())) {
+            return null;
+        }
+
+        Page<CommentsListDto> comments = commentsSearchService.findByUser(user, page, 10);
+        PaginationDto<CommentsListDto> pages = createPaginationDto(comments);
+        long numberOfPosts = postsSearchService.countByUser(user);
+
+        return CommentsHistoryDto.builder()
+                .comments(comments).pages(pages).numberOfPosts(numberOfPosts).build();
+    }
+
+    private Set<Map.Entry<String, Long>> getNumberOfReports(User user) {
+        long numberOfPostReports = contentReportsRepository.countReportsByContentTypeAndUser(ContentType.POSTS, user);
+        long numberOfCommentReports = contentReportsRepository.countReportsByContentTypeAndUser(ContentType.COMMENTS, user);
+        long numberOfUserReports = contentReportsRepository.countReportsByContentTypeAndUser(ContentType.USERS, user);
+
+        Map<String, Long> numberOfReports = new HashMap<>();
+        numberOfReports.put(ContentType.POSTS.getDetailInKor(), numberOfPostReports);
+        numberOfReports.put(ContentType.COMMENTS.getDetailInKor(), numberOfCommentReports);
+        numberOfReports.put(ContentType.USERS.getDetailInKor(), numberOfUserReports);
+
+        return numberOfReports.entrySet();
     }
 
     @Transactional(readOnly = true)

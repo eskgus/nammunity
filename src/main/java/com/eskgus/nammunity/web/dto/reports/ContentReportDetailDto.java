@@ -30,10 +30,10 @@ public class ContentReportDetailDto <U> {
                                   List<ContentReportDetailListDto> reports) {
         this.type = type.getDetail();
 
-        if (this.type.equals(ContentType.POSTS.getDetail())) {
+        if (this.type.equals(ContentType.POSTS.getDetailInKor())) {
             this.post = (PostsListDto) dto;
             this.isPostReport = true;
-        } else if (this.type.equals(ContentType.COMMENTS.getDetail())) {
+        } else if (this.type.equals(ContentType.COMMENTS.getDetailInKor())) {
             this.comment = (CommentsListDto) dto;
             this.isCommentReport = true;
         } else {

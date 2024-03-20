@@ -44,14 +44,14 @@ public class ContentReportSummaryDto {
         String reasonDetail = reportSummary.getReasons().getDetail();
         this.reason = reasonDetail.equals("기타") ? reasonDetail + ": " + reportSummary.getOtherReasons() : reasonDetail;
 
-        if (this.type.equals(ContentType.POSTS.getDetail())) {
+        if (this.type.equals(ContentType.POSTS.getDetailInKor())) {
             this.isPostReportSummary = true;
             this.post = reportSummary.getPosts();
             this.postId = this.post.getId();
             this.title = this.post.getTitle();
             this.author = this.post.getUser().getNickname();
             this.modifiedDate = DateTimeUtil.formatDateTime(this.post.getModifiedDate());
-        } else if (this.type.equals(ContentType.COMMENTS.getDetail())) {
+        } else if (this.type.equals(ContentType.COMMENTS.getDetailInKor())) {
             this.isCommentReportSummary = true;
             this.comment = reportSummary.getComments();
             this.commentId = this.comment.getId();

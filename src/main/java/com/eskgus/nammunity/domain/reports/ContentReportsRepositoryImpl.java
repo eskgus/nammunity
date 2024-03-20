@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.domain.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
@@ -80,18 +81,21 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
     }
 
     @Override
-    public long countPostReportsByUser(User user) {
-        return countByUserInTypes(QContentReports.contentReports.posts.user, user);
+    public long countReportsByContentTypeAndUser(ContentType contentType, User user) {
+        QContentReports qContentReports = QContentReports.contentReports;
+        JPAQueryFactory query = new JPAQueryFactory(entityManager);
+        Predicate whereCondition = createWhereConditionForCount(qContentReports, contentType, user);
+        return query.select(qContentReports.count()).from(qContentReports).where(whereCondition).fetchOne();
     }
 
-    @Override
-    public long countCommentReportsByUser(User user) {
-        return countByUserInTypes(QContentReports.contentReports.comments.user, user);
-    }
-
-    @Override
-    public long countUserReportsByUser(User user) {
-        return countByUserInTypes(QContentReports.contentReports.user, user);
+    private Predicate createWhereConditionForCount(QContentReports qContentReports, ContentType contentType, User user) {
+        if (contentType.equals(ContentType.POSTS)) {
+            return qContentReports.posts.user.eq(user);
+        } else if (contentType.equals(ContentType.COMMENTS)) {
+            return qContentReports.comments.user.eq(user);
+        } else {
+            return qContentReports.user.eq(user);
+        }
     }
 
     @Override
@@ -100,13 +104,6 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
         Predicate whereCondition = createWhereConditionByContents(report, contents);
         return query.select(report.count()).from(report).where(whereCondition).fetchOne();
-    }
-
-    private long countByUserInTypes(EntityPathBase<User> qUser, User user) {
-        QContentReports report = QContentReports.contentReports;
-
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        return query.select(report.count()).from(report).where(qUser.eq(user)).fetchOne();
     }
 
     private <T, U> JPAQuery<U> createBaseQueryForFindingReporterOrReason(QContentReports report, T contents,
