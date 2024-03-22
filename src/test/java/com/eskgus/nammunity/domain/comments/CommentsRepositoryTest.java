@@ -4,7 +4,7 @@ import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.helper.FindHelperForTest;
 import com.eskgus.nammunity.helper.SearchHelperForTest;
-import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryBiFinderWithUserForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -139,22 +139,22 @@ public class CommentsRepositoryTest {
     public void findByUser() {
         saveComments();
 
-        FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto>, Comments, CommentsListDto> findHelper
+        FindHelperForTest<RepositoryBiFinderWithUserForTest<CommentsListDto>, Comments, CommentsListDto> findHelper
                 = createBiFindHelper();
         callAndAssertFindComments(findHelper);
     }
 
-    private FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto>, Comments, CommentsListDto>
+    private FindHelperForTest<RepositoryBiFinderWithUserForTest<CommentsListDto>, Comments, CommentsListDto>
         createBiFindHelper() {
         EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
-        return FindHelperForTest.<RepositoryBiFinderForTest<CommentsListDto>, Comments, CommentsListDto>builder()
+        return FindHelperForTest.<RepositoryBiFinderWithUserForTest<CommentsListDto>, Comments, CommentsListDto>builder()
                 .finder(commentsRepository::findByUser).user(users[0])
                 .entityStream(commentsRepository.findAll().stream())
                 .page(1).limit(4)
                 .entityConverter(entityConverter).build();
     }
 
-    private void callAndAssertFindComments(FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto>,
+    private void callAndAssertFindComments(FindHelperForTest<RepositoryBiFinderWithUserForTest<CommentsListDto>,
                                             Comments, CommentsListDto> findHelper) {
         initializeFindHelper(findHelper);
         callAndAssertFind();

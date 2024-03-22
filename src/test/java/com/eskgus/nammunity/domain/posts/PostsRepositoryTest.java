@@ -4,7 +4,7 @@ import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.helper.FindHelperForTest;
 import com.eskgus.nammunity.helper.SearchHelperForTest;
-import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryBiFinderWithUserForTest;
 import com.eskgus.nammunity.helper.repository.RepositoryFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.user.Role;
@@ -205,13 +205,13 @@ public class PostsRepositoryTest {
     public void findByUser() {
         savePosts();
 
-        FindHelperForTest<RepositoryBiFinderForTest<PostsListDto>, Posts, PostsListDto> findHelper = createBiFindHelper();
+        FindHelperForTest<RepositoryBiFinderWithUserForTest<PostsListDto>, Posts, PostsListDto> findHelper = createBiFindHelper();
         callAndAssertFindPosts(findHelper);
     }
 
-    private FindHelperForTest<RepositoryBiFinderForTest<PostsListDto>, Posts, PostsListDto> createBiFindHelper() {
+    private FindHelperForTest<RepositoryBiFinderWithUserForTest<PostsListDto>, Posts, PostsListDto> createBiFindHelper() {
         EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
-        return FindHelperForTest.<RepositoryBiFinderForTest<PostsListDto>, Posts, PostsListDto>builder()
+        return FindHelperForTest.<RepositoryBiFinderWithUserForTest<PostsListDto>, Posts, PostsListDto>builder()
                 .finder(postsRepository::findByUser).user(users[0])
                 .entityStream(postsRepository.findAll().stream())
                 .page(1).limit(4)

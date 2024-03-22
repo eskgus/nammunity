@@ -146,13 +146,13 @@ public class LikesSearchServiceTest {
 
     private FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto>
     createFindHelper(int limit,
-                     ContentType contentTypeOfLikes,
+                     ContentType contentType,
                      BiFunction<User, Pageable, Page<LikesListDto>> likesFinder) {
         EntityConverterForTest<Likes, LikesListDto> entityConverter = new LikesConverterForTest();
         return FindHelperForTest.<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto>builder()
                 .finder(likesSearchService::findLikesByUser).user(users[1])
                 .entityStream(likesRepository.findAll().stream())
-                .contentTypeOfLikes(contentTypeOfLikes)
+                .contentType(contentType)
                 .page(2).limit(limit)
                 .entityConverter(entityConverter)
                 .likesFinder(likesFinder).build();

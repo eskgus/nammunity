@@ -1,25 +1,39 @@
 package com.eskgus.nammunity.domain.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.comments.QComments;
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.posts.QPosts;
+import com.eskgus.nammunity.domain.user.QUser;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.helper.EssentialQuery;
+import com.eskgus.nammunity.helper.FindQueries;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPADeleteClause;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static com.eskgus.nammunity.util.PaginationRepoUtil.addPageToQuery;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPage;
 
 public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySupport implements CustomContentReportSummaryRepository {
     @Autowired
     private EntityManager entityManager;
 
     private final QContentReportSummary qReportSummary = QContentReportSummary.contentReportSummary;
+    private final QPosts qPosts = QPosts.posts;
+    private final QComments qComments = QComments.comments;
+    private final QUser qUser = QUser.user;
 
     public ContentReportSummaryRepositoryImpl() {
         super(ContentReportSummary.class);
@@ -60,26 +74,52 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
     }
 
     @Override
-    public List<ContentReportSummaryDto> findAllDesc() {
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
+    public Page<ContentReportSummaryDto> findAllDesc(Pageable pageable) {
+        return findReportSummariesByFields(null, pageable);
+    }
 
-        List<ContentReportSummaryDto> reportSummaries = query.select(
-                    Projections.constructor(ContentReportSummaryDto.class, qReportSummary))
-                .from(qReportSummary)
-                .orderBy(qReportSummary.id.desc()).fetch();
-        return reportSummaries;
+    private Page<ContentReportSummaryDto> findReportSummariesByFields(Types type, Pageable pageable) {
+        EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery
+                = createEssentialQueryForReportSummaries();
+        JPAQuery<ContentReportSummaryDto> query = createQueryForFindReportSummaries(essentialQuery, type, pageable);
+        return createReportSummariesPage(query, essentialQuery, pageable);
+    }
+
+    private EssentialQuery<ContentReportSummaryDto, ContentReportSummary> createEssentialQueryForReportSummaries() {
+        Expression[] constructorParams = { qReportSummary, qPosts, qComments, qUser};
+
+        return EssentialQuery.<ContentReportSummaryDto, ContentReportSummary>builder()
+                .entityManager(entityManager).queryType(qReportSummary)
+                .classOfListDto(ContentReportSummaryDto.class).constructorParams(constructorParams).build();
+    }
+
+    private JPAQuery<ContentReportSummaryDto>
+        createQueryForFindReportSummaries(EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery,
+                                          Types type, Pageable pageable) {
+        FindQueries<ContentReportSummaryDto, ContentReportSummary> findQueries = FindQueries.<ContentReportSummaryDto, ContentReportSummary>builder()
+                .essentialQuery(essentialQuery).qTypes(qReportSummary.types).type(type).build();
+        JPAQuery<ContentReportSummaryDto> query = findQueries.createQueryForFindContents();
+        return addPageToQuery(query, pageable);
+    }
+
+    private Page<ContentReportSummaryDto>
+        createReportSummariesPage(JPAQuery<ContentReportSummaryDto> query,
+                                  EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery,
+                                  Pageable pageable) {
+        List<ContentReportSummaryDto> reportSummaries = createLeftJoinClauseForReportSummaries(query).fetch();
+        JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
+        return createPage(reportSummaries, pageable, totalQuery);
+    }
+
+    private JPAQuery<ContentReportSummaryDto> createLeftJoinClauseForReportSummaries(JPAQuery<ContentReportSummaryDto> query) {
+        return query.leftJoin(qReportSummary.posts, qPosts)
+                .leftJoin(qReportSummary.comments, qComments)
+                .leftJoin(qReportSummary.user, qUser);
     }
 
     @Override
-    public List<ContentReportSummaryDto> findByTypes(Types type) {
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
-
-        List<ContentReportSummaryDto> reportSummaries = query.select(
-                    Projections.constructor(ContentReportSummaryDto.class, qReportSummary))
-                .from(qReportSummary)
-                .where(qReportSummary.types.eq(type))
-                .orderBy(qReportSummary.id.desc()).fetch();
-        return reportSummaries;
+    public Page<ContentReportSummaryDto> findByTypes(Types type, Pageable pageable) {
+        return findReportSummariesByFields(type, pageable);
     }
 
     @Override

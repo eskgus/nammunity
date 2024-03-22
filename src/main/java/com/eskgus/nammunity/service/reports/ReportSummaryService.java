@@ -12,6 +12,9 @@ import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummarySaveDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,14 +66,16 @@ public class ReportSummaryService {
     }
 
     @Transactional(readOnly = true)
-    public List<ContentReportSummaryDto> findAllDesc() {
-        return contentReportSummaryRepository.findAllDesc();
+    public Page<ContentReportSummaryDto> findAllDesc(int page) {
+        Pageable pageable = PageRequest.of(page - 1, 20);
+        return contentReportSummaryRepository.findAllDesc(pageable);
     }
 
     @Transactional(readOnly = true)
-    public List<ContentReportSummaryDto> findByTypes(ContentType contentType) {
+    public Page<ContentReportSummaryDto> findByTypes(ContentType contentType, int page) {
+        Pageable pageable = PageRequest.of(page - 1, 20);
         Types type = typesService.findByContentType(contentType);
-        return contentReportSummaryRepository.findByTypes(type);
+        return contentReportSummaryRepository.findByTypes(type, pageable);
     }
 
     @Transactional(readOnly = true)

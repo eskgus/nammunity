@@ -25,7 +25,7 @@
                         </ul>
                         <div class="checkbox-area">
                             <input type="checkbox" id="select-all"><label><a id="btn-delete-reports">삭제</a></label>
-                            {{#numOfReports}}<span>전체 {{numOfReports}}개</span>{{/numOfReports}}
+                            <span>전체 {{summaries.totalElements}}개</span>
                         </div>
                         <table>
                             <thead>
@@ -38,18 +38,18 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^reports}}
+                            {{^summaries.content}}
                                 <tr>
                                     <td class="no-content" colspan="5">신고 내역이 없어요.</td>
                                 </tr>
-                            {{/reports}}
-                            {{#reports}}
-                                {{#isPostReportSummary}} {{! 게시글 신고 }}
+                            {{/summaries.content}}
+                            {{#summaries.content}}
+                                {{#postsListDto}} {{! 게시글 신고 }}
                                     <tr class="posts-area">
                                         <td><input type="checkbox"><label>{{type}}</label></td>
                                         <td>
                                             <div class="tit">
-                                                <a href="/posts/read/{{postId}}">{{title}}</a>
+                                                <a href="/posts/read/{{id}}">{{title}}</a>
                                             </div>
                                             <span class="date">{{author}} | {{modifiedDate}}</span>
                                         </td>
@@ -60,10 +60,28 @@
                                             <span>{{reason}}</span>
                                         </td>
                                     </tr>
-                                {{/isPostReportSummary}}
-                            {{/reports}}
+                                {{/postsListDto}}
+                            {{/summaries.content}}
                             </tbody>
                         </table>
+                        {{#pages}}
+                            <div>
+                                {{#hasPrevious}}
+                                    첫 페이지: <a href="/admin/my-page/content-report/posts?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/admin/my-page/content-report/posts?page={{previousPage}}">{{previousPage}}</a> |
+                                {{/hasPrevious}}
+                                {{#displayPages}}
+                                    {{#isCurrentPage}}
+                                        | 현재 페이지: {{page}}
+                                    {{/isCurrentPage}}
+                                    {{^isCurrentPage}}
+                                        | <a href="/admin/my-page/content-report/posts?page={{page}}">{{page}}</a>
+                                    {{/isCurrentPage}}
+                                {{/displayPages}}
+                                {{#hasNext}}
+                                    | | 다음 페이지: <a href="/admin/my-page/content-report/posts?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/admin/my-page/content-report/posts?page={{lastPage}}">{{lastPage}}</a>
+                                {{/hasNext}}
+                            </div>
+                        {{/pages}}
                     </div>
                 </div>
             </div>

@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.domain.reports;
 
+import com.eskgus.nammunity.converter.ContentReportSummaryConverterForTest;
+import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.enums.ContentType;
@@ -8,7 +10,9 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.service.reports.TypesService;
+import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryBiFinderWithTypesForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import org.junit.jupiter.api.AfterEach;
@@ -19,9 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.List;
 import java.util.Optional;
 
+import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
+import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -43,7 +48,7 @@ public class ContentReportSummaryRepositoryTest {
     private ContentReportSummaryRepository contentReportSummaryRepository;
 
     @Autowired
-    private TypesService typesService;
+    private TypesRepository typesRepository;
 
     private User[] users;
     private Posts post;
@@ -154,42 +159,57 @@ public class ContentReportSummaryRepositoryTest {
     public void findAllDesc() {
         saveReportSummaries();
 
-        callAndAssertFindAllDesc();
+        FindHelperForTest<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+                findHelper = createFindHelper();
+        callAndAssertFindReportSummaries(findHelper);
     }
 
-    private void callAndAssertFindAllDesc() {
-        List<ContentReportSummaryDto> summaryDtos = contentReportSummaryRepository.findAllDesc();
-        assertFindAllDesc(summaryDtos);
+    private FindHelperForTest<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+        createFindHelper() {
+        EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
+                = new ContentReportSummaryConverterForTest();
+        return FindHelperForTest.<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>builder()
+                .finder(contentReportSummaryRepository::findAllDesc)
+                .entityStream(contentReportSummaryRepository.findAll().stream())
+                .page(1).limit(2)
+                .entityConverter(entityConverter).build();
     }
 
-    private void assertFindAllDesc(List<ContentReportSummaryDto> summaryDtos) {
-        assertThat(summaryDtos.size()).isEqualTo(userReportSummaryId.intValue());
-        assertThat(summaryDtos.get(0).getUserId()).isEqualTo(users[0].getId());
-        assertThat(summaryDtos.get(1).getCommentId()).isEqualTo(comment.getId());
-        assertThat(summaryDtos.get(2).getPostId()).isEqualTo(post.getId());
+    private void callAndAssertFindReportSummaries(FindHelperForTest findHelper) {
+        initializeFindHelper(findHelper);
+        callAndAssertFind();
     }
 
     @Test
     public void findByTypes() {
         saveReportSummaries();
 
-        callAndAssertFindByTypes(ContentType.POSTS);
-        callAndAssertFindByTypes(ContentType.COMMENTS);
-        callAndAssertFindByTypes(ContentType.USERS);
+        Types postType = typesRepository.findByDetail(ContentType.POSTS.getDetailInKor()).get();
+        callAndAssertFindReportSummariesByTypes(postType);
+
+        Types commentType = typesRepository.findByDetail(ContentType.COMMENTS.getDetailInKor()).get();
+        callAndAssertFindReportSummariesByTypes(commentType);
+
+        Types userType = typesRepository.findByDetail(ContentType.USERS.getDetailInKor()).get();
+        callAndAssertFindReportSummariesByTypes(userType);
     }
 
-    private void callAndAssertFindByTypes(ContentType contentType) {
-        Types expectedType = typesService.findByContentType(contentType);
-        List<ContentReportSummaryDto> summaryDtos = contentReportSummaryRepository.findByTypes(expectedType);
-
-        assertFindByTypes(summaryDtos, expectedType);
+    private void callAndAssertFindReportSummariesByTypes(Types type) {
+        FindHelperForTest<RepositoryBiFinderWithTypesForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+                findHelper = createBiFindHelper(type);
+        callAndAssertFindReportSummaries(findHelper);
     }
 
-    private void assertFindByTypes(List<ContentReportSummaryDto> summaryDtos, Types expectedType) {
-        assertThat(summaryDtos.size()).isOne();
-
-        ContentReportSummaryDto summaryDto = summaryDtos.get(0);
-        assertThat(summaryDto.getType()).isEqualTo(expectedType.getDetail());
+    private FindHelperForTest<RepositoryBiFinderWithTypesForTest<ContentReportSummaryDto>,
+                                ContentReportSummary, ContentReportSummaryDto> createBiFindHelper(Types type) {
+        EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
+                = new ContentReportSummaryConverterForTest();
+        return FindHelperForTest.<RepositoryBiFinderWithTypesForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>builder()
+                .finder(contentReportSummaryRepository::findByTypes)
+                .type(type)
+                .entityStream(contentReportSummaryRepository.findAll().stream())
+                .page(1).limit(2)
+                .entityConverter(entityConverter).build();
     }
 
     @Test

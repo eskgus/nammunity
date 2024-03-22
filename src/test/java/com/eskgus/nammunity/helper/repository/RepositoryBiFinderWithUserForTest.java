@@ -6,5 +6,5 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.function.BiFunction;
 
-public interface RepositoryBiFinderForTest<V> extends BiFunction<User, Pageable, Page<V>> {
+public interface RepositoryBiFinderWithUserForTest<V> extends BiFunction<User, Pageable, Page<V>> {
 }

@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.service.reports;
 
+import com.eskgus.nammunity.converter.ContentReportSummaryConverterForTest;
+import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.enums.ContentType;
@@ -9,6 +11,9 @@ import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.repository.ServiceBiFinderForTest;
+import com.eskgus.nammunity.helper.repository.ServiceFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
@@ -25,6 +30,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
+import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -242,19 +249,25 @@ public class ReportSummaryServiceTest {
     public void findAllDesc() {
         saveReportSummaries();
 
-        callAndAssertFindAllDesc();
+        FindHelperForTest<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+                findHelper = createFindHelper();
+        callAndAssertFindReportSummaries(findHelper);
     }
 
-    private void callAndAssertFindAllDesc() {
-        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findAllDesc();
-        assertFindAllDesc(summaryDtos);
+    private FindHelperForTest<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+        createFindHelper() {
+        EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
+                = new ContentReportSummaryConverterForTest();
+        return FindHelperForTest.<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>builder()
+                .finder(reportSummaryService::findAllDesc)
+                .entityStream(contentReportSummaryRepository.findAll().stream())
+                .page(1).limit(20)
+                .entityConverter(entityConverter).build();
     }
 
-    private void assertFindAllDesc(List<ContentReportSummaryDto> summaryDtos) {
-        assertThat(summaryDtos.size()).isEqualTo(userReportSummaryId.intValue());
-        assertThat(summaryDtos.get(0).getUserId()).isEqualTo(users[0].getId());
-        assertThat(summaryDtos.get(1).getCommentId()).isEqualTo(comment.getId());
-        assertThat(summaryDtos.get(2).getPostId()).isEqualTo(post.getId());
+    private void callAndAssertFindReportSummaries(FindHelperForTest findHelper) {
+        initializeFindHelper(findHelper);
+        callAndAssertFind();
     }
 
     @Test
@@ -267,17 +280,26 @@ public class ReportSummaryServiceTest {
     }
 
     private void callAndAssertFindByTypes(ContentType contentType) {
-        Types expectedType = typesService.findByContentType(contentType);
-        List<ContentReportSummaryDto> summaryDtos = reportSummaryService.findByTypes(contentType);
-
-        assertFindByTypes(summaryDtos, expectedType);
+        Types type = getTypesByContentType(contentType);
+        FindHelperForTest<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+                findHelper = createBiFindHelper(contentType, type);
+        callAndAssertFindReportSummaries(findHelper);
     }
 
-    private void assertFindByTypes(List<ContentReportSummaryDto> summaryDtos, Types expectedType) {
-        assertThat(summaryDtos.size()).isOne();
+    private Types getTypesByContentType(ContentType contentType) {
+        return typesRepository.findByDetail(contentType.getDetailInKor()).get();
+    }
 
-        ContentReportSummaryDto summaryDto = summaryDtos.get(0);
-        assertThat(summaryDto.getType()).isEqualTo(expectedType.getDetail());
+    private FindHelperForTest<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+        createBiFindHelper(ContentType contentType, Types type) {
+        EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
+                = new ContentReportSummaryConverterForTest();
+        return FindHelperForTest.<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>builder()
+                .finder(reportSummaryService::findByTypes)
+                .contentType(contentType).type(type)
+                .entityStream(contentReportSummaryRepository.findAll().stream())
+                .page(1).limit(20)
+                .entityConverter(entityConverter).build();
     }
 
     @Test

@@ -6,68 +6,55 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.util.DateTimeUtil;
+import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
+import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.function.Function;
+
 @Getter
 public class ContentReportSummaryDto {
-    private Posts post;
-    private Comments comment;
-    private User user;
-
-    private Long postId;
-    private Long commentId;
-    private Long userId;
-
-    private String title;
-    private String content;
-    private String author;
-    private String modifiedDate;    // 작성일(수정일)
-    private String nickname;        // 신고된 사용자
-    private String createdDate;     // 가입일
-
+    private Long id;
     private String type;
     private String reporter;
-    private String reportedDate;    // 신고일
+    private String reportedDate;
     private String reason;
 
-    private Boolean isPostReportSummary = false;  // 게시글/댓글/사용자 존재 여부 (mustache에서 사용)
-    private Boolean isCommentReportSummary = false;
-    private Boolean isUserReportSummary = false;
+    private PostsListDto postsListDto;
+    private CommentsListDto commentsListDto;
+    private UsersListDto usersListDto;
 
     @Builder
-    public ContentReportSummaryDto(ContentReportSummary reportSummary) {
+    public ContentReportSummaryDto(ContentReportSummary reportSummary, Posts post, Comments comment, User user) {
+        generateReportSummary(reportSummary);
+
+        this.postsListDto = generateListDtoByType(ContentType.POSTS, PostsListDto::new, post);
+        this.commentsListDto = generateListDtoByType(ContentType.COMMENTS, CommentsListDto::new, comment);
+        this.usersListDto = generateListDtoByType(ContentType.USERS, UsersListDto::new, user);
+    }
+
+    private void generateReportSummary(ContentReportSummary reportSummary) {
+        this.id = reportSummary.getId();
         this.type = reportSummary.getTypes().getDetail();
         this.reporter = reportSummary.getReporter().getNickname();
         this.reportedDate = DateTimeUtil.formatDateTime(reportSummary.getReportedDate());
+        this.reason = generateReason(reportSummary);
+    }
 
+    private String generateReason(ContentReportSummary reportSummary) {
         String reasonDetail = reportSummary.getReasons().getDetail();
-        this.reason = reasonDetail.equals("기타") ? reasonDetail + ": " + reportSummary.getOtherReasons() : reasonDetail;
-
-        if (this.type.equals(ContentType.POSTS.getDetailInKor())) {
-            this.isPostReportSummary = true;
-            this.post = reportSummary.getPosts();
-            this.postId = this.post.getId();
-            this.title = this.post.getTitle();
-            this.author = this.post.getUser().getNickname();
-            this.modifiedDate = DateTimeUtil.formatDateTime(this.post.getModifiedDate());
-        } else if (this.type.equals(ContentType.COMMENTS.getDetailInKor())) {
-            this.isCommentReportSummary = true;
-            this.comment = reportSummary.getComments();
-            this.commentId = this.comment.getId();
-            this.content = this.comment.getContent();
-            this.author = this.comment.getUser().getNickname();
-            this.modifiedDate = DateTimeUtil.formatDateTime(this.comment.getModifiedDate());
-
-            this.post = this.comment.getPosts();
-            this.postId = this.post.getId();
-            this.title = this.post.getTitle();
-        } else {
-            this.isUserReportSummary = true;
-            this.user = reportSummary.getUser();
-            this.userId = this.user.getId();
-            this.nickname = this.user.getNickname();
-            this.createdDate = DateTimeUtil.formatDateTime(this.user.getCreatedDate());
+        if (reasonDetail.equals("기타")) {
+            return reasonDetail + ": " + reportSummary.getOtherReasons();
         }
+        return reasonDetail;
+    }
+
+    private <T, U> T generateListDtoByType(ContentType contentType, Function<U, T> constructor, U entity) {
+        if (type.equals(contentType.getDetailInKor())) {
+            return constructor.apply(entity);
+        }
+        return null;
     }
 }
