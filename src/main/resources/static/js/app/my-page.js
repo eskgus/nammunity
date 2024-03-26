@@ -10,7 +10,7 @@ var reportDetailsMain = {
                 var result = _this.getIdByType(reportDetail);
 
                 // 추출한 분류, id로 세부 신고 내역 url 생성
-                var url = '/admin/my-page/content-report/details?' + result.type + '=' + result.id;
+                var url = '/admin/my-page/content-report/details?' + result.type + '=' + result.id + '&page=1';
 
                 // 팝업 열기
                 _this.openReportDetailsPopup(url);

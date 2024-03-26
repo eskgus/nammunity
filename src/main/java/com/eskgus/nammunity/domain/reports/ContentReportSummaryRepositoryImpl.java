@@ -9,6 +9,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.FindQueries;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPADeleteClause;
@@ -50,17 +51,19 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
                 .fetchFirst() != null;
     }
 
-    private <T> Predicate createWhereConditionByContents(T contents) {
+    private <T> BooleanBuilder createWhereConditionByContents(T contents) {
         Predicate whereCondition;
         if (contents instanceof Posts) {
             whereCondition = qReportSummary.posts.eq((Posts) contents);
         } else if (contents instanceof Comments) {
             whereCondition = qReportSummary.comments.eq((Comments) contents);
-        } else {
+        } else if (contents instanceof User){
             whereCondition = qReportSummary.user.eq((User) contents);
+        } else {
+            whereCondition = qReportSummary.types.eq((Types) contents);
         }
 
-        return whereCondition;
+        return new BooleanBuilder().and(whereCondition);
     }
 
     @Override
@@ -96,8 +99,11 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
     private JPAQuery<ContentReportSummaryDto>
         createQueryForFindReportSummaries(EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery,
                                           Types type, Pageable pageable) {
+        BooleanBuilder whereCondition = type != null ? createWhereConditionByContents(type) : new BooleanBuilder();
+
         FindQueries<ContentReportSummaryDto, ContentReportSummary> findQueries = FindQueries.<ContentReportSummaryDto, ContentReportSummary>builder()
-                .essentialQuery(essentialQuery).qTypes(qReportSummary.types).type(type).build();
+                .essentialQuery(essentialQuery)
+                .whereCondition(whereCondition).build();
         JPAQuery<ContentReportSummaryDto> query = findQueries.createQueryForFindContents();
         return addPageToQuery(query, pageable);
     }

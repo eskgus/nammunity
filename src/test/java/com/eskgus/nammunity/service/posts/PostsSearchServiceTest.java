@@ -62,7 +62,7 @@ public class PostsSearchServiceTest {
     public void findAllDesc() {
         savePosts();
 
-        FindHelperForTest<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto> findHelper = createFindHelper();
+        FindHelperForTest<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto, Void> findHelper = createFindHelper();
         callAndAssertFindPosts(findHelper);
     }
 
@@ -76,9 +76,9 @@ public class PostsSearchServiceTest {
         assertThat(postsRepository.count()).isEqualTo(numberOfPostsByUser * users.length);
     }
 
-    private FindHelperForTest<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto> createFindHelper() {
+    private FindHelperForTest<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto, Void> createFindHelper() {
         EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
-        return FindHelperForTest.<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto>builder()
+        return FindHelperForTest.<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto, Void>builder()
                 .finder(postsSearchService::findAllDesc)
                 .entityStream(postsRepository.findAll().stream())
                 .page(1).limit(20)
@@ -94,14 +94,15 @@ public class PostsSearchServiceTest {
     public void findByUser() {
         savePosts();
 
-        FindHelperForTest<ServiceTriFinderForTest<PostsListDto>, Posts, PostsListDto> findHelper = createTriFindHelper();
+        FindHelperForTest<ServiceTriFinderForTest<PostsListDto>, Posts, PostsListDto, User> findHelper = createTriFindHelper();
         callAndAssertFindPosts(findHelper);
     }
 
-    private FindHelperForTest<ServiceTriFinderForTest<PostsListDto>, Posts, PostsListDto> createTriFindHelper() {
+    private FindHelperForTest<ServiceTriFinderForTest<PostsListDto>, Posts, PostsListDto, User> createTriFindHelper() {
         EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
-        return FindHelperForTest.<ServiceTriFinderForTest<PostsListDto>, Posts, PostsListDto>builder()
-                .finder(postsSearchService::findByUser).user(users[0])
+        return FindHelperForTest.<ServiceTriFinderForTest<PostsListDto>, Posts, PostsListDto, User>builder()
+                .finder(postsSearchService::findByUser)
+            .contents(users[0])
                 .entityStream(postsRepository.findAll().stream())
                 .page(1).limit(4)
                 .entityConverter(entityConverter).build();

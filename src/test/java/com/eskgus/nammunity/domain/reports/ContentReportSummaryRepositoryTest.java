@@ -11,7 +11,7 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.helper.repository.RepositoryBiFinderWithTypesForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
 import com.eskgus.nammunity.helper.repository.RepositoryFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
@@ -136,9 +136,9 @@ public class ContentReportSummaryRepositoryTest {
     }
 
     private Long getActualId(ContentReportSummary reportSummary) {
-        if (reportSummary.getTypes().getDetail().equals("게시글")) {
+        if (reportSummary.getTypes().getDetail().equals(ContentType.POSTS.getDetailInKor())) {
             return reportSummary.getPosts().getId();
-        } else if (reportSummary.getTypes().getDetail().equals("댓글")) {
+        } else if (reportSummary.getTypes().getDetail().equals(ContentType.COMMENTS.getDetailInKor())) {
             return reportSummary.getComments().getId();
         } else {
             return reportSummary.getUser().getId();
@@ -159,16 +159,16 @@ public class ContentReportSummaryRepositoryTest {
     public void findAllDesc() {
         saveReportSummaries();
 
-        FindHelperForTest<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+        FindHelperForTest<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>
                 findHelper = createFindHelper();
         callAndAssertFindReportSummaries(findHelper);
     }
 
-    private FindHelperForTest<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+    private FindHelperForTest<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>
         createFindHelper() {
         EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
                 = new ContentReportSummaryConverterForTest();
-        return FindHelperForTest.<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>builder()
+        return FindHelperForTest.<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>builder()
                 .finder(contentReportSummaryRepository::findAllDesc)
                 .entityStream(contentReportSummaryRepository.findAll().stream())
                 .page(1).limit(2)
@@ -195,18 +195,18 @@ public class ContentReportSummaryRepositoryTest {
     }
 
     private void callAndAssertFindReportSummariesByTypes(Types type) {
-        FindHelperForTest<RepositoryBiFinderWithTypesForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
-                findHelper = createBiFindHelper(type);
+        FindHelperForTest<RepositoryBiFinderForTest<ContentReportSummaryDto, Types>,
+                            ContentReportSummary, ContentReportSummaryDto, Types> findHelper = createBiFindHelper(type);
         callAndAssertFindReportSummaries(findHelper);
     }
 
-    private FindHelperForTest<RepositoryBiFinderWithTypesForTest<ContentReportSummaryDto>,
-                                ContentReportSummary, ContentReportSummaryDto> createBiFindHelper(Types type) {
+    private FindHelperForTest<RepositoryBiFinderForTest<ContentReportSummaryDto, Types>,
+                                ContentReportSummary, ContentReportSummaryDto, Types> createBiFindHelper(Types type) {
         EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
                 = new ContentReportSummaryConverterForTest();
-        return FindHelperForTest.<RepositoryBiFinderWithTypesForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>builder()
+        return FindHelperForTest.<RepositoryBiFinderForTest<ContentReportSummaryDto, Types>, ContentReportSummary, ContentReportSummaryDto, Types>builder()
                 .finder(contentReportSummaryRepository::findByTypes)
-                .type(type)
+                .contents(type)
                 .entityStream(contentReportSummaryRepository.findAll().stream())
                 .page(1).limit(2)
                 .entityConverter(entityConverter).build();
@@ -217,7 +217,8 @@ public class ContentReportSummaryRepositoryTest {
         callAndAssertFindByUser(false);
 
         saveReportSummaries();
-        callAndAssertFindByUser(true);    }
+        callAndAssertFindByUser(true);
+    }
 
     private void callAndAssertFindByUser(boolean expectedResult) {
         Optional<ContentReportSummary> result = contentReportSummaryRepository.findByUser(users[0]);

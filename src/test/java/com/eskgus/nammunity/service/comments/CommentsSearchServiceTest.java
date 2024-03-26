@@ -86,18 +86,19 @@ public class CommentsSearchServiceTest {
     }
 
     private void callAndAssertFindComments() {
-        FindHelperForTest<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto> findHelper
+        FindHelperForTest<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto, User> findHelper
                 = createTriFindHelper();
 
         initializeFindHelper(findHelper);
         callAndAssertFind();
     }
 
-    private FindHelperForTest<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto>
+    private FindHelperForTest<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto, User>
         createTriFindHelper() {
         EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
-        return FindHelperForTest.<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto>builder()
-                .finder(commentsSearchService::findByUser).user(users[0])
+        return FindHelperForTest.<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto, User>builder()
+                .finder(commentsSearchService::findByUser)
+                .contents(users[0])
                 .entityStream(commentsRepository.findAll().stream())
                 .page(1).limit(4)
                 .entityConverter(entityConverter).build();

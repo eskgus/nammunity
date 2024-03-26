@@ -6,7 +6,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.FindHelperForTest;
 import com.eskgus.nammunity.domain.enums.ContentType;
-import com.eskgus.nammunity.helper.repository.RepositoryBiFinderWithUserForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -120,11 +120,11 @@ public class LikesRepositoryTest {
         callAndAssertFindLikesByUser(likesRepository::findByUser, null);
     }
 
-    private void callAndAssertFindLikesByUser(RepositoryBiFinderWithUserForTest<LikesListDto> finder,
+    private void callAndAssertFindLikesByUser(RepositoryBiFinderForTest<LikesListDto, User> finder,
                                               ContentType contentType) {
         saveLikes();
 
-        FindHelperForTest<RepositoryBiFinderWithUserForTest<LikesListDto>, Likes, LikesListDto> findHelper =
+        FindHelperForTest<RepositoryBiFinderForTest<LikesListDto, User>, Likes, LikesListDto, User> findHelper =
                 createBiFindHelper(finder, contentType);
         callAndAssertFindLikes(findHelper);
     }
@@ -158,19 +158,20 @@ public class LikesRepositoryTest {
         return commentsRepository.findById(commentId).get();
     }
 
-    private FindHelperForTest<RepositoryBiFinderWithUserForTest<LikesListDto>, Likes, LikesListDto>
-        createBiFindHelper(RepositoryBiFinderWithUserForTest<LikesListDto> finder,
+    private FindHelperForTest<RepositoryBiFinderForTest<LikesListDto, User>, Likes, LikesListDto, User>
+        createBiFindHelper(RepositoryBiFinderForTest<LikesListDto, User> finder,
                            ContentType contentType) {
         EntityConverterForTest<Likes, LikesListDto> entityConverter = new LikesConverterForTest();
-        return FindHelperForTest.<RepositoryBiFinderWithUserForTest<LikesListDto>, Likes, LikesListDto>builder()
-                .finder(finder).user(users[0])
+        return FindHelperForTest.<RepositoryBiFinderForTest<LikesListDto, User>, Likes, LikesListDto, User>builder()
+                .finder(finder)
+                .contents(users[0])
                 .contentType(contentType)
                 .entityStream(likesRepository.findAll().stream())
                 .page(1).limit(3)
                 .entityConverter(entityConverter).build();
     }
 
-    private void callAndAssertFindLikes(FindHelperForTest<RepositoryBiFinderWithUserForTest<LikesListDto>, Likes, LikesListDto>
+    private void callAndAssertFindLikes(FindHelperForTest<RepositoryBiFinderForTest<LikesListDto, User>, Likes, LikesListDto, User>
                                                 findHelper) {
         initializeFindHelper(findHelper);
         callAndAssertFind();

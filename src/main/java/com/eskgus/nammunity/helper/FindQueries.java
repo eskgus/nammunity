@@ -1,6 +1,5 @@
 package com.eskgus.nammunity.helper;
 
-import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.EntityPathBase;
@@ -13,25 +12,24 @@ public class FindQueries<T, U> {    // T: listDto, U: entity
     private NumberPath<Long> userId;
     private User user;
     private EntityPathBase contentTypeOfLikes;
-    private EntityPathBase<Types> qTypes;
-    private Types type;
     private BooleanBuilder whereCondition;
 
     @Builder
     public FindQueries(EssentialQuery<T, U> essentialQuery,
                        NumberPath<Long> userId, User user,
                        EntityPathBase contentTypeOfLikes,
-                       EntityPathBase<Types> qTypes, Types type) {
+                       BooleanBuilder whereCondition) {
         this.essentialQuery = essentialQuery;
         this.userId = userId;
         this.user = user;
         this.contentTypeOfLikes = contentTypeOfLikes;
-        this.qTypes = qTypes;
-        this.type = type;
+        this.whereCondition = whereCondition;
     }
 
     public JPAQuery<T> createQueryForFindContents() {
-        createWhereCondition();
+        if (whereCondition == null) {
+            createWhereCondition();
+        }
         return createQueryWithConditions();
     }
 
@@ -43,8 +41,6 @@ public class FindQueries<T, U> {    // T: listDto, U: entity
             if (contentTypeOfLikes != null) {
                 whereCondition.and(contentTypeOfLikes.isNotNull());
             }
-        } else if (type != null) {
-            whereCondition.and(qTypes.eq(type));
         }
         this.whereCondition = whereCondition;
     }

@@ -1,8 +1,12 @@
 package com.eskgus.nammunity.domain.reports;
 
+import com.eskgus.nammunity.converter.ContentReportsConverterForTest;
+import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -20,9 +24,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
+
+import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
+import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -62,13 +67,13 @@ public class ContentReportsRepositoryTest {
         this.user2 = userRepository.findById(user2Id).get();
 
         // 2. user1이 게시글 작성
-        Long postId = testDB.savePosts(this.user1);
+        Long postId = testDB.savePosts(user1);
         Assertions.assertThat(postsRepository.count()).isEqualTo(postId);
 
         this.post = postsRepository.findById(postId).get();
 
         // 3. user1이 댓글 작성
-        Long commentId = testDB.saveComments(postId, this.user1);
+        Long commentId = testDB.saveComments(postId, user1);
         Assertions.assertThat(commentsRepository.count()).isEqualTo(commentId);
 
         this.comment = commentsRepository.findById(commentId).get();
@@ -84,15 +89,15 @@ public class ContentReportsRepositoryTest {
         // 게시글 신고 + 댓글 신고 + 사용자 신고
         saveReports();
 
-        callAndAssertFindReporterByContents(this.post, this.latestPostReport);
-        callAndAssertFindReporterByContents(this.comment, this.latestCommentReport);
-        callAndAssertFindReporterByContents(this.user1, this.latestUserReport);
+        callAndAssertFindReporterByContents(post, latestPostReport);
+        callAndAssertFindReporterByContents(comment, latestCommentReport);
+        callAndAssertFindReporterByContents(user1, latestUserReport);
     }
 
     private void saveReports() {
-        Long postReportId = testDB.savePostReports(this.post.getId(), this.user2);
-        Long commentReportId = testDB.saveCommentReports(this.comment.getId(), this.user2);
-        Long userReportId = testDB.saveUserReports(this.user1, this.user2);
+        Long postReportId = testDB.savePostReports(post.getId(), user2);
+        Long commentReportId = testDB.saveCommentReports(comment.getId(), user2);
+        Long userReportId = testDB.saveUserReports(user1, user2);
         Assertions.assertThat(contentReportsRepository.count()).isEqualTo(userReportId);
 
         this.latestPostReport = contentReportsRepository.findById(postReportId).get();
@@ -109,9 +114,9 @@ public class ContentReportsRepositoryTest {
     public void findReportedDateByContents() {
         saveReports();
 
-        callAndAssertFindReportedDateByContents(this.post, this.latestPostReport);
-        callAndAssertFindReportedDateByContents(this.comment, this.latestCommentReport);
-        callAndAssertFindReportedDateByContents(this.user1, this.latestUserReport);
+        callAndAssertFindReportedDateByContents(post, latestPostReport);
+        callAndAssertFindReportedDateByContents(comment, latestCommentReport);
+        callAndAssertFindReportedDateByContents(user1, latestUserReport);
     }
 
     private <T> void callAndAssertFindReportedDateByContents(T contents, ContentReports expectedReport) {
@@ -123,9 +128,9 @@ public class ContentReportsRepositoryTest {
     public void findReasonByContents() {
         saveReports();
 
-        callAndAssertFindReasonByContents(this.post, this.latestPostReport);
-        callAndAssertFindReasonByContents(this.comment, this.latestCommentReport);
-        callAndAssertFindReasonByContents(this.user1, this.latestUserReport);
+        callAndAssertFindReasonByContents(post, latestPostReport);
+        callAndAssertFindReasonByContents(comment, latestCommentReport);
+        callAndAssertFindReasonByContents(user1, latestUserReport);
     }
 
     public <T> void callAndAssertFindReasonByContents(T contents, ContentReports expectedReport) {
@@ -137,9 +142,9 @@ public class ContentReportsRepositoryTest {
     public void findOtherReasonByContents() {
         saveReportsWithOtherReason();
 
-        callAndAssertFindOtherReasonByContents(this.post, this.latestPostReport);
-        callAndAssertFindOtherReasonByContents(this.comment, this.latestCommentReport);
-        callAndAssertFindOtherReasonByContents(this.user1, this.latestUserReport);
+        callAndAssertFindOtherReasonByContents(post, latestPostReport);
+        callAndAssertFindOtherReasonByContents(comment, latestCommentReport);
+        callAndAssertFindOtherReasonByContents(user1, latestUserReport);
     }
 
     private void saveReportsWithOtherReason() {
@@ -148,9 +153,9 @@ public class ContentReportsRepositoryTest {
         Long commentReportId = 0L;
         Long userReportId = 0L;
         for (String otherReason : otherReasons) {
-            postReportId = testDB.savePostReportsWithOtherReason(this.post.getId(), this.user2, otherReason);
-            commentReportId = testDB.saveCommentReportsWithOtherReason(this.comment.getId(), this.user2, otherReason);
-            userReportId = testDB.saveUserReportsWithOtherReason(this.user1, this.user2, otherReason);
+            postReportId = testDB.savePostReportsWithOtherReason(post.getId(), user2, otherReason);
+            commentReportId = testDB.saveCommentReportsWithOtherReason(comment.getId(), user2, otherReason);
+            userReportId = testDB.saveUserReportsWithOtherReason(user1, user2, otherReason);
         }
         Assertions.assertThat(contentReportsRepository.count()).isEqualTo(userReportId);
 
@@ -169,43 +174,34 @@ public class ContentReportsRepositoryTest {
     public void findByContents() {
         saveReports();
 
-        callAndAssertFindByContents(this.post, this.latestPostReport);
-        callAndAssertFindByContents(this.comment, this.latestCommentReport);
-        callAndAssertFindByContents(this.user1, this.latestUserReport);
+        callAndAssertFindByContents(post);
+        callAndAssertFindByContents(comment);
+        callAndAssertFindByContents(user1);
     }
 
-    private <T> void callAndAssertFindByContents(T contents, ContentReports expectedLatestReport) {
-        List<ContentReportDetailListDto> expectedReports = getExpectedReports(expectedLatestReport);
-        List<ContentReportDetailListDto> actualReports = contentReportsRepository.findByContents(contents);
-
-        Assertions.assertThat(actualReports.size()).isEqualTo(expectedReports.size());
-        for (int i = 0; i < actualReports.size(); i++) {
-            Assertions.assertThat(actualReports.get(i).getId()).isEqualTo(expectedReports.get(i).getId());
-        }
+    private <T> void callAndAssertFindByContents(T contents) {
+        FindHelperForTest<RepositoryBiFinderForTest<ContentReportDetailListDto, T>,
+                            ContentReports, ContentReportDetailListDto, T> findHelper = createBiFindHelper(contents);
+        callAndAssertFindDetailListDto(findHelper);
     }
 
-    private List<ContentReportDetailListDto> getExpectedReports(ContentReports expectedLatestReport) {
-        long startIndex = getStartIndex(expectedLatestReport) + 1;
-        long endIndex = expectedLatestReport.getId();
-        List<ContentReportDetailListDto> reports = new ArrayList<>();
-
-        for (long id = startIndex; id <= endIndex; id++) {
-            ContentReports report = contentReportsRepository.findById(id).get();
-            ContentReportDetailListDto detailListDto = ContentReportDetailListDto.builder().report(report).build();
-            reports.add(detailListDto);
-        }
-        return reports;
+    private <T> FindHelperForTest<RepositoryBiFinderForTest<ContentReportDetailListDto, T>,
+                                    ContentReports, ContentReportDetailListDto, T> createBiFindHelper(T contents) {
+        EntityConverterForTest<ContentReports, ContentReportDetailListDto> entityConverter
+                = new ContentReportsConverterForTest();
+        return FindHelperForTest.<RepositoryBiFinderForTest<ContentReportDetailListDto,T>, ContentReports, ContentReportDetailListDto, T>builder()
+                .finder(contentReportsRepository::findByContents)
+                .contents(contents)
+                .entityStream(contentReportsRepository.findAll().stream())
+                .page(1).limit(3)
+                .entityConverter(entityConverter).build();
     }
 
-    private long getStartIndex(ContentReports expectedLatestReport) {
-        String type = expectedLatestReport.getTypes().getDetail();
-
-        if (type.equals("게시글")) {
-            return 0;
-        } else if (type.equals("댓글")) {
-            return this.latestPostReport.getId();
-        }
-        return this.latestCommentReport.getId();
+    private <T> void
+        callAndAssertFindDetailListDto(FindHelperForTest<RepositoryBiFinderForTest<ContentReportDetailListDto, T>,
+                                        ContentReports, ContentReportDetailListDto, T> findHelper) {
+        initializeFindHelper(findHelper);
+        callAndAssertFind();
     }
 
     @Test
@@ -237,7 +233,7 @@ public class ContentReportsRepositoryTest {
         callAndAssertCountReportsByContentTypeAndUser(userType, userReportId - commentReportId);
     }
 
-    private <T> void callAndAssertCountReportsByContentTypeAndUser(ContentType contentType, long expectedCount) {
+    private void callAndAssertCountReportsByContentTypeAndUser(ContentType contentType, long expectedCount) {
         long actualCount = contentReportsRepository.countReportsByContentTypeAndUser(contentType, user1);
         Assertions.assertThat(actualCount).isEqualTo(expectedCount);
     }
@@ -251,18 +247,18 @@ public class ContentReportsRepositoryTest {
     @Test
     public void countByContents() {
         // 1. 신고 x 후 호출
-        callAndAssertCountByContents(this.post, 0L);
-        callAndAssertCountByContents(this.comment, 0L);
-        callAndAssertCountByContents(this.user1, 0L);
+        callAndAssertCountByContents(post, 0L);
+        callAndAssertCountByContents(comment, 0L);
+        callAndAssertCountByContents(user1, 0L);
 
         // 2. 신고 후 호출
         saveReports();
 
-        callAndAssertCountByContents(this.post, this.latestPostReport.getId());
-        callAndAssertCountByContents(this.comment,
-                this.latestCommentReport.getId() - this.latestPostReport.getId());
-        callAndAssertCountByContents(this.user1,
-                this.latestUserReport.getId() - this.latestCommentReport.getId());
+        callAndAssertCountByContents(post, latestPostReport.getId());
+        callAndAssertCountByContents(comment,
+                latestCommentReport.getId() - latestPostReport.getId());
+        callAndAssertCountByContents(user1,
+                latestUserReport.getId() - latestCommentReport.getId());
     }
 
     private <T> void callAndAssertCountByContents(T contents, long expectedCountByContents) {

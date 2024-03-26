@@ -15,11 +15,13 @@ import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.reports.*;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -120,9 +122,9 @@ public class ReportsService {
     }
 
     @Transactional(readOnly = true)
-    public <T> ContentReportDetailDto findDetails(ContentType contentType, Long contentId) {
+    public <T> ContentReportDetailDto findDetails(ContentType contentType, Long contentId, int page) {
         T contents = getContentsFromContentId(contentType, contentId);
-        return createDetailDto(contentType, contents);
+        return createDetailDto(contentType, contents, page);
     }
 
     private <T> T getContentsFromContentId(ContentType contentType, Long contentId) {
@@ -134,13 +136,12 @@ public class ReportsService {
         return (T) userService.findById(contentId);
     }
 
-    @Transactional(readOnly = true)
-    private <T, U> ContentReportDetailDto createDetailDto(ContentType contentType, T contents) {
-        List<ContentReportDetailListDto> detailListDtos = contentReportsRepository.findByContents(contents);
+    private <T, U> ContentReportDetailDto createDetailDto(ContentType contentType, T contents, int page) {
+        Pageable pageable = PageRequest.of(page - 1, 10);
+        Page<ContentReportDetailListDto> reportDetails = contentReportsRepository.findByContents(contents, pageable);
         Types type = typesService.findByContentType(contentType);
         U contentListDto = createContentListDto(contents);
-
-        return ContentReportDetailDto.builder().type(type).dto(contentListDto).reports(detailListDtos).build();
+        return ContentReportDetailDto.builder().type(type).contentListDto(contentListDto).reportDetails(reportDetails).build();
     }
 
     @Transactional(readOnly = true)

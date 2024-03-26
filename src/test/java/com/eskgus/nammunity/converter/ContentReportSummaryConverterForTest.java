@@ -11,7 +11,7 @@ public class ContentReportSummaryConverterForTest implements EntityConverterForT
 
     @Override
     public Long extractUserId(ContentReportSummary entity) {
-        return null;
+        return entity.getUser().getId();
     }
 
     @Override
@@ -24,7 +24,7 @@ public class ContentReportSummaryConverterForTest implements EntityConverterForT
         return new ContentReportSummaryDto(entity, entity.getPosts(), entity.getComments(), entity.getUser());
     }
 
-    public Long getTypeId(ContentReportSummary entity) {
+    public Long extractTypeId(ContentReportSummary entity) {
         return entity.getTypes().getId();
     }
 }

@@ -98,17 +98,17 @@ public class LikesSearchServiceTest {
         saveLikesWithUser2();
 
         // 1. findByUser()
-        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto> findHelper1
+        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User> findHelper1
                 = createFindHelper(5, null, likesRepository::findByUser);
         callAndAssertFindLikesByUser(findHelper1);
 
         // 2. findPostLikesByUser()
-        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto> findHelper2
+        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User> findHelper2
                 = createFindHelper(2, ContentType.POSTS, likesRepository::findPostLikesByUser);
         callAndAssertFindLikesByUser(findHelper2);
 
         // 3. findCommentLikesByUser()
-        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto> findHelper3
+        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User> findHelper3
                 = createFindHelper(2, ContentType.COMMENTS, likesRepository::findCommentLikesByUser);
         callAndAssertFindLikesByUser(findHelper3);
     }
@@ -144,13 +144,14 @@ public class LikesSearchServiceTest {
         return commentsRepository.findById(commentId).get();
     }
 
-    private FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto>
+    private FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User>
     createFindHelper(int limit,
                      ContentType contentType,
                      BiFunction<User, Pageable, Page<LikesListDto>> likesFinder) {
         EntityConverterForTest<Likes, LikesListDto> entityConverter = new LikesConverterForTest();
-        return FindHelperForTest.<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto>builder()
-                .finder(likesSearchService::findLikesByUser).user(users[1])
+        return FindHelperForTest.<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User>builder()
+                .finder(likesSearchService::findLikesByUser)
+                .contents(users[1])
                 .entityStream(likesRepository.findAll().stream())
                 .contentType(contentType)
                 .page(2).limit(limit)
@@ -159,7 +160,7 @@ public class LikesSearchServiceTest {
     }
 
     private void callAndAssertFindLikesByUser(FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>,
-            Likes, LikesListDto> findHelper) {
+        Likes, LikesListDto, User> findHelper) {
         initializeFindHelper(findHelper);
         callAndAssertFind();
     }

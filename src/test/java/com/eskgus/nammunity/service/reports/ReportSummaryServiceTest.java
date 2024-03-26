@@ -68,8 +68,6 @@ public class ReportSummaryServiceTest {
     private Posts post;
     private Comments comment;
 
-    private Long userReportSummaryId;
-
     @BeforeEach
     public void setUp() {
         // 1. user1 회원가입 + user2 회원가입
@@ -196,7 +194,7 @@ public class ReportSummaryServiceTest {
     private void saveReportSummaries() {
         testDB.savePostReportSummary(post, users[1]);
         testDB.saveCommentReportSummary(comment, users[1]);
-        this.userReportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
+        Long userReportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
         assertThat(contentReportSummaryRepository.count()).isEqualTo(userReportSummaryId);
     }
 
@@ -249,16 +247,16 @@ public class ReportSummaryServiceTest {
     public void findAllDesc() {
         saveReportSummaries();
 
-        FindHelperForTest<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+        FindHelperForTest<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>
                 findHelper = createFindHelper();
         callAndAssertFindReportSummaries(findHelper);
     }
 
-    private FindHelperForTest<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+    private FindHelperForTest<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>
         createFindHelper() {
         EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
                 = new ContentReportSummaryConverterForTest();
-        return FindHelperForTest.<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>builder()
+        return FindHelperForTest.<ServiceFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>builder()
                 .finder(reportSummaryService::findAllDesc)
                 .entityStream(contentReportSummaryRepository.findAll().stream())
                 .page(1).limit(20)
@@ -281,7 +279,7 @@ public class ReportSummaryServiceTest {
 
     private void callAndAssertFindByTypes(ContentType contentType) {
         Types type = getTypesByContentType(contentType);
-        FindHelperForTest<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+        FindHelperForTest<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Types>
                 findHelper = createBiFindHelper(contentType, type);
         callAndAssertFindReportSummaries(findHelper);
     }
@@ -290,13 +288,14 @@ public class ReportSummaryServiceTest {
         return typesRepository.findByDetail(contentType.getDetailInKor()).get();
     }
 
-    private FindHelperForTest<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>
+    private FindHelperForTest<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Types>
         createBiFindHelper(ContentType contentType, Types type) {
         EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
                 = new ContentReportSummaryConverterForTest();
-        return FindHelperForTest.<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto>builder()
+        return FindHelperForTest.<ServiceBiFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Types>builder()
                 .finder(reportSummaryService::findByTypes)
-                .contentType(contentType).type(type)
+                .contentType(contentType)
+                .contents(type)
                 .entityStream(contentReportSummaryRepository.findAll().stream())
                 .page(1).limit(20)
                 .entityConverter(entityConverter).build();

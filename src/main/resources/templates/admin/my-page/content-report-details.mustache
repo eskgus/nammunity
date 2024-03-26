@@ -10,7 +10,7 @@
 
 <div id="wrap" class="popup-window">
     <h1>세부 목록</h1>
-    {{#details}}
+    {{#detail}}
     <div class="top-area">
         <table>
             <tbody>
@@ -21,13 +21,13 @@
                 <tr>
                     <th>신고 내용:</th>
                     <td>
-                        <p class="title">{{#isPostReport}}{{post.title}}{{/isPostReport}}{{#isCommentReport}}{{comment.content}}{{/isCommentReport}}{{#isUserReport}}{{user.nickname}}{{/isUserReport}}</p>
-                        <p class="author">{{#isPostReport}}{{post.author}}, {{post.modifiedDate}}{{/isPostReport}}{{#isCommentReport}}{{comment.author}}, {{comment.modifiedDate}}{{/isCommentReport}}{{#isUserReport}}{{user.createdDate}}{{/isUserReport}}</p>
+                        <p class="title">{{#postsListDto}}{{title}}{{/postsListDto}}{{#commentsListDto}}{{content}}{{/commentsListDto}}{{#usersListDto}}{{nickname}}{{/usersListDto}}</p>
+                        <p class="author">{{#postsListDto}}{{author}}, {{modifiedDate}}{{/postsListDto}}{{#commentsListDto}}{{author}}, {{modifiedDate}}{{/commentsListDto}}{{#usersListDto}}{{createdDate}}{{/usersListDto}}</p>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <span>누적 신고 횟수: {{numOfReports}}</span>
+        <span>누적 신고 횟수: {{reportDetails.totalElements}}</span>
     </div>
     <div class="bottom-area">
         <table>
@@ -40,18 +40,36 @@
             </tr>
             </thead>
             <tbody>
-            {{#reports}}
+            {{#reportDetails}}
                 <tr>
                     <td>{{id}}</td>
                     <td>{{reporter}}</td>
                     <td>{{reportedDate}}</td>
                     <td class="reason">{{reason}}</td>
                 </tr>
-            {{/reports}}
+            {{/reportDetails}}
             </tbody>
         </table>
+        {{#pages}}
+            <div>
+                {{#hasPrevious}}
+                    첫 페이지: <a href="/admin/my-page/content-report/details?{{#postsListDto}}postsId={{id}}{{/postsListDto}}{{#commentsListDto}}commentsId={{commentsId}}{{/commentsListDto}}{{#usersListDto}}userId={{id}}{{/usersListDto}}&page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/admin/my-page/content-report/details?{{#postsListDto}}postsId={{id}}{{/postsListDto}}{{#commentsListDto}}commentsId={{commentsId}}{{/commentsListDto}}{{#usersListDto}}userId={{id}}{{/usersListDto}}&page={{previousPage}}">{{previousPage}}</a> |
+                {{/hasPrevious}}
+                {{#displayPages}}
+                    {{#isCurrentPage}}
+                        | 현재 페이지: {{page}}
+                    {{/isCurrentPage}}
+                    {{^isCurrentPage}}
+                        | <a href="/admin/my-page/content-report/details?{{#postsListDto}}postsId={{id}}{{/postsListDto}}{{#commentsListDto}}commentsId={{commentsId}}{{/commentsListDto}}{{#usersListDto}}userId={{id}}{{/usersListDto}}&page={{page}}">{{page}}</a>
+                    {{/isCurrentPage}}
+                {{/displayPages}}
+                {{#hasNext}}
+                    | | 다음 페이지: <a href="/admin/my-page/content-report/details?{{#postsListDto}}postsId={{id}}{{/postsListDto}}{{#commentsListDto}}commentsId={{commentsId}}{{/commentsListDto}}{{#usersListDto}}userId={{id}}{{/usersListDto}}&page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/admin/my-page/content-report/details?{{#postsListDto}}postsId={{id}}{{/postsListDto}}{{#commentsListDto}}commentsId={{commentsId}}{{/commentsListDto}}{{#usersListDto}}userId={{id}}{{/usersListDto}}&page={{lastPage}}">{{lastPage}}</a>
+                {{/hasNext}}
+            </div>
+        {{/pages}}
     </div>
-    {{/details}}
+    {{/detail}}
 </div>
 
 {{#exception}}
