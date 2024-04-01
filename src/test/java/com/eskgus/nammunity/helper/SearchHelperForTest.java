@@ -3,6 +3,7 @@ package com.eskgus.nammunity.helper;
 import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.helper.repository.searcher.RepositoryBiSearcherForTest;
 import com.eskgus.nammunity.helper.repository.searcher.ServiceQuadSearcherForTest;
+import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
@@ -45,8 +46,10 @@ public class SearchHelperForTest<T, U, V> {    // T: searcher<listDto>, U: entit
     public Page<V> applySearcher(Pageable pageable) {
         if (searcher instanceof RepositoryBiSearcherForTest) {
             return ((RepositoryBiSearcherForTest<V>) searcher).apply(keywords, pageable);
-        } else {
+        } else if (searcher instanceof ServiceQuadSearcherForTest) {
             return ((ServiceQuadSearcherForTest<V>) searcher).apply(keywords, searchBy, page, limit);
+        } else {
+            return ((ServiceTriSearcherForTest<V>) searcher).apply(keywords, page, limit);
         }
     }
 

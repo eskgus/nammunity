@@ -31,17 +31,14 @@ public class CommentsRepositoryImpl extends QuerydslRepositorySupport implements
     }
 
     @Override
-    public List<CommentsListDto> searchByContent(String keywords) {
-        return searchCommentsByFields(keywords, qComments.content);
+    public Page<CommentsListDto> searchByContent(String keywords, Pageable pageable) {
+        return searchCommentsByFields(pageable, keywords, qComments.content);
     }
 
-    private List<CommentsListDto> searchCommentsByFields(String keywords, StringPath... fields) {
+    private Page<CommentsListDto> searchCommentsByFields(Pageable pageable, String keywords, StringPath... fields) {
         EssentialQuery<CommentsListDto, Comments> essentialQuery = createEssentialQueryForComments();
-        SearchQueries<CommentsListDto, Comments> searchQueries = SearchQueries.<CommentsListDto, Comments>builder()
-                .essentialQuery(essentialQuery)
-                .keywords(keywords).fields(fields).build();
-        JPAQuery<CommentsListDto> query = searchQueries.createQueryForSearchContents();
-        return createLeftJoinClauseForComments(query).fetch();
+        JPAQuery<CommentsListDto> query = createQueryForSearchComments(pageable, essentialQuery, keywords, fields);
+        return createCommentsPage(query, essentialQuery, pageable);
     }
 
     private EssentialQuery<CommentsListDto, Comments> createEssentialQueryForComments() {
@@ -50,6 +47,15 @@ public class CommentsRepositoryImpl extends QuerydslRepositorySupport implements
         return EssentialQuery.<CommentsListDto, Comments>builder()
                 .entityManager(entityManager).queryType(qComments)
                 .classOfListDto(CommentsListDto.class).constructorParams(constructorParams).build();
+    }
+
+    private JPAQuery<CommentsListDto> createQueryForSearchComments(Pageable pageable,
+                                                                   EssentialQuery<CommentsListDto, Comments> essentialQuery,
+                                                                   String keywords, StringPath... fields) {
+        SearchQueries<CommentsListDto, Comments> searchQueries = SearchQueries.<CommentsListDto, Comments>builder()
+                .essentialQuery(essentialQuery).keywords(keywords).fields(fields).build();
+        JPAQuery<CommentsListDto> query = searchQueries.createQueryForSearchContents();
+        return addPageToQuery(query, pageable);
     }
 
     private JPAQuery<CommentsListDto> createLeftJoinClauseForComments(JPAQuery<CommentsListDto> query) {

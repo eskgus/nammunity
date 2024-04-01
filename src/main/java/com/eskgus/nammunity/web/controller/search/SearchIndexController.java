@@ -40,11 +40,11 @@ public class SearchIndexController {
         }
         attr.put("posts", posts);
 
-        List<CommentsListDto> comments = commentsSearchService.searchByContent(keywords);
-        if (comments.size() > 5) {
+        Page<CommentsListDto> comments = commentsSearchService.searchByContent(keywords, page, size);
+        if (comments.getTotalElements() > size) {
             attr.put("commentsMore", true);
         }
-        attr.put("comments", comments.stream().limit(5).toList());
+        attr.put("comments", comments);
 
         List<UsersListDto> users = userService.searchByNickname(keywords);
         if (users.size() > 5) {
@@ -60,8 +60,7 @@ public class SearchIndexController {
     @GetMapping("/posts")
     public String searchPosts(@RequestParam(name = "keywords") String keywords,
                               @RequestParam(name = "searchBy") String searchBy,
-                              @RequestParam(name = "page", defaultValue = "1") int page,
-                              Model model) {
+                              @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
         Map<String, Object> attr = new HashMap<>();
 
         Page<PostsListDto> posts = postsSearchService.search(keywords, searchBy, page, 30);
@@ -80,10 +79,17 @@ public class SearchIndexController {
     }
 
     @GetMapping("/comments")
-    public String searchComments(@RequestParam(name = "keywords") String keywords, Model model) {
+    public String searchComments(@RequestParam(name = "keywords") String keywords,
+                                 @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
         Map<String, Object> attr = new HashMap<>();
-        List<CommentsListDto> comments = commentsSearchService.searchByContent(keywords);
+
+        Page<CommentsListDto> comments = commentsSearchService.searchByContent(keywords, page, 30);
         attr.put("comments", comments);
+
+        PaginationDto<CommentsListDto> paginationDto = PaginationDto.<CommentsListDto>builder()
+                .page(comments).display(10).build();
+        attr.put("pages", paginationDto);
+
         attr.put("keywords", keywords);
 
         model.addAllAttributes(attr);

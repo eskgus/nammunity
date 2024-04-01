@@ -57,12 +57,12 @@
                     </div>
                     <table>
                         <tbody>
-                        {{^comments}}
+                        {{^comments.content}}
                             <tr>
                                 <td class="no-content">검색된 댓글이 없어요.</td>
                             </tr>
-                        {{/comments}}
-                        {{#comments}}
+                        {{/comments.content}}
+                        {{#comments.content}}
                             <tr>
                                 <td>
                                     <a href="/posts/read/{{postsId}}#cmt-{{commentsId}}"><pre>{{content}}</pre></a>
@@ -72,7 +72,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        {{/comments}}
+                        {{/comments.content}}
                         </tbody>
                     </table>
                 </div>

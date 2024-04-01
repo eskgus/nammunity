@@ -3,7 +3,9 @@ package com.eskgus.nammunity.domain.comments;
 import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.SearchHelperForTest;
 import com.eskgus.nammunity.helper.repository.finder.RepositoryBiFinderForTest;
+import com.eskgus.nammunity.helper.repository.searcher.RepositoryBiSearcherForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -20,9 +22,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
 import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
+import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -93,15 +98,13 @@ public class CommentsRepositoryTest {
 
     @Test
     public void searchByContent() {
-//        saveComments();
-//
-//        // 1. 검색 제외 단어 x
-//        callAndAssertSearchCommentsByFields("흥 100 Let", commentsRepository::searchByContent,
-//                Comments::getContent);
-//
-//        // 2. 검색 제외 단어 o
-//        callAndAssertSearchCommentsByFields("흥 100 Let -봉,마리", commentsRepository::searchByContent,
-//                Comments::getContent);
+        saveComments();
+
+        // 1. 검색 제외 단어 x
+        callAndAssertSearchCommentsByFields(commentsRepository::searchByContent, "흥 100 Let", Comments::getContent);
+
+        // 2. 검색 제외 단어 o
+        callAndAssertSearchCommentsByFields(commentsRepository::searchByContent, "흥 100 Let -봉,마리", Comments::getContent);
     }
 
     private void saveComments() {
@@ -114,22 +117,25 @@ public class CommentsRepositoryTest {
         assertThat(commentsRepository.count()).isEqualTo(strings.length * users.length);
     }
 
-//    private void callAndAssertSearchCommentsByFields(String keywords,
-//                                                     Function<String, List<CommentsListDto>> searcher,
-//                                                     Function<Comments, String>... fieldExtractors) {
-//        SearchHelperForTest<CommentsListDto, Comments> searchHelper =
-//                createSearchHelper(keywords, searcher, fieldExtractors);
-//        searchHelper.callAndAssertSearchByField();
-//    }
-//
-//    private SearchHelperForTest<CommentsListDto, Comments> createSearchHelper(String keywords,
-//                                                                              Function<String, List<CommentsListDto>> searcher,
-//                                                                              Function<Comments, String>[] fieldExtractors) {
-//        return SearchHelperForTest.<CommentsListDto, Comments>builder()
-//                .keywords(keywords).searcher(searcher)
-//                .totalContents(commentsRepository.findAll(Sort.by(Sort.Order.desc("id"))))
-//                .fieldExtractors(fieldExtractors).build();
-//    }
+    private void callAndAssertSearchCommentsByFields(RepositoryBiSearcherForTest<CommentsListDto> searcher,
+                                                     String keywords, Function<Comments, String>... fieldExtractors) {
+        SearchHelperForTest<RepositoryBiSearcherForTest<CommentsListDto>, Comments, CommentsListDto> searchHelper
+                = createSearchHelper(searcher, keywords, fieldExtractors);
+        initializeSearchHelper(searchHelper);
+        callAndAssertSearch();
+    }
+
+    private SearchHelperForTest<RepositoryBiSearcherForTest<CommentsListDto>, Comments, CommentsListDto>
+        createSearchHelper(RepositoryBiSearcherForTest<CommentsListDto> searcher,
+                           String keywords, Function<Comments, String>... fieldExtractors) {
+        EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
+        return SearchHelperForTest.<RepositoryBiSearcherForTest<CommentsListDto>, Comments, CommentsListDto>builder()
+                .searcher(searcher).keywords(keywords)
+                .totalContents(commentsRepository.findAll())
+                .fieldExtractors(fieldExtractors)
+                .page(1).limit(3)
+                .entityConverter(entityConverter).build();
+    }
 
     @Test
     public void findByUser() {

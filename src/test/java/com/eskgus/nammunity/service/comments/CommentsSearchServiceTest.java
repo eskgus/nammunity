@@ -10,7 +10,9 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.SearchHelperForTest;
 import com.eskgus.nammunity.helper.repository.finder.ServiceTriFinderForTest;
+import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import org.junit.jupiter.api.AfterEach;
@@ -21,8 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.function.Function;
+
 import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
 import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
+import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -101,6 +107,46 @@ public class CommentsSearchServiceTest {
                 .contents(users[0])
                 .entityStream(commentsRepository.findAll().stream())
                 .page(1).limit(4)
+                .entityConverter(entityConverter).build();
+    }
+
+    @Test
+    public void searchByContent() {
+        saveCommentsWithContent();
+
+        // 1. 검색 제외 단어 x
+        callAndAssertSearchComments("흥 100 Let", Comments::getContent);
+
+        // 2. 검색 제외 단어 o
+        callAndAssertSearchComments("흥 100 Let -봉,마리", Comments::getContent);
+    }
+
+    private void saveCommentsWithContent() {
+        String str1 = "bts, 봉준호, 손흥민, 이나현 let's go";
+        String str2 = "붕어빵 3마리 1000원";
+        String[] strings = { str1, str2 };
+        for (User user : users) {
+            testDB.saveComments(post.getId(), user, strings);
+        }
+        assertThat(commentsRepository.count()).isEqualTo(strings.length * users.length);
+    }
+
+    private void callAndAssertSearchComments(String keywords, Function<Comments, String>... fieldExtractors) {
+        SearchHelperForTest<ServiceTriSearcherForTest<CommentsListDto>, Comments, CommentsListDto> searchHelper
+                = createSearchHelper(commentsSearchService::searchByContent, keywords, fieldExtractors);
+        initializeSearchHelper(searchHelper);
+        callAndAssertSearch();
+    }
+
+    private SearchHelperForTest<ServiceTriSearcherForTest<CommentsListDto>, Comments, CommentsListDto>
+        createSearchHelper(ServiceTriSearcherForTest<CommentsListDto> searcher,
+                           String keywords, Function<Comments, String>... fieldExtractors) {
+        EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
+        return SearchHelperForTest.<ServiceTriSearcherForTest<CommentsListDto>, Comments, CommentsListDto>builder()
+                .searcher(searcher).keywords(keywords)
+                .totalContents(commentsRepository.findAll())
+                .fieldExtractors(fieldExtractors)
+                .page(1).limit(3)
                 .entityConverter(entityConverter).build();
     }
 }

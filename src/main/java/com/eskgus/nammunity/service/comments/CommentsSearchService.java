@@ -45,7 +45,8 @@ public class CommentsSearchService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentsListDto> searchByContent(String keywords) {
-        return commentsRepository.searchByContent(keywords);
+    public Page<CommentsListDto> searchByContent(String keywords, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return commentsRepository.searchByContent(keywords, pageable);
     }
 }
