@@ -31,12 +31,12 @@
                     </div>
                     <table>
                         <tbody>
-                        {{^posts}}
+                        {{^posts.content}}
                             <tr>
                                 <td class="no-content">검색된 게시글이 없어요.</td>
                             </tr>
-                        {{/posts}}
-                        {{#posts}}
+                        {{/posts.content}}
+                        {{#posts.content}}
                             <tr>
                                 <td>
                                     <div class="tit">
@@ -46,7 +46,7 @@
                                     <span class="date">{{author}} | {{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
                                 </td>
                             </tr>
-                        {{/posts}}
+                        {{/posts.content}}
                         </tbody>
                     </table>
                 </div>

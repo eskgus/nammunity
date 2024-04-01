@@ -1,6 +1,7 @@
-package com.eskgus.nammunity.helper.repository;
+package com.eskgus.nammunity.helper.repository.finder;
 
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.helper.repository.QuadFunctionForTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

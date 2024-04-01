@@ -12,7 +12,7 @@ import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.enums.ContentType;
-import com.eskgus.nammunity.helper.repository.*;
+import com.eskgus.nammunity.helper.repository.finder.*;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
@@ -22,7 +22,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 @Getter
-public class FindHelperForTest<T, U, V, W> {  // T: Page<listDto>, U: entity, V: listDto, W: finder.apply() 호출 시 사용되는 entity
+public class FindHelperForTest<T, U, V, W> {  // T: finder<listDto>, U: entity, V: listDto, W: finder.apply() 호출 시 사용되는 entity
     private T finder;
     private W contents;
     private ContentType contentType;

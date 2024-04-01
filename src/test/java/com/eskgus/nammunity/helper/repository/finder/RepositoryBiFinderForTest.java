@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.helper.repository;
+package com.eskgus.nammunity.helper.repository.finder;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

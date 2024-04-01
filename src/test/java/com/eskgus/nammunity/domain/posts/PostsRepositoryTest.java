@@ -4,8 +4,9 @@ import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.helper.FindHelperForTest;
 import com.eskgus.nammunity.helper.SearchHelperForTest;
-import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
-import com.eskgus.nammunity.helper.repository.RepositoryFinderForTest;
+import com.eskgus.nammunity.helper.repository.finder.RepositoryBiFinderForTest;
+import com.eskgus.nammunity.helper.repository.finder.RepositoryFinderForTest;
+import com.eskgus.nammunity.helper.repository.searcher.RepositoryBiSearcherForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
@@ -17,13 +18,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.*;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
+import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
 import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
@@ -121,10 +123,10 @@ public class PostsRepositoryTest {
         savePosts();
 
         // 1. 검색 제외 단어 x
-        callAndAssertSearchPostsByFields("흥 100 Let", postsRepository::searchByTitle, Posts::getTitle);
+        callAndAssertSearchPostsByFields(postsRepository::searchByTitle, "흥 100 Let", Posts::getTitle);
 
         // 2. 검색 제외 단어 o
-        callAndAssertSearchPostsByFields("흥 100 Let -봉,마리", postsRepository::searchByTitle, Posts::getTitle);
+        callAndAssertSearchPostsByFields(postsRepository::searchByTitle, "흥 100 Let -봉,마리", Posts::getTitle);
     }
 
     private void savePosts() {
@@ -138,21 +140,24 @@ public class PostsRepositoryTest {
         assertThat(postsRepository.count()).isEqualTo((long) Math.pow(strings.length, 2) * users.length);
     }
 
-    private void callAndAssertSearchPostsByFields(String keywords,
-                                                  Function<String, List<PostsListDto>> searcher,
-                                                  Function<Posts, String>... fieldExtractors) {
-        SearchHelperForTest<PostsListDto, Posts> searchHelper = createSearchHelper(keywords, searcher, fieldExtractors);
-        searchHelper.callAndAssertSearchByField();
+    private void callAndAssertSearchPostsByFields(RepositoryBiSearcherForTest<PostsListDto> searcher,
+                                                  String keywords, Function<Posts, String>... fieldExtractors) {
+        SearchHelperForTest<RepositoryBiSearcherForTest<PostsListDto>, Posts, PostsListDto> searchHelper
+                = createSearchHelper(searcher, keywords, fieldExtractors);
+        initializeSearchHelper(searchHelper);
+        callAndAssertSearch();
     }
 
-
-    private SearchHelperForTest<PostsListDto, Posts> createSearchHelper(String keywords,
-                                                                        Function<String, List<PostsListDto>> searcher,
-                                                                        Function<Posts, String>... fieldExtractors) {
-        return SearchHelperForTest.<PostsListDto, Posts>builder()
-                .keywords(keywords).searcher(searcher)
-                .totalContents(postsRepository.findAll(Sort.by(Sort.Order.desc("id"))))
-                .fieldExtractors(fieldExtractors).build();
+    private SearchHelperForTest<RepositoryBiSearcherForTest<PostsListDto>, Posts, PostsListDto>
+        createSearchHelper(RepositoryBiSearcherForTest<PostsListDto> searcher,
+                           String keywords, Function<Posts, String>... fieldExtractors) {
+        EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
+        return SearchHelperForTest.<RepositoryBiSearcherForTest<PostsListDto>, Posts, PostsListDto>builder()
+                .searcher(searcher).keywords(keywords)
+                .totalContents(postsRepository.findAll())
+                .fieldExtractors(fieldExtractors)
+                .page(1).limit(3)
+                .entityConverter(entityConverter).build();
     }
 
     @Test
@@ -160,10 +165,10 @@ public class PostsRepositoryTest {
         savePosts();
 
         // 1. 검색 제외 단어 x
-        callAndAssertSearchPostsByFields("흥 100 Let", postsRepository::searchByContent, Posts::getContent);
+        callAndAssertSearchPostsByFields(postsRepository::searchByContent, "흥 100 Let", Posts::getContent);
 
         // 2. 검색 제외 단어 o
-        callAndAssertSearchPostsByFields("흥 100 Let -봉,마리", postsRepository::searchByContent, Posts::getContent);
+        callAndAssertSearchPostsByFields( postsRepository::searchByContent, "흥 100 Let -봉,마리", Posts::getContent);
     }
 
     @Test
@@ -171,11 +176,11 @@ public class PostsRepositoryTest {
         savePosts();
 
         // 1. 검색 제외 단어 x
-        callAndAssertSearchPostsByFields("흥 100 Let", postsRepository::searchByTitleAndContent,
+        callAndAssertSearchPostsByFields(postsRepository::searchByTitleAndContent, "흥 100 Let",
                 Posts::getTitle, Posts::getContent);
 
         // 2. 검색 제외 단어 o
-        callAndAssertSearchPostsByFields("흥 100 Let -봉,마리", postsRepository::searchByTitleAndContent,
+        callAndAssertSearchPostsByFields(postsRepository::searchByTitleAndContent, "흥 100 Let -봉,마리",
                 Posts::getTitle, Posts::getContent);
     }
 

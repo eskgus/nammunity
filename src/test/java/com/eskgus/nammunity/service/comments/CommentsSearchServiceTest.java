@@ -10,7 +10,7 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.helper.repository.ServiceTriFinderForTest;
+import com.eskgus.nammunity.helper.repository.finder.ServiceTriFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import org.junit.jupiter.api.AfterEach;

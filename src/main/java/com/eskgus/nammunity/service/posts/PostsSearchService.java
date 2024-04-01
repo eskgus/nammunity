@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.posts;
 
+import com.eskgus.nammunity.domain.enums.SearchType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
@@ -11,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.function.BiFunction;
 
 @RequiredArgsConstructor
 @Service
@@ -42,17 +43,21 @@ public class PostsSearchService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostsListDto> searchByTitle(String keywords) {
-        return postsRepository.searchByTitle(keywords);
+    public Page<PostsListDto> search(String keywords, String searchBy, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        SearchType searchType = SearchType.convertSearchBy(searchBy);
+        BiFunction<String, Pageable, Page<PostsListDto>> searcher = getSearcherBySearchType(searchType);
+
+        return searcher.apply(keywords, pageable);
     }
 
-    @Transactional(readOnly = true)
-    public List<PostsListDto> searchByContent(String keywords) {
-        return postsRepository.searchByContent(keywords);
-    }
-
-    @Transactional(readOnly = true)
-    public List<PostsListDto> searchByTitleAndContent(String keywords) {
-        return postsRepository.searchByTitleAndContent(keywords);
+    private BiFunction<String, Pageable, Page<PostsListDto>> getSearcherBySearchType(SearchType searchType) {
+        if (searchType.equals(SearchType.TITLE)) {
+            return postsRepository::searchByTitle;
+        } else if (searchType.equals(SearchType.CONTENT)) {
+            return postsRepository::searchByContent;
+        }
+        return postsRepository::searchByTitleAndContent;
     }
 }

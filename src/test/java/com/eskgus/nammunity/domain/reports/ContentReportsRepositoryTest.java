@@ -6,7 +6,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
+import com.eskgus.nammunity.helper.repository.finder.RepositoryBiFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;

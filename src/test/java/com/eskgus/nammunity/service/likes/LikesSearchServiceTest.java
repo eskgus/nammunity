@@ -7,7 +7,7 @@ import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.FindHelperForTest;
 import com.eskgus.nammunity.domain.enums.ContentType;
-import com.eskgus.nammunity.helper.repository.ServiceQuadFinderForTest;
+import com.eskgus.nammunity.helper.repository.finder.ServiceQuadFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.likes.LikesRepository;

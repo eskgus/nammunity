@@ -11,8 +11,8 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.helper.repository.RepositoryBiFinderForTest;
-import com.eskgus.nammunity.helper.repository.RepositoryFinderForTest;
+import com.eskgus.nammunity.helper.repository.finder.RepositoryBiFinderForTest;
+import com.eskgus.nammunity.helper.repository.finder.RepositoryFinderForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import org.junit.jupiter.api.AfterEach;
@@ -53,8 +53,6 @@ public class ContentReportSummaryRepositoryTest {
     private User[] users;
     private Posts post;
     private Comments comment;
-
-    private Long userReportSummaryId;
 
     @BeforeEach
     public void setUp() {
@@ -106,7 +104,7 @@ public class ContentReportSummaryRepositoryTest {
     private void saveReportSummaries() {
         testDB.savePostReportSummary(post, users[1]);
         testDB.saveCommentReportSummary(comment, users[1]);
-        this.userReportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
+        Long userReportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
         assertThat(contentReportSummaryRepository.count()).isEqualTo(userReportSummaryId);
     }
 

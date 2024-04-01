@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.helper.repository;
+package com.eskgus.nammunity.helper.repository.finder;
 
 import com.eskgus.nammunity.domain.user.User;
 import org.assertj.core.util.TriFunction;
