@@ -8,9 +8,14 @@ import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.impl.JPAQuery;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 
 import java.util.List;
+
+import static com.eskgus.nammunity.util.PaginationRepoUtil.addPageToQuery;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPage;
 
 public class UserRepositoryImpl extends QuerydslRepositorySupport implements CustomUserRepository {
     @Autowired
@@ -23,17 +28,14 @@ public class UserRepositoryImpl extends QuerydslRepositorySupport implements Cus
     }
 
     @Override
-    public List<UsersListDto> searchByNickname(String keywords) {
-        return searchUsersByFields(keywords, qUser.nickname);
+    public Page<UsersListDto> searchByNickname(String keywords, Pageable pageable) {
+        return searchUsersByFields(pageable, keywords, qUser.nickname);
     }
 
-    private List<UsersListDto> searchUsersByFields(String keywords, StringPath... fields) {
+    private Page<UsersListDto> searchUsersByFields(Pageable pageable, String keywords, StringPath... fields) {
         EssentialQuery<UsersListDto, User> essentialQuery = createEssentialQueryForUsers();
-        SearchQueries<UsersListDto, User> searchQueries = SearchQueries.<UsersListDto, User>builder()
-                .essentialQuery(essentialQuery)
-                .keywords(keywords).fields(fields).build();
-        JPAQuery<UsersListDto> query = searchQueries.createQueryForSearchContents();
-        return query.fetch();
+        JPAQuery<UsersListDto> query = createQueryForSearchUsers(pageable, essentialQuery, keywords, fields);
+        return createUsersPage(query, essentialQuery, pageable);
     }
 
     private EssentialQuery<UsersListDto, User> createEssentialQueryForUsers() {
@@ -42,5 +44,22 @@ public class UserRepositoryImpl extends QuerydslRepositorySupport implements Cus
         return EssentialQuery.<UsersListDto, User>builder()
                 .entityManager(entityManager).queryType(qUser)
                 .classOfListDto(UsersListDto.class).constructorParams(constructorParams).build();
+    }
+
+    private JPAQuery<UsersListDto> createQueryForSearchUsers(Pageable pageable,
+                                                             EssentialQuery<UsersListDto, User> essentialQuery,
+                                                             String keywords, StringPath... fields) {
+        SearchQueries<UsersListDto, User> searchQueries = SearchQueries.<UsersListDto, User>builder()
+                .essentialQuery(essentialQuery).keywords(keywords).fields(fields).build();
+        JPAQuery<UsersListDto> query = searchQueries.createQueryForSearchContents();
+        return addPageToQuery(query, pageable);
+    }
+
+    private Page<UsersListDto> createUsersPage(JPAQuery<UsersListDto> query,
+                                               EssentialQuery<UsersListDto, User> essentialQuery,
+                                               Pageable pageable) {
+        List<UsersListDto> users = query.fetch();
+        JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
+        return createPage(users, pageable, totalQuery);
     }
 }

@@ -1,9 +1,9 @@
 package com.eskgus.nammunity.domain.user;
 
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface CustomUserRepository {
-    List<UsersListDto> searchByNickname(String keywords);
+    Page<UsersListDto> searchByNickname(String keywords, Pageable pageable);
 }

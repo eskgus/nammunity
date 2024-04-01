@@ -1,7 +1,11 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.converter.EntityConverterForTest;
+import com.eskgus.nammunity.converter.UserConverterForTest;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
+import com.eskgus.nammunity.helper.SearchHelperForTest;
+import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -10,10 +14,7 @@ import com.eskgus.nammunity.domain.user.BannedUsersRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.web.dto.user.ActivityHistoryDto;
-import com.eskgus.nammunity.web.dto.user.BannedHistoryDto;
-import com.eskgus.nammunity.web.dto.user.CommentsHistoryDto;
-import com.eskgus.nammunity.web.dto.user.PostsHistoryDto;
+import com.eskgus.nammunity.web.dto.user.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,8 @@ import java.util.function.Function;
 
 import static com.eskgus.nammunity.util.PaginationUtilForTest.assertActualPageEqualsExpectedPage;
 import static com.eskgus.nammunity.util.PaginationUtilForTest.initializePaginationUtil;
+import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
+import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -197,5 +200,44 @@ public class UserServiceTest {
         }
         initializePaginationUtil(actualPage, expectedPage);
         assertActualPageEqualsExpectedPage();
+    }
+
+    @Test
+    public void searchByNickname() {
+        signUpUsers();
+
+        // 1. 검색 제외 단어 x
+        callAndAssertSearchUsers("nick 네임", User::getNickname);
+
+        // 2. 검색 제외 단어 o
+        callAndAssertSearchUsers("nick 네임 -name", User::getNickname);
+    }
+
+    private void signUpUsers() {
+        Long userId = testDB.signUp(users[1].getId() + 1, Role.USER);
+        Long numberOfUsers = userId + 3;
+        for (long i = userId; i < numberOfUsers; i++) {
+            testDB.signUp("닉네임" + i, i + 1, Role.USER);
+        }
+        assertThat(userRepository.count()).isEqualTo(numberOfUsers);
+    }
+
+    private void callAndAssertSearchUsers(String keywords, Function<User, String>... fieldExtractors) {
+        SearchHelperForTest<ServiceTriSearcherForTest<UsersListDto>, User, UsersListDto> searchHelper
+                = createSearchHelper(userService::searchByNickname, keywords, fieldExtractors);
+        initializeSearchHelper(searchHelper);
+        callAndAssertSearch();
+    }
+
+    private SearchHelperForTest<ServiceTriSearcherForTest<UsersListDto>, User, UsersListDto>
+        createSearchHelper(ServiceTriSearcherForTest<UsersListDto> searcher,
+                           String keywords, Function<User, String>... fieldExtractors) {
+        EntityConverterForTest<User, UsersListDto> entityConverter = new UserConverterForTest();
+        return SearchHelperForTest.<ServiceTriSearcherForTest<UsersListDto>, User, UsersListDto>builder()
+                .searcher(searcher).keywords(keywords)
+                .totalContents(userRepository.findAll())
+                .fieldExtractors(fieldExtractors)
+                .page(1).limit(2)
+                .entityConverter(entityConverter).build();
     }
 }

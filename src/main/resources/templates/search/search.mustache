@@ -83,18 +83,18 @@
                     </div>
                     <table>
                         <tbody>
-                        {{^users}}
+                        {{^users.content}}
                             <tr>
                                 <td class="no-content">검색된 사용자가 없어요.</td>
                             </tr>
-                        {{/users}}
-                        {{#users}}
+                        {{/users.content}}
+                        {{#users.content}}
                             <tr>
                                 <td>
                                     <a href="/users/activity-history/posts/{{id}}">{{nickname}}</a>
                                 </td>
                             </tr>
-                        {{/users}}
+                        {{/users.content}}
                         </tbody>
                     </table>
                 </div>

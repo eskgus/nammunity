@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -46,11 +45,12 @@ public class SearchIndexController {
         }
         attr.put("comments", comments);
 
-        List<UsersListDto> users = userService.searchByNickname(keywords);
-        if (users.size() > 5) {
+        Page<UsersListDto> users = userService.searchByNickname(keywords, page, size);
+        if (users.getTotalElements() > size) {
             attr.put("usersMore", true);
         }
-        attr.put("users", users.stream().limit(5).toList());
+        attr.put("users", users);
+
         attr.put("keywords", keywords);
 
         model.addAllAttributes(attr);
@@ -97,10 +97,17 @@ public class SearchIndexController {
     }
 
     @GetMapping("/users")
-    public String searchUsers(@RequestParam(name = "keywords") String keywords, Model model) {
+    public String searchUsers(@RequestParam(name = "keywords") String keywords,
+                              @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
         Map<String, Object> attr = new HashMap<>();
-        List<UsersListDto> users = userService.searchByNickname(keywords);
+
+        Page<UsersListDto> users = userService.searchByNickname(keywords, page, 30);
         attr.put("users", users);
+
+        PaginationDto<UsersListDto> paginationDto = PaginationDto.<UsersListDto>builder()
+                .page(users).display(10).build();
+        attr.put("pages", paginationDto);
+
         attr.put("keywords", keywords);
 
         model.addAllAttributes(attr);
