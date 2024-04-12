@@ -2,41 +2,42 @@ package com.eskgus.nammunity.web.dto.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Builder;
 import lombok.Getter;
+
+import static com.eskgus.nammunity.util.DateTimeUtil.formatDateTime;
+import static com.eskgus.nammunity.util.DateTimeUtil.formatModifiedDate;
 
 @Getter
 public class PostsReadDto {
     private Long id;
-    private String title;
-    private String content;
     private String author;
     private Long authorId;
+    private String title;
+    private String content;
     private String createdDate;
     private String modifiedDate;
     private int view;
-    private int cSum;   // 댓글 개수
-    private int lSum;   // 좋아요 개수
-    private Boolean lAuth;   // 좋아요 누른 사용자 확인
+    private boolean doesUserWritePost;
+    private int likes;
+    private boolean doesUserLikePost;
 
     @Builder
-    public PostsReadDto(Posts posts, User user) {
-        this.id = posts.getId();
-        this.title = posts.getTitle();
-        this.content = posts.getContent();
-        this.author = posts.getUser().getNickname();
-        this.authorId = posts.getUser().getId();
-        this.createdDate = DateTimeUtil.formatDateTime(posts.getCreatedDate());
-        this.modifiedDate = DateTimeUtil.formatModifiedDate(posts.getCreatedDate(), posts.getModifiedDate());
-        this.view = posts.getView();
-        this.cSum = posts.getComments().size();
-        this.lSum = posts.getLikes().size();
+    public PostsReadDto(Posts post, boolean doesUserWritePost, boolean doesUserLikePost) {
+        this.id = post.getId();
+        generateAuthor(post.getUser());
+        this.title = post.getTitle();
+        this.content = post.getContent();
+        this.createdDate = formatDateTime(post.getCreatedDate());
+        this.modifiedDate = formatModifiedDate(post.getCreatedDate(), post.getModifiedDate());
+        this.view = post.getView();
+        this.doesUserWritePost = doesUserWritePost;
+        this.likes = post.getLikes().size();
+        this.doesUserLikePost = doesUserLikePost;
+    }
 
-        posts.getLikes().forEach(like -> {
-            if (like.getUser().equals(user)) {
-                this.lAuth = true;
-            }
-        });
+    private void generateAuthor(User user) {
+        this.author = user.getNickname();
+        this.authorId = user.getId();
     }
 }

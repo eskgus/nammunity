@@ -1,0 +1,74 @@
+{{#commentsPage}}
+    <div class="sum-area">
+        <span class="sum">댓글 {{comments.totalElements}}개</span>
+    </div>
+    <div class="comments-list">
+        {{#comments.content}}
+            <div id="cmt-{{id}}">
+                <div class="comment">
+                                <span class="author dropdown" id="author" data-toggle="dropdown">{{author}}
+                                    <ul class="dropdown-menu">
+                                        <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first{{#admin}} last{{/admin}}{{^admin}}{{#doesUserWriteComment}} last{{/doesUserWriteComment}}{{/admin}}" name="btn-history">활동 내역</a></li>
+                                        {{^admin}}{{^doesUserWriteComment}}<li><a role="button" class="last" name="btn-report">신고</a></li>{{/doesUserWriteComment}}{{/admin}}
+                                    </ul>
+                                </span>
+                    <div class="btn-area">
+                        <button name="btn-cmts-like" type="button" class="img-btn">
+                            <img class="like_d {{#doesUserLikeComment}}like_s_d{{/doesUserLikeComment}}" alt="좋아요">
+                        </button>
+                        <span class="sum">{{likes}}</span>
+                        <ul class="hidden-btn">
+                            <li class="dropdown">
+                                <a class="btn dropdown-toggle" data-toggle="dropdown">∙∙∙</a>
+                                <ul class="dropdown-menu">
+                                    {{^admin}}
+                                        {{#doesUserWriteComment}}<li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>
+                                            <li><a role="button" class="last" name="btn-cmt-delete">삭제</a></li>{{/doesUserWriteComment}}
+                                        {{^doesUserWriteComment}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/doesUserWriteComment}}
+                                    {{/admin}}
+                                    {{#admin}}
+                                        {{#doesUserWriteComment}}<li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>{{/doesUserWriteComment}}
+                                        <li><a role="button" class="{{^doesUserWriteComment}}first {{/doesUserWriteComment}}last" name="btn-cmt-delete">삭제</a></li>
+                                    {{/admin}}
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <pre>{{content}}</pre>
+                    <span class="date">작성 {{createdDate}}{{#modifiedDate}} | 수정 {{modifiedDate}}{{/modifiedDate}}</span>
+                </div>
+            </div>
+        {{/comments.content}}
+    </div>
+    <div class="comments-creation">
+        {{#auth}}<span class="author">{{auth}}</span>{{/auth}}
+        <textarea class="cmt-content" id="cmt-content"
+                  placeholder={{#auth}}"댓글을 입력하세요."{{/auth}}
+        {{^auth}}"댓글을 입력하려면 로그인하세요." disabled{{/auth}}
+        rows="4"></textarea>
+        <div class="btn-area">
+            <button type="button" class="btn" id="btn-cmt-save">등록</button>
+        </div>
+    </div>
+    {{#pages}}
+        <div>
+            {{#hasPrevious}}
+                첫 페이지: <a role="button" name="page" style="cursor: pointer;">{{firstPage}}</a> | 이전 페이지: <a role="button" name="page" style="cursor: pointer;">{{previousPage}}</a> |
+            {{/hasPrevious}}
+            {{#displayPages}}
+                {{#isCurrentPage}}
+                    | 현재 페이지: {{page}}
+                {{/isCurrentPage}}
+                {{^isCurrentPage}}
+                    | <a role="button" name="page" style="cursor: pointer;">{{page}}</a>
+                {{/isCurrentPage}}
+            {{/displayPages}}
+            {{#hasNext}}
+                | | 다음 페이지: <a role="button" name="page" style="cursor: pointer;">{{nextPage}}</a> | 마지막 페이지: <a role="button" name="page" style="cursor: pointer;">{{lastPage}}</a>
+            {{/hasNext}}
+        </div>
+    {{/pages}}
+{{/commentsPage}}
+
+<script src="/js/app/comments.js"></script>
+<script src="/js/app/likes.js"></script>

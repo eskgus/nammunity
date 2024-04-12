@@ -26,6 +26,18 @@ var postsMain = {
                 window.location.href = this.href;
             });
         });
+
+        if (window.location.pathname.includes('/posts/read')) {
+            // 글 읽기 화면 로드 시 댓글 가져오기
+            $(document).ready(function() {
+                _this.readComments(1);
+
+                // 글 읽기 화면에서 댓글 페이지 선택 시 댓글 가져오기
+                $(document).on('click', '[name="page"]', function() {
+                    _this.readComments($(this).text());
+                });
+            });
+        }
     },
     savePosts: function() {
         var data = {
@@ -109,6 +121,15 @@ var postsMain = {
                 }
             });
         }
+    },
+    readComments: function(page) {
+        var id = $('#id').val();
+        $.ajax({
+            type: 'GET',
+            url: '/posts/read/' + id + '?page=' + page
+        }).done(function(response) {
+            $("#comments-area").html(response);
+        });
     }
 };
 

@@ -58,7 +58,7 @@ public class Posts extends BaseTimeEntity {
         this.content = content;
     }
 
-    public void countViews() {
+    public void countView() {
         this.view += 1;
     }
 }

@@ -3,16 +3,14 @@
 <div id="container">
     <div class="wrapper">
         <div class="read">
+            {{#postWithReasons}}
             <div class="posts-area">
             {{#post}}
                 <input type="hidden" id="id" value="{{id}}">
                 <div class="title-area">
                     <div class="top-area">
                         <span class="date">
-                            작성 {{createdDate}}
-                            {{#modifiedDate}}
-                                | 수정 {{modifiedDate}}
-                            {{/modifiedDate}}
+                            작성 {{createdDate}}{{#modifiedDate}} | 수정 {{modifiedDate}}{{/modifiedDate}}
                         </span>
                         <h1 class="title">
                             <span id="title">{{title}}</span>
@@ -21,10 +19,8 @@
                     <div class="btm-area">
                         <div class="author dropdown" id="author" data-toggle="dropdown">{{author}}
                             <ul class="dropdown-menu">
-                                <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first {{#admin}}last{{/admin}}{{^admin}}{{#pAuth}}last{{/pAuth}}{{/admin}}" name="btn-history">활동 내역</a></li>
-                                {{^admin}}{{^pAuth}}
-                                    <li><a role="button" class="last" name="btn-report">신고</a></li>
-                                {{/pAuth}}{{/admin}}
+                                <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first{{#admin}} last{{/admin}}{{^admin}}{{#doesUserWritePost}} last{{/doesUserWritePost}}{{/admin}}" name="btn-history">활동 내역</a></li>
+                                {{^admin}}{{^doesUserWritePost}}<li><a role="button" class="last" name="btn-report">신고</a></li>{{/doesUserWritePost}}{{/admin}}
                             </ul>
                         </div>
                         <div class="view">
@@ -42,84 +38,30 @@
                 <div class="btn-area">
                     <a role="button" class="btn" style="float: left;" href="/">목록</a>
                     <button id="btn-posts-like" type="button" class="img-btn">
-                        <img class="like_d {{#lAuth}}like_s_d{{/lAuth}}" alt="좋아요">
+                        <img class="like_d {{#doesUserLikePost}}like_s_d{{/doesUserLikePost}}" alt="좋아요">
                     </button>
-                    <span class="sum">{{lSum}}</span>
-                    {{/post}}
+                    <span class="sum">{{likes}}</span>
                     <ul class="hidden-btn">
                         <li class="dropdown">
                             <a class="btn dropdown-toggle" data-toggle="dropdown">∙∙∙</a>
                             <ul class="dropdown-menu">
                                 {{^admin}}
-                                    {{#pAuth}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
-                                    <li><a role="button" class="last" id="btn-delete">삭제</a></li>{{/pAuth}}
-                                    {{^pAuth}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/pAuth}}
+                                    {{#doesUserWritePost}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
+                                    <li><a role="button" class="last" id="btn-delete">삭제</a></li>{{/doesUserWritePost}}
+                                    {{^doesUserWritePost}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/doesUserWritePost}}
                                 {{/admin}}
                                 {{#admin}}
-                                    {{#pAuth}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>{{/pAuth}}
-                                    <li><a role="button" class="{{^pAuth}}first {{/pAuth}}last" id="btn-delete">삭제</a></li>
+                                    {{#doesUserWritePost}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>{{/doesUserWritePost}}
+                                    <li><a role="button" class="{{^doesUserWritePost}}first {{/doesUserWritePost}}last" id="btn-delete">삭제</a></li>
                                 {{/admin}}
                             </ul>
                         </li>
                     </ul>
                 </div>
+            {{/post}}
             </div>
-            <div class="comments-area">
-                <div class="sum-area">
-                {{#post}}
-                    <span class="sum">댓글 {{cSum}}개</span>
-                {{/post}}
-                </div>
-                <div class="comments-list">
-                {{#comments}}
-                    <div id="cmt-{{id}}">
-                        <div class="comment">
-                            <span class="author dropdown" id="author" data-toggle="dropdown">{{author}}
-                                <ul class="dropdown-menu">
-                                    <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first {{#admin}}last{{/admin}}{{^admin}}{{#pAuth}}last{{/pAuth}}{{/admin}}" name="btn-history">활동 내역</a></li>
-                                    {{^admin}}{{^cAuth}}
-                                        <li><a role="button" class="last" name="btn-report">신고</a></li>
-                                    {{/cAuth}}{{/admin}}
-                                </ul>
-                            </span>
-                            <div class="btn-area">
-                                <button name="btn-cmts-like" type="button" class="img-btn">
-                                    <img class="like_d {{#lAuth}}like_s_d{{/lAuth}}" alt="좋아요">
-                                </button>
-                                <span class="sum">{{lSum}}</span>
-                                <ul class="hidden-btn">
-                                    <li class="dropdown">
-                                        <a class="btn dropdown-toggle" data-toggle="dropdown">∙∙∙</a>
-                                        <ul class="dropdown-menu">
-                                            {{^admin}}
-                                                {{#cAuth}}<li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>
-                                                    <li><a role="button" class="last" name="btn-cmt-delete">삭제</a></li>{{/cAuth}}
-                                                {{^cAuth}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/cAuth}}
-                                            {{/admin}}
-                                            {{#admin}}
-                                                {{#cAuth}}<li><a role="button" class="first" name="btn-cmt-edit" href="#cmt-{{id}}">수정</a></li>{{/cAuth}}
-                                                <li><a role="button" class="{{^cAuth}}first {{/cAuth}}last" name="btn-cmt-delete">삭제</a></li>
-                                            {{/admin}}
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </div>
-                            <pre>{{content}}</pre>
-                            <span class="date">작성 {{createdDate}}{{#modifiedDate}} | 수정 {{modifiedDate}}{{/modifiedDate}}</span>
-                        </div>
-                    </div>
-                {{/comments}}
-                </div>
-                <div class="comments-creation">
-                    {{#auth}}<span class="author">{{auth}}</span>{{/auth}}
-                    <textarea class="cmt-content" id="cmt-content"
-                              placeholder={{#auth}}"댓글을 입력하세요."{{/auth}}
-                                            {{^auth}}"댓글을 입력하려면 로그인하세요." disabled{{/auth}}
-                              rows="4"></textarea>
-                    <div class="btn-area">
-                        <button type="button" class="btn" id="btn-cmt-save">등록</button>
-                    </div>
-                </div>
+            <div class="comments-area" id="comments-area">
+<!--                댓글 표시 -->
             </div>
             <div id="report-popup-container" class="report-popup-container">
                 <div id="report-popup" class="report-popup">
@@ -139,13 +81,13 @@
                     </div>
                 </div>
             </div>
+            {{/postWithReasons}}
         </div>
     </div>
 </div>
 
 {{>layout/footer}}
 <script type="module" src="/js/app/posts.js"></script>
-<script src="/js/app/comments.js"></script>
 <script src="/js/app/likes.js"></script>
 <script src="/js/app/reports.js"></script>
 </body>

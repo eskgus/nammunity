@@ -2,37 +2,44 @@ package com.eskgus.nammunity.web.dto.comments;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Getter;
+
+import static com.eskgus.nammunity.util.DateTimeUtil.formatDateTime;
+import static com.eskgus.nammunity.util.DateTimeUtil.formatModifiedDate;
 
 @Getter
 public class CommentsReadDto {
     private Long id;
+    private String author;
+    private Long authorId;
     private String content;
     private String createdDate;
     private String modifiedDate;
-    private String author;
-    private Long authorId;
-    private Boolean cAuth;   // 댓글 작성자 확인
-    private int lSum;   // 좋아요 개수
-    private Boolean lAuth;   // 좋아요 누른 사용자 확인
 
-    public CommentsReadDto(Comments comments, User user) {
-        this.id = comments.getId();
-        this.content = comments.getContent();
-        this.createdDate = DateTimeUtil.formatDateTime(comments.getCreatedDate());
-        this.modifiedDate = DateTimeUtil.formatModifiedDate(comments.getCreatedDate(), comments.getModifiedDate());
-        this.author = comments.getUser().getNickname();
-        this.authorId = comments.getUser().getId();
-        this.lSum = comments.getLikes().size();
-        comments.getLikes().forEach(like -> {
-            if (like.getUser().equals(user)) {
-                this.lAuth = true;
-            }
-        });
+    private boolean doesUserWriteComment;
 
-        if (comments.getUser().equals(user)) {
-            this.cAuth = true;
-        }
+    private Long likes;
+    private boolean doesUserLikeComment;
+
+    public CommentsReadDto(Comments comment, Long likes) {
+        this.id = comment.getId();
+        generateAuthor(comment.getUser());
+        this.content = comment.getContent();
+        this.createdDate = formatDateTime(comment.getCreatedDate());
+        this.modifiedDate = formatModifiedDate(comment.getCreatedDate(), comment.getModifiedDate());
+        this.likes = likes;
+    }
+
+    private void generateAuthor(User user) {
+        this.author = user.getNickname();
+        this.authorId = user.getId();
+    }
+
+    public void setDoesUserWriteComment(boolean doesUserWriteComment) {
+        this.doesUserWriteComment = doesUserWriteComment;
+    }
+
+    public void setDoesUserLikeComment(boolean doesUserLikeComment) {
+        this.doesUserLikeComment = doesUserLikeComment;
     }
 }
