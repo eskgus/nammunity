@@ -34,7 +34,7 @@ public class SearchUtilForTest {    // U: entity, T: listDto
                 .sorted(Comparator.comparing(entity ->
                         searchHelper.getEntityConverter().extractEntityId(entity))
                         .reversed())
-                .map(entity -> (V) searchHelper.getEntityConverter().generateListDto(entity))
+                .map(entity -> (V) searchHelper.getEntityConverter().generateDto(entity))
                 .toList();
 
         return createPage(dtos, pageable);

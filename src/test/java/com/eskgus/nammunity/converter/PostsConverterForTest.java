@@ -15,12 +15,12 @@ public class PostsConverterForTest implements EntityConverterForTest<Posts, Post
     }
 
     @Override
-    public Long extractListDtoId(PostsListDto listDto) {
-        return listDto.getId();
+    public Long extractDtoId(PostsListDto dto) {
+        return dto.getId();
     }
 
     @Override
-    public PostsListDto generateListDto(Posts entity) {
+    public PostsListDto generateDto(Posts entity) {
         return new PostsListDto(entity);
     }
 }

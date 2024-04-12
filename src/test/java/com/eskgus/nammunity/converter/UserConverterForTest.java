@@ -15,12 +15,12 @@ public class UserConverterForTest implements EntityConverterForTest<User, UsersL
     }
 
     @Override
-    public Long extractListDtoId(UsersListDto listDto) {
-        return listDto.getId();
+    public Long extractDtoId(UsersListDto dto) {
+        return dto.getId();
     }
 
     @Override
-    public UsersListDto generateListDto(User entity) {
+    public UsersListDto generateDto(User entity) {
         return new UsersListDto(entity);
     }
 }

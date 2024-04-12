@@ -38,11 +38,6 @@ public class PaginationUtilForTest {   // U: entity, V: listDto
         entityConverter = inputEntityConverter;
     }
 
-    public static <V> void initializePaginationUtil(Page<V> inputActualPage, Page<V> inputExpectedPage) {
-        actualPage = inputActualPage;
-        expectedPage = inputExpectedPage;
-    }
-
     public static void assertActualPageEqualsExpectedPage() {
         assertPage();
 
@@ -65,8 +60,8 @@ public class PaginationUtilForTest {   // U: entity, V: listDto
         for (int i = 0; i < actualContent.size(); i++) {
             V actualListDto = actualContent.get(i);
             V expectedListDto = expectedContent.get(i);
-            assertThat(entityConverter.extractListDtoId(actualListDto))
-                    .isEqualTo(entityConverter.extractListDtoId(expectedListDto));
+            assertThat(entityConverter.extractDtoId(actualListDto))
+                    .isEqualTo(entityConverter.extractDtoId(expectedListDto));
         }
     }
 }

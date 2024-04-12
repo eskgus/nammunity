@@ -99,7 +99,7 @@ public class UserServiceTest {
         this.pageable = createPageable(page);
 
         // 1. type = "posts"
-        callAndAssertFindActivityHistory(postType.getDetailInEng(),  page);
+        callAndAssertFindActivityHistory(postType.getDetailInEng(), page);
 
         // 2. type = "comments"
         callAndAssertFindActivityHistory(commentType.getDetailInEng(), page);
@@ -198,7 +198,7 @@ public class UserServiceTest {
             actualPage = (Page<V>) activityHistoryDto.getCommentsHistoryDto().getComments();
             expectedPage = (Page<V>) commentsRepository.findByUser(users[0], pageable);
         }
-        initializePaginationUtil(actualPage, expectedPage);
+        initializePaginationUtil(actualPage, expectedPage, null);
         assertActualPageEqualsExpectedPage();
     }
 

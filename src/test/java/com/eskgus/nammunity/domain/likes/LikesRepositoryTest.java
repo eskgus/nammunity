@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
 import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
@@ -55,6 +54,7 @@ public class LikesRepositoryTest {
 
     private User[] users;
     private Posts post1;
+    private Comments comment1;
     private Likes post1Like;
     private Likes comment1Like;
 
@@ -77,6 +77,8 @@ public class LikesRepositoryTest {
         Long comment1Id = testDB.saveComments(post1Id, user1);
         assertThat(commentsRepository.count()).isEqualTo(comment1Id);
 
+        this.comment1 = commentsRepository.findById(comment1Id).get();
+
         Long post1LikeId = testDB.savePostLikes(post1Id, user1);
         Long comment1LikeId = testDB.saveCommentLikes(comment1Id, user1);
         assertThat(likesRepository.count()).isEqualTo(comment1LikeId);
@@ -88,31 +90,6 @@ public class LikesRepositoryTest {
     @AfterEach
     public void cleanUp() {
         testDB.cleanUp();
-    }
-
-    @Test
-    public void countByUser() {
-        // 1. user2가 좋아요 x 후 호출
-        callAndAssertCountLikesByUser(users[1], likesRepository::countByUser, 0);
-
-        // 2. user1이 게시글 좋아요 + 댓글 좋아요 후 호출
-        callAndAssertCountLikesByUser(users[0], likesRepository::countByUser, comment1Like.getId());
-    }
-
-    private void callAndAssertCountLikesByUser(User user, Function<User, Long> counter, long expectedCount) {
-        long actualCount = counter.apply(user);
-        Assertions.assertThat(actualCount).isEqualTo(expectedCount);
-    }
-
-    @Test
-    public void countPostLikesByUser() {
-        callAndAssertCountLikesByUser(users[0], likesRepository::countPostLikesByUser, post1Like.getId());
-    }
-
-    @Test
-    public void countCommentLikesByUser() {
-        callAndAssertCountLikesByUser(users[0], likesRepository::countCommentLikesByUser,
-                comment1Like.getId() - post1Like.getId());
     }
 
     @Test
@@ -222,5 +199,35 @@ public class LikesRepositoryTest {
         Comments comment2 = saveComment();
 
         callAndAssertDeleteByField(testDB::saveCommentLikes, likesRepository::deleteByComments, comment2);
+    }
+
+    @Test
+    public void existsByPostsAndUser() {
+        // 1. user1이 post1 좋아요 후 호출
+        callAndAssertExistsByContentsAndUser(post1, users[0], true);
+
+        // 2. user2가 post1 좋아요 x 후 호출
+        callAndAssertExistsByContentsAndUser(post1, users[1], false);
+    }
+
+    private <T> void callAndAssertExistsByContentsAndUser(T content, User user, boolean expectedDoesUserLikeContent) {
+        boolean actualDoesUserLikeContent = callExistsByContentsAndUser(content, user);
+        assertThat(actualDoesUserLikeContent).isEqualTo(expectedDoesUserLikeContent);
+    }
+
+    private <T> boolean callExistsByContentsAndUser(T content, User user) {
+        if (content instanceof Posts) {
+            return likesRepository.existsByPostsAndUser((Posts) content, user);
+        }
+        return likesRepository.existsByCommentsAndUser((Comments) content, user);
+    }
+
+    @Test
+    public void existsByCommentsAndUser() {
+        // 1. user1이 comment1 좋아요 후 호출
+        callAndAssertExistsByContentsAndUser(comment1, users[0], true);
+
+        // 2. user2가 comment1 좋아요 x 후 호출
+        callAndAssertExistsByContentsAndUser(comment1, users[1], false);
     }
 }

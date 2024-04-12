@@ -19,12 +19,12 @@ public class ContentReportsConverterForTest implements EntityConverterForTest<Co
     }
 
     @Override
-    public Long extractListDtoId(ContentReportDetailListDto listDto) {
-        return listDto.getId();
+    public Long extractDtoId(ContentReportDetailListDto dto) {
+        return dto.getId();
     }
 
     @Override
-    public ContentReportDetailListDto generateListDto(ContentReports entity) {
+    public ContentReportDetailListDto generateDto(ContentReports entity) {
         return new ContentReportDetailListDto(entity);
     }
 

@@ -13,6 +13,4 @@ public interface CustomLikesRepository {
     Page<LikesListDto> findCommentLikesByUser(User user, Pageable pageable);
     void deleteByPosts(Posts post, User user);
     void deleteByComments(Comments comment, User user);
-    long countPostLikesByUser(User user);
-    long countCommentLikesByUser(User user);
 }

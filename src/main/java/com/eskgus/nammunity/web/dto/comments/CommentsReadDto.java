@@ -22,12 +22,20 @@ public class CommentsReadDto {
     private boolean doesUserLikeComment;
 
     public CommentsReadDto(Comments comment, Long likes) {
+        generateComment(comment);
+        this.likes = likes;
+    }
+
+    public CommentsReadDto(Comments comment) {
+        generateComment(comment);
+    }
+
+    private void generateComment(Comments comment) {
         this.id = comment.getId();
         generateAuthor(comment.getUser());
         this.content = comment.getContent();
         this.createdDate = formatDateTime(comment.getCreatedDate());
         this.modifiedDate = formatModifiedDate(comment.getCreatedDate(), comment.getModifiedDate());
-        this.likes = likes;
     }
 
     private void generateAuthor(User user) {

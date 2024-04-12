@@ -15,14 +15,18 @@ import com.eskgus.nammunity.helper.repository.finder.ServiceTriFinderForTest;
 import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
@@ -101,7 +105,8 @@ public class CommentsSearchServiceTest {
 
     private FindHelperForTest<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto, User>
         createTriFindHelper() {
-        EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
+        EntityConverterForTest<Comments, CommentsListDto> entityConverter
+                = new CommentsConverterForTest(CommentsListDto.class);
         return FindHelperForTest.<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto, User>builder()
                 .finder(commentsSearchService::findByUser)
                 .contents(users[0])
@@ -141,12 +146,55 @@ public class CommentsSearchServiceTest {
     private SearchHelperForTest<ServiceTriSearcherForTest<CommentsListDto>, Comments, CommentsListDto>
         createSearchHelper(ServiceTriSearcherForTest<CommentsListDto> searcher,
                            String keywords, Function<Comments, String>... fieldExtractors) {
-        EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
+        EntityConverterForTest<Comments, CommentsListDto> entityConverter
+                = new CommentsConverterForTest(CommentsListDto.class);
         return SearchHelperForTest.<ServiceTriSearcherForTest<CommentsListDto>, Comments, CommentsListDto>builder()
                 .searcher(searcher).keywords(keywords)
                 .totalContents(commentsRepository.findAll())
                 .fieldExtractors(fieldExtractors)
                 .page(1).limit(3)
                 .entityConverter(entityConverter).build();
+    }
+
+    @Test
+    public void findByPosts() {
+        saveComments();
+
+        callAndAssertFindByPosts();
+    }
+
+    private void callAndAssertFindByPosts() {
+        Page<CommentsReadDto> comments = commentsSearchService.findByPosts(post, users[0], 1);
+        assertBooleanValues(comments.getContent());
+    }
+
+    private void assertBooleanValues(List<CommentsReadDto> comments) {
+        List<Boolean> expectedDoesUserWriteComment = getExpectedDoesUserWriteComment();
+        List<Boolean> expectedDoesUserLikeComment = getExpectedDoesUserLikeComment();
+
+        for (int i = 0; i < comments.size(); i++) {
+            CommentsReadDto comment = comments.get(i);
+            assertThat(comment.isDoesUserWriteComment()).isEqualTo(expectedDoesUserWriteComment.get(i));
+            assertThat(comment.isDoesUserLikeComment()).isEqualTo(expectedDoesUserLikeComment.get(i));
+        }
+    }
+
+    private List<Boolean> getExpectedDoesUserWriteComment() {
+        List<Boolean> expectedDoesUserWriteComment = new ArrayList<>();
+        for (long i = commentsRepository.count(); i >= 1; i--) {
+            Comments comment = commentsRepository.findById(i).get();
+            Long authorId = comment.getUser().getId();
+            Long userId = users[0].getId();
+            expectedDoesUserWriteComment.add(authorId.equals(userId));
+        }
+        return expectedDoesUserWriteComment;
+    }
+
+    private List<Boolean> getExpectedDoesUserLikeComment() {
+        List<Boolean> expectedDoesUserLikeComment = new ArrayList<>();
+        for (long i = 0; i < commentsRepository.count(); i++) {
+            expectedDoesUserLikeComment.add(false); // 댓글 좋아요 안 함
+        }
+        return expectedDoesUserLikeComment;
     }
 }

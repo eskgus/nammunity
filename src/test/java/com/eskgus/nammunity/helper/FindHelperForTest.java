@@ -44,10 +44,10 @@ public class FindHelperForTest<T, U, V, W> {  // T: finder<listDto>, U: entity, 
         this.finder = finder;
         this.contents = contents;
         this.contentType = contentType;
+        this.entityConverter = entityConverter;
         this.entityStream = initializeEntityStream(entityStream);
         this.page = page;
         this.limit = limit;
-        this.entityConverter = entityConverter;
         this.likesFinder = likesFinder;
     }
 
@@ -60,24 +60,20 @@ public class FindHelperForTest<T, U, V, W> {  // T: finder<listDto>, U: entity, 
 
     private Stream<U> addFilterToStreamByContents(Stream<U> entityStream) {
         if (contents instanceof User) {
-            if (contentType != null) {
-                entityStream = addLikesFilterToStream(entityStream);
-            }
-            return entityStream.filter(entity -> entityConverter.extractUserId(entity).equals(((User) contents).getId()));
-        } else if (contents instanceof Posts) {
-            return entityStream.filter(entity ->
-                    ((ContentReportsConverterForTest) entityConverter).extractPostId((ContentReports) entity)
-                            .equals(((Posts) contents).getId()));
-        } else if (contents instanceof Comments) {
-            return entityStream.filter(entity ->
-                    ((ContentReportsConverterForTest) entityConverter).extractCommentId((ContentReports) entity)
-                            .equals(((Comments) contents).getId()));
-        } else if (contents instanceof Types) {
-            return entityStream.filter(entity ->
-                    ((ContentReportSummaryConverterForTest) entityConverter).extractTypeId((ContentReportSummary) entity)
-                            .equals(((Types) contents).getId()));
+            return addUserFilterToStream(entityStream);
+        } else if (entityConverter instanceof ContentReportsConverterForTest) {
+            return addContentReportFilterToStream(entityStream);
+        } else if (entityConverter instanceof ContentReportSummaryConverterForTest) {
+            return addContentReportSummaryFilterToStream(entityStream);
         }
         return entityStream;
+    }
+
+    private Stream<U> addUserFilterToStream(Stream<U> entityStream) {
+        if (contentType != null) {
+            entityStream = addLikesFilterToStream(entityStream);
+        }
+        return entityStream.filter(entity -> entityConverter.extractUserId(entity).equals(((User) contents).getId()));
     }
 
     private Stream<U> addLikesFilterToStream(Stream<U> entityStream) {
@@ -85,6 +81,28 @@ public class FindHelperForTest<T, U, V, W> {  // T: finder<listDto>, U: entity, 
             return entityStream.filter(entity -> ((LikesConverterForTest) entityConverter).getPosts((Likes) entity) != null);
         } else if (contentType.equals(ContentType.COMMENTS)) {
             return entityStream.filter(entity -> ((LikesConverterForTest) entityConverter).getComments((Likes) entity) != null);
+        }
+        return entityStream;
+    }
+
+    private Stream<U> addContentReportFilterToStream(Stream<U> entityStream) {
+        if (contents instanceof Posts) {
+            return entityStream.filter(entity ->
+                    ((ContentReportsConverterForTest) entityConverter).extractPostId((ContentReports) entity)
+                            .equals(((Posts) contents).getId()));
+        } else if (contents instanceof Comments) {
+            return entityStream.filter(entity ->
+                    ((ContentReportsConverterForTest) entityConverter).extractCommentId((ContentReports) entity)
+                            .equals(((Comments) contents).getId()));
+        }
+        return entityStream;
+    }
+
+    private Stream<U> addContentReportSummaryFilterToStream(Stream<U> entityStream) {
+        if (contents instanceof Types) {
+            return entityStream.filter(entity ->
+                    ((ContentReportSummaryConverterForTest) entityConverter).extractTypeId((ContentReportSummary) entity)
+                            .equals(((Types) contents).getId()));
         }
         return entityStream;
     }

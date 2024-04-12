@@ -14,6 +14,7 @@ import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.reports.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -217,14 +218,15 @@ public class ReportsServiceTest {
         if (contentType.equals(ContentType.POSTS)) {
             assertContentListDtoId(new PostsConverterForTest(), detailDto.getPostsListDto(), post);
         } else if (contentType.equals(ContentType.COMMENTS)) {
-            assertContentListDtoId(new CommentsConverterForTest(), detailDto.getCommentsListDto(), comment);
+            assertContentListDtoId(new CommentsConverterForTest(CommentsListDto.class), detailDto.getCommentsListDto(),
+                    comment);
         } else {
             assertContentListDtoId(new UserConverterForTest(), detailDto.getUsersListDto(), user1);
         }
     }
 
     private <T, U> void assertContentListDtoId(EntityConverterForTest entityConverter, T listDto, U entity) {
-        Long actualId = entityConverter.extractListDtoId(listDto);
+        Long actualId = entityConverter.extractDtoId(listDto);
         Long expectedId = entityConverter.extractEntityId(entity);
         assertThat(actualId).isEqualTo(expectedId);
     }

@@ -13,6 +13,7 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -128,7 +129,8 @@ public class CommentsRepositoryTest {
     private SearchHelperForTest<RepositoryBiSearcherForTest<CommentsListDto>, Comments, CommentsListDto>
         createSearchHelper(RepositoryBiSearcherForTest<CommentsListDto> searcher,
                            String keywords, Function<Comments, String>... fieldExtractors) {
-        EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
+        EntityConverterForTest<Comments, CommentsListDto> entityConverter
+                = new CommentsConverterForTest(CommentsListDto.class);
         return SearchHelperForTest.<RepositoryBiSearcherForTest<CommentsListDto>, Comments, CommentsListDto>builder()
                 .searcher(searcher).keywords(keywords)
                 .totalContents(commentsRepository.findAll())
@@ -142,13 +144,14 @@ public class CommentsRepositoryTest {
         saveComments();
 
         FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto, User>, Comments, CommentsListDto, User> findHelper
-                = createBiFindHelper();
+                = createBiFindHelperWithUser();
         callAndAssertFindComments(findHelper);
     }
 
     private FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto, User>, Comments, CommentsListDto, User>
-        createBiFindHelper() {
-        EntityConverterForTest<Comments, CommentsListDto> entityConverter = new CommentsConverterForTest();
+        createBiFindHelperWithUser() {
+        EntityConverterForTest<Comments, CommentsListDto> entityConverter
+                = new CommentsConverterForTest(CommentsListDto.class);
         return FindHelperForTest.<RepositoryBiFinderForTest<CommentsListDto, User>, Comments, CommentsListDto, User>builder()
                 .finder(commentsRepository::findByUser)
                 .contents(users[0])
@@ -157,9 +160,30 @@ public class CommentsRepositoryTest {
                 .entityConverter(entityConverter).build();
     }
 
-    private void callAndAssertFindComments(FindHelperForTest<RepositoryBiFinderForTest<CommentsListDto, User>,
-                                                                Comments, CommentsListDto, User> findHelper) {
+    private <V, W> void callAndAssertFindComments(FindHelperForTest<RepositoryBiFinderForTest<V, W>, Comments, V, W>
+                                                          findHelper) {
         initializeFindHelper(findHelper);
         callAndAssertFind();
+    }
+
+    @Test
+    public void findByPosts() {
+        saveComments();
+
+        FindHelperForTest<RepositoryBiFinderForTest<CommentsReadDto, Posts>, Comments, CommentsReadDto, Posts>
+                findHelper = createBiFindHelperWithPosts();
+        callAndAssertFindComments(findHelper);
+    }
+
+    private FindHelperForTest<RepositoryBiFinderForTest<CommentsReadDto, Posts>, Comments, CommentsReadDto, Posts>
+        createBiFindHelperWithPosts() {
+        EntityConverterForTest<Comments, CommentsReadDto> entityConverter
+                = new CommentsConverterForTest(CommentsReadDto.class);
+        return FindHelperForTest.<RepositoryBiFinderForTest<CommentsReadDto, Posts>, Comments, CommentsReadDto, Posts>builder()
+                .finder(commentsRepository::findByPosts)
+                .contents(post)
+                .entityStream(commentsRepository.findAll().stream())
+                .page(1).limit(4)
+                .entityConverter(entityConverter).build();
     }
 }

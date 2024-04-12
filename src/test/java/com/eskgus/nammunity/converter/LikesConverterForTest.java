@@ -17,12 +17,12 @@ public class LikesConverterForTest implements EntityConverterForTest<Likes, Like
     }
 
     @Override
-    public Long extractListDtoId(LikesListDto listDto) {
-        return listDto.getLikesId();
+    public Long extractDtoId(LikesListDto dto) {
+        return dto.getLikesId();
     }
 
     @Override
-    public LikesListDto generateListDto(Likes entity) {
+    public LikesListDto generateDto(Likes entity) {
         return new LikesListDto(entity);
     }
 

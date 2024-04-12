@@ -29,7 +29,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
 import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
@@ -166,19 +165,32 @@ public class LikesSearchServiceTest {
     }
 
     @Test
-    public void countLikesByUser() {
-        // 1. countByUser()
-        callAndAssertCountLikesByUser(likesRepository::countByUser, commentLikeId);
+    public void existsByPostsAndUser() {
+        // 1. user1이 post1 좋아요 후 호출
+        callAndAssertExistsByContentsAndUser(post, users[0], true);
 
-        // 2.countPostLikesByUser()
-        callAndAssertCountLikesByUser(likesRepository::countPostLikesByUser, postLikeId);
-
-        // 3. countCommentLikesByUser()
-        callAndAssertCountLikesByUser(likesRepository::countCommentLikesByUser, commentLikeId - postLikeId);
+        // 2. user2가 post1 좋아요 x 후 호출
+        callAndAssertExistsByContentsAndUser(post, users[1], false);
     }
 
-    private void callAndAssertCountLikesByUser(Function<User, Long> counter, Long expectedCount) {
-        Long actualCount = counter.apply(users[0]);
-        assertThat(actualCount).isEqualTo(expectedCount);
+    private <T> void callAndAssertExistsByContentsAndUser(T content, User user, boolean expectedDoesUserLikeContent) {
+        boolean actualDoesUserLikeContent = callExistsByContentsAndUser(content, user);
+        assertThat(actualDoesUserLikeContent).isEqualTo(expectedDoesUserLikeContent);
+    }
+
+    private <T> boolean callExistsByContentsAndUser(T content, User user) {
+        if (content instanceof Posts) {
+            return likesSearchService.existsByPostsAndUser((Posts) content, user);
+        }
+        return likesSearchService.existsByCommentsAndUser((Comments) content, user);
+    }
+
+    @Test
+    public void existsByCommentsAndUser() {
+        // 1. user1이 comment1 좋아요 후 호출
+        callAndAssertExistsByContentsAndUser(comment, users[0], true);
+
+        // 2. user2가 comment1 좋아요 x 후 호출
+        callAndAssertExistsByContentsAndUser(comment, users[1], false);
     }
 }

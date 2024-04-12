@@ -10,7 +10,6 @@ import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.EntityPathBase;
 import com.querydsl.jpa.impl.JPADeleteClause;
 import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -97,20 +96,5 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
     @Transactional
     public void deleteByComments(Comments comment, User user) {
         deleteByField(qLikes.comments, comment, user);
-    }
-
-    @Override
-    public long countPostLikesByUser(User user) {
-        return countContentsByUser(qLikes.posts, user);
-    }
-
-    private <T> long countContentsByUser(EntityPathBase<T> qContent, User user) {
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        return query.select(qLikes.count()).from(qLikes).where(qLikes.user.eq(user).and(qContent.isNotNull())).fetchOne();
-    }
-
-    @Override
-    public long countCommentLikesByUser(User user) {
-        return countContentsByUser(qLikes.comments, user);
     }
 }

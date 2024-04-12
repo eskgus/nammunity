@@ -34,7 +34,7 @@ public class FindUtilForTest { // U: entity, V: listDto
                 .sorted(Comparator.comparing(entity ->
                             findHelper.getEntityConverter().extractEntityId(entity))
                         .reversed())
-                .map(entity -> (V) findHelper.getEntityConverter().generateListDto(entity))
+                .map(entity -> (V) findHelper.getEntityConverter().generateDto(entity))
                 .toList();
 
         return createPage(dtos, pageable);

@@ -15,12 +15,12 @@ public class ContentReportSummaryConverterForTest implements EntityConverterForT
     }
 
     @Override
-    public Long extractListDtoId(ContentReportSummaryDto listDto) {
-        return listDto.getId();
+    public Long extractDtoId(ContentReportSummaryDto dto) {
+        return dto.getId();
     }
 
     @Override
-    public ContentReportSummaryDto generateListDto(ContentReportSummary entity) {
+    public ContentReportSummaryDto generateDto(ContentReportSummary entity) {
         return new ContentReportSummaryDto(entity, entity.getPosts(), entity.getComments(), entity.getUser());
     }
 
