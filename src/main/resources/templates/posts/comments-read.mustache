@@ -1,9 +1,9 @@
-{{#commentsPage}}
+{{#contentsPage}}
     <div class="sum-area">
-        <span class="sum">댓글 {{comments.totalElements}}개</span>
+        <span class="sum">댓글 {{contents.totalElements}}개</span>
     </div>
     <div class="comments-list">
-        {{#comments.content}}
+        {{#contents.content}}
             <div id="cmt-{{id}}">
                 <div class="comment">
                                 <span class="author dropdown" id="author" data-toggle="dropdown">{{author}}
@@ -38,7 +38,7 @@
                     <span class="date">작성 {{createdDate}}{{#modifiedDate}} | 수정 {{modifiedDate}}{{/modifiedDate}}</span>
                 </div>
             </div>
-        {{/comments.content}}
+        {{/contents.content}}
     </div>
     <div class="comments-creation">
         {{#auth}}<span class="author">{{auth}}</span>{{/auth}}
@@ -68,7 +68,7 @@
             {{/hasNext}}
         </div>
     {{/pages}}
-{{/commentsPage}}
+{{/contentsPage}}
 
 <script src="/js/app/comments.js"></script>
 <script src="/js/app/likes.js"></script>

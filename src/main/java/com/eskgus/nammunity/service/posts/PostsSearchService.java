@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
+
 @RequiredArgsConstructor
 @Service
 public class PostsSearchService {
@@ -22,7 +24,7 @@ public class PostsSearchService {
 
     @Transactional(readOnly = true)
     public ContentsPageDto<PostsListDto> findAllDesc(int page) {
-        Pageable pageable = PageRequest.of(page - 1, 20);
+        Pageable pageable = createPageable(page, 20);
         Page<PostsListDto> contents = postsRepository.findAllDesc(pageable);
         return new ContentsPageDto<>(contents);
     }

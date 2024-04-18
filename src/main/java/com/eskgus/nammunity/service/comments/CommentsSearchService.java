@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
+
 @RequiredArgsConstructor
 @Service
 public class CommentsSearchService {
@@ -24,7 +26,7 @@ public class CommentsSearchService {
 
     @Transactional(readOnly = true)
     public Page<CommentsReadDto> findByPosts(Posts post, User user, int page) {
-        Pageable pageable = PageRequest.of(page - 1, 30);
+        Pageable pageable = createPageable(page, 30);
         Page<CommentsReadDto> comments = commentsRepository.findByPosts(post, pageable);
         setCommentsReadDto(comments.getContent(), user);
         return comments;

@@ -3,7 +3,7 @@ package com.eskgus.nammunity.web.controller.posts;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
-import com.eskgus.nammunity.web.dto.comments.CommentsPageDto;
+import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
@@ -57,8 +57,8 @@ public class PostsIndexController {
 
     private String readComments(Long id, Principal principal, int page, Model model) {
         try {
-            CommentsPageDto commentsPage = postsService.readComments(id, principal, page);
-            model.addAttribute("commentsPage", commentsPage);
+            ContentsPageDto<CommentsReadDto> contentsPage = postsService.readComments(id, principal, page);
+            model.addAttribute("contentsPage", contentsPage);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
         }

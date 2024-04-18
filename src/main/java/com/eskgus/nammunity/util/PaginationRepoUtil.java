@@ -2,6 +2,7 @@ package com.eskgus.nammunity.util;
 
 import com.querydsl.jpa.impl.JPAQuery;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 
@@ -15,5 +16,9 @@ public class PaginationRepoUtil {
 
     public static <T> Page<T> createPage(List<T> dtos, Pageable pageable, JPAQuery<Long> totalQuery) {
         return PageableExecutionUtils.getPage(dtos, pageable, totalQuery::fetchOne);
+    }
+
+    public static Pageable createPageable(int page, int size) {
+        return PageRequest.of(page - 1, size);
     }
 }

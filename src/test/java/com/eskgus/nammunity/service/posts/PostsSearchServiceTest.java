@@ -14,6 +14,7 @@ import com.eskgus.nammunity.helper.SearchHelperForTest;
 import com.eskgus.nammunity.helper.repository.finder.ServiceTriFinderForTest;
 import com.eskgus.nammunity.helper.repository.searcher.ServiceQuadSearcherForTest;
 import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,12 +22,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.function.Function;
 
 import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
 import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
 import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,6 +51,7 @@ public class PostsSearchServiceTest {
     private PostsSearchService postsSearchService;
 
     private User[] users;
+    private final int page = 1;
 
     @BeforeEach
     public void setUp() {
@@ -79,14 +84,22 @@ public class PostsSearchServiceTest {
                 testDB.savePosts(user);
             }
         }
-        assertThat(postsRepository.count()).isEqualTo(numberOfPostsByUser * users.length);
+        assertThat(postsRepository.count()).isEqualTo((long) numberOfPostsByUser * users.length);
     }
 
     private void callAndAssertFindPosts2() {
-        FindHelperForTest2 findHelper = FindHelperForTest2.<PostsListDto, Posts>builder()
-                .finder(postsSearchService::findAllDesc).pageGetter(postsRepository::findAllDesc)
-                .size(20).entityConverter(new PostsConverterForTest()).build();
+        ContentsPageDto<PostsListDto> actualResult = postsSearchService.findAllDesc(page);
+        Page<PostsListDto> expectedContents = createExpectedContents();
+
+        FindHelperForTest2<PostsListDto, Posts> findHelper = FindHelperForTest2.<PostsListDto, Posts>builder()
+                .actualResult(actualResult).expectedContents(expectedContents)
+                .entityConverter(new PostsConverterForTest()).build();
         findHelper.callAndAssertFind();
+    }
+
+    private Page<PostsListDto> createExpectedContents() {
+        Pageable pageable = createPageable(page, 20);
+        return postsRepository.findAllDesc(pageable);
     }
 
     @Test

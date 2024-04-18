@@ -7,9 +7,8 @@ import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.reports.ReasonsService;
 import com.eskgus.nammunity.service.user.UserService;
-import com.eskgus.nammunity.web.dto.comments.CommentsPageDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
-import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
@@ -108,11 +107,9 @@ public class PostsService {
     }
 
     @Transactional(readOnly = true)
-    public CommentsPageDto readComments(Long postId, Principal principal, int page) {
-        Page<CommentsReadDto> comments = createCommentsPage(postId, principal, page);
-        PaginationDto<CommentsReadDto> pages = PaginationDto.<CommentsReadDto>builder()
-                .page(comments).display(10).build();
-        return CommentsPageDto.builder().comments(comments).pages(pages).build();
+    public ContentsPageDto<CommentsReadDto> readComments(Long postId, Principal principal, int page) {
+        Page<CommentsReadDto> contents = createCommentsPage(postId, principal, page);
+        return new ContentsPageDto<>(contents);
     }
 
     private Page<CommentsReadDto> createCommentsPage(Long postId, Principal principal, int page) {

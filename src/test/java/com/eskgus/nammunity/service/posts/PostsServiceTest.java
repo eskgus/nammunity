@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.service.posts;
 
+import com.eskgus.nammunity.converter.CommentsConverterForTest;
+import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -7,9 +9,11 @@ import com.eskgus.nammunity.domain.reports.ReasonsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.helper.FindHelperForTest2;
+import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.util.TestDB;
-import com.eskgus.nammunity.web.dto.comments.CommentsPageDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostWithReasonsDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
@@ -19,10 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,8 +52,12 @@ public class PostsServiceTest {
     @Autowired
     private PostsService postsService;
 
+    @Autowired
+    private CommentsSearchService commentsSearchService;
+
     private User[] users;
     private Posts post;
+    private final int page = 1;
 
     @BeforeEach
     public void setUp() {
@@ -110,7 +118,7 @@ public class PostsServiceTest {
     public void readComments() {
         saveComments();
 
-        callAndAssertReadComments();
+        callAndAssertReadCommentS();
     }
 
     private void saveComments() {
@@ -120,30 +128,21 @@ public class PostsServiceTest {
                 testDB.saveComments(post.getId(), user);
             }
         }
-        assertThat(commentsRepository.count()).isEqualTo(numberOfCommentsByUser * users.length);
+        assertThat(commentsRepository.count()).isEqualTo((long) numberOfCommentsByUser * users.length);
     }
 
-    private void callAndAssertReadComments() {
-        CommentsPageDto commentsPageDto = callReadCommentsAndGetCommentsPageDto();
-        assertCommentsPageDto(commentsPageDto);
+    private void callAndAssertReadCommentS() {
+        ContentsPageDto<CommentsReadDto> actualResult = callReadCommentsAndGetActualResult();
+        Page<CommentsReadDto> expectedContents = commentsSearchService.findByPosts(post, users[0], page);
+
+        FindHelperForTest2<CommentsReadDto, Comments> findHelper = FindHelperForTest2.<CommentsReadDto, Comments>builder()
+                    .actualResult(actualResult).expectedContents(expectedContents)
+                .entityConverter(new CommentsConverterForTest<>(CommentsReadDto.class)).build();
+        findHelper.callAndAssertFind();
     }
 
-    private CommentsPageDto callReadCommentsAndGetCommentsPageDto() {
+    private ContentsPageDto<CommentsReadDto> callReadCommentsAndGetActualResult() {
         Principal principal = createPrincipalWithUser1();
-        return postsService.readComments(post.getId(), principal, 1);
-    }
-
-    private void assertCommentsPageDto(CommentsPageDto commentsPageDto) {
-        List<Long> expectedCommentIds = getExpectedCommentIds();
-        List<CommentsReadDto> comments = commentsPageDto.getComments().getContent();
-        assertThat(comments).extracting(CommentsReadDto::getId).isEqualTo(expectedCommentIds);
-    }
-
-    private List<Long> getExpectedCommentIds() {
-        List<Long> expectedCommentId = new ArrayList<>();
-        for (long i = commentsRepository.count(); i >= 1; i--) {
-            expectedCommentId.add(i);
-        }
-        return expectedCommentId;
+        return postsService.readComments(post.getId(), principal, page);
     }
 }
