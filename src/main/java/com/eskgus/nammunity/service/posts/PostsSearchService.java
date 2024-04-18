@@ -4,6 +4,7 @@ import com.eskgus.nammunity.domain.enums.SearchType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,9 +21,10 @@ public class PostsSearchService {
     private final PostsRepository postsRepository;
 
     @Transactional(readOnly = true)
-    public Page<PostsListDto> findAllDesc(int page) {
+    public ContentsPageDto<PostsListDto> findAllDesc(int page) {
         Pageable pageable = PageRequest.of(page - 1, 20);
-        return postsRepository.findAllDesc(pageable);
+        Page<PostsListDto> contents = postsRepository.findAllDesc(pageable);
+        return new ContentsPageDto<>(contents);
     }
 
     @Transactional(readOnly = true)

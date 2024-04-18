@@ -38,6 +38,12 @@ var postsMain = {
                 });
             });
         }
+
+        if ((window.location.pathname === '/') || (window.location.pathname.includes('/main'))) {
+            $(document).on('click', '[name="page"]', function() {
+                _this.getMainPage($(this).text());
+            })
+        }
     },
     savePosts: function() {
         var data = {
@@ -130,6 +136,13 @@ var postsMain = {
         }).done(function(response) {
             $("#comments-area").html(response);
         });
+    },
+    getMainPage: function(page) {
+        var location = window.location.pathname;
+        if (location === '/') {
+            location += 'main';
+        }
+        window.location.href = location + '?page=' + page;
     }
 };
 

@@ -9,8 +9,8 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.FindHelperForTest2;
 import com.eskgus.nammunity.helper.SearchHelperForTest;
-import com.eskgus.nammunity.helper.repository.finder.ServiceFinderForTest;
 import com.eskgus.nammunity.helper.repository.finder.ServiceTriFinderForTest;
 import com.eskgus.nammunity.helper.repository.searcher.ServiceQuadSearcherForTest;
 import com.eskgus.nammunity.util.TestDB;
@@ -69,8 +69,7 @@ public class PostsSearchServiceTest {
     public void findAllDesc() {
         savePosts();
 
-        FindHelperForTest<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto, Void> findHelper = createFindHelper();
-        callAndAssertFindPosts(findHelper);
+        callAndAssertFindPosts2();
     }
 
     private void savePosts() {
@@ -83,18 +82,11 @@ public class PostsSearchServiceTest {
         assertThat(postsRepository.count()).isEqualTo(numberOfPostsByUser * users.length);
     }
 
-    private FindHelperForTest<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto, Void> createFindHelper() {
-        EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
-        return FindHelperForTest.<ServiceFinderForTest<PostsListDto>, Posts, PostsListDto, Void>builder()
-                .finder(postsSearchService::findAllDesc)
-                .entityStream(postsRepository.findAll().stream())
-                .page(1).limit(20)
-                .entityConverter(entityConverter).build();
-    }
-
-    private void callAndAssertFindPosts(FindHelperForTest findHelper) {
-        initializeFindHelper(findHelper);
-        callAndAssertFind();
+    private void callAndAssertFindPosts2() {
+        FindHelperForTest2 findHelper = FindHelperForTest2.<PostsListDto, Posts>builder()
+                .finder(postsSearchService::findAllDesc).pageGetter(postsRepository::findAllDesc)
+                .size(20).entityConverter(new PostsConverterForTest()).build();
+        findHelper.callAndAssertFind();
     }
 
     @Test
@@ -113,6 +105,11 @@ public class PostsSearchServiceTest {
                 .entityStream(postsRepository.findAll().stream())
                 .page(1).limit(4)
                 .entityConverter(entityConverter).build();
+    }
+
+    private void callAndAssertFindPosts(FindHelperForTest findHelper) {
+        initializeFindHelper(findHelper);
+        callAndAssertFind();
     }
 
     @Test
