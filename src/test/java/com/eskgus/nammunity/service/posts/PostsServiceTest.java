@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.service.posts;
 
 import com.eskgus.nammunity.converter.CommentsConverterForTest;
+import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -15,6 +16,7 @@ import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostWithReasonsDto;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
 import org.junit.jupiter.api.AfterEach;
@@ -53,6 +55,9 @@ public class PostsServiceTest {
     private PostsService postsService;
 
     @Autowired
+    private PostsSearchService postsSearchService;
+
+    @Autowired
     private CommentsSearchService commentsSearchService;
 
     private User[] users;
@@ -88,12 +93,12 @@ public class PostsServiceTest {
     }
 
     private PostWithReasonsDto callReadPostsAndGetPostWithReasonsDto() {
-        Principal principal = createPrincipalWithUser1();
+        Principal principal = createPrincipal(users[0]);
         return postsService.readPosts(post.getId(), principal);
     }
 
-    private Principal createPrincipalWithUser1() {
-        return () -> users[0].getUsername();
+    private Principal createPrincipal(User user) {
+        return user::getUsername;
     }
 
     private void assertPostWithReasonsDto(PostWithReasonsDto postWithReasonsDto) {
@@ -132,8 +137,9 @@ public class PostsServiceTest {
     }
 
     private void callAndAssertReadCommentS() {
-        ContentsPageDto<CommentsReadDto> actualResult = callReadCommentsAndGetActualResult();
-        Page<CommentsReadDto> expectedContents = commentsSearchService.findByPosts(post, users[0], page);
+        User user = users[0];
+        ContentsPageDto<CommentsReadDto> actualResult = callReadCommentsAndGetActualResult(user);
+        Page<CommentsReadDto> expectedContents = commentsSearchService.findByPosts(post, user, page);
 
         ContentsPageDtoTestHelper<CommentsReadDto, Comments> findHelper = ContentsPageDtoTestHelper.<CommentsReadDto, Comments>builder()
                     .actualResult(actualResult).expectedContents(expectedContents)
@@ -141,8 +147,41 @@ public class PostsServiceTest {
         findHelper.createExpectedResultAndAssertContentsPage();
     }
 
-    private ContentsPageDto<CommentsReadDto> callReadCommentsAndGetActualResult() {
-        Principal principal = createPrincipalWithUser1();
+    private ContentsPageDto<CommentsReadDto> callReadCommentsAndGetActualResult(User user) {
+        Principal principal = createPrincipal(user);
         return postsService.readComments(post.getId(), principal, page);
+    }
+
+    @Test
+    public void listPosts() {
+        savePosts();
+
+        callAndAssertListPosts();
+    }
+
+    private void savePosts() {
+        int numberOfPostsByUser = 30;
+        for (int i = 0; i < numberOfPostsByUser; i++) {
+            for (User user : users) {
+                testDB.savePosts(user);
+            }
+        }
+        assertThat(postsRepository.count()).isEqualTo((long) numberOfPostsByUser * users.length + post.getId());
+    }
+
+    private void callAndAssertListPosts() {
+        User user = users[0];
+        ContentsPageDto<PostsListDto> actualResult = callListPostsAndGetActualResult(user);
+        Page<PostsListDto> expectedContents = postsSearchService.findByUser(user, page, 20);
+
+        ContentsPageDtoTestHelper<PostsListDto, Posts> findHelper = ContentsPageDtoTestHelper.<PostsListDto, Posts>builder()
+                .actualResult(actualResult).expectedContents(expectedContents)
+                .entityConverter(new PostsConverterForTest()).build();
+        findHelper.createExpectedResultAndAssertContentsPage();
+    }
+
+    private ContentsPageDto<PostsListDto> callListPostsAndGetActualResult(User user) {
+        Principal principal = createPrincipal(user);
+        return postsService.listPosts(principal, page);
     }
 }

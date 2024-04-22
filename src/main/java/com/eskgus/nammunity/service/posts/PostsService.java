@@ -9,10 +9,7 @@ import com.eskgus.nammunity.service.reports.ReasonsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
-import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
-import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
-import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
-import com.eskgus.nammunity.web.dto.posts.PostWithReasonsDto;
+import com.eskgus.nammunity.web.dto.posts.*;
 import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -116,5 +113,12 @@ public class PostsService {
         Posts post = postsSearchService.findById(postId);
         User user = getUserFromPrincipal(principal);
         return commentsSearchService.findByPosts(post, user, page);
+    }
+
+    @Transactional(readOnly = true)
+    public ContentsPageDto<PostsListDto> listPosts(Principal principal, int page) {
+        User user = getUserFromPrincipal(principal);
+        Page<PostsListDto> contents = postsSearchService.findByUser(user, page, 20);
+        return new ContentsPageDto<>(contents);
     }
 }

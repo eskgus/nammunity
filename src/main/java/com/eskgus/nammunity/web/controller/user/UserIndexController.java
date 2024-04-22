@@ -4,10 +4,11 @@ import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
@@ -26,7 +27,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserIndexController {
     private final UserService userService;
-    private final PostsSearchService postsSearchService;
+    private final PostsService postsService;
     private final CommentsSearchService commentsSearchService;
     private final LikesSearchService likesSearchService;
     private final LikesRepository likesRepository;
@@ -76,8 +77,7 @@ public class UserIndexController {
     }
 
     @GetMapping("/my-page")
-    public String myPage(@RequestParam(name = "page", defaultValue = "1") int page,
-                         Principal principal, Model model) {
+    public String myPage(Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
             ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> contentsPages
@@ -118,18 +118,10 @@ public class UserIndexController {
                             Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
-            User user = userService.findByUsername(principal.getName());
-
-            // 게시글 목록
-            Page<PostsListDto> posts = postsSearchService.findByUser(user, page, 20);
-            attr.put("posts", posts);
-
-            // 페이지 번호
-            PaginationDto<PostsListDto> paginationDto = PaginationDto.<PostsListDto>builder()
-                    .page(posts).display(10).build();
-            attr.put("pages", paginationDto);
+            ContentsPageDto<PostsListDto> contentsPage = postsService.listPosts(principal, page);
+            attr.put("contentsPage", contentsPage);
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("exception", ex.getMessage());
+            attr.put("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
         }
         model.addAllAttributes(attr);

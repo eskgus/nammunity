@@ -53,7 +53,7 @@ public class ContentsPageMoreDtoTestHelper<T, U, V> {
 
         for (int i = 0; i < actualResult.size(); i++) {
             PaginationTestHelper<?, ?> paginationHelper
-                    = new PaginationTestHelper<>(actualResult.get(i), expectedResult.get(i), entityConverters.get(i));
+                    = new PaginationTestHelper(actualResult.get(i), expectedResult.get(i), entityConverters.get(i));
             paginationHelper.assertContentsPageMore();
         }
     }
