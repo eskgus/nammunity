@@ -9,7 +9,7 @@ import com.eskgus.nammunity.domain.reports.ReasonsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.FindHelperForTest2;
+import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
@@ -135,10 +135,10 @@ public class PostsServiceTest {
         ContentsPageDto<CommentsReadDto> actualResult = callReadCommentsAndGetActualResult();
         Page<CommentsReadDto> expectedContents = commentsSearchService.findByPosts(post, users[0], page);
 
-        FindHelperForTest2<CommentsReadDto, Comments> findHelper = FindHelperForTest2.<CommentsReadDto, Comments>builder()
+        ContentsPageDtoTestHelper<CommentsReadDto, Comments> findHelper = ContentsPageDtoTestHelper.<CommentsReadDto, Comments>builder()
                     .actualResult(actualResult).expectedContents(expectedContents)
                 .entityConverter(new CommentsConverterForTest<>(CommentsReadDto.class)).build();
-        findHelper.callAndAssertFind();
+        findHelper.createExpectedResultAndAssertContentsPage();
     }
 
     private ContentsPageDto<CommentsReadDto> callReadCommentsAndGetActualResult() {

@@ -12,10 +12,12 @@
             <div class="content-area">
                 {{>layout/my-page-nav}}
                 <div class="my-activity-area">
+                    {{#contentsPages}}
                     <div class="posts-area">
+                        {{#contentsPageMore1}}
                         <div class="title">
                             <h2>작성 글</h2>
-                            {{#postsMore}}<a class="more" href="/users/my-page/posts">더 보기<img></a>{{/postsMore}}
+                            {{#more}}<a class="more" href="/users/my-page/posts">더 보기<img></a>{{/more}}
                         </div>
                         <table>
                             <thead>
@@ -25,12 +27,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^posts.content}}
+                            {{^contents.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">작성한 글이 없어요.</td>
                                 </tr>
-                            {{/posts.content}}
-                            {{#posts.content}}
+                            {{/contents.content}}
+                            {{#contents.content}}
                                 <tr>
                                     <td class="no-checkbox">{{id}}</td>
                                     <td>
@@ -40,14 +42,16 @@
                                         <span class="date">{{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
                                     </td>
                                 </tr>
-                            {{/posts.content}}
+                            {{/contents.content}}
                             </tbody>
                         </table>
+                        {{/contentsPageMore1}}
                     </div>
                     <div class="comments-area">
+                        {{#contentsPageMore2}}
                         <div class="title">
                             <h2>작성 댓글</h2>
-                            {{#commentsMore}}<a class="more" href="/users/my-page/comments">더 보기<img></a>{{/commentsMore}}
+                            {{#more}}<a class="more" href="/users/my-page/comments">더 보기<img></a>{{/more}}
                         </div>
                         <table>
                             <thead>
@@ -57,12 +61,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^comments.content}}
+                            {{^contents.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">작성한 댓글이 없어요.</td>
                                 </tr>
-                            {{/comments.content}}
-                            {{#comments.content}}
+                            {{/contents.content}}
+                            {{#contents.content}}
                                 <tr>
                                     <td class="no-checkbox">{{commentsId}}</td>
                                     <td>
@@ -73,14 +77,16 @@
                                         </div>
                                     </td>
                                 </tr>
-                            {{/comments.content}}
+                            {{/contents.content}}
                             </tbody>
                         </table>
+                        {{/contentsPageMore2}}
                     </div>
                     <div id="likes-area">
+                        {{#contentsPageMore3}}
                         <div class="title">
                             <h2>좋아요</h2>
-                            {{#likesMore}}<a class="more" href="/users/my-page/likes">더 보기<img></a>{{/likesMore}}
+                            {{#more}}<a class="more" href="/users/my-page/likes">더 보기<img></a>{{/more}}
                         </div>
                         <table>
                             <thead>
@@ -90,12 +96,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^likes.content}}
+                            {{^contents.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">좋아요한 게시글/댓글이 없어요.</td>
                                 </tr>
-                            {{/likes.content}}
-                            {{#likes.content}}
+                            {{/contents.content}}
+                            {{#contents.content}}
                                 {{#isCommentLikes}}
                                     <tr class="comments-area">
                                         <td class="no-checkbox">{{likesId}}</td>
@@ -119,10 +125,12 @@
                                         </td>
                                     </tr>
                                 {{/isCommentLikes}}
-                            {{/likes.content}}
+                            {{/contents.content}}
                             </tbody>
                         </table>
+                        {{/contentsPageMore3}}
                     </div>
+                    {{/contentsPages}}
                 </div>
             </div>
         </div>

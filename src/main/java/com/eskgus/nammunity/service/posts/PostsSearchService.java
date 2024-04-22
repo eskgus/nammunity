@@ -37,7 +37,7 @@ public class PostsSearchService {
 
     @Transactional(readOnly = true)
     public Page<PostsListDto> findByUser(User user, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = createPageable(page, size);
         return postsRepository.findByUser(user, pageable);
     }
 

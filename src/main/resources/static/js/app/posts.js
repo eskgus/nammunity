@@ -18,14 +18,6 @@ var postsMain = {
         $('#btn-delete').on('click', function() {
             _this.deletePosts();
         });
-
-        // 사용자 활동 내역
-        var loadUserHistoryBtns = document.getElementsByName('btn-history');
-        loadUserHistoryBtns.forEach(function(loadUserHistoryBtn) {
-            loadUserHistoryBtn.addEventListener('click', function() {
-                window.location.href = this.href;
-            });
-        });
     },
     savePosts: function() {
         var data = {

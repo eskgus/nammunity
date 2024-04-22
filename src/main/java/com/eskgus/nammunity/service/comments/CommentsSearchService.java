@@ -51,7 +51,7 @@ public class CommentsSearchService {
 
     @Transactional(readOnly = true)
     public Page<CommentsListDto> findByUser(User user, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = createPageable(page, size);
         return commentsRepository.findByUser(user, pageable);
     }
 

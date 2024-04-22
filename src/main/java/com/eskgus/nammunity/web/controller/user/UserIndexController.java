@@ -8,6 +8,7 @@ import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
@@ -79,30 +80,11 @@ public class UserIndexController {
                          Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
-            User user = userService.findByUsername(principal.getName());
-
-            // 작성 글
-            Page<PostsListDto> posts = postsSearchService.findByUser(user, page, 5);
-            if (posts.getTotalElements() > 5) {
-                attr.put("postsMore", true);
-            }
-            attr.put("posts", posts);
-
-            // 작성 댓글
-            Page<CommentsListDto> comments = commentsSearchService.findByUser(user, page, 5);
-            if (comments.getTotalElements() > 5) {
-                attr.put("commentsMore", true);
-            }
-            attr.put("comments", comments);
-
-            // 좋아요
-            Page<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findByUser, page, 5);
-            if (likes.getTotalElements() > 5) {
-                attr.put("likesMore", true);
-            }
-            attr.put("likes", likes);
+            ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> contentsPages
+                    = userService.getMyPage(principal);
+            attr.put("contentsPages", contentsPages);
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("exception", ex.getMessage());
+            attr.put("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
         }
         model.addAllAttributes(attr);

@@ -18,6 +18,16 @@ var commentsMain = {
 
         // 댓글 삭제
         _this.event('delete', _this.deleteComments);
+
+        $(document).ready(function() {
+            var commentId = window.location.hash;
+            if (commentId) {    // commentId가 존재하는 경우 해당 댓글 위치로 스크롤 이동
+                console.log('commentId is present');
+                _this.focusOnTargetComment(commentId);
+            }
+        });
+
+        _this.loadUserHistory();    // 사용자 활동 내역
     },
     saveComments: function() {
         var data = {
@@ -147,6 +157,22 @@ var commentsMain = {
             });
         }
         return ['d', divId];
+    },
+    focusOnTargetComment: function(commentId) {
+        var $targetComment = $(commentId);
+        if ($targetComment.length) {
+            $('html, body').animate({
+                scrollTop: $targetComment.offset().top
+            }, 1000);
+        }
+    },
+    loadUserHistory: function() {
+        var loadUserHistoryBtns = document.getElementsByName('btn-history');
+        loadUserHistoryBtns.forEach(function(loadUserHistoryBtn) {
+            loadUserHistoryBtn.addEventListener('click', function() {
+                window.location.href = this.href;
+            });
+        });
     }
 };
 

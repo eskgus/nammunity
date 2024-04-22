@@ -9,9 +9,8 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.FindHelperForTest;
+import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.helper.SearchHelperForTest;
-import com.eskgus.nammunity.helper.repository.finder.ServiceTriFinderForTest;
 import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
@@ -23,14 +22,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
-import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
 import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,6 +54,7 @@ public class CommentsSearchServiceTest {
 
     private User[] users;
     private Posts post;
+    private final int page = 1;
 
     @BeforeEach
     public void setUp() {
@@ -82,7 +82,7 @@ public class CommentsSearchServiceTest {
     public void findByUser() {
         saveComments();
 
-        callAndAssertFindComments();
+        callAndAssertFindByUser();
     }
 
     private void saveComments() {
@@ -92,27 +92,28 @@ public class CommentsSearchServiceTest {
                 testDB.saveComments(post.getId(), user);
             }
         }
-        assertThat(commentsRepository.count()).isEqualTo(numberOfCommentsByUser * users.length);
+        assertThat(commentsRepository.count()).isEqualTo((long)numberOfCommentsByUser * users.length);
     }
 
-    private void callAndAssertFindComments() {
-        FindHelperForTest<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto, User> findHelper
-                = createTriFindHelper();
+    private void callAndAssertFindByUser() {
+        int size = 4;
+        User user = users[0];
 
-        initializeFindHelper(findHelper);
-        callAndAssertFind();
+        Page<CommentsListDto> actualPage = commentsSearchService.findByUser(user, page, size);
+        Page<CommentsListDto> expectedPage = createExpectedPageByUser(page, size, user);
+
+        assertFindByUser(actualPage, expectedPage);
     }
 
-    private FindHelperForTest<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto, User>
-        createTriFindHelper() {
-        EntityConverterForTest<Comments, CommentsListDto> entityConverter
-                = new CommentsConverterForTest(CommentsListDto.class);
-        return FindHelperForTest.<ServiceTriFinderForTest<CommentsListDto>, Comments, CommentsListDto, User>builder()
-                .finder(commentsSearchService::findByUser)
-                .contents(users[0])
-                .entityStream(commentsRepository.findAll().stream())
-                .page(1).limit(4)
-                .entityConverter(entityConverter).build();
+    private Page<CommentsListDto> createExpectedPageByUser(int page, int size, User user) {
+        Pageable pageable = createPageable(page, size);
+        return commentsRepository.findByUser(user, pageable);
+    }
+
+    private void assertFindByUser(Page<CommentsListDto> actualPage, Page<CommentsListDto> expectedPage) {
+        PaginationTestHelper<CommentsListDto, Comments> paginationHelper
+                = new PaginationTestHelper<>(actualPage, expectedPage, new CommentsConverterForTest<>(CommentsListDto.class));
+        paginationHelper.assertContents();
     }
 
     @Test
@@ -133,7 +134,7 @@ public class CommentsSearchServiceTest {
         for (User user : users) {
             testDB.saveComments(post.getId(), user, strings);
         }
-        assertThat(commentsRepository.count()).isEqualTo(strings.length * users.length);
+        assertThat(commentsRepository.count()).isEqualTo((long)strings.length * users.length);
     }
 
     private void callAndAssertSearchComments(String keywords, Function<Comments, String>... fieldExtractors) {
@@ -164,12 +165,29 @@ public class CommentsSearchServiceTest {
     }
 
     private void callAndAssertFindByPosts() {
-        Page<CommentsReadDto> comments = commentsSearchService.findByPosts(post, users[0], 1);
-        assertBooleanValues(comments.getContent());
+        User user = users[0];
+
+        Page<CommentsReadDto> actualPage = commentsSearchService.findByPosts(post, user, page);
+        Page<CommentsReadDto> expectedPage = createExpectedPageByPosts();
+
+        assertFindByPosts(actualPage, expectedPage, user);
     }
 
-    private void assertBooleanValues(List<CommentsReadDto> comments) {
-        List<Boolean> expectedDoesUserWriteComment = getExpectedDoesUserWriteComment();
+    private Page<CommentsReadDto> createExpectedPageByPosts() {
+        Pageable pageable = createPageable(page, 30);
+        return commentsRepository.findByPosts(post, pageable);
+    }
+
+    private void assertFindByPosts(Page<CommentsReadDto> actualPage, Page<CommentsReadDto> expectedPage, User user) {
+        PaginationTestHelper<CommentsReadDto, Comments> paginationHelper
+                = new PaginationTestHelper<>(actualPage, expectedPage, new CommentsConverterForTest<>(CommentsReadDto.class));
+        paginationHelper.assertContents();
+
+        assertBooleanValues(actualPage.getContent(), user);
+    }
+
+    private void assertBooleanValues(List<CommentsReadDto> comments, User user) {
+        List<Boolean> expectedDoesUserWriteComment = getExpectedDoesUserWriteComment(user);
         List<Boolean> expectedDoesUserLikeComment = getExpectedDoesUserLikeComment();
 
         for (int i = 0; i < comments.size(); i++) {
@@ -179,12 +197,12 @@ public class CommentsSearchServiceTest {
         }
     }
 
-    private List<Boolean> getExpectedDoesUserWriteComment() {
+    private List<Boolean> getExpectedDoesUserWriteComment(User user) {
         List<Boolean> expectedDoesUserWriteComment = new ArrayList<>();
         for (long i = commentsRepository.count(); i >= 1; i--) {
             Comments comment = commentsRepository.findById(i).get();
             Long authorId = comment.getUser().getId();
-            Long userId = users[0].getId();
+            Long userId = user.getId();
             expectedDoesUserWriteComment.add(authorId.equals(userId));
         }
         return expectedDoesUserWriteComment;

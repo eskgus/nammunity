@@ -3,9 +3,14 @@ package com.eskgus.nammunity.service.user;
 import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.converter.UserConverterForTest;
 import com.eskgus.nammunity.domain.enums.ContentType;
+import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
+import com.eskgus.nammunity.helper.ContentsPageMoreDtoTestHelper;
 import com.eskgus.nammunity.helper.SearchHelperForTest;
 import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
+import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.likes.LikesSearchService;
+import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -14,6 +19,10 @@ import com.eskgus.nammunity.domain.user.BannedUsersRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.likes.LikesListDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.user.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +35,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.security.Principal;
 import java.time.Period;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +63,9 @@ public class UserServiceTest {
     private CommentsRepository commentsRepository;
 
     @Autowired
+    private LikesRepository likesRepository;
+
+    @Autowired
     private ContentReportsRepository contentReportsRepository;
 
     @Autowired
@@ -63,6 +76,15 @@ public class UserServiceTest {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PostsSearchService postsSearchService;
+
+    @Autowired
+    private CommentsSearchService commentsSearchService;
+
+    @Autowired
+    private LikesSearchService likesSearchService;
 
     private User[] users;
     private Pageable pageable;
@@ -239,5 +261,52 @@ public class UserServiceTest {
                 .fieldExtractors(fieldExtractors)
                 .page(1).limit(2)
                 .entityConverter(entityConverter).build();
+    }
+
+    @Test
+    public void getMyPage() {
+        savePostsAndComments();
+        saveLikes();
+
+        callAndAssertGetMyPage();
+    }
+
+    private void saveLikes() {
+        long numberOfPosts = postsRepository.count();
+        for (long i = 1; i <= numberOfPosts; i++) {
+            testDB.savePostLikes(i, users[0]);
+        }
+
+        long numberOfComments = commentsRepository.count();
+        for (long i = 1; i <= numberOfComments; i++) {
+            testDB.saveCommentLikes(i, users[0]);
+        }
+
+        assertThat(likesRepository.count()).isEqualTo(numberOfPosts + numberOfComments);
+    }
+
+    private void callAndAssertGetMyPage() {
+        int page = 1;
+        int size = 5;
+        User user = users[0];
+
+        ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> actualResult = callGetMyPageAndGetActualResult(user);
+
+        Page<PostsListDto> postsPage = postsSearchService.findByUser(user, page, size);
+        Page<CommentsListDto> commentsPage = commentsSearchService.findByUser(user, page, size);
+        Page<LikesListDto> likesPage = likesSearchService.findLikesByUser(user, likesRepository::findByUser, page, size);
+
+        ContentsPageMoreDtoTestHelper<PostsListDto, CommentsListDto, LikesListDto> findHelper
+                = new ContentsPageMoreDtoTestHelper<>(actualResult, postsPage, commentsPage, likesPage);
+        findHelper.createExpectedResultAndAssertContentsPageMore();
+    }
+
+    private ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> callGetMyPageAndGetActualResult(User user) {
+        Principal principal = createPrincipalWithUser(user);
+        return userService.getMyPage(principal);
+    }
+
+    private Principal createPrincipalWithUser(User user) {
+        return user::getUsername;
     }
 }

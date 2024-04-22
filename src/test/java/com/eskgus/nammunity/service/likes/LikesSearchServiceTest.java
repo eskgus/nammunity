@@ -1,13 +1,10 @@
 package com.eskgus.nammunity.service.likes;
 
-import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.domain.enums.ContentType;
-import com.eskgus.nammunity.helper.repository.finder.ServiceQuadFinderForTest;
+import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
@@ -30,8 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
-import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -58,7 +54,6 @@ public class LikesSearchServiceTest {
     private User[] users;
     private Posts post;
     private Comments comment;
-    private Long postLikeId;
     private Long commentLikeId;
 
     @BeforeEach
@@ -82,7 +77,7 @@ public class LikesSearchServiceTest {
 
         this.comment = commentsRepository.findById(comment1Id).get();
 
-        this.postLikeId = testDB.savePostLikes(post1Id, user1);
+        testDB.savePostLikes(post1Id, user1);
         this.commentLikeId = testDB.saveCommentLikes(comment1Id, user1);
         assertThat(likesRepository.count()).isEqualTo(commentLikeId);
     }
@@ -97,19 +92,13 @@ public class LikesSearchServiceTest {
         saveLikesWithUser2();
 
         // 1. findByUser()
-        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User> findHelper1
-                = createFindHelper(5, null, likesRepository::findByUser);
-        callAndAssertFindLikesByUser(findHelper1);
+        callAndAssertFindLikesByUser(5, likesRepository::findByUser);
 
         // 2. findPostLikesByUser()
-        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User> findHelper2
-                = createFindHelper(2, ContentType.POSTS, likesRepository::findPostLikesByUser);
-        callAndAssertFindLikesByUser(findHelper2);
+        callAndAssertFindLikesByUser(2, likesRepository::findPostLikesByUser);
 
         // 3. findCommentLikesByUser()
-        FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User> findHelper3
-                = createFindHelper(2, ContentType.COMMENTS, likesRepository::findCommentLikesByUser);
-        callAndAssertFindLikesByUser(findHelper3);
+        callAndAssertFindLikesByUser(2, likesRepository::findCommentLikesByUser);
     }
 
     private void saveLikesWithUser2() {
@@ -143,25 +132,26 @@ public class LikesSearchServiceTest {
         return commentsRepository.findById(commentId).get();
     }
 
-    private FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User>
-    createFindHelper(int limit,
-                     ContentType contentType,
-                     BiFunction<User, Pageable, Page<LikesListDto>> likesFinder) {
-        EntityConverterForTest<Likes, LikesListDto> entityConverter = new LikesConverterForTest();
-        return FindHelperForTest.<ServiceQuadFinderForTest<LikesListDto>, Likes, LikesListDto, User>builder()
-                .finder(likesSearchService::findLikesByUser)
-                .contents(users[1])
-                .entityStream(likesRepository.findAll().stream())
-                .contentType(contentType)
-                .page(2).limit(limit)
-                .entityConverter(entityConverter)
-                .likesFinder(likesFinder).build();
+    private void callAndAssertFindLikesByUser(int size, BiFunction<User, Pageable, Page<LikesListDto>> finder) {
+        int page = 1;
+        User user = users[1];
+
+        Page<LikesListDto> actualPage = likesSearchService.findLikesByUser(user, finder, page, size);
+        Page<LikesListDto> expectedPage = createExpectedPage(page, size, user, finder);
+
+        assertFindLikesByUser(actualPage, expectedPage);
     }
 
-    private void callAndAssertFindLikesByUser(FindHelperForTest<ServiceQuadFinderForTest<LikesListDto>,
-        Likes, LikesListDto, User> findHelper) {
-        initializeFindHelper(findHelper);
-        callAndAssertFind();
+    private Page<LikesListDto> createExpectedPage(int page, int size, User user,
+                                                  BiFunction<User, Pageable, Page<LikesListDto>> finder) {
+        Pageable pageable = createPageable(page, size);
+        return finder.apply(user, pageable);
+    }
+
+    private void assertFindLikesByUser(Page<LikesListDto> actualPage, Page<LikesListDto> expectedPage) {
+        PaginationTestHelper<LikesListDto, Likes> paginationHelper
+                = new PaginationTestHelper<>(actualPage, expectedPage, new LikesConverterForTest());
+        paginationHelper.assertContents();
     }
 
     @Test

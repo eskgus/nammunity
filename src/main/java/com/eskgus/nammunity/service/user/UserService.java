@@ -1,13 +1,18 @@
 package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.enums.ContentType;
+import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.user.BannedUsersRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.likes.LikesListDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDto;
 import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.user.*;
@@ -18,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -26,6 +32,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final PostsSearchService postsSearchService;
     private final CommentsSearchService commentsSearchService;
+    private final LikesSearchService likesSearchService;
+    private final LikesRepository likesRepository;
     private final BannedUsersRepository bannedUsersRepository;
     private final ContentReportsRepository contentReportsRepository;
 
@@ -119,5 +127,26 @@ public class UserService {
     public Page<UsersListDto> searchByNickname(String keywords, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
         return userRepository.searchByNickname(keywords, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> getMyPage(Principal principal) {
+        User user = findByUsername(principal.getName());
+
+        int page = 1;
+        int size = 5;
+
+        Page<PostsListDto> postsPage = postsSearchService.findByUser(user, page, size);
+        ContentsPageMoreDto<PostsListDto> postsPageMoreDto = new ContentsPageMoreDto<>(postsPage);
+
+        Page<CommentsListDto> commentsPage = commentsSearchService.findByUser(user, page, size);
+        ContentsPageMoreDto<CommentsListDto> commentsPageMoreDto = new ContentsPageMoreDto<>(commentsPage);
+
+        Page<LikesListDto> likesPage = likesSearchService.findLikesByUser(user, likesRepository::findByUser, page, size);
+        ContentsPageMoreDto<LikesListDto> likesPageMoreDto = new ContentsPageMoreDto<>(likesPage);
+
+        return ContentsPageMoreDtos.<PostsListDto, CommentsListDto, LikesListDto>builder()
+                .contentsPageMore1(postsPageMoreDto).contentsPageMore2(commentsPageMoreDto)
+                .contentsPageMore3(likesPageMoreDto).build();
     }
 }

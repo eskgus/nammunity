@@ -6,12 +6,12 @@
         {{#contents.content}}
             <div id="cmt-{{id}}">
                 <div class="comment">
-                                <span class="author dropdown" id="author" data-toggle="dropdown">{{author}}
-                                    <ul class="dropdown-menu">
-                                        <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first{{#admin}} last{{/admin}}{{^admin}}{{#doesUserWriteComment}} last{{/doesUserWriteComment}}{{/admin}}" name="btn-history">활동 내역</a></li>
-                                        {{^admin}}{{^doesUserWriteComment}}<li><a role="button" class="last" name="btn-report">신고</a></li>{{/doesUserWriteComment}}{{/admin}}
-                                    </ul>
-                                </span>
+                    <span class="author dropdown" id="author" data-toggle="dropdown">{{author}}
+                        <ul class="dropdown-menu">
+                            <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first{{#admin}} last{{/admin}}{{^admin}}{{#doesUserWriteComment}} last{{/doesUserWriteComment}}{{/admin}}" name="btn-history">활동 내역</a></li>
+                            {{^admin}}{{^doesUserWriteComment}}<li><a role="button" class="last" name="btn-report">신고</a></li>{{/doesUserWriteComment}}{{/admin}}
+                        </ul>
+                    </span>
                     <div class="btn-area">
                         <button name="btn-cmts-like" type="button" class="img-btn">
                             <img class="like_d {{#doesUserLikeComment}}like_s_d{{/doesUserLikeComment}}" alt="좋아요">
@@ -72,3 +72,4 @@
 
 <script src="/js/app/comments.js"></script>
 <script src="/js/app/likes.js"></script>
+<script src="/js/app/reports.js"></script>
