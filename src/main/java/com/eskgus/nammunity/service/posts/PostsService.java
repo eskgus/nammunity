@@ -3,6 +3,7 @@ package com.eskgus.nammunity.service.posts;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.reports.ReasonsService;
@@ -12,6 +13,7 @@ import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.*;
 import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,9 @@ public class PostsService {
     private final ReasonsService reasonsService;
     private final LikesSearchService likesSearchService;
     private final PostsSearchService postsSearchService;
+
+    @Autowired
+    private PrincipalHelper principalHelper;
 
     @Transactional
     public Long save(PostsSaveDto requestDto, Long id) {
@@ -72,7 +77,7 @@ public class PostsService {
     private PostsReadDto createPostsReadDto(Long postId, Principal principal) {
         Posts post = postsSearchService.findById(postId);
         Long postAuthorId = post.getUser().getId();
-        User user = getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal);
         boolean doesUserWritePost = doesUserWritePost(user, postAuthorId);
 
         if (!doesUserWritePost) {
@@ -83,13 +88,6 @@ public class PostsService {
 
         return PostsReadDto.builder()
                 .post(post).doesUserWritePost(doesUserWritePost).doesUserLikePost(doesUserLikePost).build();
-    }
-
-    private User getUserFromPrincipal(Principal principal) {
-        if (principal != null) {
-            return userService.findByUsername(principal.getName());
-        }
-        return null;
     }
 
     private boolean doesUserWritePost(User user, Long postAuthorId) {
@@ -111,13 +109,13 @@ public class PostsService {
 
     private Page<CommentsReadDto> createCommentsPage(Long postId, Principal principal, int page) {
         Posts post = postsSearchService.findById(postId);
-        User user = getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal);
         return commentsSearchService.findByPosts(post, user, page);
     }
 
     @Transactional(readOnly = true)
     public ContentsPageDto<PostsListDto> listPosts(Principal principal, int page) {
-        User user = getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal);
         Page<PostsListDto> contents = postsSearchService.findByUser(user, page, 20);
         return new ContentsPageDto<>(contents);
     }

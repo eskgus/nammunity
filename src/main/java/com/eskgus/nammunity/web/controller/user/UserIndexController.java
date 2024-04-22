@@ -2,7 +2,7 @@ package com.eskgus.nammunity.web.controller.user;
 
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
@@ -28,7 +28,7 @@ import java.util.Map;
 public class UserIndexController {
     private final UserService userService;
     private final PostsService postsService;
-    private final CommentsSearchService commentsSearchService;
+    private final CommentsService commentsService;
     private final LikesSearchService likesSearchService;
     private final LikesRepository likesRepository;
 
@@ -138,18 +138,10 @@ public class UserIndexController {
                                Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
-            User user = userService.findByUsername(principal.getName());
-
-            // 댓글 목록
-            Page<CommentsListDto> comments = commentsSearchService.findByUser(user, page, 20);
-            attr.put("comments", comments);
-
-            // 페이지 번호
-            PaginationDto<CommentsListDto> paginationDto = PaginationDto.<CommentsListDto>builder()
-                    .page(comments).display(10).build();
-            attr.put("pages", paginationDto);
+            ContentsPageDto<CommentsListDto> contentsPage = commentsService.listComments(principal, page);
+            attr.put("contentsPage", contentsPage);
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("exception", ex.getMessage());
+            attr.put("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
         }
         model.addAllAttributes(attr);

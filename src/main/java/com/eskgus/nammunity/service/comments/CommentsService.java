@@ -4,13 +4,19 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -19,6 +25,10 @@ public class CommentsService {
     private final CommentsRepository commentsRepository;
     private final UserService userService;
     private final PostsSearchService postsSearchService;
+    private final CommentsSearchService commentsSearchService;
+
+    @Autowired
+    private PrincipalHelper principalHelper;
 
     @Transactional
     public Long save(CommentsSaveDto requestDto, String username) {
@@ -54,5 +64,12 @@ public class CommentsService {
         }
 
         commentsId.forEach(this::delete);
+    }
+
+    @Transactional(readOnly = true)
+    public ContentsPageDto<CommentsListDto> listComments(Principal principal, int page) {
+        User user = principalHelper.getUserFromPrincipal(principal);
+        Page<CommentsListDto> contents = commentsSearchService.findByUser(user, page, 20);
+        return new ContentsPageDto<>(contents);
     }
 }
