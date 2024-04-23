@@ -6,10 +6,10 @@ import lombok.Getter;
 
 @Getter
 public class BannedHistoryDto {
-    private int count;
-    private String period;
-    private String startedDate;
-    private String expiredDate;
+    private final int count;
+    private final String period;
+    private final String startedDate;
+    private final String expiredDate;
 
     public BannedHistoryDto(BannedUsers bannedUser) {
         this.count = bannedUser.getCount();

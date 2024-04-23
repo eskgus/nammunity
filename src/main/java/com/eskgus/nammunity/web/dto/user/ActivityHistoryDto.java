@@ -7,11 +7,11 @@ import java.util.*;
 
 @Getter
 public class ActivityHistoryDto {
-    private UsersListDto usersListDto;
-    private BannedHistoryDto bannedHistoryDto;
-    private PostsHistoryDto postsHistoryDto;
-    private CommentsHistoryDto commentsHistoryDto;
-    Set<Map.Entry<String, Long>> numberOfReports;
+    private final UsersListDto usersListDto;
+    private final BannedHistoryDto bannedHistoryDto;
+    private final PostsHistoryDto postsHistoryDto;
+    private final CommentsHistoryDto commentsHistoryDto;
+    private final Set<Map.Entry<String, Long>> numberOfReports;
 
     @Builder
     public ActivityHistoryDto(UsersListDto usersListDto, BannedHistoryDto bannedHistoryDto,

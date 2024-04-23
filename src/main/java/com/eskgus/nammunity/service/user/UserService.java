@@ -11,9 +11,9 @@ import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDto;
-import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.user.*;
 import lombok.RequiredArgsConstructor;
@@ -61,8 +61,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public ActivityHistoryDto findActivityHistory(Long id, String type, int page) {
-        User user = userRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("존재하지 않는 회원입니다."));
+        User user = findById(id);
 
         UsersListDto usersListDto = new UsersListDto(user);
         BannedHistoryDto bannedHistoryDto = getBannedHistoryDto(user);
@@ -85,16 +84,16 @@ public class UserService {
             return null;
         }
 
-        Page<PostsListDto> posts = postsSearchService.findByUser(user, page, 10);
-        PaginationDto<PostsListDto> pages = createPaginationDto(posts);
+        Page<PostsListDto> contents = postsSearchService.findByUser(user, page, 10);
+        ContentsPageDto<PostsListDto> postsPage = createContentsPageDto(contents);
         long numberOfComments = commentsSearchService.countByUser(user);
 
         return PostsHistoryDto.builder()
-                .posts(posts).pages(pages).numberOfComments(numberOfComments).build();
+                .contentsPage(postsPage).numberOfComments(numberOfComments).build();
     }
 
-    private <T> PaginationDto<T> createPaginationDto(Page<T> page) {
-        return PaginationDto.<T>builder().page(page).display(10).build();
+    private <T> ContentsPageDto<T> createContentsPageDto(Page<T> page) {
+        return new ContentsPageDto<>(page);
     }
 
     private CommentsHistoryDto getCommentsHistoryDto(String type, User user, int page) {
@@ -102,12 +101,12 @@ public class UserService {
             return null;
         }
 
-        Page<CommentsListDto> comments = commentsSearchService.findByUser(user, page, 10);
-        PaginationDto<CommentsListDto> pages = createPaginationDto(comments);
+        Page<CommentsListDto> contents = commentsSearchService.findByUser(user, page, 10);
+        ContentsPageDto<CommentsListDto> commentsPage = createContentsPageDto(contents);
         long numberOfPosts = postsSearchService.countByUser(user);
 
         return CommentsHistoryDto.builder()
-                .comments(comments).pages(pages).numberOfPosts(numberOfPosts).build();
+                .contentsPage(commentsPage).numberOfPosts(numberOfPosts).build();
     }
 
     private Set<Map.Entry<String, Long>> getNumberOfReports(User user) {

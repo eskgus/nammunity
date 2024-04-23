@@ -32,6 +32,7 @@
                                     <a style="background-color: #C1DAC0;" href="/users/activity-history/posts/{{usersListDto.id}}">게시글</a></li><li>
                                 <a href="/users/activity-history/comments/{{usersListDto.id}}">댓글</a></li>
                             </ul>
+                            {{#contentsPage}}
                             <table>
                                 <thead>
                                 <tr>
@@ -40,12 +41,12 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {{^posts.content}}
+                                {{^contents.content}}
                                     <tr>
                                         <td class="no-content" colspan="2">작성한 글이 없어요.</td>
                                     </tr>
-                                {{/posts.content}}
-                                {{#posts.content}}
+                                {{/contents.content}}
+                                {{#contents.content}}
                                     <tr>
                                         <td class="no-checkbox">{{id}}</td>
                                         <td>
@@ -55,27 +56,28 @@
                                             <span class="date">{{author}} | {{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
                                         </td>
                                     </tr>
-                                {{/posts.content}}
+                                {{/contents.content}}
                                 </tbody>
                             </table>
                             {{#pages}}
                             <div>
                                 {{#hasPrevious}}
-                                    첫 페이지: <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{previousPage}}">{{previousPage}}</a> |
+                                    첫 페이지: <a role="button" name="page" style="cursor: pointer;">{{firstPage}}</a> | 이전 페이지: <a role="button" name="page" style="cursor: pointer;">{{previousPage}}</a> |
                                 {{/hasPrevious}}
                                 {{#displayPages}}
                                     {{#isCurrentPage}}
                                         | 현재 페이지: {{page}}
                                     {{/isCurrentPage}}
                                     {{^isCurrentPage}}
-                                        | <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{page}}">{{page}}</a>
+                                        | <a role="button" name="page" style="cursor: pointer;">{{page}}</a>
                                     {{/isCurrentPage}}
                                 {{/displayPages}}
                                 {{#hasNext}}
-                                    | | 다음 페이지: <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/users/activity-history/posts/{{usersListDto.id}}?page={{lastPage}}">{{lastPage}}</a>
+                                    | | 다음 페이지: <a role="button" name="page" style="cursor: pointer;">{{nextPage}}</a> | 마지막 페이지: <a role="button" name="page" style="cursor: pointer;">{{lastPage}}</a>
                                 {{/hasNext}}
                             </div>
                             {{/pages}}
+                            {{/contentsPage}}
                         </div>
                         {{/postsHistoryDto}}
                         </div>
@@ -88,5 +90,6 @@
 
 {{>layout/footer}}
 <script src="/js/app/my-page.js"></script>
+<script src="/js/app/pages.js"></script>
 </body>
 </html>

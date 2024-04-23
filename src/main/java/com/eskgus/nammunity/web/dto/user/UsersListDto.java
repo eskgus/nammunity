@@ -6,9 +6,9 @@ import lombok.Getter;
 
 @Getter
 public class UsersListDto {
-    private Long id;
-    private String nickname;
-    private String createdDate;
+    private final Long id;
+    private final String nickname;
+    private final String createdDate;
 
     public UsersListDto(User user) {
         this.id = user.getId();

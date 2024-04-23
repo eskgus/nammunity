@@ -86,9 +86,7 @@ public class LikesServiceTest {
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        Optional<T> optional = finder.apply(contentId);
-        assertThat(optional).isPresent();
-        return optional.get();
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach

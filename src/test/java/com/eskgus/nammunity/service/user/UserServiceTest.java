@@ -1,10 +1,13 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.converter.EntityConverterForTest;
+import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.converter.UserConverterForTest;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
+import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.helper.ContentsPageMoreDtoTestHelper;
 import com.eskgus.nammunity.helper.SearchHelperForTest;
 import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
@@ -21,9 +24,11 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.user.*;
+import org.assertj.core.util.TriFunction;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,18 +36,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
 import java.time.Period;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.PaginationUtilForTest.assertActualPageEqualsExpectedPage;
-import static com.eskgus.nammunity.util.PaginationUtilForTest.initializePaginationUtil;
 import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
 import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,23 +88,25 @@ public class UserServiceTest {
     @Autowired
     private LikesSearchService likesSearchService;
 
-    private User[] users;
-    private Pageable pageable;
+    private User user1;
+    private User user2;
     private ActivityHistoryDto activityHistoryDto;
     private final ContentType postType = ContentType.POSTS;
     private final ContentType commentType = ContentType.COMMENTS;
     private final ContentType userType = ContentType.USERS;
+    private final int page = 1;
 
     @BeforeEach
     public void setUp() {
         Long user1Id = testDB.signUp(1L, Role.USER);
+        this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
+
         Long user2Id = testDB.signUp(2L, Role.ADMIN);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
+    }
 
-        User user1 = userRepository.findById(user1Id).get();
-        User user2 = userRepository.findById(user2Id).get();
-
-        this.users = new User[]{ user1, user2 };
+    private <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
+        return testDB.assertOptionalAndGetEntity(finder, content);
     }
 
     @AfterEach
@@ -117,67 +121,67 @@ public class UserServiceTest {
         saveUserReportSummary();
         banUser();
 
-        int page = 2;
-        this.pageable = createPageable(page);
-
         // 1. type = "posts"
-        callAndAssertFindActivityHistory(postType.getDetailInEng(), page);
+        callAndAssertFindActivityHistory(postType.getDetailInEng());
 
         // 2. type = "comments"
-        callAndAssertFindActivityHistory(commentType.getDetailInEng(), page);
+        callAndAssertFindActivityHistory(commentType.getDetailInEng());
     }
 
     private void savePostsAndComments() {
         int numberOfContents = 11;
         for (int i = 0; i < numberOfContents; i++) {
-            Long postId = testDB.savePosts(users[0]);
-            testDB.saveComments(postId, users[0]);
+            Long postId = testDB.savePosts(user1);
+            testDB.saveComments(postId, user1);
         }
         assertThat(postsRepository.count()).isEqualTo(numberOfContents);
         assertThat(commentsRepository.count()).isEqualTo(numberOfContents);
     }
 
     private void reportUser() {
-        Long latestUserReportId = testDB.saveUserReports(users[0], users[1]);
+        Long latestUserReportId = testDB.saveUserReports(user1, user2);
         assertThat(contentReportsRepository.count()).isEqualTo(latestUserReportId);
     }
 
     private void saveUserReportSummary() {
-        Long reportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
+        Long reportSummaryId = testDB.saveUserReportSummary(user1, user2);
         assertThat(reportSummaryRepository.count()).isEqualTo(reportSummaryId);
     }
 
     private void banUser() {
-        Long bannedUserId = testDB.saveBannedUsers(users[0], Period.ofWeeks(1));
+        Long bannedUserId = testDB.saveBannedUsers(user1, Period.ofWeeks(1));
         assertThat(bannedUsersRepository.count()).isEqualTo(bannedUserId);
     }
 
-    private Pageable createPageable(int page) {
-        return PageRequest.of(page - 1, 10);
-    }
-
-    private void callAndAssertFindActivityHistory(String type, int page) {
-        this.activityHistoryDto = userService.findActivityHistory(users[0].getId(), type, page);
+    private void callAndAssertFindActivityHistory(String type) {
+        this.activityHistoryDto = userService.findActivityHistory(user1.getId(), type, page);
         assertActivityHistoryDto(type);
     }
 
     private void assertActivityHistoryDto(String type) {
-        assertThat(activityHistoryDto.getUsersListDto().getId()).isEqualTo(users[0].getId());
-        assertNumberOfContents(type);
-        assertNumberOfReports();
+        assertThat(activityHistoryDto.getUsersListDto().getId()).isEqualTo(user1.getId());
         assertUserBan(activityHistoryDto.getBannedHistoryDto());
-        assertPages(type);
+        assertContentsHistoryDto(type);
+        assertNumberOfReports();
     }
 
-    private void assertNumberOfContents(String type) {
-        Long actualNumberOfPosts;
-        Long actualNumberOfComments;
+    private void assertContentsHistoryDto(String type) {
+        long actualNumberOfPosts;
+        long actualNumberOfComments;
         if (type.equals(ContentType.POSTS.getDetailInEng())) {
             PostsHistoryDto postsHistoryDto = activityHistoryDto.getPostsHistoryDto();
+
+            assertContentsPage(postsSearchService::findByUser, postsHistoryDto.getContentsPage(),
+                    new PostsConverterForTest());
+
             actualNumberOfPosts = postsHistoryDto.getNumberOfPosts();
             actualNumberOfComments = postsHistoryDto.getNumberOfComments();
         } else {
             CommentsHistoryDto commentsHistoryDto = activityHistoryDto.getCommentsHistoryDto();
+
+            assertContentsPage(commentsSearchService::findByUser, commentsHistoryDto.getContentsPage(),
+                    new CommentsConverterForTest<>(CommentsListDto.class));
+
             actualNumberOfPosts = commentsHistoryDto.getNumberOfPosts();
             actualNumberOfComments = commentsHistoryDto.getNumberOfComments();
         }
@@ -186,8 +190,20 @@ public class UserServiceTest {
         assertNumberOfContent(actualNumberOfComments, commentsRepository::countByUser);
     }
 
+    private <T, U> void assertContentsPage(TriFunction<User, Integer, Integer, Page<T>> finder,
+                                           ContentsPageDto<T> actualResult,
+                                           EntityConverterForTest<U, T> entityConverter) {
+        int size = 10;
+        Page<T> expectedContents = finder.apply(user1, page, size);
+        ContentsPageDtoTestHelper<T, U> findHelper
+                = ContentsPageDtoTestHelper.<T, U>builder()
+                .actualResult(actualResult).expectedContents(expectedContents)
+                .entityConverter(entityConverter).build();
+        findHelper.createExpectedResultAndAssertContentsPage();
+    }
+
     private void assertNumberOfContent(long actualNumberOfContent, Function<User, Long> expectedCounter) {
-        assertThat(actualNumberOfContent).isEqualTo(expectedCounter.apply(users[0]));
+        assertThat(actualNumberOfContent).isEqualTo(expectedCounter.apply(user1));
     }
 
     private void assertNumberOfReports() {
@@ -201,27 +217,13 @@ public class UserServiceTest {
     }
 
     private void assertNumberOfReport(long actualNumberOfReport, ContentType contentType) {
-        long expectedNumberOfReport = contentReportsRepository.countReportsByContentTypeAndUser(contentType, users[0]);
+        long expectedNumberOfReport = contentReportsRepository.countReportsByContentTypeAndUser(contentType, user1);
         assertThat(actualNumberOfReport).isEqualTo(expectedNumberOfReport);
     }
 
     private void assertUserBan(BannedHistoryDto bannedHistoryDto) {
-        int expectedCount = bannedUsersRepository.findByUser(users[0]).get().getCount();
+        int expectedCount = assertOptionalAndGetEntity(bannedUsersRepository::findByUser, user1).getCount();
         assertThat(bannedHistoryDto.getCount()).isEqualTo(expectedCount);
-    }
-
-    private <V> void assertPages(String type) {
-        Page<V> actualPage;
-        Page<V> expectedPage;
-        if (type.equals(postType.getDetailInEng())) {
-            actualPage = (Page<V>) activityHistoryDto.getPostsHistoryDto().getPosts();
-            expectedPage = (Page<V>) postsRepository.findByUser(users[0], pageable);
-        } else {
-            actualPage = (Page<V>) activityHistoryDto.getCommentsHistoryDto().getComments();
-            expectedPage = (Page<V>) commentsRepository.findByUser(users[0], pageable);
-        }
-        initializePaginationUtil(actualPage, expectedPage, null);
-        assertActualPageEqualsExpectedPage();
     }
 
     @Test
@@ -236,7 +238,7 @@ public class UserServiceTest {
     }
 
     private void signUpUsers() {
-        Long userId = testDB.signUp(users[1].getId() + 1, Role.USER);
+        Long userId = testDB.signUp(user2.getId() + 1, Role.USER);
         Long numberOfUsers = userId + 3;
         for (long i = userId; i < numberOfUsers; i++) {
             testDB.signUp("닉네임" + i, i + 1, Role.USER);
@@ -274,35 +276,33 @@ public class UserServiceTest {
     private void saveLikes() {
         long numberOfPosts = postsRepository.count();
         for (long i = 1; i <= numberOfPosts; i++) {
-            testDB.savePostLikes(i, users[0]);
+            testDB.savePostLikes(i, user1);
         }
 
         long numberOfComments = commentsRepository.count();
         for (long i = 1; i <= numberOfComments; i++) {
-            testDB.saveCommentLikes(i, users[0]);
+            testDB.saveCommentLikes(i, user1);
         }
 
         assertThat(likesRepository.count()).isEqualTo(numberOfPosts + numberOfComments);
     }
 
     private void callAndAssertGetMyPage() {
-        int page = 1;
         int size = 5;
-        User user = users[0];
 
-        ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> actualResult = callGetMyPageAndGetActualResult(user);
+        ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> actualResult = callGetMyPageAndGetActualResult();
 
-        Page<PostsListDto> postsPage = postsSearchService.findByUser(user, page, size);
-        Page<CommentsListDto> commentsPage = commentsSearchService.findByUser(user, page, size);
-        Page<LikesListDto> likesPage = likesSearchService.findLikesByUser(user, likesRepository::findByUser, page, size);
+        Page<PostsListDto> postsPage = postsSearchService.findByUser(user1, page, size);
+        Page<CommentsListDto> commentsPage = commentsSearchService.findByUser(user1, page, size);
+        Page<LikesListDto> likesPage = likesSearchService.findLikesByUser(user1, likesRepository::findByUser, page, size);
 
         ContentsPageMoreDtoTestHelper<PostsListDto, CommentsListDto, LikesListDto> findHelper
                 = new ContentsPageMoreDtoTestHelper<>(actualResult, postsPage, commentsPage, likesPage);
         findHelper.createExpectedResultAndAssertContentsPageMore();
     }
 
-    private ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> callGetMyPageAndGetActualResult(User user) {
-        Principal principal = createPrincipalWithUser(user);
+    private ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> callGetMyPageAndGetActualResult() {
+        Principal principal = createPrincipalWithUser(user1);
         return userService.getMyPage(principal);
     }
 

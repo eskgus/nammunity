@@ -24,11 +24,10 @@ import org.springframework.web.filter.CharacterEncodingFilter;
 
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @Component
@@ -154,7 +153,7 @@ public class TestDB {
     }
 
     public Long saveComments(Long postId, User user) {
-        Posts post = postsRepository.findById(postId).get();
+        Posts post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
         Comments comment = Comments.builder()
                 .content("content").posts(post).user(user).build();
@@ -162,7 +161,7 @@ public class TestDB {
     }
 
     public void saveComments(Long postId, User user, String... strings) {
-        Posts post = postsRepository.findById(postId).get();
+        Posts post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
         for (String content : strings) {
             Comments comment = Comments.builder()
@@ -172,7 +171,7 @@ public class TestDB {
     }
 
     public Long savePostLikes(Long postId, User user) {
-        Posts post = postsRepository.findById(postId).get();
+        Posts post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
         Likes like = Likes.builder()
                 .posts(post).user(user).build();
@@ -180,7 +179,7 @@ public class TestDB {
     }
 
     public Long saveCommentLikes(Long commentId, User user) {
-        Comments comment = commentsRepository.findById(commentId).get();
+        Comments comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
 
         Likes like = Likes.builder()
                 .comments(comment).user(user).build();
@@ -188,13 +187,13 @@ public class TestDB {
     }
 
     public Long savePostReports(Long postId, User reporter) {
-        Posts post = postsRepository.findById(postId).get();
+        Posts post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
-        Types type = typesRepository.findById(1L).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 1L);
         Long[] reasonIdArr = {1L, 2L, 8L};
         List<Reasons> reasons = new ArrayList<>();
         for (Long id : reasonIdArr) {
-            reasons.add(reasonsRepository.findById(id).get());
+            reasons.add(assertOptionalAndGetEntity(reasonsRepository::findById, id));
         }
 
         for (int i = 0; i < 10; i++) {
@@ -209,10 +208,10 @@ public class TestDB {
     }
 
     public Long savePostReportsWithOtherReason(Long postId, User reporter, String otherReason) {
-        Posts post = postsRepository.findById(postId).get();
+        Posts post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
-        Types type = typesRepository.findById(1L).get();
-        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 1L);
+        Reasons reason = assertOptionalAndGetEntity(reasonsRepository::findById, reasonsRepository.count());
 
         ContentReports contentReport = ContentReports.builder()
                 .posts(post).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
@@ -220,13 +219,13 @@ public class TestDB {
     }
 
     public Long saveCommentReports(Long commentId, User reporter) {
-        Comments comment = commentsRepository.findById(commentId).get();
+        Comments comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
 
-        Types type = typesRepository.findById(2L).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 2L);
         Long[] reasonIdArr = {2L, 8L, 1L};
         List<Reasons> reasons = new ArrayList<>();
         for (Long id : reasonIdArr) {
-            reasons.add(reasonsRepository.findById(id).get());
+            reasons.add(assertOptionalAndGetEntity(reasonsRepository::findById, id));
         }
 
         for (int i = 0; i < 10; i++) {
@@ -241,10 +240,10 @@ public class TestDB {
     }
 
     public Long saveCommentReportsWithOtherReason(Long commentId, User reporter, String otherReason) {
-        Comments comment = commentsRepository.findById(commentId).get();
+        Comments comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
 
-        Types type = typesRepository.findById(2L).get();
-        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 2L);
+        Reasons reason = assertOptionalAndGetEntity(reasonsRepository::findById, reasonsRepository.count());
 
         ContentReports contentReport = ContentReports.builder()
                 .comments(comment).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
@@ -252,11 +251,11 @@ public class TestDB {
     }
 
     public Long saveUserReports(User user, User reporter) {
-        Types type = typesRepository.findById(3L).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 3L);
         Long[] reasonIdArr = {1L, 2L, 8L};
         List<Reasons> reasons = new ArrayList<>();
         for (Long id : reasonIdArr) {
-            reasons.add(reasonsRepository.findById(id).get());
+            reasons.add(assertOptionalAndGetEntity(reasonsRepository::findById, id));
         }
 
         for (int i = 0; i < 3; i++) {
@@ -271,8 +270,8 @@ public class TestDB {
     }
 
     public Long saveUserReportsWithOtherReason(User user, User reporter, String otherReason) {
-        Types type = typesRepository.findById(3L).get();
-        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 3L);
+        Reasons reason = assertOptionalAndGetEntity(reasonsRepository::findById, reasonsRepository.count());
 
         ContentReports contentReport = ContentReports.builder()
                 .user(user).reporter(reporter).types(type).reasons(reason).otherReasons(otherReason).build();
@@ -280,8 +279,8 @@ public class TestDB {
     }
 
     public Long savePostReportSummary(Posts post, User reporter) {
-        Types type = typesRepository.findById(1L).get();
-        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 1L);
+        Reasons reason = assertOptionalAndGetEntity(reasonsRepository::findById, reasonsRepository.count());
 
         ContentReportSummary reportSummary = ContentReportSummary.builder()
                 .posts(post).types(type).reportedDate(LocalDateTime.now()).reporter(reporter)
@@ -290,8 +289,8 @@ public class TestDB {
     }
 
     public Long saveCommentReportSummary(Comments comment, User reporter) {
-        Types type = typesRepository.findById(2L).get();
-        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 2L);
+        Reasons reason = assertOptionalAndGetEntity(reasonsRepository::findById, reasonsRepository.count());
 
         ContentReportSummary reportSummary = ContentReportSummary.builder()
                 .comments(comment).types(type).reportedDate(LocalDateTime.now()).reporter(reporter)
@@ -300,8 +299,8 @@ public class TestDB {
     }
 
     public Long saveUserReportSummary(User user, User reporter) {
-        Types type = typesRepository.findById(3L).get();
-        Reasons reason = reasonsRepository.findById(reasonsRepository.count()).get();
+        Types type = assertOptionalAndGetEntity(typesRepository::findById, 3L);
+        Reasons reason = assertOptionalAndGetEntity(reasonsRepository::findById, reasonsRepository.count());
 
         ContentReportSummary reportSummary = ContentReportSummary.builder()
                 .user(user).types(type).reportedDate(LocalDateTime.now()).reporter(reporter)
@@ -313,7 +312,7 @@ public class TestDB {
         LocalDateTime startedDate = LocalDateTime.now();
         LocalDateTime expiredDate = startedDate.plus(period);
 
-        ContentReportSummary reportSummary = contentReportSummaryRepository.findByUser(user).get();
+        ContentReportSummary reportSummary = assertOptionalAndGetEntity(contentReportSummaryRepository::findByUser, user);
         String reasonDetail = reportSummary.getReasons().getDetail();
         if (reasonDetail.equals("기타")) {
             reasonDetail += ": " + reportSummary.getOtherReasons();
@@ -328,5 +327,11 @@ public class TestDB {
     public Map<String, Object> parseResponseJSON(String response) {
         Gson gson = new Gson();
         return gson.fromJson(response, Map.class);
+    }
+
+    public <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
+        Optional<T> optional = finder.apply(content);
+        assertThat(optional).isPresent();
+        return optional.get();
     }
 }

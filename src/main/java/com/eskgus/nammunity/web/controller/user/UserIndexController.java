@@ -11,6 +11,7 @@ import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
+import com.eskgus.nammunity.web.dto.user.ActivityHistoryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -199,7 +200,8 @@ public class UserIndexController {
                                       @RequestParam(name = "page", defaultValue = "1") int page,
                                       Model model) {
         try {
-            model.addAttribute("history", userService.findActivityHistory(id, type, page));
+            ActivityHistoryDto history = userService.findActivityHistory(id, type, page);
+            model.addAttribute("history", history);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             // id로 user 검색 안 되면 메인("/")으로 이동 (footer)
