@@ -15,6 +15,7 @@
                 {{>layout/my-page-nav}}
                 <div class="my-activity-area">
                     <div id="likes-area">
+                        {{#contentsPage}}
                         <h2>좋아요</h2>
                         <ul>
                             <li>
@@ -24,7 +25,7 @@
                         </ul>
                         <div class="checkbox-area">
                             <input type="checkbox" id="select-all"><label><a id="btn-delete-likes">삭제</a></label>
-                            <span>전체 {{likes.totalElements}}개</span>
+                            <span>전체 {{contents.totalElements}}개</span>
                         </div>
                         <table>
                             <thead>
@@ -34,12 +35,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^likes.content}}
+                            {{^contents.content}}
                                 <tr>
                                     <td class="no-content" colspan="2">좋아요한 게시글/댓글이 없어요.</td>
                                 </tr>
-                            {{/likes.content}}
-                            {{#likes.content}}
+                            {{/contents.content}}
+                            {{#contents.content}}
                                 {{#isCommentLikes}}
                                     <tr class="comments-area">
                                         <td><input type="checkbox"><label>{{likesId}}</label></td>
@@ -63,27 +64,28 @@
                                         </td>
                                     </tr>
                                 {{/isCommentLikes}}
-                            {{/likes.content}}
+                            {{/contents.content}}
                             </tbody>
                         </table>
                         {{#pages}}
                             <div>
                                 {{#hasPrevious}}
-                                    첫 페이지: <a href="/users/my-page/likes?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/users/my-page/likes?page={{previousPage}}">{{previousPage}}</a> |
+                                    첫 페이지: <a role="button" name="page" style="cursor: pointer;">{{firstPage}}</a> | 이전 페이지: <a role="button" name="page" style="cursor: pointer;">{{previousPage}}</a> |
                                 {{/hasPrevious}}
                                 {{#displayPages}}
                                     {{#isCurrentPage}}
                                         | 현재 페이지: {{page}}
                                     {{/isCurrentPage}}
                                     {{^isCurrentPage}}
-                                        | <a href="/users/my-page/likes?page={{page}}">{{page}}</a>
+                                        | <a role="button" name="page" style="cursor: pointer;">{{page}}</a>
                                     {{/isCurrentPage}}
                                 {{/displayPages}}
                                 {{#hasNext}}
-                                    | | 다음 페이지: <a href="/users/my-page/likes?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/users/my-page/likes?page={{lastPage}}">{{lastPage}}</a>
+                                    | | 다음 페이지: <a role="button" name="page" style="cursor: pointer;">{{nextPage}}</a> | 마지막 페이지: <a role="button" name="page" style="cursor: pointer;">{{lastPage}}</a>
                                 {{/hasNext}}
                             </div>
                         {{/pages}}
+                        {{/contentsPage}}
                     </div>
                 </div>
             </div>
@@ -93,5 +95,6 @@
 
 {{>layout/footer}}
 <script src="/js/app/my-page.js"></script>
+<script src="/js/app/pages.js"></script>
 </body>
 </html>

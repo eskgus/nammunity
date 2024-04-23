@@ -3,17 +3,15 @@ package com.eskgus.nammunity.web.controller.user;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsService;
-import com.eskgus.nammunity.service.likes.LikesSearchService;
+import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
-import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +27,7 @@ public class UserIndexController {
     private final UserService userService;
     private final PostsService postsService;
     private final CommentsService commentsService;
-    private final LikesSearchService likesSearchService;
+    private final LikesService likesService;
     private final LikesRepository likesRepository;
 
     @GetMapping("/sign-up")
@@ -153,18 +151,11 @@ public class UserIndexController {
                             Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
-            User user = userService.findByUsername(principal.getName());
-
-            // 전체 좋아요 목록
-            Page<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findByUser, page, 20);
-            attr.put("likes", likes);
-
-            // 페이지 번호
-            PaginationDto<LikesListDto> paginationDto = PaginationDto.<LikesListDto>builder()
-                    .page(likes).display(10).build();
-            attr.put("pages", paginationDto);
+            ContentsPageDto<LikesListDto> contentsPage
+                    = likesService.listLikes(likesRepository::findByUser, principal, page);
+            attr.put("contentsPage", contentsPage);
         } catch (IllegalArgumentException ex) {
-            model.addAttribute("exception", ex.getMessage());
+            attr.put("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
         }
         model.addAllAttributes(attr);
@@ -176,16 +167,9 @@ public class UserIndexController {
                                  Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
-            User user = userService.findByUsername(principal.getName());
-
-            // 게시글 좋아요 목록
-            Page<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findPostLikesByUser, page, 20);
-            attr.put("likes", likes);
-
-            // 페이지 번호
-            PaginationDto<LikesListDto> paginationDto = PaginationDto.<LikesListDto>builder()
-                    .page(likes).display(10).build();
-            attr.put("pages", paginationDto);
+            ContentsPageDto<LikesListDto> contentsPage
+                    = likesService.listLikes(likesRepository::findPostLikesByUser, principal, page);
+            attr.put("contentsPage", contentsPage);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
@@ -199,16 +183,9 @@ public class UserIndexController {
                                     Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
-            User user = userService.findByUsername(principal.getName());
-
-            // 댓글 좋아요 목록
-            Page<LikesListDto> likes = likesSearchService.findLikesByUser(user, likesRepository::findCommentLikesByUser, page, 20);
-            attr.put("likes", likes);
-
-            // 페이지 번호
-            PaginationDto<LikesListDto> paginationDto = PaginationDto.<LikesListDto>builder()
-                    .page(likes).display(2).build();
-            attr.put("pages", paginationDto);
+            ContentsPageDto<LikesListDto> contentsPage
+                    = likesService.listLikes(likesRepository::findCommentLikesByUser, principal, page);
+            attr.put("contentsPage", contentsPage);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());
             attr.put("signOut", "/users/sign-out");
