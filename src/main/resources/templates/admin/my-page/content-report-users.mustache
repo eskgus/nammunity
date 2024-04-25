@@ -15,6 +15,7 @@
                 {{>layout/my-page-nav}}
                 <div class="admin-area">
                     <div id="reports-area">
+                        {{#contentsPage}}
                         <h2>컨텐츠 신고</h2>
                         <ul>
                             <li>
@@ -25,7 +26,7 @@
                         </ul>
                         <div class="checkbox-area">
                             <input type="checkbox" id="select-all"><label><a id="btn-delete-reports">삭제</a></label>
-                            <span>전체 {{summaries.totalElements}}개</span>
+                            <span>전체 {{contents.totalElements}}개</span>
                         </div>
                         <table>
                             <thead>
@@ -38,12 +39,12 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {{^summaries.content}}
+                            {{^contents.content}}
                                 <tr>
                                     <td class="no-content" colspan="5">신고 내역이 없어요.</td>
                                 </tr>
-                            {{/summaries.content}}
-                            {{#summaries.content}}
+                            {{/contents.content}}
+                            {{#contents.content}}
                                 {{#usersListDto}} {{! 사용자 신고 }}
                                     <tr class="users-area">
                                         <td><input type="checkbox"><label>{{type}}</label></td>
@@ -59,27 +60,28 @@
                                         </td>
                                     </tr>
                                 {{/usersListDto}}
-                            {{/summaries.content}}
+                            {{/contents.content}}
                             </tbody>
                         </table>
                         {{#pages}}
                             <div>
                                 {{#hasPrevious}}
-                                    첫 페이지: <a href="/admin/my-page/content-report/users?page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/admin/my-page/content-report/users?page={{previousPage}}">{{previousPage}}</a> |
+                                    첫 페이지: <a role="button" name="page" style="cursor: pointer;">{{firstPage}}</a> | 이전 페이지: <a role="button" name="page" style="cursor: pointer;">{{previousPage}}</a> |
                                 {{/hasPrevious}}
                                 {{#displayPages}}
                                     {{#isCurrentPage}}
                                         | 현재 페이지: {{page}}
                                     {{/isCurrentPage}}
                                     {{^isCurrentPage}}
-                                        | <a href="/admin/my-page/content-report/users?page={{page}}">{{page}}</a>
+                                        | <a role="button" name="page" style="cursor: pointer;">{{page}}</a>
                                     {{/isCurrentPage}}
                                 {{/displayPages}}
                                 {{#hasNext}}
-                                    | | 다음 페이지: <a href="/admin/my-page/content-report/users?page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/admin/my-page/content-report/users?page={{lastPage}}">{{lastPage}}</a>
+                                    | | 다음 페이지: <a role="button" name="page" style="cursor: pointer;">{{nextPage}}</a> | 마지막 페이지: <a role="button" name="page" style="cursor: pointer;">{{lastPage}}</a>
                                 {{/hasNext}}
                             </div>
                         {{/pages}}
+                        {{/contentsPage}}
                     </div>
                 </div>
             </div>
@@ -89,5 +91,6 @@
 
 {{>layout/footer}}
 <script src="/js/app/my-page.js"></script>
+<script src="/js/app/pages.js"></script>
 </body>
 </html>
