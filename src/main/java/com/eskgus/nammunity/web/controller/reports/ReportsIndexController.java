@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web.controller.reports;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.service.reports.ReportSummaryService;
 import com.eskgus.nammunity.service.reports.ReportsService;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
@@ -27,18 +28,8 @@ public class ReportsIndexController {
 
     @GetMapping("/content-report")
     public String listContentReports(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
-        Map<String, Object> attr = new HashMap<>();
-
-        // 전체 신고 요약 목록
-        Page<ContentReportSummaryDto> summaries = reportSummaryService.findAllDesc(page);
-        attr.put("summaries", summaries);
-
-        // 페이지 번호
-        PaginationDto<ContentReportSummaryDto> paginationDto = PaginationDto.<ContentReportSummaryDto>builder()
-                .page(summaries).display(10).build();
-        attr.put("pages", paginationDto);
-
-        model.addAllAttributes(attr);
+        ContentsPageDto<ContentReportSummaryDto> contentsPage = reportSummaryService.findAllDesc(page);
+        model.addAttribute("contentsPage", contentsPage);
         return "admin/my-page/content-report";
     }
 

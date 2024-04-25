@@ -8,6 +8,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummarySaveDto;
@@ -20,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.function.Function;
+
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
 @Service
@@ -66,9 +69,10 @@ public class ReportSummaryService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ContentReportSummaryDto> findAllDesc(int page) {
-        Pageable pageable = PageRequest.of(page - 1, 20);
-        return contentReportSummaryRepository.findAllDesc(pageable);
+    public ContentsPageDto<ContentReportSummaryDto> findAllDesc(int page) {
+        Pageable pageable = createPageable(page, 20);
+        Page<ContentReportSummaryDto> contents = contentReportSummaryRepository.findAllDesc(pageable);
+        return new ContentsPageDto<>(contents);
     }
 
     @Transactional(readOnly = true)

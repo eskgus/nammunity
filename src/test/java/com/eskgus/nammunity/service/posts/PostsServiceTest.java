@@ -30,6 +30,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,18 +69,19 @@ public class PostsServiceTest {
     @BeforeEach
     public void setUp() {
         Long user1Id = testDB.signUp(1L, Role.USER);
-        Long user2Id = testDB.signUp(2L, Role.USER);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        User user1 = userRepository.findById(user1Id).get();
-        User user2 = userRepository.findById(user2Id).get();
+        Long user2Id = testDB.signUp(2L, Role.USER);
+        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
 
         Long postId = testDB.savePosts(user1);
-        assertThat(postsRepository.count()).isEqualTo(postId);
+        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
+    }
 
-        this.post = postsRepository.findById(postId).get();
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
