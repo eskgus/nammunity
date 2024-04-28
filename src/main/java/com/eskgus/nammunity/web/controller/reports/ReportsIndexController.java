@@ -4,9 +4,8 @@ import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.service.reports.ReportSummaryService;
 import com.eskgus.nammunity.service.reports.ReportsService;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
-import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailDto;
-import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
+import com.eskgus.nammunity.web.dto.reports.ContentReportDetailRequestDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -14,9 +13,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -59,23 +55,10 @@ public class ReportsIndexController {
                                            @RequestParam(name = "userId", required = false) Long userId,
                                            @RequestParam(name = "page", defaultValue = "1") int page,
                                            Model model) {
-        Map<String, Object> attr = new HashMap<>();
-
-        ContentReportDetailDto detail;
-        if (postId != null) {
-            detail = reportsService.findDetails(ContentType.POSTS, postId, page);
-        } else if (commentId != null) {
-            detail = reportsService.findDetails(ContentType.COMMENTS, commentId, page);
-        } else {
-            detail = reportsService.findDetails(ContentType.USERS, userId, page);
-        }
-        attr.put("detail", detail);
-
-        PaginationDto<ContentReportDetailListDto> paginationDto = PaginationDto.<ContentReportDetailListDto>builder()
-                .page(detail.getReportDetails()).display(10).build();
-        attr.put("pages", paginationDto);
-
-        model.addAllAttributes(attr);
+        ContentReportDetailRequestDto requestDto = ContentReportDetailRequestDto.builder()
+                .postId(postId).commentId(commentId).userId(userId).page(page).build();
+        ContentReportDetailDto reportDetail = reportsService.listContentReportDetails(requestDto);
+        model.addAttribute("reportDetail", reportDetail);
         return "admin/my-page/content-report-details";
     }
 }

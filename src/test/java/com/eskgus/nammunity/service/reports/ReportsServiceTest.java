@@ -1,10 +1,8 @@
 package com.eskgus.nammunity.service.reports;
 
-import com.eskgus.nammunity.converter.CommentsConverterForTest;
-import com.eskgus.nammunity.converter.EntityConverterForTest;
-import com.eskgus.nammunity.converter.PostsConverterForTest;
-import com.eskgus.nammunity.converter.UserConverterForTest;
+import com.eskgus.nammunity.converter.*;
 import com.eskgus.nammunity.domain.enums.ContentType;
+import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
@@ -15,7 +13,10 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
+import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.reports.*;
+import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,10 +24,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.*;
+import java.util.function.Function;
 
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -54,6 +58,9 @@ public class ReportsServiceTest {
     private ContentReportSummaryRepository contentReportSummaryRepository;
 
     @Autowired
+    private TypesRepository typesRepository;
+
+    @Autowired
     private ReportsService reportsService;
 
     private User user1;
@@ -61,33 +68,30 @@ public class ReportsServiceTest {
     private Posts post;
     private Comments comment;
 
-    private Long latestPostReportId;
     private Long latestCommentReportId;
     private Long latestUserReportId;
 
-    private ContentType contentType;
+    private final int page = 1;
 
     @BeforeEach
     public void setUp() {
-        // 1. user1 회원가입 + user2 (관리자) 회원가입
         Long user1Id = testDB.signUp(1L, Role.USER);
-        Long user2Id = testDB.signUp(2L, Role.ADMIN);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        this.user1 = userRepository.findById(user1Id).get();
-        this.user2 = userRepository.findById(user2Id).get();
+        Long user2Id = testDB.signUp(2L, Role.ADMIN);
+        this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         // 2. user1이 게시글 작성
         Long postId = testDB.savePosts(user1);
-        assertThat(postsRepository.count()).isEqualTo(postId);
-
-        this.post = postsRepository.findById(postId).get();
+        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
         // 3. user1이 댓글 작성
         Long commentId = testDB.saveComments(postId, user1);
-        assertThat(commentsRepository.count()).isEqualTo(commentId);
+        this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
+    }
 
-        this.comment = commentsRepository.findById(commentId).get();
+    private <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
+        return testDB.assertOptionalAndGetEntity(finder, content);
     }
 
     @AfterEach
@@ -174,87 +178,96 @@ public class ReportsServiceTest {
     }
 
     private void saveReports() {
-        this.latestPostReportId = testDB.savePostReports(post.getId(), user2);
+        testDB.savePostReports(post.getId(), user2);
         this.latestCommentReportId = testDB.saveCommentReports(comment.getId(), user2);
         this.latestUserReportId = testDB.saveUserReports(user1, user2);
         assertThat(contentReportsRepository.count()).isEqualTo(latestUserReportId);
     }
 
     @Test
-    public void findDetails() {
+    public void listContentReportDetails() {
         saveReports();
 
-        // 1. contentType = post, id = post의 id
-        callAndAssertFindDetails(ContentType.POSTS, post);
+        // 1. postId
+        callAndAssertListContentReportDetails(post, new PostsListDto(post), ContentType.POSTS);
 
-        // 2. contentType = comment, id = comment의 id
-        callAndAssertFindDetails(ContentType.COMMENTS, comment);
+        // 2. commentId
+        callAndAssertListContentReportDetails(comment, new CommentsListDto(comment), ContentType.COMMENTS);
 
-        // 3. contentType = user, id = user1의 id
-        callAndAssertFindDetails(ContentType.USERS, user1);
+        // 3. userId
+        callAndAssertListContentReportDetails(user1, new UsersListDto(user1), ContentType.USERS);
+
     }
 
-    private <T> void callAndAssertFindDetails(ContentType contentType, T contents) {
-        this.contentType = contentType;
+    private <U, T> void callAndAssertListContentReportDetails(U content, T expectedContentListDto,
+                                                              ContentType contentType) {
+        Long contentId = getIdFromContent(content);
+        ContentReportDetailRequestDto requestDto = createRequestDto(contentId, contentType);
+        ContentReportDetailDto<T> actualResult = reportsService.listContentReportDetails(requestDto);
+        ContentReportDetailDto<T> expectedResult = createExpectedResult(expectedContentListDto, contentType);
+        Page<ContentReportDetailListDto> expectedContents = createExpectedContents(content);
 
-        Long contentId = getIdFromContent(contents);
-        ContentReportDetailDto detailDto = reportsService.findDetails(contentType, contentId, 1);
-
-        assertFindDetails(detailDto);
+        assertContentReportDetailDto(actualResult, expectedResult, expectedContents);
     }
 
-    private void assertFindDetails(ContentReportDetailDto detailDto) {
-        assertDetailDto(detailDto);
-        assertContentListDto(detailDto);
-        assertReportDetails(detailDto.getReportDetails());
-    }
-
-    private void assertDetailDto(ContentReportDetailDto detailDto) {
-        String expectedType = contentType.getDetailInKor();
-        assertThat(detailDto.getType()).isEqualTo(expectedType);
-    }
-
-    private void assertContentListDto(ContentReportDetailDto detailDto) {
+    private ContentReportDetailRequestDto createRequestDto(Long contentId, ContentType contentType) {
         if (contentType.equals(ContentType.POSTS)) {
-            assertContentListDtoId(new PostsConverterForTest(), detailDto.getPostsListDto(), post);
+            return ContentReportDetailRequestDto.builder().postId(contentId).page(page).build();
         } else if (contentType.equals(ContentType.COMMENTS)) {
-            assertContentListDtoId(new CommentsConverterForTest(CommentsListDto.class), detailDto.getCommentsListDto(),
-                    comment);
+            return ContentReportDetailRequestDto.builder().commentId(contentId).page(page).build();
         } else {
-            assertContentListDtoId(new UserConverterForTest(), detailDto.getUsersListDto(), user1);
+            return ContentReportDetailRequestDto.builder().userId(contentId).page(page).build();
         }
     }
 
-    private <T, U> void assertContentListDtoId(EntityConverterForTest entityConverter, T listDto, U entity) {
-        Long actualId = entityConverter.extractDtoId(listDto);
-        Long expectedId = entityConverter.extractEntityId(entity);
-        assertThat(actualId).isEqualTo(expectedId);
+    private <T> ContentReportDetailDto<T> createExpectedResult(T expectedContentListDto,
+                                                               ContentType contentType) {
+        Types expectedType = assertOptionalAndGetEntity(typesRepository::findByDetail, contentType.getDetailInKor());
+        return ContentReportDetailDto.<T>builder()
+                .type(expectedType).contentListDto(expectedContentListDto).build();
     }
 
-    private void assertReportDetails(Page<ContentReportDetailListDto> reportDetails) {
-        List<Long> expectedIds = getExpectedDetailListDtoIds();
-        assertThat(reportDetails.getContent()).extracting(ContentReportDetailListDto::getId)
-                .isEqualTo(expectedIds);
+    private <U> Page<ContentReportDetailListDto> createExpectedContents(U expectedContent) {
+        Pageable pageable = createPageable(page, 10);
+        return contentReportsRepository.findByContents(expectedContent, pageable);
     }
 
-    private List<Long> getExpectedDetailListDtoIds() {
-        long endIndex;
-        long startIndex;
-        if (contentType.equals(ContentType.POSTS)) {
-            endIndex = 0;
-            startIndex = latestPostReportId;
-        } else if (contentType.equals(ContentType.COMMENTS)) {
-            endIndex = latestPostReportId;
-            startIndex = latestCommentReportId;
+    private <T> void assertContentReportDetailDto(ContentReportDetailDto<T> actualResult,
+                                              ContentReportDetailDto<T> expectedResult,
+                                              Page<ContentReportDetailListDto> expectedContents) {
+        assertThat(actualResult.getType()).isEqualTo(expectedResult.getType());
+        assertContentListDto(actualResult, expectedResult);
+        assertContentsPage(actualResult.getContentsPage(), expectedContents);
+    }
+
+    private <T> void assertContentListDto(ContentReportDetailDto<T> actualResult,
+                                          ContentReportDetailDto<T> expectedResult) {
+        String type = actualResult.getType();
+        if (type.equals(ContentType.POSTS.getDetailInKor())) {
+            assertContentListDtoId(actualResult.getPostsListDto(), expectedResult.getPostsListDto(),
+                    new PostsConverterForTest());
+        } else if (type.equals(ContentType.COMMENTS.getDetailInKor())) {
+            assertContentListDtoId(actualResult.getCommentsListDto(), expectedResult.getCommentsListDto(),
+                    new CommentsConverterForTest<>(CommentsListDto.class));
         } else {
-            endIndex = latestCommentReportId;
-            startIndex = latestUserReportId;
+            assertContentListDtoId(actualResult.getUsersListDto(), expectedResult.getUsersListDto(),
+                    new UserConverterForTest());
         }
+    }
 
-        List<Long> expectedDetailListDtoIds = new ArrayList<>();
-        for (long i = startIndex; i > endIndex; i--) {
-            expectedDetailListDtoIds.add(i);
-        }
-        return expectedDetailListDtoIds;
+    private <T, U> void assertContentListDtoId(T actualContentListDto,
+                                            T expectedContentListDto,
+                                            EntityConverterForTest<U, T> entityConverter) {
+        assertThat(entityConverter.extractDtoId(actualContentListDto))
+                .isEqualTo(entityConverter.extractDtoId(expectedContentListDto));
+    }
+
+    private void assertContentsPage(ContentsPageDto<ContentReportDetailListDto> actualResult,
+                                    Page<ContentReportDetailListDto> expectedContents) {
+        ContentsPageDtoTestHelper<ContentReportDetailListDto, ContentReports> findHelper
+                = ContentsPageDtoTestHelper.<ContentReportDetailListDto, ContentReports>builder()
+                .actualResult(actualResult).expectedContents(expectedContents)
+                .entityConverter(new ContentReportsConverterForTest()).build();
+        findHelper.createExpectedResultAndAssertContentsPage();
     }
 }

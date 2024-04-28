@@ -11,17 +11,19 @@ import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.reports.*;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
 @Service
@@ -122,35 +124,32 @@ public class ReportsService {
     }
 
     @Transactional(readOnly = true)
-    public <T> ContentReportDetailDto findDetails(ContentType contentType, Long contentId, int page) {
-        T contents = getContentsFromContentId(contentType, contentId);
-        return createDetailDto(contentType, contents, page);
-    }
+    public ContentReportDetailDto listContentReportDetails(ContentReportDetailRequestDto requestDto) {
+        int page = requestDto.getPage();
 
-    private <T> T getContentsFromContentId(ContentType contentType, Long contentId) {
-        if (contentType.equals(ContentType.POSTS)) {
-            return (T) postsSearchService.findById(contentId);
-        } else if (contentType.equals(ContentType.COMMENTS)) {
-            return (T) commentsSearchService.findById(contentId);
+        if (requestDto.getPostId() != null) {
+            Posts post = postsSearchService.findById(requestDto.getPostId());
+            return createContentReportDetailDto(post, new PostsListDto(post), ContentType.POSTS, page);
+        } else if (requestDto.getCommentId() != null) {
+            Comments comment = commentsSearchService.findById(requestDto.getCommentId());
+            return createContentReportDetailDto(comment, new CommentsListDto(comment), ContentType.COMMENTS, page);
+        } else {
+            User user = userService.findById(requestDto.getUserId());
+            return createContentReportDetailDto(user, new UsersListDto(user), ContentType.USERS, page);
         }
-        return (T) userService.findById(contentId);
     }
 
-    private <T, U> ContentReportDetailDto createDetailDto(ContentType contentType, T contents, int page) {
-        Pageable pageable = PageRequest.of(page - 1, 10);
-        Page<ContentReportDetailListDto> reportDetails = contentReportsRepository.findByContents(contents, pageable);
+    private <T, U> ContentReportDetailDto<U> createContentReportDetailDto(T content, U contentListDto,
+                                                                       ContentType contentType, int page) {
         Types type = typesService.findByContentType(contentType);
-        U contentListDto = createContentListDto(contents);
-        return ContentReportDetailDto.builder().type(type).contentListDto(contentListDto).reportDetails(reportDetails).build();
+        ContentsPageDto<ContentReportDetailListDto> contentsPage = createContentsPage(page, content);
+        return ContentReportDetailDto.<U>builder()
+                .type(type).contentListDto(contentListDto).contentsPage(contentsPage).build();
     }
 
-    @Transactional(readOnly = true)
-    private <T, U> U createContentListDto(T contents) {
-        if (contents instanceof Posts) {
-            return (U) new PostsListDto((Posts) contents);
-        } else if (contents instanceof Comments) {
-            return (U) new CommentsListDto((Comments) contents);
-        }
-        return (U) new UsersListDto((User) contents);
+    private <T> ContentsPageDto<ContentReportDetailListDto> createContentsPage(int page, T content) {
+        Pageable pageable = createPageable(page, 10);
+        Page<ContentReportDetailListDto> contents = contentReportsRepository.findByContents(content, pageable);
+        return new ContentsPageDto<>(contents);
     }
 }

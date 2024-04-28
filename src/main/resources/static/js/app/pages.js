@@ -3,7 +3,7 @@ var pagesMain = {
         var _this = this;
 
         var currentLocation = window.location.pathname;
-        var isCurrentPagePostsRead = _this.isCurrentPagePostsRead(currentLocation);
+        var isCurrentPagePostsRead = currentLocation.includes('/posts/read');
         if (!isCurrentPagePostsRead) {  // 나머지 화면
             $(document).on('click', '[name="page"]', function() {
                 _this.getOtherPage(currentLocation, $(this).text());
@@ -19,12 +19,6 @@ var pagesMain = {
                 });
             });
         }
-    },
-    isCurrentPagePostsRead: function(currentLocation) {
-        if (currentLocation.includes('/posts/read')) {
-            return true;
-        }
-        return false;
     },
     getOtherPage: function(currentLocation, page) {
         var newLocation = this.getNewLocation(currentLocation, page);
@@ -42,6 +36,10 @@ var pagesMain = {
     getNewLocation: function(currentLocation, page) {
         if (currentLocation === '/') {
             currentLocation += 'main';
+        } else if (currentLocation.includes('/content-report/details')) {
+            var params = window.location.search;
+            currentLocation += params.substring(0, params.indexOf('&'));
+            return currentLocation + '&page=' + page;
         }
         return currentLocation + '?page=' + page;
     }
