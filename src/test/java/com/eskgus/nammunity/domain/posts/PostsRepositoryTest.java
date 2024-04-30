@@ -135,7 +135,7 @@ public class PostsRepositoryTest {
         String str3 = "붕어빵 3마리 1000원";
         String[] strings = { str1, str2, str3 };
         for (User user : users) {
-            testDB.savePosts(user, strings);
+            testDB.savePostsWithTitleAndContent(user, strings);
         }
         assertThat(postsRepository.count()).isEqualTo((long) Math.pow(strings.length, 2) * users.length);
     }

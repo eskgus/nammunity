@@ -1,15 +1,12 @@
 package com.eskgus.nammunity.web.controller.search;
 
-import com.eskgus.nammunity.domain.enums.SearchType;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
-import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.service.search.SearchService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
-import com.eskgus.nammunity.web.dto.pagination.PaginationDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
+import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,34 +20,16 @@ import java.util.Map;
 @Controller
 @RequestMapping("/search")
 public class SearchIndexController {
-    private final PostsSearchService postsSearchService;
-    private final CommentsSearchService commentsSearchService;
-    private final UserService userService;
+    private final SearchService searchService;
 
     @GetMapping
     public String search(@RequestParam(name = "keywords") String keywords,
-                         @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
+                         Model model) {
         Map<String, Object> attr = new HashMap<>();
-        int size = 5;
 
-        Page<PostsListDto> posts = postsSearchService.search(keywords, SearchType.TITLE_AND_CONTENT.getKey(), page, size);
-        if (posts.getTotalElements() > size) {
-            attr.put("postsMore", true);
-        }
-        attr.put("posts", posts);
-
-        Page<CommentsListDto> comments = commentsSearchService.searchByContent(keywords, page, size);
-        if (comments.getTotalElements() > size) {
-            attr.put("commentsMore", true);
-        }
-        attr.put("comments", comments);
-
-        Page<UsersListDto> users = userService.searchByNickname(keywords, page, size);
-        if (users.getTotalElements() > size) {
-            attr.put("usersMore", true);
-        }
-        attr.put("users", users);
-
+        ContentsPageMoreDtos<PostsListDto, CommentsListDto, UsersListDto> contentsPages
+                = searchService.search(keywords);
+        attr.put("contentsPages", contentsPages);
         attr.put("keywords", keywords);
 
         model.addAllAttributes(attr);
@@ -63,13 +42,8 @@ public class SearchIndexController {
                               @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
         Map<String, Object> attr = new HashMap<>();
 
-        Page<PostsListDto> posts = postsSearchService.search(keywords, searchBy, page, 30);
-        attr.put("posts", posts);
-
-        PaginationDto<PostsListDto> paginationDto = PaginationDto.<PostsListDto>builder()
-                .page(posts).display(10).build();
-        attr.put("pages", paginationDto);
-
+        ContentsPageDto<PostsListDto> contentsPage = searchService.searchPosts(keywords, searchBy, page);
+        attr.put("contentsPage", contentsPage);
         attr.put(searchBy, true);
         attr.put("searchBy", searchBy);
         attr.put("keywords", keywords);
@@ -83,13 +57,8 @@ public class SearchIndexController {
                                  @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
         Map<String, Object> attr = new HashMap<>();
 
-        Page<CommentsListDto> comments = commentsSearchService.searchByContent(keywords, page, 30);
-        attr.put("comments", comments);
-
-        PaginationDto<CommentsListDto> paginationDto = PaginationDto.<CommentsListDto>builder()
-                .page(comments).display(10).build();
-        attr.put("pages", paginationDto);
-
+        ContentsPageDto<CommentsListDto> contentsPage = searchService.searchComments(keywords, page);
+        attr.put("contentsPage", contentsPage);
         attr.put("keywords", keywords);
 
         model.addAllAttributes(attr);
@@ -101,13 +70,8 @@ public class SearchIndexController {
                               @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
         Map<String, Object> attr = new HashMap<>();
 
-        Page<UsersListDto> users = userService.searchByNickname(keywords, page, 30);
-        attr.put("users", users);
-
-        PaginationDto<UsersListDto> paginationDto = PaginationDto.<UsersListDto>builder()
-                .page(users).display(10).build();
-        attr.put("pages", paginationDto);
-
+        ContentsPageDto<UsersListDto> contentsPage = searchService.searchUsers(keywords, page);
+        attr.put("contentsPage", contentsPage);
         attr.put("keywords", keywords);
 
         model.addAllAttributes(attr);

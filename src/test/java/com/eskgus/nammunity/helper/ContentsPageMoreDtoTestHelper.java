@@ -1,10 +1,8 @@
 package com.eskgus.nammunity.helper;
 
-import com.eskgus.nammunity.converter.CommentsConverterForTest;
-import com.eskgus.nammunity.converter.EntityConverterForTest;
-import com.eskgus.nammunity.converter.LikesConverterForTest;
-import com.eskgus.nammunity.converter.PostsConverterForTest;
+import com.eskgus.nammunity.converter.*;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
@@ -41,8 +39,10 @@ public class ContentsPageMoreDtoTestHelper<T, U, V> {
                 entityConverters.add(new PostsConverterForTest());
             } else if (genericType.equals(CommentsListDto.class)) {
                 entityConverters.add(new CommentsConverterForTest<>(CommentsListDto.class));
-            } else {
+            } else if (genericType.equals(LikesListDto.class)){
                 entityConverters.add(new LikesConverterForTest());
+            } else {
+                entityConverters.add(new UserConverterForTest());
             }
         }
         return entityConverters;

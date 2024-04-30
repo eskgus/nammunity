@@ -9,8 +9,8 @@ import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.helper.ContentsPageMoreDtoTestHelper;
-import com.eskgus.nammunity.helper.SearchHelperForTest;
-import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
+import com.eskgus.nammunity.helper.PaginationTestHelper;
+import com.eskgus.nammunity.helper.Range;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
@@ -36,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
@@ -45,8 +46,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
-import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -228,41 +228,51 @@ public class UserServiceTest {
 
     @Test
     public void searchByNickname() {
-        signUpUsers();
+        saveUsersWithNickname();
 
         // 1. 검색 제외 단어 x
-        callAndAssertSearchUsers("nick 네임", User::getNickname);
+        callAndAssertSearchByNicnkame("nick 사");
 
         // 2. 검색 제외 단어 o
-        callAndAssertSearchUsers("nick 네임 -name", User::getNickname);
+        callAndAssertSearchByNicnkame("nick 사 -name");
     }
 
-    private void signUpUsers() {
-        Long userId = testDB.signUp(user2.getId() + 1, Role.USER);
-        Long numberOfUsers = userId + 3;
-        for (long i = userId; i < numberOfUsers; i++) {
-            testDB.signUp("닉네임" + i, i + 1, Role.USER);
+    private void saveUsersWithNickname() {
+        long numberOfUsers = 20;
+        long half = numberOfUsers / 2;
+
+        Range firstRange = Range.builder().startIndex(userRepository.count() + 1).endIndex(half).nickname("nickname").build();
+        Range secondRange = Range.builder().startIndex(half + 1).endIndex(numberOfUsers).nickname("사용자").build();
+
+        saveUsersInRange(firstRange);
+        saveUsersInRange(secondRange);
+    }
+
+    private void saveUsersInRange(Range range) {
+        for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
+            Long userId = testDB.signUp(range.getNickname() + i, i, Role.USER);
+            assertOptionalAndGetEntity(userRepository::findById, userId);
         }
-        assertThat(userRepository.count()).isEqualTo(numberOfUsers);
     }
 
-    private void callAndAssertSearchUsers(String keywords, Function<User, String>... fieldExtractors) {
-        SearchHelperForTest<ServiceTriSearcherForTest<UsersListDto>, User, UsersListDto> searchHelper
-                = createSearchHelper(userService::searchByNickname, keywords, fieldExtractors);
-        initializeSearchHelper(searchHelper);
-        callAndAssertSearch();
+    private void callAndAssertSearchByNicnkame(String keywords) {
+        int size = 3;
+
+        Page<UsersListDto> actualContents = userService.searchByNickname(keywords, page, size);
+        Page<UsersListDto> expectedContents = createExpectedPage(keywords, size);
+
+        assertContents(actualContents, expectedContents);
     }
 
-    private SearchHelperForTest<ServiceTriSearcherForTest<UsersListDto>, User, UsersListDto>
-        createSearchHelper(ServiceTriSearcherForTest<UsersListDto> searcher,
-                           String keywords, Function<User, String>... fieldExtractors) {
-        EntityConverterForTest<User, UsersListDto> entityConverter = new UserConverterForTest();
-        return SearchHelperForTest.<ServiceTriSearcherForTest<UsersListDto>, User, UsersListDto>builder()
-                .searcher(searcher).keywords(keywords)
-                .totalContents(userRepository.findAll())
-                .fieldExtractors(fieldExtractors)
-                .page(1).limit(2)
-                .entityConverter(entityConverter).build();
+    private Page<UsersListDto> createExpectedPage(String keywords, int size) {
+        Pageable pageable = createPageable(page, size);
+        return userRepository.searchByNickname(keywords, pageable);
+    }
+
+    private void assertContents(Page<UsersListDto> actualContents, Page<UsersListDto> expectedContents) {
+        PaginationTestHelper<UsersListDto, User> paginationHelper
+                = new PaginationTestHelper<>(actualContents, expectedContents, new UserConverterForTest());
+        paginationHelper.assertContents();
     }
 
     @Test

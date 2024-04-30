@@ -8,7 +8,6 @@ import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +47,7 @@ public class PostsSearchService {
 
     @Transactional(readOnly = true)
     public Page<PostsListDto> search(String keywords, String searchBy, int page, int size) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = createPageable(page, size);
 
         SearchType searchType = SearchType.convertSearchBy(searchBy);
         BiFunction<String, Pageable, Page<PostsListDto>> searcher = getSearcherBySearchType(searchType);
@@ -57,11 +56,10 @@ public class PostsSearchService {
     }
 
     private BiFunction<String, Pageable, Page<PostsListDto>> getSearcherBySearchType(SearchType searchType) {
-        if (searchType.equals(SearchType.TITLE)) {
-            return postsRepository::searchByTitle;
-        } else if (searchType.equals(SearchType.CONTENT)) {
-            return postsRepository::searchByContent;
-        }
-        return postsRepository::searchByTitleAndContent;
+        return switch (searchType) {
+            case TITLE -> postsRepository::searchByTitle;
+            case CONTENT -> postsRepository::searchByContent;
+            default -> postsRepository::searchByTitleAndContent;
+        };
     }
 }

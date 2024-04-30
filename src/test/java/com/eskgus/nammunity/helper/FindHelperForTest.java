@@ -23,17 +23,17 @@ import java.util.stream.Stream;
 
 @Getter
 public class FindHelperForTest<T, U, V, W> {  // T: finder<listDto>, U: entity, V: listDto, W: finder.apply() 호출 시 사용되는 entity
-    private T finder;
-    private W contents;
-    private ContentType contentType;
-    private Stream<U> entityStream;
+    private final T finder;
+    private final W contents;
+    private final ContentType contentType;
+    private final Stream<U> entityStream;
 
-    private int page;
-    private int limit;
+    private final int page;
+    private final int limit;
 
-    private EntityConverterForTest<U, V> entityConverter;
+    private final EntityConverterForTest<U, V> entityConverter;
 
-    private BiFunction<User, Pageable, Page<V>> likesFinder;
+    private final BiFunction<User, Pageable, Page<V>> likesFinder;
 
 
     @Builder
@@ -112,14 +112,7 @@ public class FindHelperForTest<T, U, V, W> {  // T: finder<listDto>, U: entity, 
             return ((RepositoryFinderForTest<V>) finder).apply(pageable);
         } else if (finder instanceof RepositoryBiFinderForTest) {
             return ((RepositoryBiFinderForTest<V, W>) finder).apply(contents, pageable);
-        } else if (finder instanceof ServiceFinderForTest) {
-            return ((ServiceFinderForTest<V>) finder).apply(page);
-        } else if (finder instanceof ServiceBiFinderForTest) {
-            return ((ServiceBiFinderForTest<V>) finder).apply(contentType, page);
-        } else if (finder instanceof ServiceTriFinderForTest){
-            return ((ServiceTriFinderForTest<V>) finder).apply((User) contents, page, limit);
-        } else {
-            return ((ServiceQuadFinderForTest<V>) finder).apply((User) contents, likesFinder, page, limit);
         }
+        return null;
     }
 }

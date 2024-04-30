@@ -36,10 +36,16 @@ var pagesMain = {
     getNewLocation: function(currentLocation, page) {
         if (currentLocation === '/') {
             currentLocation += 'main';
-        } else if (currentLocation.includes('/content-report/details')) {
-            var params = window.location.search;
-            currentLocation += params.substring(0, params.indexOf('&'));
-            return currentLocation + '&page=' + page;
+        } else if (currentLocation.includes('/content-report/details') || currentLocation.includes('/search')) {
+            var params = new URLSearchParams(window.location.search);
+            var pageParamIndex = params.get('page');
+
+            if (pageParamIndex !== null) {
+                params.delete('page');
+            }
+
+            params.set('page', page);
+            return currentLocation + '?' + params;
         }
         return currentLocation + '?page=' + page;
     }

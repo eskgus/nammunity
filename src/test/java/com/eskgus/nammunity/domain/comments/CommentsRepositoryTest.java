@@ -113,7 +113,7 @@ public class CommentsRepositoryTest {
         String str2 = "붕어빵 3마리 1000원";
         String[] strings = { str1, str2 };
         for (User user : users) {
-            testDB.saveComments(post.getId(), user, strings);
+            testDB.saveCommentsWithContent(post.getId(), user, strings);
         }
         assertThat(commentsRepository.count()).isEqualTo(strings.length * users.length);
     }

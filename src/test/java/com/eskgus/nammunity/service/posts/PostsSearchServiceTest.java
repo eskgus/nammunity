@@ -1,6 +1,5 @@
 package com.eskgus.nammunity.service.posts;
 
-import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.domain.enums.SearchType;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -10,8 +9,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
-import com.eskgus.nammunity.helper.SearchHelperForTest;
-import com.eskgus.nammunity.helper.repository.searcher.ServiceQuadSearcherForTest;
+import com.eskgus.nammunity.helper.Range;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
@@ -25,11 +23,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
-import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
-import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -53,13 +51,16 @@ public class PostsSearchServiceTest {
     @BeforeEach
     public void setUp() {
         Long user1Id = testDB.signUp(1L, Role.USER);
-        Long user2Id = testDB.signUp(2L, Role.USER);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        User user1 = userRepository.findById(user1Id).get();
-        User user2 = userRepository.findById(user2Id).get();
+        Long user2Id = testDB.signUp(2L, Role.USER);
+        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -110,10 +111,10 @@ public class PostsSearchServiceTest {
         int size = 4;
         User user = users[0];
 
-        Page<PostsListDto> actualPage = postsSearchService.findByUser(user, page, size);
-        Page<PostsListDto> expectedPage = createExpectedPage(size, user);
+        Page<PostsListDto> actualContents = postsSearchService.findByUser(user, page, size);
+        Page<PostsListDto> expectedContents = createExpectedPage(size, user);
 
-        assertFindByUser(actualPage, expectedPage);
+        assertContents(actualContents, expectedContents);
     }
 
     private Page<PostsListDto> createExpectedPage(int size, User user) {
@@ -121,9 +122,9 @@ public class PostsSearchServiceTest {
         return postsRepository.findByUser(user, pageable);
     }
 
-    private void assertFindByUser(Page<PostsListDto> actualPage, Page<PostsListDto> expectedPage) {
+    private void assertContents(Page<PostsListDto> actualContents, Page<PostsListDto> expectedContents) {
         PaginationTestHelper<PostsListDto, Posts> paginationHelper
-                = new PaginationTestHelper<>(actualPage, expectedPage, new PostsConverterForTest());
+                = new PaginationTestHelper<>(actualContents, expectedContents, new PostsConverterForTest());
         paginationHelper.assertContents();
     }
 
@@ -131,44 +132,60 @@ public class PostsSearchServiceTest {
     public void search() {
         savePostsWithTitleAndContent();
 
-        // 1. 제목 + 내용
-        callAndAssertSearchPosts("흥 100 Let", SearchType.TITLE_AND_CONTENT.getKey()
-                , Posts::getTitle, Posts::getContent);
+        // 1. searchBy = title (title)
+        callAndAssertSearch("title", SearchType.TITLE);
 
-        // 2. 제목
-        callAndAssertSearchPosts("흥 100 Let", SearchType.TITLE.getKey(), Posts::getTitle);
+        // 2. searchBy = content (content)
+        callAndAssertSearch("content", SearchType.CONTENT);
 
-        // 3. 내용
-        callAndAssertSearchPosts("흥 100 Let -봉,마리", SearchType.CONTENT.getKey(), Posts::getContent);
+        // 3. searchBy = title and content (제목 내용)
+        callAndAssertSearch("제목 내용", SearchType.TITLE_AND_CONTENT);
     }
 
     private void savePostsWithTitleAndContent() {
-        String str1 = "default";
-        String str2 = "bts, 봉준호, 손흥민, 이나현 let's go";
-        String str3 = "붕어빵 3마리 1000원";
-        String[] strings = { str1, str2, str3 };
-        for (User user : users) {
-            testDB.savePosts(user, strings);
+        long numberOfPosts = 20;
+        long half = numberOfPosts / 2;
+
+        Range firstRange = Range.builder()
+                .startIndex(1).endIndex(half)
+                .title("title").content("content").build();
+        Range secondRange = Range.builder()
+                .startIndex(half + 1).endIndex(numberOfPosts)
+                .title("제목").content("내용").build();
+
+        savePostsInRange(firstRange);
+        savePostsInRange(secondRange);
+    }
+
+    private void savePostsInRange(Range range) {
+        for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
+            Long postId = testDB.savePostWithTitleAndContent(users[0], range.getTitle() + i, range.getContent() + i);
+            assertOptionalAndGetEntity(postsRepository::findById, postId);
         }
-        assertThat(postsRepository.count()).isEqualTo((long) Math.pow(strings.length, 2) * users.length);
     }
 
-    private void callAndAssertSearchPosts(String keywords, String searchBy, Function<Posts, String>... fieldExtractors) {
-        SearchHelperForTest<ServiceQuadSearcherForTest<PostsListDto>, Posts, PostsListDto> searchHelper
-                = createSearchHelper(postsSearchService::search, keywords, searchBy, fieldExtractors);
-        initializeSearchHelper(searchHelper);
-        callAndAssertSearch();
+    private void callAndAssertSearch(String keywords, SearchType searchType) {
+        String searchBy = searchType.getKey();
+        int size = 3;
+
+        Page<PostsListDto> actualContents = postsSearchService.search(keywords, searchBy, page, size);
+        Page<PostsListDto> expectedContents = createExpectedPage(keywords, searchType, size);
+
+        assertContents(actualContents, expectedContents);
     }
 
-    private SearchHelperForTest<ServiceQuadSearcherForTest<PostsListDto>, Posts, PostsListDto>
-        createSearchHelper(ServiceQuadSearcherForTest<PostsListDto> searcher,
-                           String keywords, String searchBy, Function<Posts, String>... fieldExtractors) {
-        EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
-        return SearchHelperForTest.<ServiceQuadSearcherForTest<PostsListDto>, Posts, PostsListDto>builder()
-                .searcher(searcher).keywords(keywords)
-                .totalContents(postsRepository.findAll())
-                .searchBy(searchBy).fieldExtractors(fieldExtractors)
-                .page(1).limit(3)
-                .entityConverter(entityConverter).build();
+    private Page<PostsListDto> createExpectedPage(String keywords, SearchType searchType, int size) {
+        Pageable pageable = createPageable(page, size);
+        BiFunction<String, Pageable, Page<PostsListDto>> searcher = getSearcher(searchType);
+        return searcher.apply(keywords, pageable);
+    }
+
+    private BiFunction<String, Pageable, Page<PostsListDto>> getSearcher(SearchType searchType) {
+        if (searchType.equals(SearchType.TITLE)) {
+            return postsRepository::searchByTitle;
+        } else if (searchType.equals(SearchType.CONTENT)) {
+            return postsRepository::searchByContent;
+        }
+        return postsRepository::searchByTitleAndContent;
     }
 }

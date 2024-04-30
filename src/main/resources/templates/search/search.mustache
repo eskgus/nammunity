@@ -24,19 +24,21 @@
                 </ul>
             </div>
             <div class="results-area">
+                {{#contentsPages}}
                 <div class="posts-area">
+                    {{#contentsPageMore1}}
                     <div class="title">
                         <h2>게시글</h2>
-                        {{#postsMore}}<a class="more" href="/search/posts?keywords={{keywords}}&searchBy=title+content">더 보기<img></a>{{/postsMore}}
+                        {{#more}}<a class="more" href="/search/posts?keywords={{keywords}}&searchBy=title+content">더 보기<img></a>{{/more}}
                     </div>
                     <table>
                         <tbody>
-                        {{^posts.content}}
+                        {{^contents.content}}
                             <tr>
                                 <td class="no-content">검색된 게시글이 없어요.</td>
                             </tr>
-                        {{/posts.content}}
-                        {{#posts.content}}
+                        {{/contents.content}}
+                        {{#contents.content}}
                             <tr>
                                 <td>
                                     <div class="tit">
@@ -46,23 +48,25 @@
                                     <span class="date">{{author}} | {{modifiedDate}} | <img class="view"> {{view}} | <img class="cmt"> {{comments}} | <img class="like"> {{likes}}</span>
                                 </td>
                             </tr>
-                        {{/posts.content}}
+                        {{/contents.content}}
                         </tbody>
                     </table>
+                    {{/contentsPageMore1}}
                 </div>
                 <div class="comments-area">
+                    {{#contentsPageMore2}}
                     <div class="title">
                         <h2>댓글</h2>
-                        {{#commentsMore}}<a class="more" href="/search/comments?keywords={{keywords}}">더 보기<img></a>{{/commentsMore}}
+                        {{#more}}<a class="more" href="/search/comments?keywords={{keywords}}">더 보기<img></a>{{/more}}
                     </div>
                     <table>
                         <tbody>
-                        {{^comments.content}}
+                        {{^contents.content}}
                             <tr>
                                 <td class="no-content">검색된 댓글이 없어요.</td>
                             </tr>
-                        {{/comments.content}}
-                        {{#comments.content}}
+                        {{/contents.content}}
+                        {{#contents.content}}
                             <tr>
                                 <td>
                                     <a href="/posts/read/{{postsId}}#cmt-{{commentsId}}"><pre>{{content}}</pre></a>
@@ -72,32 +76,36 @@
                                     </div>
                                 </td>
                             </tr>
-                        {{/comments.content}}
+                        {{/contents.content}}
                         </tbody>
                     </table>
+                    {{/contentsPageMore2}}
                 </div>
                 <div class="users-area">
+                    {{#contentsPageMore3}}
                     <div class="title">
                         <h2>사용자</h2>
-                        {{#usersMore}}<a class="more" href="/search/users?keywords={{keywords}}">더 보기<img></a>{{/usersMore}}
+                        {{#more}}<a class="more" href="/search/users?keywords={{keywords}}">더 보기<img></a>{{/more}}
                     </div>
                     <table>
                         <tbody>
-                        {{^users.content}}
+                        {{^contents.content}}
                             <tr>
                                 <td class="no-content">검색된 사용자가 없어요.</td>
                             </tr>
-                        {{/users.content}}
-                        {{#users.content}}
+                        {{/contents.content}}
+                        {{#contents.content}}
                             <tr>
                                 <td>
                                     <a href="/users/activity-history/posts/{{id}}">{{nickname}}</a>
                                 </td>
                             </tr>
-                        {{/users.content}}
+                        {{/contents.content}}
                         </tbody>
                     </table>
+                    {{/contentsPageMore3}}
                 </div>
+                {{/contentsPages}}
             </div>
         </div>
     </div>

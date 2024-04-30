@@ -24,18 +24,19 @@
                 </ul>
             </div>
             <div class="results-area">
+                {{#contentsPage}}
                 <div class="comments-area">
                     <div class="title">
                         <h2>댓글</h2>
                     </div>
                     <table>
                         <tbody>
-                        {{^comments.content}}
+                        {{^contents.content}}
                             <tr>
                                 <td class="no-content">검색된 댓글이 없어요.</td>
                             </tr>
-                        {{/comments.content}}
-                        {{#comments.content}}
+                        {{/contents.content}}
+                        {{#contents.content}}
                             <tr>
                                 <td>
                                     <a href="/posts/read/{{postsId}}#cmt-{{commentsId}}"><pre>{{content}}</pre></a>
@@ -45,33 +46,35 @@
                                     </div>
                                 </td>
                             </tr>
-                        {{/comments.content}}
+                        {{/contents.content}}
                         </tbody>
                     </table>
                     {{#pages}}
                         <div>
                             {{#hasPrevious}}
-                                첫 페이지: <a href="/search/comments?keywords={{keywords}}&page={{firstPage}}">{{firstPage}}</a> | 이전 페이지: <a href="/search/comments?keywords={{keywords}}&page={{previousPage}}">{{previousPage}}</a> |
+                                첫 페이지: <a role="button" name="page" style="cursor: pointer;">{{firstPage}}</a> | 이전 페이지: <a role="button" name="page" style="cursor: pointer;">{{previousPage}}</a> |
                             {{/hasPrevious}}
                             {{#displayPages}}
                                 {{#isCurrentPage}}
                                     | 현재 페이지: {{page}}
                                 {{/isCurrentPage}}
                                 {{^isCurrentPage}}
-                                    | <a href="/search/comments?keywords={{keywords}}&page={{page}}">{{page}}</a>
+                                    | <a role="button" name="page" style="cursor: pointer;">{{page}}</a>
                                 {{/isCurrentPage}}
                             {{/displayPages}}
                             {{#hasNext}}
-                                | | 다음 페이지: <a href="/search/comments?keywords={{keywords}}&page={{nextPage}}">{{nextPage}}</a> | 마지막 페이지: <a href="/search/comments?keywords={{keywords}}&page={{lastPage}}">{{lastPage}}</a>
+                                | | 다음 페이지: <a role="button" name="page" style="cursor: pointer;">{{nextPage}}</a> | 마지막 페이지: <a role="button" name="page" style="cursor: pointer;">{{lastPage}}</a>
                             {{/hasNext}}
                         </div>
                     {{/pages}}
                 </div>
+                {{/contentsPage}}
             </div>
         </div>
     </div>
 </div>
 
 {{>layout/footer}}
+<script src="/js/app/pages.js"></script>
 </body>
 </html>

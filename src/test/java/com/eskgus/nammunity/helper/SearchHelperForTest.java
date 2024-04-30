@@ -2,8 +2,6 @@ package com.eskgus.nammunity.helper;
 
 import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.helper.repository.searcher.RepositoryBiSearcherForTest;
-import com.eskgus.nammunity.helper.repository.searcher.ServiceQuadSearcherForTest;
-import com.eskgus.nammunity.helper.repository.searcher.ServiceTriSearcherForTest;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
@@ -15,18 +13,18 @@ import java.util.stream.Stream;
 
 @Getter
 public class SearchHelperForTest<T, U, V> {    // T: searcher<listDto>, U: entity, V: listDto
-    private T searcher;
-    private String keywords;
-    private KeywordHelper keywordHelper;
+    private final T searcher;
+    private final String keywords;
+    private final KeywordHelper keywordHelper;
 
-    private List<U> totalContents;
-    private Function<U, String>[] fieldExtractors;
-    private String searchBy;
+    private final List<U> totalContents;
+    private final Function<U, String>[] fieldExtractors;
+    private final String searchBy;
 
-    private int page;
-    private int limit;
+    private final int page;
+    private final int limit;
 
-    private EntityConverterForTest<U, V> entityConverter;
+    private final EntityConverterForTest<U, V> entityConverter;
 
     @Builder
     public SearchHelperForTest(T searcher, String keywords,
@@ -46,11 +44,8 @@ public class SearchHelperForTest<T, U, V> {    // T: searcher<listDto>, U: entit
     public Page<V> applySearcher(Pageable pageable) {
         if (searcher instanceof RepositoryBiSearcherForTest) {
             return ((RepositoryBiSearcherForTest<V>) searcher).apply(keywords, pageable);
-        } else if (searcher instanceof ServiceQuadSearcherForTest) {
-            return ((ServiceQuadSearcherForTest<V>) searcher).apply(keywords, searchBy, page, limit);
-        } else {
-            return ((ServiceTriSearcherForTest<V>) searcher).apply(keywords, page, limit);
         }
+        return null;
     }
 
     public Stream<U> getKeywordsFilter() {

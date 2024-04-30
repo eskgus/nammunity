@@ -142,7 +142,12 @@ public class TestDB {
         return postsRepository.save(post).getId();
     }
 
-    public void savePosts(User user, String... strings) {
+    public Long savePostWithTitleAndContent(User user, String title, String content) {
+        Posts post = Posts.builder().title(title).content(content).user(user).build();
+        return postsRepository.save(post).getId();
+    }
+
+    public void savePostsWithTitleAndContent(User user, String... strings) {
         for (String title : strings) {
             for (String content :  strings) {
                 Posts post = Posts.builder()
@@ -160,7 +165,14 @@ public class TestDB {
         return commentsRepository.save(comment).getId();
     }
 
-    public void saveComments(Long postId, User user, String... strings) {
+    public Long saveCommentWithContent(Long postId, User user, String content) {
+        Posts post = assertOptionalAndGetEntity(postsRepository::findById, postId);
+
+        Comments comment = Comments.builder().content(content).posts(post).user(user).build();
+        return commentsRepository.save(comment).getId();
+    }
+
+    public void saveCommentsWithContent(Long postId, User user, String... strings) {
         Posts post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
         for (String content : strings) {
