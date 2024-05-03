@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.controller.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
@@ -22,6 +23,7 @@ import java.security.Principal;
 public class PostsIndexController {
     private final PostsService postsService;
     private final PostsSearchService postsSearchService;
+    private final CommentsSearchService commentsSearchService;
 
     @GetMapping({"/", "/main"})
     public String mainPage(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
@@ -38,9 +40,13 @@ public class PostsIndexController {
     @GetMapping("/posts/read/{id}")
     public String read(@PathVariable Long id,
                        @RequestParam(name = "page", required = false) Integer page,
+                        @RequestParam(name = "cmt", required = false) Long commentId,
                         Principal principal, Model model) {
         if (page == null) {
-            return readPosts(id, principal, model);
+            if (commentId == null) {
+                return readPosts(id, principal, model);
+            }
+            return readSpecificComments(id, commentId, principal, model);
         }
         return readComments(id, principal, page, model);
     }
@@ -53,6 +59,11 @@ public class PostsIndexController {
             model.addAttribute("exception", ex.getMessage());
         }
         return "posts/posts-read";
+    }
+
+    private String readSpecificComments(Long postId, Long commentId, Principal principal, Model model) {
+        int page = commentsSearchService.calculateCommentPage(postId, commentId);
+        return readComments(postId, principal, page, model);
     }
 
     private String readComments(Long id, Principal principal, int page, Model model) {

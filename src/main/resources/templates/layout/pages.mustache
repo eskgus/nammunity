@@ -1,0 +1,20 @@
+{{#pages}}
+    <div class="pagination">
+        {{#hasPrevious}}
+            <a role="button" name="page" class="first"><span>{{firstPage}}</span><img></a>
+            <a role="button" name="page" class="previous"><span>{{previousPage}}</span><img></a>
+        {{/hasPrevious}}
+        {{#displayPages}}
+            {{#isCurrentPage}}
+                <strong>{{page}}</strong>
+            {{/isCurrentPage}}
+            {{^isCurrentPage}}
+                <a role="button" name="page">{{page}}</a>
+            {{/isCurrentPage}}
+        {{/displayPages}}
+        {{#hasNext}}
+            <a role="button" name="page" class="next"><span>{{nextPage}}</span><img></a>
+            <a role="button" name="page" class="last"><span>{{lastPage}}</span><img></a>
+        {{/hasNext}}
+    </div>
+{{/pages}}

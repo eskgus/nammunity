@@ -12,6 +12,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -111,5 +112,14 @@ public class CommentsRepositoryImpl extends QuerydslRepositorySupport implements
     @Override
     public Page<CommentsReadDto> findByPosts(Posts post, Pageable pageable) {
         return findCommentsByFields(post, pageable, CommentsReadDto.class);
+    }
+
+    @Override
+    public long countCommentIndex(Long postId, Long commentId) {
+        JPAQueryFactory query = new JPAQueryFactory(entityManager);
+        BooleanBuilder whereCondition = new BooleanBuilder();
+        whereCondition.and(qComments.posts.id.eq(postId));
+        whereCondition.and(qComments.id.gt(commentId));
+        return query.select(qComments.count()).from(qComments).where(whereCondition).fetchOne();
     }
 }

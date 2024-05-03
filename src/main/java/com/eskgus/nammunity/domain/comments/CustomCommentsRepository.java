@@ -11,4 +11,5 @@ public interface CustomCommentsRepository {
     Page<CommentsListDto> searchByContent(String keywords, Pageable pageable);
     Page<CommentsListDto> findByUser(User user, Pageable pageable);
     Page<CommentsReadDto> findByPosts(Posts post, Pageable pageable);
+    long countCommentIndex(Long postId, Long commentId);
 }

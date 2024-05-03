@@ -52,18 +52,19 @@ public class CommentsRepositoryTest {
     @BeforeEach
     public void setUp() {
         Long user1Id = testDB.signUp(1L, Role.USER);
-        Long user2Id = testDB.signUp(2L, Role.USER);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        User user1 = userRepository.findById(user1Id).get();
-        User user2 = userRepository.findById(user2Id).get();
+        Long user2Id = testDB.signUp(2L, Role.USER);
+        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
 
         Long postId = testDB.savePosts(user1);
-        assertThat(postsRepository.count()).isEqualTo(postId);
+        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
+    }
 
-        this.post = postsRepository.findById(postId).get();
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -88,13 +89,7 @@ public class CommentsRepositoryTest {
 
     private Comments saveCommentAndGetSavedComment() {
         Long commentId = testDB.saveComments(post.getId(), users[0]);
-        return getSavedComment(commentId);
-    }
-
-    private Comments getSavedComment(Long commentId) {
-        Optional<Comments> result = commentsRepository.findById(commentId);
-        assertThat(result).isPresent();
-        return result.get();
+        return assertOptionalAndGetEntity(commentsRepository::findById, commentId);
     }
 
     @Test
@@ -185,5 +180,20 @@ public class CommentsRepositoryTest {
                 .entityStream(commentsRepository.findAll().stream())
                 .page(1).limit(4)
                 .entityConverter(entityConverter).build();
+    }
+
+    @Test
+    public void countCommentIndex() {
+        saveComments();
+
+        callAndAssertCountCommentIndex();
+    }
+
+    private void callAndAssertCountCommentIndex() {
+        long expectedCommentIndex = 3;
+        Comments comment = assertOptionalAndGetEntity(
+                commentsRepository::findById, commentsRepository.count() - expectedCommentIndex);
+        long actualCommentIndex = commentsRepository.countCommentIndex(post.getId(), comment.getId());
+        assertThat(actualCommentIndex).isEqualTo(expectedCommentIndex);
     }
 }

@@ -64,4 +64,10 @@ public class CommentsSearchService {
         Pageable pageable = createPageable(page, size);
         return commentsRepository.searchByContent(keywords, pageable);
     }
+
+    @Transactional(readOnly = true)
+    public int calculateCommentPage(Long postId, Long commentId) {
+        long commentIndex = commentsRepository.countCommentIndex(postId, commentId);
+        return (int) commentIndex / 30 + 1;
+    }
 }

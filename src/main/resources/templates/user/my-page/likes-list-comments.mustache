@@ -54,24 +54,7 @@
                             {{/contents.content}}
                             </tbody>
                         </table>
-                        {{#pages}}
-                            <div>
-                                {{#hasPrevious}}
-                                    첫 페이지: <a role="button" name="page" style="cursor: pointer;">{{firstPage}}</a> | 이전 페이지: <a role="button" name="page" style="cursor: pointer;">{{previousPage}}</a> |
-                                {{/hasPrevious}}
-                                {{#displayPages}}
-                                    {{#isCurrentPage}}
-                                        | 현재 페이지: {{page}}
-                                    {{/isCurrentPage}}
-                                    {{^isCurrentPage}}
-                                        | <a role="button" name="page" style="cursor: pointer;">{{page}}</a>
-                                    {{/isCurrentPage}}
-                                {{/displayPages}}
-                                {{#hasNext}}
-                                    | | 다음 페이지: <a role="button" name="page" style="cursor: pointer;">{{nextPage}}</a> | 마지막 페이지: <a role="button" name="page" style="cursor: pointer;">{{lastPage}}</a>
-                                {{/hasNext}}
-                            </div>
-                        {{/pages}}
+                        {{>layout/pages}}
                         {{/contentsPage}}
                     </div>
                 </div>

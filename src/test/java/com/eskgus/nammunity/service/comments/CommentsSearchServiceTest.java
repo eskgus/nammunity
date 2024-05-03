@@ -218,4 +218,27 @@ public class CommentsSearchServiceTest {
         }
         return expectedDoesUserLikeComment;
     }
+
+    @Test
+    public void calculateCommentPage() {
+        saveComments();
+
+        callAndAssertCalculateCommentPage();
+    }
+
+    private void callAndAssertCalculateCommentPage() {
+        // Long postId, Long commentId
+        long commentIndex = 3;
+        Comments comment = assertOptionalAndGetEntity(
+                commentsRepository::findById, commentsRepository.count() - commentIndex);
+        int expectedCommentPage = getExpectedCommentPage((int) commentIndex);
+
+        int actualCommentPage = commentsSearchService.calculateCommentPage(post.getId(), comment.getId());
+
+        assertThat(actualCommentPage).isEqualTo(expectedCommentPage);
+    }
+
+    private int getExpectedCommentPage(int commentIndex) {
+        return commentIndex / 30 + 1;
+    }
 }

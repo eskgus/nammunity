@@ -1342,3 +1342,51 @@ textarea:disabled {
     margin-right: 14px;
 }
 /* 여기까지 검색 */
+
+/* 여기부터 페이지 */
+.pagination {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.pagination strong,
+.pagination a{
+    cursor: pointer;
+    padding: 7px;
+    margin: 0 5px;
+    border: 1px solid transparent;
+}
+
+.pagination strong,
+.pagination a[name="page"]:hover {
+    border: 1px solid #AAC2A9;
+    border-radius: 0.3rem;
+    text-decoration: none;
+}
+
+.pagination a img {
+    height: 10px;
+}
+
+.pagination a.last img,
+.pagination a.first img {
+    width: 20px;
+    content: url(/images/app/arrow2_s_l.png);
+}
+
+.pagination a.next img,
+.pagination a.previous img {
+    width: 10px;
+    content: url(/images/app/arrow_s_l.png);
+}
+
+.pagination a.first img,
+.pagination a.previous img {
+    transform: scaleX(-1);
+}
+
+.pagination a span {
+    position: absolute;
+    left: -9999px;
+}
+/* 여기까지 페이지 */

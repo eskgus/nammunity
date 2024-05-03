@@ -22,7 +22,6 @@ var commentsMain = {
         $(document).ready(function() {
             var commentId = window.location.hash;
             if (commentId) {    // commentId가 존재하는 경우 해당 댓글 위치로 스크롤 이동
-                console.log('commentId is present');
                 _this.focusOnTargetComment(commentId);
             }
         });
