@@ -257,7 +257,7 @@ public class ReportsServiceTest {
 
     private <T, U> void assertContentListDtoId(T actualContentListDto,
                                             T expectedContentListDto,
-                                            EntityConverterForTest<U, T> entityConverter) {
+                                            EntityConverterForTest<T, U> entityConverter) {
         assertThat(entityConverter.extractDtoId(actualContentListDto))
                 .isEqualTo(entityConverter.extractDtoId(expectedContentListDto));
     }

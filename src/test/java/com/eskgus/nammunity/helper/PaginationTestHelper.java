@@ -20,11 +20,11 @@ public class PaginationTestHelper<T, U> {   // T: dto, U: entity
 
     private Page<T> actualContents;
     private Page<T> expectedContents;
-    private EntityConverterForTest<U, T> entityConverter;
+    private EntityConverterForTest<T, U> entityConverter;
 
     public PaginationTestHelper(ContentsPageDto<T> actualContentsPage,
                                 ContentsPageDto<T> expectedContentsPage,
-                                EntityConverterForTest<U, T> entityConverter) {
+                                EntityConverterForTest<T, U> entityConverter) {
         this.actualContentsPage = actualContentsPage;
         this.expectedContentsPage = expectedContentsPage;
         generateContentsAndConverter(actualContentsPage.getContents(), expectedContentsPage.getContents(),
@@ -32,13 +32,13 @@ public class PaginationTestHelper<T, U> {   // T: dto, U: entity
     }
 
     public PaginationTestHelper(Page<T> actualContents, Page<T> expectedContents,
-                                EntityConverterForTest<U, T> entityConverter) {
+                                EntityConverterForTest<T, U> entityConverter) {
         generateContentsAndConverter(actualContents, expectedContents, entityConverter);
     }
 
     public PaginationTestHelper(ContentsPageMoreDto<T> actualContentsPageMore,
                                 ContentsPageMoreDto<T> expectedContentsPageMore,
-                                EntityConverterForTest<U, T> entityConverter) {
+                                EntityConverterForTest<T, U> entityConverter) {
         this.actualContentsPageMore = actualContentsPageMore;
         this.expectedContentsPageMore = expectedContentsPageMore;
         generateContentsAndConverter(actualContentsPageMore.getContents(), expectedContentsPageMore.getContents(),
@@ -46,7 +46,7 @@ public class PaginationTestHelper<T, U> {   // T: dto, U: entity
     }
 
     private void generateContentsAndConverter(Page<T> actualContents, Page<T> expectedContents,
-                                              EntityConverterForTest<U, T> entityConverter) {
+                                              EntityConverterForTest<T, U> entityConverter) {
         this.actualContents = actualContents;
         this.expectedContents = expectedContents;
         this.entityConverter = entityConverter;

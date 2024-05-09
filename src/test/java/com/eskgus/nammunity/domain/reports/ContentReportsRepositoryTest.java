@@ -1,12 +1,10 @@
 package com.eskgus.nammunity.domain.reports;
 
 import com.eskgus.nammunity.converter.ContentReportsConverterForTest;
-import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.helper.repository.finder.RepositoryBiFinderForTest;
+import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -21,13 +19,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
-import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
+import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -56,27 +60,25 @@ public class ContentReportsRepositoryTest {
     private ContentReports latestCommentReport;
     private ContentReports latestUserReport;
 
+    private final ContentReportsConverterForTest entityConverter = new ContentReportsConverterForTest();
+
     @BeforeEach
     public void setUp() {
-        // 1. user1 회원가입 + user2 회원가입
         Long user1Id = testDB.signUp(1L, Role.USER);
+        this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
+
         Long user2Id = testDB.signUp(2L, Role.USER);
-        Assertions.assertThat(userRepository.count()).isEqualTo(user2Id);
+        this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
-        this.user1 = userRepository.findById(user1Id).get();
-        this.user2 = userRepository.findById(user2Id).get();
+        Long post1Id = testDB.savePosts(user1);
+        this.post = assertOptionalAndGetEntity(postsRepository::findById, post1Id);
 
-        // 2. user1이 게시글 작성
-        Long postId = testDB.savePosts(user1);
-        Assertions.assertThat(postsRepository.count()).isEqualTo(postId);
+        Long comment1Id = testDB.saveComments(post1Id, user1);
+        this.comment = assertOptionalAndGetEntity(commentsRepository::findById, comment1Id);
+    }
 
-        this.post = postsRepository.findById(postId).get();
-
-        // 3. user1이 댓글 작성
-        Long commentId = testDB.saveComments(postId, user1);
-        Assertions.assertThat(commentsRepository.count()).isEqualTo(commentId);
-
-        this.comment = commentsRepository.findById(commentId).get();
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -96,13 +98,13 @@ public class ContentReportsRepositoryTest {
 
     private void saveReports() {
         Long postReportId = testDB.savePostReports(post.getId(), user2);
-        Long commentReportId = testDB.saveCommentReports(comment.getId(), user2);
-        Long userReportId = testDB.saveUserReports(user1, user2);
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(userReportId);
+        this.latestPostReport = assertOptionalAndGetEntity(contentReportsRepository::findById, postReportId);
 
-        this.latestPostReport = contentReportsRepository.findById(postReportId).get();
-        this.latestCommentReport = contentReportsRepository.findById(commentReportId).get();
-        this.latestUserReport = contentReportsRepository.findById(userReportId).get();
+        Long commentReportId = testDB.saveCommentReports(comment.getId(), user2);
+        this.latestCommentReport = assertOptionalAndGetEntity(contentReportsRepository::findById, commentReportId);
+
+        Long userReportId = testDB.saveUserReports(user1, user2);
+        this.latestUserReport = assertOptionalAndGetEntity(contentReportsRepository::findById, userReportId);
     }
 
     private <T> void callAndAssertFindReporterByContents(T contents, ContentReports expectedReport) {
@@ -157,11 +159,10 @@ public class ContentReportsRepositoryTest {
             commentReportId = testDB.saveCommentReportsWithOtherReason(comment.getId(), user2, otherReason);
             userReportId = testDB.saveUserReportsWithOtherReason(user1, user2, otherReason);
         }
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(userReportId);
 
-        this.latestPostReport = contentReportsRepository.findById(postReportId).get();
-        this.latestCommentReport = contentReportsRepository.findById(commentReportId).get();
-        this.latestUserReport = contentReportsRepository.findById(userReportId).get();
+        this.latestPostReport = assertOptionalAndGetEntity(contentReportsRepository::findById, postReportId);
+        this.latestCommentReport = assertOptionalAndGetEntity(contentReportsRepository::findById, commentReportId);
+        this.latestUserReport = assertOptionalAndGetEntity(contentReportsRepository::findById, userReportId);
     }
 
     private <T> void callAndAssertFindOtherReasonByContents(T contents, ContentReports expectedReport) {
@@ -179,29 +180,41 @@ public class ContentReportsRepositoryTest {
         callAndAssertFindByContents(user1);
     }
 
-    private <T> void callAndAssertFindByContents(T contents) {
-        FindHelperForTest<RepositoryBiFinderForTest<ContentReportDetailListDto, T>,
-                            ContentReports, ContentReportDetailListDto, T> findHelper = createBiFindHelper(contents);
-        callAndAssertFindDetailListDto(findHelper);
+    private <T> void callAndAssertFindByContents(T content) {
+        int page = 1;
+        int size = 3;
+
+        Pageable pageable = createPageable(page, size);
+
+        Page<ContentReportDetailListDto> actualContents = contentReportsRepository.findByContents(content, pageable);
+        Page<ContentReportDetailListDto> expectedContents = createExpectedContents(content, pageable);
+
+        assertContents(actualContents, expectedContents);
     }
 
-    private <T> FindHelperForTest<RepositoryBiFinderForTest<ContentReportDetailListDto, T>,
-                                    ContentReports, ContentReportDetailListDto, T> createBiFindHelper(T contents) {
-        EntityConverterForTest<ContentReports, ContentReportDetailListDto> entityConverter
-                = new ContentReportsConverterForTest();
-        return FindHelperForTest.<RepositoryBiFinderForTest<ContentReportDetailListDto,T>, ContentReports, ContentReportDetailListDto, T>builder()
-                .finder(contentReportsRepository::findByContents)
-                .contents(contents)
-                .entityStream(contentReportsRepository.findAll().stream())
-                .page(1).limit(3)
-                .entityConverter(entityConverter).build();
+    private <T> Page<ContentReportDetailListDto> createExpectedContents(T content, Pageable pageable) {
+        Predicate<ContentReports> filter = createFilterByContent(content);
+
+        Stream<ContentReports> filteredReportsStream = contentReportsRepository.findAll().stream()
+                .filter(filter);
+        return createPageWithContent(filteredReportsStream, entityConverter, pageable);
     }
 
-    private <T> void
-        callAndAssertFindDetailListDto(FindHelperForTest<RepositoryBiFinderForTest<ContentReportDetailListDto, T>,
-                                        ContentReports, ContentReportDetailListDto, T> findHelper) {
-        initializeFindHelper(findHelper);
-        callAndAssertFind();
+    private <T> Predicate<ContentReports> createFilterByContent(T content) {
+        if (content instanceof Posts) {
+            return report -> entityConverter.extractPostId(report).equals(((Posts) content).getId());
+        } else if (content instanceof Comments) {
+            return report -> entityConverter.extractCommentId(report).equals(((Comments) content).getId());
+        } else {
+            return report -> entityConverter.extractUserId(report).equals(((User) content).getId());
+        }
+    }
+
+    private void assertContents(Page<ContentReportDetailListDto> actualContents,
+                                Page<ContentReportDetailListDto> expectedContents) {
+        PaginationTestHelper<ContentReportDetailListDto, ContentReports> paginationHelper
+                = new PaginationTestHelper<>(actualContents, expectedContents, entityConverter);
+        paginationHelper.assertContents();
     }
 
     @Test
@@ -240,7 +253,7 @@ public class ContentReportsRepositoryTest {
 
     private <T> Long saveReportsAndGetLatestReportId(BiFunction<T, User, Long> saver, T t, User user) {
         Long latestReportId = saver.apply(t, user);
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(latestReportId);
+        assertOptionalAndGetEntity(contentReportsRepository::findById, latestReportId);
         return latestReportId;
     }
 

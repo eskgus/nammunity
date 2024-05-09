@@ -3,7 +3,7 @@ package com.eskgus.nammunity.converter;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
 
-public class UserConverterForTest implements EntityConverterForTest<User, UsersListDto> {
+public class UserConverterForTest implements EntityConverterForTest<UsersListDto, User> {
     @Override
     public Long extractEntityId(User entity) {
         return entity.getId();

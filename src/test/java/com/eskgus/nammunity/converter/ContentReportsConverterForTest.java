@@ -6,7 +6,7 @@ import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
 
-public class ContentReportsConverterForTest implements EntityConverterForTest<ContentReports, ContentReportDetailListDto> {
+public class ContentReportsConverterForTest implements EntityConverterForTest<ContentReportDetailListDto, ContentReports> {
     @Override
     public Long extractEntityId(ContentReports entity) {
         return entity.getId();

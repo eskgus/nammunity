@@ -97,21 +97,15 @@ public class CommentsSearchServiceTest {
         int size = 4;
         User user = users[0];
 
-        Page<CommentsListDto> actualPage = commentsSearchService.findByUser(user, page, size);
-        Page<CommentsListDto> expectedPage = createExpectedPageByUser(size, user);
+        Page<CommentsListDto> actualContents = commentsSearchService.findByUser(user, page, size);
+        Page<CommentsListDto> expectedContents = createExpectedPageByUser(size, user);
 
-        assertFindByUser(actualPage, expectedPage);
+        assertContents(actualContents, expectedContents, CommentsListDto.class);
     }
 
     private Page<CommentsListDto> createExpectedPageByUser(int size, User user) {
         Pageable pageable = createPageable(page, size);
         return commentsRepository.findByUser(user, pageable);
-    }
-
-    private void assertFindByUser(Page<CommentsListDto> actualPage, Page<CommentsListDto> expectedPage) {
-        PaginationTestHelper<CommentsListDto, Comments> paginationHelper
-                = new PaginationTestHelper<>(actualPage, expectedPage, new CommentsConverterForTest<>(CommentsListDto.class));
-        paginationHelper.assertContents();
     }
 
     @Test
@@ -122,15 +116,15 @@ public class CommentsSearchServiceTest {
         callAndAssertSearchByContent("com 댓");
 
         // 2. 검색 제외 단어 o
-        callAndAssertSearchByContent("com 댓 -ment");
+        callAndAssertSearchByContent("com 댓 -ent");
     }
 
     private void saveCommentsWithContent() {
         long numberOfComments = 20;
         long half = numberOfComments / 2;
 
-        Range firstRange = Range.builder().startIndex(1).endIndex(half).content("comment").build();
-        Range secondRange = Range.builder().startIndex(half + 1).endIndex(numberOfComments).content("댓글").build();
+        Range firstRange = Range.builder().startIndex(1).endIndex(half).comment("comment").build();
+        Range secondRange = Range.builder().startIndex(half + 1).endIndex(numberOfComments).comment("댓글").build();
 
         saveCommentsInRange(firstRange);
         saveCommentsInRange(secondRange);

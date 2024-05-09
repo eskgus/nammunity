@@ -1,51 +1,22 @@
 package com.eskgus.nammunity.helper;
 
-import com.eskgus.nammunity.converter.EntityConverterForTest;
-import com.eskgus.nammunity.helper.repository.searcher.RepositoryBiSearcherForTest;
 import lombok.Builder;
-import lombok.Getter;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-@Getter
-public class SearchHelperForTest<T, U, V> {    // T: searcher<listDto>, U: entity, V: listDto
-    private final T searcher;
-    private final String keywords;
-    private final KeywordHelper keywordHelper;
-
+public class SearchTestHelper<U> {  // U: entity
     private final List<U> totalContents;
     private final Function<U, String>[] fieldExtractors;
-    private final String searchBy;
+    private final KeywordHelper keywordHelper;
 
-    private final int page;
-    private final int limit;
-
-    private final EntityConverterForTest<U, V> entityConverter;
-
+    // TODO: 왜 fieldExtractors에 Comments::getContent를 못 넣는 거지 ??
     @Builder
-    public SearchHelperForTest(T searcher, String keywords,
-                               List<U> totalContents, Function<U, String>[] fieldExtractors, String searchBy,
-                               int page, int limit, EntityConverterForTest<U, V> entityConverter) {
-        this.searcher = searcher;
-        this.keywords = keywords;
-        this.keywordHelper = new KeywordHelper().extractKeywords(keywords);
+    public SearchTestHelper(List<U> totalContents, String keywords, Function<U, String>[] fieldExtractors) {
         this.totalContents = totalContents;
         this.fieldExtractors = fieldExtractors;
-        this.searchBy = searchBy;
-        this.page = page;
-        this.limit = limit;
-        this.entityConverter = entityConverter;
-    }
-
-    public Page<V> applySearcher(Pageable pageable) {
-        if (searcher instanceof RepositoryBiSearcherForTest) {
-            return ((RepositoryBiSearcherForTest<V>) searcher).apply(keywords, pageable);
-        }
-        return null;
+        this.keywordHelper = new KeywordHelper().extractKeywords(keywords);
     }
 
     public Stream<U> getKeywordsFilter() {

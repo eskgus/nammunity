@@ -5,7 +5,7 @@ import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 
-public class LikesConverterForTest implements EntityConverterForTest<Likes, LikesListDto> {
+public class LikesConverterForTest implements EntityConverterForTest<LikesListDto, Likes> {
     @Override
     public Long extractEntityId(Likes entity) {
         return entity.getId();

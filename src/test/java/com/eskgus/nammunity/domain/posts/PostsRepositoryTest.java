@@ -1,12 +1,7 @@
 package com.eskgus.nammunity.domain.posts;
 
-import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.converter.PostsConverterForTest;
-import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.helper.SearchHelperForTest;
-import com.eskgus.nammunity.helper.repository.finder.RepositoryBiFinderForTest;
-import com.eskgus.nammunity.helper.repository.finder.RepositoryFinderForTest;
-import com.eskgus.nammunity.helper.repository.searcher.RepositoryBiSearcherForTest;
+import com.eskgus.nammunity.helper.*;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
@@ -18,17 +13,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-import static com.eskgus.nammunity.util.SearchUtilForTest.callAndAssertSearch;
-import static com.eskgus.nammunity.util.SearchUtilForTest.initializeSearchHelper;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
+import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent;
 import static org.assertj.core.api.Assertions.assertThat;
-import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
-import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -43,17 +41,22 @@ public class PostsRepositoryTest {
     private PostsRepository postsRepository;
 
     private User[] users;
+    private final int page = 1;
+    private final PostsConverterForTest entityConverter = new PostsConverterForTest();
 
     @BeforeEach
     public void setUp() {
         Long user1Id = testDB.signUp(1L, Role.USER);
-        Long user2Id = testDB.signUp(2L, Role.USER);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        User user1 = userRepository.findById(user1Id).get();
-        User user2 = userRepository.findById(user2Id).get();
+        Long user2Id = testDB.signUp(2L, Role.USER);
+        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -63,24 +66,18 @@ public class PostsRepositoryTest {
 
     @Test
     public void save() {
-        Posts post = createPost("title", "content");
+        Posts post = createPost();
         callAndAssertSavePosts(post);
     }
 
-    private Posts createPost(String title, String content) {
-        return Posts.builder().title(title).content(content).user(users[0]).build();
+    private Posts createPost() {
+        return Posts.builder().title("title").content("content").user(users[0]).build();
     }
 
     private void callAndAssertSavePosts(Posts post) {
         postsRepository.save(post);
-        Posts actualPost = getSavedPost(post.getId());
+        Posts actualPost = assertOptionalAndGetEntity(postsRepository::findById, post.getId());
         assertActualPostEqualsExpectedPost(actualPost, post);
-    }
-
-    private Posts getSavedPost(Long postId) {
-        Optional<Posts> result = postsRepository.findById(postId);
-        assertThat(result).isPresent();
-        return result.get();
     }
 
     private void assertActualPostEqualsExpectedPost(Posts actualPost, Posts expectedPost) {
@@ -100,7 +97,7 @@ public class PostsRepositoryTest {
 
     private Posts savePostAndGetSavedPost() {
         Long postId = testDB.savePosts(users[0]);
-        return getSavedPost(postId);
+        return assertOptionalAndGetEntity(postsRepository::findById, postId);
     }
 
     @Test
@@ -123,41 +120,59 @@ public class PostsRepositoryTest {
         savePosts();
 
         // 1. 검색 제외 단어 x
-        callAndAssertSearchPostsByFields(postsRepository::searchByTitle, "흥 100 Let", Posts::getTitle);
+        callAndAssertSearch(postsRepository::searchByTitle, "ti 제목", Posts::getTitle);
 
         // 2. 검색 제외 단어 o
-        callAndAssertSearchPostsByFields(postsRepository::searchByTitle, "흥 100 Let -봉,마리", Posts::getTitle);
+        callAndAssertSearch(postsRepository::searchByTitle, "ti 제목 -tle", Posts::getTitle);
     }
 
     private void savePosts() {
-        String str1 = "default";
-        String str2 = "bts, 봉준호, 손흥민, 이나현 let's go";
-        String str3 = "붕어빵 3마리 1000원";
-        String[] strings = { str1, str2, str3 };
+        long numberOfPostsByUser = 10;
+        long half = numberOfPostsByUser / 2;
+
+        Range firstRange = Range.builder().startIndex(1).endIndex(half).title("title").content("content").build();
+        Range secondRange = Range.builder().startIndex(half + 1).endIndex(numberOfPostsByUser)
+                .title("제목").content("내용").build();
+
+        savePostsInRange(firstRange);
+        savePostsInRange(secondRange);
+    }
+
+    private void savePostsInRange(Range range) {
         for (User user : users) {
-            testDB.savePostsWithTitleAndContent(user, strings);
+            for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
+                Long postId = testDB.savePostWithTitleAndContent(user, range.getTitle() + i, range.getContent() + i);
+                assertOptionalAndGetEntity(postsRepository::findById, postId);
+            }
         }
-        assertThat(postsRepository.count()).isEqualTo((long) Math.pow(strings.length, 2) * users.length);
     }
 
-    private void callAndAssertSearchPostsByFields(RepositoryBiSearcherForTest<PostsListDto> searcher,
-                                                  String keywords, Function<Posts, String>... fieldExtractors) {
-        SearchHelperForTest<RepositoryBiSearcherForTest<PostsListDto>, Posts, PostsListDto> searchHelper
-                = createSearchHelper(searcher, keywords, fieldExtractors);
-        initializeSearchHelper(searchHelper);
-        callAndAssertSearch();
+    private void callAndAssertSearch(BiFunction<String, Pageable, Page<PostsListDto>> searcher, String keywords,
+                                     Function<Posts, String>... fieldExtractors) {
+        int size = 3;
+
+        Pageable pageable = createPageable(page, size);
+
+        Page<PostsListDto> actualContents = searcher.apply(keywords, pageable);
+        Page<PostsListDto> expectedContents = createExpectedContents(keywords, pageable, fieldExtractors);
+
+        assertContents(actualContents, expectedContents);
     }
 
-    private SearchHelperForTest<RepositoryBiSearcherForTest<PostsListDto>, Posts, PostsListDto>
-        createSearchHelper(RepositoryBiSearcherForTest<PostsListDto> searcher,
-                           String keywords, Function<Posts, String>... fieldExtractors) {
-        EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
-        return SearchHelperForTest.<RepositoryBiSearcherForTest<PostsListDto>, Posts, PostsListDto>builder()
-                .searcher(searcher).keywords(keywords)
-                .totalContents(postsRepository.findAll())
-                .fieldExtractors(fieldExtractors)
-                .page(1).limit(3)
-                .entityConverter(entityConverter).build();
+    private Page<PostsListDto> createExpectedContents(String keywords, Pageable pageable,
+                                                      Function<Posts, String>... fieldExtractors) {
+        SearchTestHelper<Posts> searchHelper = SearchTestHelper.<Posts>builder()
+                .totalContents(postsRepository.findAll()).keywords(keywords)
+                .fieldExtractors(fieldExtractors).build();
+        Stream<Posts> filteredPostsStream = searchHelper.getKeywordsFilter();
+
+        return createPageWithContent(filteredPostsStream, entityConverter, pageable);
+    }
+
+    private void assertContents(Page<PostsListDto> actualContents, Page<PostsListDto> expectedContents) {
+        PaginationTestHelper<PostsListDto, Posts> paginationHelper
+                = new PaginationTestHelper<>(actualContents, expectedContents, entityConverter);
+        paginationHelper.assertContents();
     }
 
     @Test
@@ -165,10 +180,10 @@ public class PostsRepositoryTest {
         savePosts();
 
         // 1. 검색 제외 단어 x
-        callAndAssertSearchPostsByFields(postsRepository::searchByContent, "흥 100 Let", Posts::getContent);
+        callAndAssertSearch(postsRepository::searchByContent, "con 내용", Posts::getContent);
 
         // 2. 검색 제외 단어 o
-        callAndAssertSearchPostsByFields( postsRepository::searchByContent, "흥 100 Let -봉,마리", Posts::getContent);
+        callAndAssertSearch(postsRepository::searchByContent, "con 내용 -용", Posts::getContent);
     }
 
     @Test
@@ -176,11 +191,11 @@ public class PostsRepositoryTest {
         savePosts();
 
         // 1. 검색 제외 단어 x
-        callAndAssertSearchPostsByFields(postsRepository::searchByTitleAndContent, "흥 100 Let",
+        callAndAssertSearch(postsRepository::searchByTitleAndContent, "title 내용",
                 Posts::getTitle, Posts::getContent);
 
         // 2. 검색 제외 단어 o
-        callAndAssertSearchPostsByFields(postsRepository::searchByTitleAndContent, "흥 100 Let -봉,마리",
+        callAndAssertSearch(postsRepository::searchByTitleAndContent, "title 내용 -제목",
                 Posts::getTitle, Posts::getContent);
     }
 
@@ -188,39 +203,47 @@ public class PostsRepositoryTest {
     public void findAllDesc() {
         savePosts();
 
-        FindHelperForTest<RepositoryFinderForTest<PostsListDto>, Posts, PostsListDto, Void> findHelper = createFindHelper();
-        callAndAssertFindPosts(findHelper);
+        callAndAssertFindAllDesc();
     }
 
-    private FindHelperForTest<RepositoryFinderForTest<PostsListDto>, Posts, PostsListDto, Void> createFindHelper() {
-        EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
-        return FindHelperForTest.<RepositoryFinderForTest<PostsListDto>, Posts, PostsListDto, Void>builder()
-                .finder(postsRepository::findAllDesc)
-                .entityStream(postsRepository.findAll().stream())
-                .page(1).limit(4)
-                .entityConverter(entityConverter).build();
+    private void callAndAssertFindAllDesc() {
+        int size = 4;
+
+        Pageable pageable = createPageable(page, size);
+
+        Page<PostsListDto> actualContents = postsRepository.findAllDesc(pageable);
+        Page<PostsListDto> expectedContents = createExpectedContents(null, pageable);
+
+        assertContents(actualContents, expectedContents);
     }
 
-    private void callAndAssertFindPosts(FindHelperForTest findHelper) {
-        initializeFindHelper(findHelper);
-        callAndAssertFind();
+    private Page<PostsListDto> createExpectedContents(Predicate<Posts> filter, Pageable pageable) {
+        Stream<Posts> filteredPostsStream = filter != null
+                ? postsRepository.findAll().stream().filter(filter) : postsRepository.findAll().stream();
+        return createPageWithContent(filteredPostsStream, entityConverter, pageable);
     }
 
     @Test
     public void findByUser() {
         savePosts();
 
-        FindHelperForTest<RepositoryBiFinderForTest<PostsListDto, User>, Posts, PostsListDto, User> findHelper = createBiFindHelper();
-        callAndAssertFindPosts(findHelper);
+        callAndAssertFindByUser();
     }
 
-    private FindHelperForTest<RepositoryBiFinderForTest<PostsListDto, User>, Posts, PostsListDto, User> createBiFindHelper() {
-        EntityConverterForTest<Posts, PostsListDto> entityConverter = new PostsConverterForTest();
-        return FindHelperForTest.<RepositoryBiFinderForTest<PostsListDto, User>, Posts, PostsListDto, User>builder()
-                .finder(postsRepository::findByUser)
-                .contents(users[0])
-                .entityStream(postsRepository.findAll().stream())
-                .page(1).limit(4)
-                .entityConverter(entityConverter).build();
+    private void callAndAssertFindByUser() {
+        int size = 4;
+        User user = users[0];
+
+        Pageable pageable = createPageable(page, size);
+
+        Page<PostsListDto> actualContents = postsRepository.findByUser(user, pageable);
+        Page<PostsListDto> expectedContents = createExpectedContentsByUser(user, pageable);
+
+        assertContents(actualContents, expectedContents);
+    }
+
+    private Page<PostsListDto> createExpectedContentsByUser(User user, Pageable pageable) {
+        Predicate<Posts> filter = post -> entityConverter.extractUserId(post).equals(user.getId());
+        return createExpectedContents(filter, pageable);
     }
 }

@@ -3,7 +3,7 @@ package com.eskgus.nammunity.converter;
 import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 
-public class ContentReportSummaryConverterForTest implements EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> {
+public class ContentReportSummaryConverterForTest implements EntityConverterForTest<ContentReportSummaryDto, ContentReportSummary> {
     @Override
     public Long extractEntityId(ContentReportSummary entity) {
         return entity.getId();

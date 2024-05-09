@@ -1,7 +1,6 @@
 package com.eskgus.nammunity.domain.reports;
 
 import com.eskgus.nammunity.converter.ContentReportSummaryConverterForTest;
-import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.enums.ContentType;
@@ -10,9 +9,7 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.FindHelperForTest;
-import com.eskgus.nammunity.helper.repository.finder.RepositoryBiFinderForTest;
-import com.eskgus.nammunity.helper.repository.finder.RepositoryFinderForTest;
+import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import org.junit.jupiter.api.AfterEach;
@@ -21,12 +18,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-import static com.eskgus.nammunity.util.FindUtilForTest.callAndAssertFind;
-import static com.eskgus.nammunity.util.FindUtilForTest.initializeFindHelper;
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
+import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -50,30 +52,30 @@ public class ContentReportSummaryRepositoryTest {
     @Autowired
     private TypesRepository typesRepository;
 
-    private User[] users;
+    private User user1;
+    private User user2;
     private Posts post;
     private Comments comment;
+    private final int page = 1;
+    private final ContentReportSummaryConverterForTest entityConverter = new ContentReportSummaryConverterForTest();
 
     @BeforeEach
     public void setUp() {
         Long user1Id = testDB.signUp(1L, Role.USER);
+        this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
+
         Long user2Id = testDB.signUp(2L, Role.USER);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
-        User user1 = userRepository.findById(user1Id).get();
-        User user2 = userRepository.findById(user2Id).get();
+        Long post1Id = testDB.savePosts(user1);
+        this.post = assertOptionalAndGetEntity(postsRepository::findById, post1Id);
 
-        this.users = new User[]{ user1, user2 };
+        Long comment1Id = testDB.saveComments(post1Id, user1);
+        this.comment = assertOptionalAndGetEntity(commentsRepository::findById, comment1Id);
+    }
 
-        Long postId = testDB.savePosts(user1);
-        assertThat(postsRepository.count()).isEqualTo(postId);
-
-        this.post = postsRepository.findById(postId).get();
-
-        Long commentId = testDB.saveComments(postId, user1);
-        assertThat(commentsRepository.count()).isEqualTo(commentId);
-
-        this.comment = commentsRepository.findById(commentId).get();
+    private <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
+        return testDB.assertOptionalAndGetEntity(finder, content);
     }
 
     @AfterEach
@@ -86,14 +88,14 @@ public class ContentReportSummaryRepositoryTest {
         // 1. 신고 요약 저장 x 후 호출
         callAndAssertExistsByContents(post, false);
         callAndAssertExistsByContents(comment, false);
-        callAndAssertExistsByContents(users[0], false);
+        callAndAssertExistsByContents(user1, false);
 
         // 2. 신고 요약 저장 후 호출
         saveReportSummaries();
 
         callAndAssertExistsByContents(post, true);
         callAndAssertExistsByContents(comment, true);
-        callAndAssertExistsByContents(users[0], true);
+        callAndAssertExistsByContents(user1, true);
     }
 
     private <T> void callAndAssertExistsByContents(T contents, boolean expectedResult) {
@@ -102,10 +104,14 @@ public class ContentReportSummaryRepositoryTest {
     }
 
     private void saveReportSummaries() {
-        testDB.savePostReportSummary(post, users[1]);
-        testDB.saveCommentReportSummary(comment, users[1]);
-        Long userReportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
-        assertThat(contentReportSummaryRepository.count()).isEqualTo(userReportSummaryId);
+        Long postReportSummaryId = testDB.savePostReportSummary(post, user1);
+        assertOptionalAndGetEntity(contentReportSummaryRepository::findById, postReportSummaryId);
+
+        Long commentReportSummaryId = testDB.saveCommentReportSummary(comment, user1);
+        assertOptionalAndGetEntity(contentReportSummaryRepository::findById, commentReportSummaryId);
+
+        Long userReportSummaryId = testDB.saveUserReportSummary(user1, user2);
+        assertOptionalAndGetEntity(contentReportSummaryRepository::findById, userReportSummaryId);
     }
 
     @Test
@@ -114,7 +120,7 @@ public class ContentReportSummaryRepositoryTest {
 
         callAndAssertFindByContents(post);
         callAndAssertFindByContents(comment);
-        callAndAssertFindByContents(users[0]);
+        callAndAssertFindByContents(user1);
     }
 
     private <T> void callAndAssertFindByContents(T contents) {
@@ -157,57 +163,64 @@ public class ContentReportSummaryRepositoryTest {
     public void findAllDesc() {
         saveReportSummaries();
 
-        FindHelperForTest<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>
-                findHelper = createFindHelper();
-        callAndAssertFindReportSummaries(findHelper);
+        callAndAssertFindAllDesc();
     }
 
-    private FindHelperForTest<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>
-        createFindHelper() {
-        EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
-                = new ContentReportSummaryConverterForTest();
-        return FindHelperForTest.<RepositoryFinderForTest<ContentReportSummaryDto>, ContentReportSummary, ContentReportSummaryDto, Void>builder()
-                .finder(contentReportSummaryRepository::findAllDesc)
-                .entityStream(contentReportSummaryRepository.findAll().stream())
-                .page(1).limit(2)
-                .entityConverter(entityConverter).build();
+    private void callAndAssertFindAllDesc() {
+        int size = 2;
+
+        Pageable pageable = createPageable(page, size);
+
+        Page<ContentReportSummaryDto> actualContents = contentReportSummaryRepository.findAllDesc(pageable);
+        Page<ContentReportSummaryDto> expectedContents = createExpectedContents(null, pageable);
+
+        assertContents(actualContents, expectedContents);
     }
 
-    private void callAndAssertFindReportSummaries(FindHelperForTest findHelper) {
-        initializeFindHelper(findHelper);
-        callAndAssertFind();
+    private Page<ContentReportSummaryDto> createExpectedContents(Predicate<ContentReportSummary> filter,
+                                                                 Pageable pageable) {
+        Stream<ContentReportSummary> filteredReportSummaryStream = filter != null
+                ? contentReportSummaryRepository.findAll().stream().filter(filter)
+                    : contentReportSummaryRepository.findAll().stream();
+        return createPageWithContent(filteredReportSummaryStream, entityConverter, pageable);
+    }
+
+    private void assertContents(Page<ContentReportSummaryDto> actualContents,
+                                Page<ContentReportSummaryDto> expectedContents) {
+        PaginationTestHelper<ContentReportSummaryDto, ContentReportSummary> paginationHelper
+                = new PaginationTestHelper<>(actualContents, expectedContents, entityConverter);
+        paginationHelper.assertContents();
     }
 
     @Test
     public void findByTypes() {
         saveReportSummaries();
 
-        Types postType = typesRepository.findByDetail(ContentType.POSTS.getDetailInKor()).get();
-        callAndAssertFindReportSummariesByTypes(postType);
+        Types postType = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.POSTS.getDetailInKor());
+        callAndAssertFindByTypes(postType);
 
-        Types commentType = typesRepository.findByDetail(ContentType.COMMENTS.getDetailInKor()).get();
-        callAndAssertFindReportSummariesByTypes(commentType);
+        Types commentType = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.COMMENTS.getDetailInKor());
+        callAndAssertFindByTypes(commentType);
 
-        Types userType = typesRepository.findByDetail(ContentType.USERS.getDetailInKor()).get();
-        callAndAssertFindReportSummariesByTypes(userType);
+        Types userType = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.USERS.getDetailInKor());
+        callAndAssertFindByTypes(userType);
     }
 
-    private void callAndAssertFindReportSummariesByTypes(Types type) {
-        FindHelperForTest<RepositoryBiFinderForTest<ContentReportSummaryDto, Types>,
-                            ContentReportSummary, ContentReportSummaryDto, Types> findHelper = createBiFindHelper(type);
-        callAndAssertFindReportSummaries(findHelper);
+    private void callAndAssertFindByTypes(Types type) {
+        int size = 2;
+
+        Pageable pageable = createPageable(page, size);
+
+        Page<ContentReportSummaryDto> actualContents = contentReportSummaryRepository.findByTypes(type, pageable);
+        Page<ContentReportSummaryDto> expectedContents = createExpectedContentsByTypes(type, pageable);
+
+        assertContents(actualContents, expectedContents);
     }
 
-    private FindHelperForTest<RepositoryBiFinderForTest<ContentReportSummaryDto, Types>,
-                                ContentReportSummary, ContentReportSummaryDto, Types> createBiFindHelper(Types type) {
-        EntityConverterForTest<ContentReportSummary, ContentReportSummaryDto> entityConverter
-                = new ContentReportSummaryConverterForTest();
-        return FindHelperForTest.<RepositoryBiFinderForTest<ContentReportSummaryDto, Types>, ContentReportSummary, ContentReportSummaryDto, Types>builder()
-                .finder(contentReportSummaryRepository::findByTypes)
-                .contents(type)
-                .entityStream(contentReportSummaryRepository.findAll().stream())
-                .page(1).limit(2)
-                .entityConverter(entityConverter).build();
+    private Page<ContentReportSummaryDto> createExpectedContentsByTypes(Types type, Pageable pageable) {
+        Predicate<ContentReportSummary> filter =
+                reportSummary -> entityConverter.extractTypeId(reportSummary).equals(type.getId());
+        return createExpectedContents(filter, pageable);
     }
 
     @Test
@@ -219,7 +232,7 @@ public class ContentReportSummaryRepositoryTest {
     }
 
     private void callAndAssertFindByUser(boolean expectedResult) {
-        Optional<ContentReportSummary> result = contentReportSummaryRepository.findByUser(users[0]);
+        Optional<ContentReportSummary> result = contentReportSummaryRepository.findByUser(user1);
         assertThat(result.isPresent()).isEqualTo(expectedResult);
     }
 
@@ -229,7 +242,7 @@ public class ContentReportSummaryRepositoryTest {
 
         callAndAssertDeleteByContents(post);
         callAndAssertDeleteByContents(comment);
-        callAndAssertDeleteByContents(users[0]);
+        callAndAssertDeleteByContents(user1);
     }
 
     private <T> void callAndAssertDeleteByContents(T contents) {

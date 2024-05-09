@@ -192,7 +192,7 @@ public class UserServiceTest {
 
     private <T, U> void assertContentsPage(TriFunction<User, Integer, Integer, Page<T>> finder,
                                            ContentsPageDto<T> actualResult,
-                                           EntityConverterForTest<U, T> entityConverter) {
+                                           EntityConverterForTest<T, U> entityConverter) {
         int size = 10;
         Page<T> expectedContents = finder.apply(user1, page, size);
         ContentsPageDtoTestHelper<T, U> findHelper

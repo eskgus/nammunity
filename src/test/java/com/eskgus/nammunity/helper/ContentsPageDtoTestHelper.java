@@ -8,11 +8,11 @@ import org.springframework.data.domain.Page;
 public class ContentsPageDtoTestHelper<T, U> { // T: dto, U: entity
     private final ContentsPageDto<T> actualResult;
     private final Page<T> expectedContents;
-    private final EntityConverterForTest<U, T> entityConverter;
+    private final EntityConverterForTest<T, U> entityConverter;
 
     @Builder
     public ContentsPageDtoTestHelper(ContentsPageDto<T> actualResult, Page<T> expectedContents,
-                                     EntityConverterForTest<U, T> entityConverter) {
+                                     EntityConverterForTest<T, U> entityConverter) {
         this.actualResult = actualResult;
         this.expectedContents = expectedContents;
         this.entityConverter = entityConverter;

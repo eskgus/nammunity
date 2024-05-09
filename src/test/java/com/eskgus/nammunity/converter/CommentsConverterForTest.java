@@ -4,10 +4,10 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 
-public class CommentsConverterForTest<V> implements EntityConverterForTest<Comments, V> {
-    private final Class<V> classOfDto;
+public class CommentsConverterForTest<T> implements EntityConverterForTest<T, Comments> {
+    private final Class<T> classOfDto;
 
-    public CommentsConverterForTest(Class<V> classOfDto) {
+    public CommentsConverterForTest(Class<T> classOfDto) {
         this.classOfDto = classOfDto;
     }
 
@@ -22,7 +22,7 @@ public class CommentsConverterForTest<V> implements EntityConverterForTest<Comme
     }
 
     @Override
-    public Long extractDtoId(V dto) {
+    public Long extractDtoId(T dto) {
         if (dto instanceof CommentsListDto) {
             return ((CommentsListDto) dto).getCommentsId();
         } else {
@@ -30,12 +30,16 @@ public class CommentsConverterForTest<V> implements EntityConverterForTest<Comme
         }
     }
 
+    public Long extractPostId(Comments entity) {
+        return entity.getPosts().getId();
+    }
+
     @Override
-    public V generateDto(Comments entity) {
+    public T generateDto(Comments entity) {
         if (classOfDto.equals(CommentsListDto.class)) {
-            return (V) new CommentsListDto(entity);
+            return (T) new CommentsListDto(entity);
         } else {
-            return (V) new CommentsReadDto(entity);
+            return (T) new CommentsReadDto(entity);
         }
     }
 }
