@@ -76,7 +76,7 @@ public class TestDB {
 
     public MockMvc setUp() {
         return MockMvcBuilders.webAppContextSetup(context)
-                .addFilter(new CharacterEncodingFilter("UTF-8", true))
+//                .addFilter(new CharacterEncodingFilter("UTF-8", true))
                 .apply(springSecurity())
                 .build();
     }

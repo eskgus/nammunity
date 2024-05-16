@@ -1,7 +1,6 @@
 package com.eskgus.nammunity.web.comments;
 
 import com.eskgus.nammunity.util.TestDB;
-import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -11,7 +10,6 @@ import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsUpdateDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,11 +20,12 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,17 +47,22 @@ public class CommentsApiControllerTest {
     @Autowired
     private CommentsRepository commentsRepository;
 
+    private User user;
+    private Posts post;
+
     @BeforeEach
     public void setUp() {
         this.mockMvc = testDB.setUp();
 
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
-        Assertions.assertThat(userRepository.count()).isOne();
+        Long user1Id = testDB.signUp(1L, Role.USER);
+        this.user = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        // 2. user1이 게시글 작성
-        testDB.savePosts(user1);
-        Assertions.assertThat(postsRepository.count()).isOne();
+        Long postId = testDB.savePosts(user);
+        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -69,124 +73,68 @@ public class CommentsApiControllerTest {
     @Test
     @WithMockUser(username = "username1")
     public void saveComments() throws Exception {
-        // 1. user1 회원가입
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
+        MockHttpServletRequestBuilder requestBuilder = post("/api/comments");
+        CommentsSaveDto requestDto = createCommentsSaveDto();
 
-        // 3. content, postId로 CommentsSaveDto 생성
+        requestAndAssert(requestBuilder, requestDto);
+    }
+
+    private CommentsSaveDto createCommentsSaveDto() {
+        String content = "comment";
         Long postId = post.getId();
-        String content = "content";
-        CommentsSaveDto requestDto = new CommentsSaveDto(content, postId);
+        return new CommentsSaveDto(content, postId);
+    }
 
-        // 4. "/api/comments"로 commentsSaveDto 담아서 post 요청
-        MvcResult mvcResult = mockMvc.perform(post("/api/comments")
+    private <T> void requestAndAssert(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvc.perform(requestBuilder
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 5. 응답 확인
-        assertMvcResult(mvcResult, true, content);
+                .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void updateComments() throws Exception {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
+        Long commentId = saveComment();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-        Long postId = post.getId();
+        MockHttpServletRequestBuilder requestBuilder = put("/api/comments/{id}", commentId);
+        CommentsUpdateDto requestDto = createCommentsUpdateDto();
 
-        // 3. user1이 댓글 작성
-        Long commentId = testDB.saveComments(postId, user1);
-        Assertions.assertThat(commentsRepository.count()).isOne();
+        requestAndAssert(requestBuilder, requestDto);
+    }
 
-        // 4. content로 CommentsUpdateDto 생성
-        String content = "updated content";
-        CommentsUpdateDto requestDto = new CommentsUpdateDto(content);
+    private Long saveComment() {
+        Long commentId = testDB.saveComments(post.getId(), user);
+        assertOptionalAndGetEntity(commentsRepository::findById, commentId);
+        return commentId;
+    }
 
-        // 5. "/api/comments/{id}"의 pathVariable=commentId로 하고, commentsUpdateDto 담아서 put 요청
-        MvcResult mvcResult = mockMvc.perform(put("/api/comments/{id}", commentId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 6. 응답 확인
-        assertMvcResult(mvcResult, true, content);
+    private CommentsUpdateDto createCommentsUpdateDto() {
+        String content = "updated comment";
+        return new CommentsUpdateDto(content);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deleteComments() throws Exception {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
+        Long commentId = saveComment();
 
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-        Long postId = post.getId();
+        MockHttpServletRequestBuilder requestBuilder = delete("/api/comments/{id}", commentId);
 
-        // 3. user1이 댓글 작성
-        Long commentId = testDB.saveComments(postId, user1);
-        Assertions.assertThat(commentsRepository.count()).isOne();
-
-        // 4. "/api/comments/{id}"의 pathVariable=commentId로 하고, delete 요청
-        MvcResult mvcResult = mockMvc.perform(delete("/api/comments/{id}", commentId))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 3. 응답 확인
-        assertMvcResult(mvcResult, false, null);
+        requestAndAssert(requestBuilder, null);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deleteSelectedComments() throws Exception {
-        // 1. user1 회원가입
-        User user1 = userRepository.findById(1L).get();
-
-        // 2. user1이 게시글 작성
-        Posts post = postsRepository.findById(1L).get();
-        Long postId = post.getId();
-
-        // 3. user1이 댓글 작성
-        Long commentId1 = testDB.saveComments(postId, user1);
-        Long commentId2 = testDB.saveComments(postId, user1);
-        Assertions.assertThat(commentsRepository.count()).isEqualTo(2);
-
-        // 4. "/api/comments/selected-delete"로 List<Long> commentsId에 commentId1/2 담아서 delete 요청
-        List<Long> commentsId = List.of(commentId1, commentId2);
-        MvcResult mvcResult = mockMvc.perform(delete("/api/comments/selected-delete")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(commentsId)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // 5. 응답 확인
-        assertMvcResult(mvcResult, false, null);
-    }
-
-    private void assertMvcResult(MvcResult mvcResult, boolean expectedResult, String content) throws Exception {
-        // 1. 응답으로 "OK" 왔는지 확인
-        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("OK");
-
-        // 2. expectedResult가 false면 댓글 삭제한 거 => db에 있는 댓글 수 0인지 확인하고 리턴
-        if (!expectedResult) {
-            Assertions.assertThat(commentsRepository.count()).isZero();
-            return;
+        List<Long> requestDto = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            Long commentId = saveComment();
+            requestDto.add(commentId);
         }
 
-        // 3. expectedResult가 true면 댓글 삭제 말고 저장 또는 수정한 거
-        // 3-1. "OK"의 값으로 comments 찾고
-        Long commentId = Long.valueOf((String) map.get("OK"));
-        Optional<Comments> result = commentsRepository.findById(commentId);
-        Assertions.assertThat(result).isPresent();
+        MockHttpServletRequestBuilder requestBuilder = delete("/api/comments/selected-delete");
 
-        // 3-2. db에 저장됐나 확인
-        Comments comment = result.get();
-        Assertions.assertThat(comment.getContent()).isEqualTo(content);
+        requestAndAssert(requestBuilder, requestDto);
     }
 }

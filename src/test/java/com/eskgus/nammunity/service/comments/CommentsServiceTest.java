@@ -11,6 +11,7 @@ import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
+import java.util.Optional;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -52,18 +55,19 @@ public class CommentsServiceTest {
     @BeforeEach
     public void setUp() {
         Long user1Id = testDB.signUp(1L, Role.USER);
-        Long user2Id = testDB.signUp(2L, Role.USER);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        User user1 = userRepository.findById(user1Id).get();
-        User user2 = userRepository.findById(user2Id).get();
+        Long user2Id = testDB.signUp(2L, Role.USER);
+        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
 
         Long postId = testDB.savePosts(user1);
-        assertThat(postsRepository.count()).isEqualTo(postId);
+        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
+    }
 
-        this.post = postsRepository.findById(postId).get();
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -82,10 +86,10 @@ public class CommentsServiceTest {
         int numberOfCommentsByUser = 20;
         for (int i = 0; i < numberOfCommentsByUser; i++) {
             for (User user : users) {
-                testDB.saveComments(post.getId(), user);
+                Long commentId = testDB.saveComments(post.getId(), user);
+                assertOptionalAndGetEntity(commentsRepository::findById, commentId);
             }
         }
-        assertThat(commentsRepository.count()).isEqualTo((long) numberOfCommentsByUser * users.length);
     }
 
     private void callAndAssertListComments() {
@@ -103,5 +107,24 @@ public class CommentsServiceTest {
     private ContentsPageDto<CommentsListDto> callListCommentsAndGetActualResult(User user, int page) {
         Principal principal = user::getUsername;
         return commentsService.listComments(principal, page);
+    }
+
+    @Test
+    public void save() {
+        User user = users[0];
+
+        CommentsSaveDto requestDto = new CommentsSaveDto("comment", post.getId());
+        Principal principal = user::getUsername;
+
+        Long id = commentsService.save(requestDto, principal);
+
+        Comments comment = assertOptionalAndGetEntity(commentsRepository::findById, id);
+        assertSavedComment(requestDto, user, comment);
+    }
+
+    private void assertSavedComment(CommentsSaveDto requestDto, User user, Comments comment) {
+        assertThat(comment.getContent()).isEqualTo(requestDto.getContent());
+        assertThat(comment.getPosts().getId()).isEqualTo(requestDto.getPostsId());
+        assertThat(comment.getUser().getId()).isEqualTo(user.getId());
     }
 }

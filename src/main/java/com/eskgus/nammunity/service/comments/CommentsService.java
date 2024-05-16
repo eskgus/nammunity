@@ -6,7 +6,6 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
-import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -23,7 +22,6 @@ import java.util.List;
 @Service
 public class CommentsService {
     private final CommentsRepository commentsRepository;
-    private final UserService userService;
     private final PostsSearchService postsSearchService;
     private final CommentsSearchService commentsSearchService;
 
@@ -31,13 +29,12 @@ public class CommentsService {
     private PrincipalHelper principalHelper;
 
     @Transactional
-    public Long save(CommentsSaveDto requestDto, String username) {
-        User user = userService.findByUsername(username);
-        Posts posts = postsSearchService.findById(requestDto.getPostsId());
+    public Long save(CommentsSaveDto requestDto, Principal principal) {
+        User user = principalHelper.getUserFromPrincipal(principal);
+        Posts post = postsSearchService.findById(requestDto.getPostsId());
 
         CommentsSaveDto commentsSaveDto = CommentsSaveDto.builder()
-                .content(requestDto.getContent())
-                .posts(posts).user(user).build();
+                .content(requestDto.getContent()).posts(post).user(user).build();
 
         return commentsRepository.save(commentsSaveDto.toEntity()).getId();
     }
@@ -58,12 +55,12 @@ public class CommentsService {
     }
 
     @Transactional
-    public void deleteSelectedComments(List<Long> commentsId) {
-        if (commentsId.isEmpty()) {
+    public void deleteSelectedComments(List<Long> commentIds) {
+        if (commentIds.isEmpty()) {
             throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
         }
 
-        commentsId.forEach(this::delete);
+        commentIds.forEach(this::delete);
     }
 
     @Transactional(readOnly = true)

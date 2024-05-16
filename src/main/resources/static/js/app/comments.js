@@ -1,3 +1,5 @@
+import { indexMain } from './index.js';
+
 var commentsMain = {
     // event 함수에서 쓸 변수 초기화
     e: false,
@@ -37,20 +39,12 @@ var commentsMain = {
         $.ajax({
             type: 'POST',
             url: '/api/comments',
-            dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                window.location.reload();
-            } else {
-                alert(response[Object.keys(response)]);
-                if (Object.keys(response) == 'error') {
-                    window.location.href = '/';
-                }
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            window.location.reload();
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest);
         });
     },
     event: function(name, func) {
@@ -116,16 +110,9 @@ var commentsMain = {
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                window.location.reload();
-            } else {
-                alert(response[Object.keys(response)]);
-                if (Object.keys(response) == 'error') {
-                    window.location.reload();
-                }
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            window.location.reload();
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest);
         });
 
         return ['u', divId];
@@ -149,10 +136,10 @@ var commentsMain = {
                 url: '/api/comments/' + id,
                 contentType: 'application/json; charset=utf-8'
             }).done(function(response) {
-                alert(response[Object.keys(response)]);
+                alert('삭제됐습니다.');
                 window.location.reload();
-            }).fail(function(response) {
-                alert(JSON.stringify(response));
+            }).fail(function(xhRequest) {
+                indexMain.fail(xhRequest);
             });
         }
         return ['d', divId];

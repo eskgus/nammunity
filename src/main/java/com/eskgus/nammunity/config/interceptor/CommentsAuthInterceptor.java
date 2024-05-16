@@ -45,7 +45,9 @@ public class CommentsAuthInterceptor implements HandlerInterceptor {
                 Long authorId = commentsSearchService.findById(id).getUser().getId();
 
                 if (!userId.equals(authorId)) {
-                    response.sendError(HttpStatus.FORBIDDEN.value());
+                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setContentType("application/json; charset=UTF-8");
+                    response.getWriter().write("권한이 없습니다.");
                     return false;
                 }
             } catch (Exception ex) {

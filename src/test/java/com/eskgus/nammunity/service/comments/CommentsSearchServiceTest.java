@@ -87,10 +87,10 @@ public class CommentsSearchServiceTest {
         int numberOfCommentsByUser = 15;
         for (int i = 0; i < numberOfCommentsByUser; i++) {
             for (User user : users) {
-                testDB.saveComments(post.getId(), user);
+                Long commentId = testDB.saveComments(post.getId(), user);
+                assertOptionalAndGetEntity(commentsRepository::findById, commentId);
             }
         }
-        assertThat(commentsRepository.count()).isEqualTo((long)numberOfCommentsByUser * users.length);
     }
 
     private void callAndAssertFindByUser() {

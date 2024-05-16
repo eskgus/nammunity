@@ -56,6 +56,24 @@ var indexMain = {
         alert(response[firstError]);
         document.getElementById(Object.keys(data)[firstData]).focus();
     },
+    fail: function (xhRequest) {    // 요청 실패 시 처리
+        if (xhRequest.status === 400) {
+            // MethodArgumentNotValidException
+            var errors = xhRequest.responseJSON;
+            if (Array.isArray(errors) && errors.length > 0) {
+                for (var i = 0; i < errors.length; i++) {
+                    var error = errors[i];
+                    alert(error.defaultMessage);
+                }
+            } else {    // IllegalArgumentException
+                alert(xhRequest.responseText);
+                window.location.reload();
+            }
+        } else {    // Exception
+            alert(xhRequest.responseText);
+            window.location.reload();
+        }
+    },
     search: function(searchBtn) {
         var keywords = searchBtn.previousElementSibling.value;
         var currentLocation = window.location.href;

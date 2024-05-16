@@ -59,6 +59,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CustomAuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return new CustomAuthenticationEntryPoint();
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable().headers().frameOptions().disable()
                 .and()
@@ -76,6 +81,9 @@ public class SecurityConfig {
                         .requestMatchers("/admin/my-page/content-report/**",
                                 "/api/reports/content/selected-delete", "/api/reports/process").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated())
+                .exceptionHandling()
+                    .authenticationEntryPoint(customAuthenticationEntryPoint())
+                .and()
                 .httpBasic(withDefaults())
                 .formLogin(login -> login
                         .loginPage("/users/sign-in")
