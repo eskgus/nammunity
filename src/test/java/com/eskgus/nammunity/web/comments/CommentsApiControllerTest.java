@@ -54,8 +54,8 @@ public class CommentsApiControllerTest {
     public void setUp() {
         this.mockMvc = testDB.setUp();
 
-        Long user1Id = testDB.signUp(1L, Role.USER);
-        this.user = assertOptionalAndGetEntity(userRepository::findById, user1Id);
+        Long userId = testDB.signUp(1L, Role.USER);
+        this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
         Long postId = testDB.savePosts(user);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
@@ -127,14 +127,18 @@ public class CommentsApiControllerTest {
     @Test
     @WithMockUser(username = "username1")
     public void deleteSelectedComments() throws Exception {
+        List<Long> requestDto = createCommentIds();
+        MockHttpServletRequestBuilder requestBuilder = delete("/api/comments/selected-delete");
+
+        requestAndAssert(requestBuilder, requestDto);
+    }
+
+    private List<Long> createCommentIds() {
         List<Long> requestDto = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             Long commentId = saveComment();
             requestDto.add(commentId);
         }
-
-        MockHttpServletRequestBuilder requestBuilder = delete("/api/comments/selected-delete");
-
-        requestAndAssert(requestBuilder, requestDto);
+        return requestDto;
     }
 }

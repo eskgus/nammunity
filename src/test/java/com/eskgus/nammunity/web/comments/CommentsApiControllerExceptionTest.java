@@ -57,8 +57,8 @@ public class CommentsApiControllerExceptionTest {
     public void setUp() {
         this.mockMvc = testDB.setUp();
 
-        Long user1Id = testDB.signUp(1L, Role.USER);
-        this.user = assertOptionalAndGetEntity(userRepository::findById, user1Id);
+        Long userId = testDB.signUp(1L, Role.USER);
+        this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
         Long postId = testDB.savePosts(user);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
@@ -221,13 +221,18 @@ public class CommentsApiControllerExceptionTest {
     }
 
     private void deleteSelectedCommentsWithNonExistentCommentIds() throws Exception {
+        List<Long> requestDto = createCommentIds();
+        ResultMatcher resultMatcher = createResultMatcher("해당 댓글이 없습니다.");
+
+        requestAndAssert(requestDto, resultMatcher);
+    }
+
+    private List<Long> createCommentIds() {
         List<Long> requestDto = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             Long commentId = saveComment();
             requestDto.add(commentId + 1);
         }
-        ResultMatcher resultMatcher = createResultMatcher("해당 댓글이 없습니다.");
-
-        requestAndAssert(requestDto, resultMatcher);
+        return requestDto;
     }
 }

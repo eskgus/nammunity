@@ -1,3 +1,5 @@
+import { indexMain } from './index.js';
+
 var likesMain = {
     init: function() {
         var _this = this;
@@ -42,19 +44,10 @@ var likesMain = {
             type: 'POST',
             url: '/api/likes?postsId=' + post.id
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                post.img.add('like_s_d');
-                post.sum.textContent = parseInt(post.sum.textContent) + 1;
-            } else {
-                alert(response[Object.keys(response)]);
-                window.location.href = '/';
-            }
-        }).fail(function(response) {
-            if (response.status == 401) {
-                alert('로그인하세요.');
-            } else {
-                alert(JSON.stringify(response));
-            }
+            post.img.add('like_s_d');
+            post.sum.textContent = parseInt(post.sum.textContent) + 1;
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest);
         });
     },
     deletePostLikes: function(post) {
@@ -62,15 +55,10 @@ var likesMain = {
             type: 'DELETE',
             url: '/api/likes?postsId=' + post.id
         }).done(function(response) {
-            if (response == 'OK') {
-                post.img.remove('like_s_d');
-                post.sum.textContent = parseInt(post.sum.textContent) - 1;
-            } else {
-                alert(response);
-                window.location.href = '/';
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            post.img.remove('like_s_d');
+            post.sum.textContent = parseInt(post.sum.textContent) - 1;
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest);
         });
     },
     saveCmtLikes: function(cmt) {
@@ -78,19 +66,10 @@ var likesMain = {
             type: 'POST',
             url: '/api/likes?commentsId=' + cmt.id
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                cmt.img.add('like_s_d');
-                cmt.sum.textContent = parseInt(cmt.sum.textContent) + 1;
-            } else {
-                alert(response[Object.keys(response)]);
-                window.location.href = '/';
-            }
-        }).fail(function(response) {
-            if (response.status == 401) {
-                alert('로그인하세요.');
-            } else {
-                alert(JSON.stringify(response));
-            }
+            cmt.img.add('like_s_d');
+            cmt.sum.textContent = parseInt(cmt.sum.textContent) + 1;
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest);
         });
     },
     deleteCmtLikes: function(cmt) {
@@ -98,15 +77,10 @@ var likesMain = {
             type: 'DELETE',
             url: '/api/likes?commentsId=' + cmt.id
         }).done(function(response) {
-            if (response == 'OK') {
-                cmt.img.remove('like_s_d');
-                cmt.sum.textContent = parseInt(cmt.sum.textContent) - 1;
-            } else {
-                alert(response);
-                window.location.href = '/';
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            cmt.img.remove('like_s_d');
+            cmt.sum.textContent = parseInt(cmt.sum.textContent) - 1;
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest);
         });
     }
 };

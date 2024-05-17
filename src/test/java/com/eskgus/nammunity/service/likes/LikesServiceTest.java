@@ -3,6 +3,7 @@ package com.eskgus.nammunity.service.likes;
 import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -166,5 +167,75 @@ public class LikesServiceTest {
                                                                           int page) {
         Principal principal = user::getUsername;
         return likesService.listLikes(finder, principal, page);
+    }
+
+    @Test
+    public void save() {
+        // 1. 게시글 좋아요
+        callAndAssertSave(post.getId(), ContentType.POSTS);
+
+        // 2. 댓글 좋아요
+        callAndAssertSave(comment.getId(), ContentType.COMMENTS);
+    }
+
+    private void callAndAssertSave(Long contentId, ContentType contentType) {
+        User user = users[0];
+        Principal principal = user::getUsername;
+
+        Long postId = contentType.equals(ContentType.POSTS) ? contentId : null;
+        Long commentId = contentType.equals(ContentType.COMMENTS) ? contentId : null;
+        Long id = likesService.save(postId, commentId, principal);
+
+        Likes like = assertOptionalAndGetEntity(likesRepository::findById, id);
+        assertSavedLike(contentId, contentType, user, like);
+    }
+
+    private void assertSavedLike(Long contentId, ContentType contentType, User user, Likes like) {
+        Long actualContentId = contentType.equals(ContentType.POSTS)
+                ? like.getPosts().getId() : like.getComments().getId();
+
+        assertThat(actualContentId).isEqualTo(contentId);
+        assertThat(like.getUser().getId()).isEqualTo(user.getId());
+    }
+
+    @Test
+    public void deleteByContentId() {
+        // 1. 게시글 좋아요 취소
+        callAndAssertDeleteByContentId(post.getId(), ContentType.POSTS);
+
+        // 2. 댓글 좋아요 취소
+        callAndAssertDeleteByContentId(comment.getId(), ContentType.COMMENTS);
+    }
+
+    private void callAndAssertDeleteByContentId(Long contentId, ContentType contentType) {
+        User user = users[0];
+
+        Long likeId = saveLike(contentId, contentType, user);
+
+        deleteLike(contentId, contentType, user);
+
+        assertDeletedLike(likeId);
+    }
+
+    private Long saveLike(Long contentId, ContentType contentType, User user) {
+        Long likeId = contentType.equals(ContentType.POSTS)
+                ? testDB.savePostLikes(contentId, user) : testDB.saveCommentLikes(contentId, user);
+
+        assertOptionalAndGetEntity(likesRepository::findById, likeId);
+        return likeId;
+    }
+
+    private void deleteLike(Long contentId, ContentType contentType, User user) {
+        Principal principal = user::getUsername;
+
+        Long postId = contentType.equals(ContentType.POSTS) ? contentId : null;
+        Long commentId = contentType.equals(ContentType.COMMENTS) ? contentId : null;
+
+        likesService.deleteByContentId(postId, commentId, principal);
+    }
+
+    private void assertDeletedLike(Long likeId) {
+        Optional<Likes> result = likesRepository.findById(likeId);
+        assertThat(result).isNotPresent();
     }
 }
