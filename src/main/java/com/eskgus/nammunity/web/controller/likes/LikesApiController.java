@@ -34,5 +34,6 @@ public class LikesApiController {
     @DeleteMapping("/selected-delete")
     public ResponseEntity<Void> deleteSelectedLikes(@RequestBody List<Long> likeIds) {
         likesService.deleteSelectedLikes(likeIds);
-        return ResponseEntity.status(HttpStatus.OK).build();    }
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
 }

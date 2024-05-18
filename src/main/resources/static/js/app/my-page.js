@@ -137,16 +137,13 @@ var reportDetailsMain = {
             $.ajax({
                 type: 'DELETE',
                 url: '/api/posts/selected-delete',
-                dataType: 'json',
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify(data.postsId)
             }).done(function(response) {
-                alert(response[Object.keys(response)]);
-                if (!response[Object.keys(response)].includes("항목")) {
-                    window.location.reload();
-                }
-            }).fail(function(response) {
-                alert(JSON.stringify(response));
+                alert('삭제됐습니다.');
+                window.location.reload();
+            }).fail(function(xhRequest) {
+                indexMain.fail(xhRequest, null);
             });
         }
     },
@@ -161,7 +158,7 @@ var reportDetailsMain = {
                 alert('삭제됐습니다.');
                 window.location.reload();
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest);
+                indexMain.fail(xhRequest, null);
             });
         }
     },
@@ -176,7 +173,7 @@ var reportDetailsMain = {
                 alert('삭제됐습니다.');
                 window.location.reload();
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest);
+                indexMain.fail(xhRequest, null);
             });
         }
     },

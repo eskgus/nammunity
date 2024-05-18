@@ -7,7 +7,6 @@ import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
 import com.eskgus.nammunity.service.reports.ReasonsService;
-import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.*;
@@ -25,7 +24,6 @@ import java.util.List;
 @Service
 public class PostsService {
     private final PostsRepository postsRepository;
-    private final UserService userService;
     private final CommentsSearchService commentsSearchService;
     private final ReasonsService reasonsService;
     private final LikesSearchService likesSearchService;
@@ -35,8 +33,8 @@ public class PostsService {
     private PrincipalHelper principalHelper;
 
     @Transactional
-    public Long save(PostsSaveDto requestDto, Long id) {
-        User user = userService.findById(id);
+    public Long save(PostsSaveDto requestDto, Principal principal) {
+        User user = principalHelper.getUserFromPrincipal(principal);
         PostsSaveDto postsSaveDto = PostsSaveDto.builder()
                 .title(requestDto.getTitle()).content(requestDto.getContent())
                 .user(user).build();
@@ -59,12 +57,12 @@ public class PostsService {
     }
 
     @Transactional
-    public void deleteSelectedPosts(List<Long> postsId) {
-        if (postsId.isEmpty()) {
+    public void deleteSelectedPosts(List<Long> postIds) {
+        if (postIds.isEmpty()) {
             throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
         }
 
-        postsId.forEach(this::delete);
+        postIds.forEach(this::delete);
     }
 
     @Transactional

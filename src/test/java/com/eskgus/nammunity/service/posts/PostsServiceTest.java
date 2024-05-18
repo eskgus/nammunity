@@ -18,6 +18,7 @@ import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostWithReasonsDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
+import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -186,5 +187,24 @@ public class PostsServiceTest {
     private ContentsPageDto<PostsListDto> callListPostsAndGetActualResult(User user) {
         Principal principal = createPrincipal(user);
         return postsService.listPosts(principal, page);
+    }
+
+    @Test
+    public void save() {
+        User user = users[0];
+
+        PostsSaveDto requestDto = PostsSaveDto.builder().title("title").content("content").build();
+        Principal principal = user::getUsername;
+
+        Long id = postsService.save(requestDto, principal);
+
+        Posts post = assertOptionalAndGetEntity(postsRepository::findById, id);
+        assertSavedPost(requestDto, user, post);
+    }
+
+    private void assertSavedPost(PostsSaveDto requestDto, User user, Posts post) {
+        assertThat(post.getTitle()).isEqualTo(requestDto.getTitle());
+        assertThat(post.getContent()).isEqualTo(requestDto.getContent());
+        assertThat(post.getUser().getId()).isEqualTo(user.getId());
     }
 }

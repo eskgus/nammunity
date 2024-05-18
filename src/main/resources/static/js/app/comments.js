@@ -44,7 +44,9 @@ var commentsMain = {
         }).done(function(response) {
             window.location.reload();
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest);
+            indexMain.fail(xhRequest, (errors) => {
+                indexMain.handleValidException(errors, 'cmt-', '');
+            });
         });
     },
     event: function(name, func) {
@@ -112,7 +114,9 @@ var commentsMain = {
         }).done(function(response) {
             window.location.reload();
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest);
+            indexMain.fail(xhRequest, (errors) => {
+                indexMain.handleValidException(errors, 'cmt-', '-' + id);
+            });
         });
 
         return ['u', divId];
@@ -139,7 +143,7 @@ var commentsMain = {
                 alert('삭제됐습니다.');
                 window.location.reload();
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest);
+                indexMain.fail(xhRequest, null);
             });
         }
         return ['d', divId];

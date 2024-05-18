@@ -47,7 +47,7 @@ var likesMain = {
             post.img.add('like_s_d');
             post.sum.textContent = parseInt(post.sum.textContent) + 1;
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest);
+            indexMain.fail(xhRequest, null);
         });
     },
     deletePostLikes: function(post) {
@@ -58,7 +58,7 @@ var likesMain = {
             post.img.remove('like_s_d');
             post.sum.textContent = parseInt(post.sum.textContent) - 1;
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest);
+            indexMain.fail(xhRequest, null);
         });
     },
     saveCmtLikes: function(cmt) {
@@ -69,7 +69,7 @@ var likesMain = {
             cmt.img.add('like_s_d');
             cmt.sum.textContent = parseInt(cmt.sum.textContent) + 1;
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest);
+            indexMain.fail(xhRequest, null);
         });
     },
     deleteCmtLikes: function(cmt) {
@@ -80,7 +80,7 @@ var likesMain = {
             cmt.img.remove('like_s_d');
             cmt.sum.textContent = parseInt(cmt.sum.textContent) - 1;
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest);
+            indexMain.fail(xhRequest, null);
         });
     }
 };

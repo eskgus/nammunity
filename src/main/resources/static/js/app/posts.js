@@ -25,24 +25,18 @@ var postsMain = {
             content: $('#content').val()
         };
 
-        var rb = indexMain.redBoxNBC;
-        var fail = indexMain.fail;
-
         $.ajax({
             type: 'POST',
             url: '/api/posts',
-            dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                alert('글이 등록되었습니다.');
-                window.location.href = '/';
-            } else {
-                fail(response, data, rb);
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            alert('저장됐습니다.');
+            window.location.href = '/';
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest, (errors) => {
+                indexMain.handleValidException(errors, '', '');
+            });
         });
     },
     updatePosts: function() {
@@ -52,33 +46,19 @@ var postsMain = {
         };
 
         var id = $('#id').val();
-        var rb = indexMain.redBoxNBC;
-        var fail = indexMain.fail;
 
         $.ajax({
             type: 'PUT',
             url: '/api/posts/' + id,
-            dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                alert('글이 수정되었습니다.');
-                window.location.href = '/posts/read/' + id;
-            } else if (Object.keys(response) == 'error') {  // 게시글이 없는 경우
-                alert(response[Object.keys(response)]);
-                window.location.href = '/';
-            } else {
-                fail(response, data, rb);
-            }
-        }).fail(function(response) {
-            if (response.status == 403) {
-                alert('권한이 없습니다.');
-                window.history.back();
-            } else {
-                alert(JSON.stringify(response));
-                window.location.href = '/';
-            }
+            alert('수정됐습니다.');
+            window.location.href = '/posts/read/' + id;
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest, (errors) => {
+                indexMain.handleValidException(errors, '', '');
+            });
         });
     },
     deletePosts: function() {
@@ -90,15 +70,10 @@ var postsMain = {
                 url: '/api/posts/' + id,
                 contentType: 'application/json; charset=utf-8'
             }).done(function(response) {
-                alert(response[Object.keys(response)]);
+                alert('삭제됐습니다.');
                 window.location.href = '/';
-            }).fail(function(response) {
-                if (response.status == 403) {
-                    alert('권한이 없습니다.');
-                    window.history.back();
-                } else {
-                    alert(JSON.stringify(response));
-                }
+            }).fail(function(xhRequest) {
+                indexMain.fail(xhRequest, null);
             });
         }
     }

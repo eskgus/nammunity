@@ -41,7 +41,22 @@ var indexMain = {
             }
         });
     },
+    redBoxWithoutBackgroundColour: function(field, rejectedValue) {
+        console.log('red box without background colour...');
+        var box = document.getElementById(field);
+
+        var red = 'border: 1px solid #ea3636';
+        box.style = red;
+        box.addEventListener('input', function() {
+            if (rejectedValue != box.value) {
+                box.style = 'border: none';
+            } else {
+                box.style = red;
+            }
+        });
+    },
     fail: function (response, data, rb) {  // ajax 응답 알림 창 띄우기
+        console.log('indexMain.fail(response, data, redBox)...');
         var size = Object.keys(response).length;
         let firstData = 4;
 
@@ -56,23 +71,38 @@ var indexMain = {
         alert(response[firstError]);
         document.getElementById(Object.keys(data)[firstData]).focus();
     },
-    fail: function (xhRequest) {    // 요청 실패 시 처리
+    fail: function(xhRequest, validExceptionHandler) {  // 요청 실패 시 처리
         if (xhRequest.status === 400) {
-            // MethodArgumentNotValidException
             var errors = xhRequest.responseJSON;
-            if (Array.isArray(errors) && errors.length > 0) {
-                for (var i = 0; i < errors.length; i++) {
-                    var error = errors[i];
-                    alert(error.defaultMessage);
-                }
+            if (Array.isArray(errors) && errors.length > 0) {   // MethodArgumentNotValidException
+                validExceptionHandler(errors);
             } else {    // IllegalArgumentException
                 alert(xhRequest.responseText);
                 window.location.reload();
             }
-        } else {    // Exception
+        } else {
             alert(xhRequest.responseText);
-            window.location.reload();
+            switch (xhRequest.status) {
+                case 401:
+                    window.location.href = '/users/sign-in';
+                    break;
+                case 403:
+                    window.location.href = '/';
+                    break;
+                default:    // Exception
+                    window.location.reload();
+                    break;
+            }
         }
+    },
+    handleValidException: function(errors, prefix, suffix) {
+        for (var i = 0; i < errors.length; i++) {
+            var error = errors[i];
+            this.redBoxWithoutBackgroundColour(prefix + error.field + suffix, error.rejectedValue);
+        }
+        var firstError = errors[0];
+        alert(firstError.defaultMessage);
+        document.getElementById(prefix + firstError.field + suffix).focus();
     },
     search: function(searchBtn) {
         var keywords = searchBtn.previousElementSibling.value;
