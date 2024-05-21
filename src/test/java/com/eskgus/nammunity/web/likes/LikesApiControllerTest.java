@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.likes;
 
+import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
@@ -9,18 +10,14 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +27,6 @@ import java.util.function.Function;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -38,7 +34,8 @@ public class LikesApiControllerTest {
     @Autowired
     private TestDB testDB;
 
-    private MockMvc mockMvc;
+    @Autowired
+    private MockMvcTestHelper mockMvcTestHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -58,8 +55,6 @@ public class LikesApiControllerTest {
 
     @BeforeEach
     public void setUp() {
-        this.mockMvc = testDB.setUp();
-
         Long userId = testDB.signUp(1L, Role.USER);
         this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
@@ -83,16 +78,12 @@ public class LikesApiControllerTest {
     @WithMockUser(username = "username1")
     public void saveLikes() throws Exception {
         // 일반 1. 게시글 좋아요
-        requestAndAssertWithParam(post("/api/likes"), "postsId", post.getId());
+        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(
+                post("/api/likes"), "postsId", post.getId());
 
         // 일반 2. 댓글 좋아요
-        requestAndAssertWithParam(post("/api/likes"), "commentsId", comment.getId());
-    }
-
-    private void requestAndAssertWithParam(MockHttpServletRequestBuilder requestBuilder, String name, Long id) throws Exception {
-        mockMvc.perform(requestBuilder
-                    .param(name, String.valueOf(id)))
-                .andExpect(status().isOk());
+        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(
+                post("/api/likes"), "commentsId", comment.getId());
     }
 
     @Test
@@ -100,11 +91,13 @@ public class LikesApiControllerTest {
     public void deleteLikes() throws Exception {
         // 일반 1. 게시글 좋아요 취소
         saveLike(testDB::savePostLikes, post.getId());
-        requestAndAssertWithParam(delete("/api/likes"), "postsId", post.getId());
+        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(
+                delete("/api/likes"), "postsId", post.getId());
 
         // 일반 2. 댓글 좋아요 취소
         saveLike(testDB::saveCommentLikes, comment.getId());
-        requestAndAssertWithParam(delete("/api/likes"), "commentsId", comment.getId());
+        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(
+                delete("/api/likes"), "commentsId", comment.getId());
     }
 
     private Long saveLike(BiFunction<Long, User, Long> saver, Long contentId) {
@@ -118,10 +111,7 @@ public class LikesApiControllerTest {
     public void deleteSelectedLikes() throws Exception {
         List<Long> requestDto = createLikeIds();
 
-        mockMvc.perform(delete("/api/likes/selected-delete")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(new ObjectMapper().writeValueAsString(requestDto)))
-                .andExpect(status().isOk());
+        mockMvcTestHelper.requestAndAssertStatusIsOk(delete("/api/likes/selected-delete"), requestDto);
     }
 
     private List<Long> createLikeIds() {

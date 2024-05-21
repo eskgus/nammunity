@@ -7,11 +7,11 @@ import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -22,46 +22,21 @@ public class ReportsApiController {
     private final ReportSummaryService reportSummaryService;
 
     @PostMapping("/content")
-    public Map<String, String> saveContentReports(@Valid @RequestBody ContentReportsSaveDto requestDto,
-                                                    Principal principal) {
-        Map<String, String> response = new HashMap<>();
-
-        String username = principal.getName();
-        try {
-            Long id = reportsService.saveContentReports(requestDto, username);
-            response.put("OK", id.toString());
-        } catch (IllegalArgumentException ex) {
-            response.put("error", ex.getMessage());
-        }
-
-        return response;
+    public ResponseEntity<Void> saveContentReports(@Valid @RequestBody ContentReportsSaveDto requestDto,
+                                             Principal principal) {
+        reportsService.saveContentReports(requestDto, principal);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @DeleteMapping("/content/selected-delete")
-    public Map<String, String> deleteSelectedContentReports(@RequestBody ContentReportSummaryDeleteDto requestDto) {
-        Map<String, String> response = new HashMap<>();
-
-        try {
-            reportSummaryService.deleteSelectedReportSummary(requestDto);
-            response.put("OK", "삭제됐습니다.");
-        } catch (IllegalArgumentException ex) {
-            response.put("error", ex.getMessage());
-        }
-
-        return response;
+    public ResponseEntity<Void> deleteSelectedContentReports(@RequestBody ContentReportSummaryDeleteDto requestDto) {
+        reportSummaryService.deleteSelectedReportSummary(requestDto);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/process")
-    public Map<String, String> banUser(@RequestBody Long userId) {
-        Map<String, String> response = new HashMap<>();
-
-        try {
-            Long id = bannedUsersService.banUser(userId);
-            response.put("OK", id.toString());
-        } catch (IllegalArgumentException ex) {
-            response.put("error", ex.getMessage());
-        }
-
-        return response;
+    public ResponseEntity<Void> banUser(@RequestBody Long userId) {
+        bannedUsersService.banUser(userId);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

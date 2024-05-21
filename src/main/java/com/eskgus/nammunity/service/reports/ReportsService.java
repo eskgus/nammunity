@@ -7,6 +7,7 @@ import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.reports.Reasons;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsSearchService;
 import com.eskgus.nammunity.service.user.UserService;
@@ -16,11 +17,13 @@ import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.reports.*;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
@@ -36,9 +39,12 @@ public class ReportsService {
     private final TypesService typesService;
     private final ReportSummaryService reportSummaryService;
 
+    @Autowired
+    private PrincipalHelper principalHelper;
+
     @Transactional
-    public Long saveContentReports(ContentReportsSaveDto requestDto, String username) {
-        ContentReportsSaveDto saveDto = createContentReportsSaveDto(requestDto, username);
+    public Long saveContentReports(ContentReportsSaveDto requestDto, Principal principal) {
+        ContentReportsSaveDto saveDto = createContentReportsSaveDto(requestDto, principal);
         Long reportId = contentReportsRepository.save(saveDto.toEntity()).getId();
 
         // 누적 신고 개수 10개 (or 3개) 이상이면 신고 요약 저장/수정
@@ -49,8 +55,8 @@ public class ReportsService {
         return reportId;
     }
 
-    private ContentReportsSaveDto createContentReportsSaveDto(ContentReportsSaveDto requestDto, String username) {
-        User reporter = userService.findByUsername(username);
+    private ContentReportsSaveDto createContentReportsSaveDto(ContentReportsSaveDto requestDto, Principal principal) {
+        User reporter = principalHelper.getUserFromPrincipal(principal);
         Reasons reasons = reasonsService.findById(requestDto.getReasonsId());
         String otherReasons = requestDto.getOtherReasons();
         if (reasons.getDetail().equals("기타") && (otherReasons == null)) {

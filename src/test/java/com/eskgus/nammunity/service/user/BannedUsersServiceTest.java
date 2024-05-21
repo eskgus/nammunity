@@ -3,7 +3,6 @@ package com.eskgus.nammunity.service.user;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.user.*;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,17 +44,20 @@ public class BannedUsersServiceTest {
     @BeforeEach
     public void setUp() {
         Long user1Id = testDB.signUp(1L, Role.USER);
-        Long user2Id = testDB.signUp(2L, Role.ADMIN);
-        assertThat(userRepository.count()).isEqualTo(user2Id);
+        this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        this.user1 = userRepository.findById(user1Id).get();
-        User user2 = userRepository.findById(user2Id).get();
+        Long user2Id = testDB.signUp(2L, Role.ADMIN);
+        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         Long reportId = testDB.saveUserReports(user1, user2);
-        assertThat(contentReportsRepository.count()).isEqualTo(reportId);
+        assertOptionalAndGetEntity(contentReportsRepository::findById, reportId);
 
         Long reportSummaryId = testDB.saveUserReportSummary(user1, user2);
-        assertThat(reportSummaryRepository.count()).isEqualTo(reportSummaryId);
+        assertOptionalAndGetEntity(reportSummaryRepository::findById, reportSummaryId);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -115,7 +118,7 @@ public class BannedUsersServiceTest {
 
     private void callAndAssertIsAccountNonBanned(boolean expectedResult) {
         boolean result = bannedUsersService.isAccountNonBanned(user1.getUsername());
-        Assertions.assertThat(result).isEqualTo(expectedResult);
+        assertThat(result).isEqualTo(expectedResult);
     }
 
     private Long saveBannedUsers() {

@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.comments;
 
+import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -9,17 +10,14 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsUpdateDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
@@ -29,7 +27,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -37,7 +34,8 @@ public class CommentsApiControllerExceptionTest {
     @Autowired
     private TestDB testDB;
 
-    private MockMvc mockMvc;
+    @Autowired
+    private MockMvcTestHelper mockMvcTestHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -55,8 +53,6 @@ public class CommentsApiControllerExceptionTest {
 
     @BeforeEach
     public void setUp() {
-        this.mockMvc = testDB.setUp();
-
         Long userId = testDB.signUp(1L, Role.USER);
         this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
@@ -92,7 +88,7 @@ public class CommentsApiControllerExceptionTest {
         CommentsSaveDto requestDto = createCommentsSaveDto("", post.getId());
         ResultMatcher[] resultMatchers = createResultMatchers("댓글을 입력하세요.");
 
-        requestAndAssert(requestDto, resultMatchers);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
     private CommentsSaveDto createCommentsSaveDto(String content, Long postId) {
@@ -100,22 +96,7 @@ public class CommentsApiControllerExceptionTest {
     }
 
     private ResultMatcher[] createResultMatchers(String expectedDefaultMessage) {
-        ResultMatcher resultMatcher1 = jsonPath("$[0].field").value("content");
-        ResultMatcher resultMatcher2 = jsonPath("$[0].defaultMessage").value(expectedDefaultMessage);
-
-        return new ResultMatcher[]{ resultMatcher1, resultMatcher2 };
-    }
-
-    private <T> void requestAndAssert(T requestDto, ResultMatcher... resultMatchers) throws Exception {
-        mockMvc.perform(requestBuilder
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(new ObjectMapper().writeValueAsString(requestDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> {
-                    for (ResultMatcher resultMatcher : resultMatchers) {
-                        resultMatcher.match(result);
-                    }
-                });
+        return mockMvcTestHelper.createResultMatchers("content", expectedDefaultMessage);
     }
 
     private void saveCommentsWithInvalidContentLength() throws Exception {
@@ -123,18 +104,14 @@ public class CommentsApiControllerExceptionTest {
         CommentsSaveDto requestDto = createCommentsSaveDto(content.repeat(1501), post.getId());
         ResultMatcher[] resultMatchers = createResultMatchers("댓글은 1500글자 이하여야 합니다.");
 
-        requestAndAssert(requestDto, resultMatchers);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
     private void saveCommentsWithNonexistentPostId() throws Exception {
         CommentsSaveDto requestDto = createCommentsSaveDto("comment", post.getId() + 1);
-        ResultMatcher resultMatcher = createResultMatcher("해당 게시글이 없습니다.");
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher("해당 게시글이 없습니다.");
 
-        requestAndAssert(requestDto, resultMatcher);
-    }
-
-    private ResultMatcher createResultMatcher(String expectedContent) {
-        return content().string(expectedContent);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatcher);
     }
 
     @Test
@@ -163,7 +140,7 @@ public class CommentsApiControllerExceptionTest {
         CommentsUpdateDto requestDto = createCommentsUpdateDto("");
         ResultMatcher[] resultMatchers = createResultMatchers("댓글을 입력하세요.");
 
-        requestAndAssert(requestDto, resultMatchers);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
     private CommentsUpdateDto createCommentsUpdateDto(String content) {
@@ -176,15 +153,15 @@ public class CommentsApiControllerExceptionTest {
         CommentsUpdateDto requestDto = createCommentsUpdateDto(content.repeat(1501));
         ResultMatcher[] resultMatchers = createResultMatchers("댓글은 1500글자 이하여야 합니다.");
 
-        requestAndAssert(requestDto, resultMatchers);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
     private void updateCommentsWithNonexistentCommentId(Long commentId) throws Exception {
         this.requestBuilder = put("/api/comments/{id}", commentId);
         CommentsUpdateDto requestDto = createCommentsUpdateDto("updated comment");
-        ResultMatcher resultMatcher = createResultMatcher("해당 댓글이 없습니다.");
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher("해당 댓글이 없습니다.");
 
-        requestAndAssert(requestDto, resultMatcher);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatcher);
     }
 
     @Test
@@ -196,9 +173,9 @@ public class CommentsApiControllerExceptionTest {
 
     private void deleteCommentsWithNonExistentCommentId() throws Exception {
         this.requestBuilder = delete("/api/comments/{id}", 1);
-        ResultMatcher resultMatcher = createResultMatcher("해당 댓글이 없습니다.");
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher("해당 댓글이 없습니다.");
 
-        requestAndAssert(null, resultMatcher);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, null, resultMatcher);
     }
 
     @Test
@@ -215,16 +192,16 @@ public class CommentsApiControllerExceptionTest {
 
     private void deleteSelectedCommentsWithEmptyCommentIds() throws Exception {
         List<Long> requestDto = new ArrayList<>();
-        ResultMatcher resultMatcher = createResultMatcher("삭제할 항목을 선택하세요.");
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher("삭제할 항목을 선택하세요.");
 
-        requestAndAssert(requestDto, resultMatcher);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatcher);
     }
 
     private void deleteSelectedCommentsWithNonExistentCommentIds() throws Exception {
         List<Long> requestDto = createCommentIds();
-        ResultMatcher resultMatcher = createResultMatcher("해당 댓글이 없습니다.");
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher("해당 댓글이 없습니다.");
 
-        requestAndAssert(requestDto, resultMatcher);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatcher);
     }
 
     private List<Long> createCommentIds() {

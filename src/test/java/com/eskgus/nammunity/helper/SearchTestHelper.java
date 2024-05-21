@@ -11,7 +11,6 @@ public class SearchTestHelper<U> {  // U: entity
     private final Function<U, String>[] fieldExtractors;
     private final KeywordHelper keywordHelper;
 
-    // TODO: 왜 fieldExtractors에 Comments::getContent를 못 넣는 거지 ??
     @Builder
     public SearchTestHelper(List<U> totalContents, String keywords, Function<U, String>[] fieldExtractors) {
         this.totalContents = totalContents;

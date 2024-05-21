@@ -1,3 +1,5 @@
+import { indexMain } from './index.js';
+
 var reportsMain = {
     popupContainer: document.getElementById('report-popup-container'),
     reasons: document.querySelectorAll('#report-popup input[type="checkbox"]'),
@@ -35,7 +37,7 @@ var reportsMain = {
                     _this.id.value = divId.slice(divId.indexOf('-') + 1);
                     cmtReportBtn.style.display = 'inline-block';
                 } else {
-                    alert('신고할 게시글/댓글이 선택되지 않았습니다.');
+                    alert('신고할 컨텐츠가 선택되지 않았습니다.');
                 }
 
                 _this.openReportPopup();
@@ -76,7 +78,7 @@ var reportsMain = {
         $('#btn-posts-report').on('click', function() {
             var reasonsId = _this.getReasons();
             if (reasonsId != null) {
-                _this.reportPosts(reasonsId);
+                _this.saveContentReports('posts', reasonsId);
             }
         });
 
@@ -84,7 +86,7 @@ var reportsMain = {
         $('#btn-cmt-report').on('click', function() {
             var reasonsId = _this.getReasons();
             if (reasonsId != null) {
-                _this.reportComments(reasonsId);
+                _this.saveContentReports('comments', reasonsId);
             }
         });
 
@@ -92,7 +94,7 @@ var reportsMain = {
         $('#btn-user-report').on('click', function() {
             var reasonsId = _this.getReasons();
             if (reasonsId != null) {
-                _this.reportUsers(reasonsId);
+                _this.saveContentReports('users', reasonsId);
             }
         });
     },
@@ -128,128 +130,34 @@ var reportsMain = {
 
         return reasonsId;
     },
-    reportPosts: function(reasonsId) {
-        var data = {
-            postsId: reportsMain.id.value,
-            reasonsId: reasonsId,
-            otherReasons: reportsMain.otherReasons.value
-        };
-
-        if (data.otherReasons == '') {
-            data.otherReasons = null;
-        }
-        if (data.reasonsId == 0) {
-            data.reasonsId = null;
-        }
+    saveContentReports: function(type, reasonsId) {
+        var data = this.generateData(type, reasonsId);
 
         $.ajax({
             type: 'POST',
             url: '/api/reports/content',
-            dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                alert("신고되었습니다.");
-                reportsMain.closeReportPopup();
-            } else {
-                alert(response[Object.keys(response)]);
-                if (response[Object.keys(response)].includes('ID')) { // reporter 없는 경우
-                    window.location.href = '/users/sign-out';
-                } else if (response[Object.keys(response)].includes('게시글')) { // 게시글 없는 경우
-                    window.location.href = '/';
-                }
-            }
-        }).fail(function(response) {
-            if (response.status == 401) {
-                alert('로그인하세요.');
-                reportsMain.closeReportPopup();
-            } else {
-                alert(JSON.stringify(response));
-            }
+            alert('신고됐습니다.');
+            reportsMain.closeReportPopup();
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest, null);
         });
     },
-    reportComments: function(reasonsId) {
+    generateData: function(type, reasonsId) {
+        var contentId = this.id.value;
+        var otherReasons = this.otherReasons.value;
+
         var data = {
-            commentsId: reportsMain.id.value,
-            reasonsId: reasonsId,
-            otherReasons: reportsMain.otherReasons.value
+            postsId: type === 'posts' ? contentId : null,
+            commentsId: type === 'comments' ? contentId : null,
+            userId: type === 'users' ? contentId : null,
+            reasonsId: reasonsId !== 0 ? reasonsId : null,
+            otherReasons: otherReasons !== '' ? otherReasons : null
         };
 
-        if (data.otherReasons == '') {
-            data.otherReasons = null;
-        }
-        if (data.reasonsId == 0) {
-            data.reasonsId = null;
-        }
-
-        $.ajax({
-            type: 'POST',
-            url: '/api/reports/content',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data)
-        }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                alert("신고되었습니다.");
-                reportsMain.closeReportPopup();
-            } else {
-                alert(response[Object.keys(response)]);
-                if (response[Object.keys(response)].includes('ID')) { // reporter 없는 경우
-                    window.location.href = '/users/sign-out';
-                } else if (response[Object.keys(response)].includes('댓글')) { // 댓글 없는 경우
-                    window.location.href = '/';
-                }
-            }
-        }).fail(function(response) {
-            if (response.status == 401) {
-                alert('로그인하세요.');
-                reportsMain.closeReportPopup();
-            } else {
-                alert(JSON.stringify(response));
-            }
-        });
-    },
-    reportUsers: function(reasonsId) {
-        var data = {
-            userId: reportsMain.id.value,
-            reasonsId: reasonsId,
-            otherReasons: reportsMain.otherReasons.value
-        };
-
-        if (data.otherReasons == '') {
-            data.otherReasons = null;
-        }
-        if (data.reasonsId == 0) {
-            data.reasonsId = null;
-        }
-
-        $.ajax({
-            type: 'POST',
-            url: '/api/reports/content',
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data)
-        }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                alert("신고되었습니다.");
-                reportsMain.closeReportPopup();
-            } else {
-                alert(response[Object.keys(response)]);
-                if (response[Object.keys(response)].includes('ID')) { // reporter 없는 경우
-                    window.location.href = '/users/sign-out';
-                } else if (response[Object.keys(response)].includes('회원')) { // 사용자 없는 경우
-                    window.location.href = '/';
-                }
-            }
-        }).fail(function(response) {
-            if (response.status == 401) {
-                alert('로그인하세요.');
-                reportsMain.closeReportPopup();
-            } else {
-                alert(JSON.stringify(response));
-            }
-        });
+        return data;
     }
 };
 

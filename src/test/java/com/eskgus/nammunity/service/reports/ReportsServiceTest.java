@@ -27,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.security.Principal;
 import java.util.*;
 import java.util.function.Function;
 
@@ -81,11 +82,9 @@ public class ReportsServiceTest {
         Long user2Id = testDB.signUp(2L, Role.ADMIN);
         this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
-        // 2. user1이 게시글 작성
         Long postId = testDB.savePosts(user1);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
-        // 3. user1이 댓글 작성
         Long commentId = testDB.saveComments(postId, user1);
         this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
     }
@@ -101,61 +100,67 @@ public class ReportsServiceTest {
 
     @Test
     public void saveContentReports() {
+        Long postId = post.getId();
+        Long commentId = comment.getId();
+        Long user1Id = user1.getId();
+
+        ContentType postType = ContentType.POSTS;
+        ContentType commentType = ContentType.COMMENTS;
+        ContentType userType = ContentType.USERS;
+
         // 1. 최초 신고 (신고 요약 저장 x)
-        callAndAssertSaveContentReports(post, user2);
-        callAndAssertSaveContentReports(comment, user2);
-        callAndAssertSaveContentReports(user1, user2);
+        callAndAssertSaveContentReports(postId, postType, user2);
+        callAndAssertSaveContentReports(commentId, commentType, user2);
+        callAndAssertSaveContentReports(user1Id, userType, user2);
         assertThat(contentReportSummaryRepository.count()).isZero();
 
         // 2. 누적 신고 10 or 3개 이상 (신고 요약 저장 o)
         saveReports();
 
-        callAndAssertSaveContentReports(post, user2);
-        callAndAssertSaveContentReports(comment, user2);
-        callAndAssertSaveContentReports(user1, user2);
+        callAndAssertSaveContentReports(postId, postType, user2);
+        callAndAssertSaveContentReports(commentId, commentType, user2);
+        callAndAssertSaveContentReports(user1Id, userType, user2);
         assertThat(contentReportSummaryRepository.count()).isEqualTo(latestUserReportId - latestCommentReportId);
     }
 
-    private <T> void callAndAssertSaveContentReports(T contents, User reporter) {
-        Long reportId = callSaveContentReports(contents, reporter);
-        assertSaveContentReports(contents, reporter, reportId);
+    private void callAndAssertSaveContentReports(Long contentId, ContentType contentType, User reporter) {
+        Long reportId = callSaveContentReports(contentId, contentType, reporter);
+        assertSaveContentReports(contentId, reporter, reportId);
     }
 
-    private <T> Long callSaveContentReports(T contents, User reporter) {
-        ContentReportsSaveDto requestDto = createReportsSaveDto(contents);
-        return reportsService.saveContentReports(requestDto, reporter.getUsername());
+    private Long callSaveContentReports(Long contentId, ContentType contentType, User reporter) {
+        ContentReportsSaveDto requestDto = createReportsSaveDto(contentId, contentType);
+        Principal principal = reporter::getUsername;
+        return reportsService.saveContentReports(requestDto, principal);
     }
 
-    private <T> ContentReportsSaveDto createReportsSaveDto(T contents) {
-        Long postId = contents instanceof Posts ? ((Posts) contents).getId() : null;
-        Long commentId = contents instanceof Comments ? ((Comments) contents).getId() : null;
-        Long userId = contents instanceof User ? ((User) contents).getId() : null;
+    private ContentReportsSaveDto createReportsSaveDto(Long contentId, ContentType contentType) {
         Long reasonId = reasonsRepository.count();
         String otherReason = "기타 사유";
 
         ContentReportsSaveDto saveDto = new ContentReportsSaveDto();
-        saveDto.setPostsId(postId);
-        saveDto.setCommentsId(commentId);
-        saveDto.setUserId(userId);
         saveDto.setReasonsId(reasonId);
         saveDto.setOtherReasons(otherReason);
-
+        switch (contentType) {
+            case POSTS -> saveDto.setPostsId(contentId);
+            case COMMENTS -> saveDto.setCommentsId(contentId);
+            case USERS -> saveDto.setUserId(contentId);
+        }
         return saveDto;
     }
 
-    private <T> void assertSaveContentReports(T contents, User reporter, Long reportId) {
+    private void assertSaveContentReports(Long contentId, User reporter, Long reportId) {
         Optional<ContentReports> result = contentReportsRepository.findById(reportId);
         assertThat(result).isPresent();
 
         ContentReports report = result.get();
         assertThat(report.getReporter().getId()).isEqualTo(reporter.getId());
-        assertContentId(report, contents);
+        assertContentId(report, contentId);
     }
 
-    private <T> void assertContentId(ContentReports report, T contents) {
-        Long actualId = getContentIdFromReport(report);
-        Long expectedId = getIdFromContent(contents);
-        assertThat(actualId).isEqualTo(expectedId);
+    private void assertContentId(ContentReports report, Long expectedContentId) {
+        Long actualContentId = getContentIdFromReport(report);
+        assertThat(actualContentId).isEqualTo(expectedContentId);
     }
 
     private Long getContentIdFromReport(ContentReports report) {
@@ -166,15 +171,6 @@ public class ReportsServiceTest {
             return report.getComments().getId();
         }
         return report.getUser().getId();
-    }
-
-    private <T> Long getIdFromContent(T contents) {
-        if (contents instanceof Posts) {
-            return ((Posts) contents).getId();
-        } else if (contents instanceof Comments) {
-            return ((Comments) contents).getId();
-        }
-        return ((User) contents).getId();
     }
 
     private void saveReports() {
@@ -208,6 +204,15 @@ public class ReportsServiceTest {
         Page<ContentReportDetailListDto> expectedContents = createExpectedContents(content);
 
         assertContentReportDetailDto(actualResult, expectedResult, expectedContents);
+    }
+
+    private <T> Long getIdFromContent(T contents) {
+        if (contents instanceof Posts) {
+            return ((Posts) contents).getId();
+        } else if (contents instanceof Comments) {
+            return ((Comments) contents).getId();
+        }
+        return ((User) contents).getId();
     }
 
     private ContentReportDetailRequestDto createRequestDto(Long contentId, ContentType contentType) {

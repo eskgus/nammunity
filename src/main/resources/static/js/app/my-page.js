@@ -119,16 +119,13 @@ var reportDetailsMain = {
             $.ajax({
                 type: 'DELETE',
                 url: '/api/reports/content/selected-delete',
-                dataType: 'json',
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify(data)
             }).done(function(response) {
-                alert(response[Object.keys(response)]);
-                if (!response[Object.keys(response)].includes("항목")) {
-                    window.location.reload();
-                }
-            }).fail(function(response) {
-                alert(JSON.stringify(response));
+                alert('삭제됐습니다.');
+                window.location.reload();
+            }).fail(function(xhRequest) {
+                indexMain.fail(xhRequest, null);
             });
         }
     },
@@ -184,19 +181,13 @@ var reportDetailsMain = {
         $.ajax({
             type: 'POST',
             url: '/api/reports/process',
-            dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(userId)
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                alert('활동 정지 처리되었습니다.');
-            } else {
-                alert(response[Object.keys(response)]);
-            }
+            alert('활동 정지 처리됐습니다.');
             window.location.reload();
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
-            button.disabled = false;
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest, null);
         });
     }
 };
