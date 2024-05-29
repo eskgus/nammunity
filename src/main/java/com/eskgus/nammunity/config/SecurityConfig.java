@@ -76,7 +76,7 @@ public class SecurityConfig {
                                 "/users/sign-up/**", "/users/confirm-email", "/users/sign-in", "/users/find/*",
                                 "/users/activity-history/**", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/api/comments/**", "/api/likes/**", "/api/reports/content",
-                                "/api/users/unlink*").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+                                "/api/users/unlink/*").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
                         .requestMatchers("/api/reports/content/selected-delete", "/api/reports/process",
                                 "/admin/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated())
