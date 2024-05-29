@@ -56,7 +56,7 @@ public class ReportsService {
     }
 
     private ContentReportsSaveDto createContentReportsSaveDto(ContentReportsSaveDto requestDto, Principal principal) {
-        User reporter = principalHelper.getUserFromPrincipal(principal);
+        User reporter = principalHelper.getUserFromPrincipal(principal, true);
         Reasons reasons = reasonsService.findById(requestDto.getReasonsId());
         String otherReasons = requestDto.getOtherReasons();
         if (reasons.getDetail().equals("기타") && (otherReasons == null)) {
@@ -157,5 +157,10 @@ public class ReportsService {
         Pageable pageable = createPageable(page, 10);
         Page<ContentReportDetailListDto> contents = contentReportsRepository.findByContents(content, pageable);
         return new ContentsPageDto<>(contents);
+    }
+
+    @Transactional(readOnly = true)
+    public Long countReportsByContentTypeAndUser(ContentType contentType, User user) {
+        return contentReportsRepository.countReportsByContentTypeAndUser(contentType, user);
     }
 }

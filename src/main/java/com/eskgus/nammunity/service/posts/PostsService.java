@@ -34,7 +34,7 @@ public class PostsService {
 
     @Transactional
     public Long save(PostsSaveDto requestDto, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, true);
         PostsSaveDto postsSaveDto = PostsSaveDto.builder()
                 .title(requestDto.getTitle()).content(requestDto.getContent())
                 .user(user).build();
@@ -75,7 +75,7 @@ public class PostsService {
     private PostsReadDto createPostsReadDto(Long postId, Principal principal) {
         Posts post = postsSearchService.findById(postId);
         Long postAuthorId = post.getUser().getId();
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, false);
         boolean doesUserWritePost = doesUserWritePost(user, postAuthorId);
 
         if (!doesUserWritePost) {
@@ -107,13 +107,13 @@ public class PostsService {
 
     private Page<CommentsReadDto> createCommentsPage(Long postId, Principal principal, int page) {
         Posts post = postsSearchService.findById(postId);
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, false);
         return commentsSearchService.findByPosts(post, user, page);
     }
 
     @Transactional(readOnly = true)
     public ContentsPageDto<PostsListDto> listPosts(Principal principal, int page) {
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, true);
         Page<PostsListDto> contents = postsSearchService.findByUser(user, page, 20);
         return new ContentsPageDto<>(contents);
     }

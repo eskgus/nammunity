@@ -1,11 +1,11 @@
 package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.tokens.OAuth2Tokens;
-import com.eskgus.nammunity.domain.tokens.OAuth2TokensRepository;
 import com.eskgus.nammunity.domain.user.CustomOAuth2User;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.exception.SocialException;
 import com.eskgus.nammunity.service.tokens.OAuth2TokensService;
 import com.eskgus.nammunity.web.dto.tokens.OAuth2TokensDto;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
@@ -45,7 +45,6 @@ import java.util.Optional;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final BCryptPasswordEncoder encoder;
     private final UserRepository userRepository;
-    private final OAuth2TokensRepository oAuth2TokensRepository;
     private final OAuth2TokensService oAuth2TokensService;
     private final UserService userService;
     private final BannedUsersService bannedUsersService;
@@ -147,7 +146,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .nickname(name).email(customOAuth2User.getEmail())
                     .role(Role.USER).build();
 
-            Long id = userService.signUp(registrationDto);
+            Long id = userService.save(registrationDto);
             user = userService.findById(id);
 
             // 소셜 로그인은 이메일 인증이 없으니까 가입하자마자 enabled true로 업데이트
@@ -245,7 +244,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     + "&grant_type=delete"
                     + "&service_provider=NAVER";
             case "kakao" -> "https://kapi.kakao.com/v1/user/unlink";
-            default -> throw new IllegalStateException("unexpected value");
+            default -> throw new SocialException(username, "social", social);
         };
         if (social.equals("kakao")) {
             headers.set("Authorization", "Bearer " + accessToken);
@@ -255,7 +254,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
-        User user = userRepository.findByUsername(username).get();
+        User user = userService.findByUsername(username);
         user.updateSocial("none");
 
         return cookie;
@@ -287,8 +286,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public Cookie refreshAccessToken(String social, String username) {
         log.info("refreshAccessToken.....");
 
-        User user = userRepository.findByUsername(username).get();
-        String refreshToken = user.getOAuth2Tokens().getRefreshToken();
+        User user = userService.findByUsername(username);
+        OAuth2Tokens oAuth2Tokens = user.getOAuth2Tokens();
+        if (oAuth2Tokens == null) {
+            throw new SocialException(username, "refreshToken", null);
+        }
+        String refreshToken = oAuth2Tokens.getRefreshToken();
 
         String url = switch (social) {
             case "google" -> "https://oauth2.googleapis.com/token?"
@@ -300,7 +303,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             case "kakao" -> url = "https://kauth.kakao.com/oauth/token?"
                     + "client_id=" + kakaoClientId
                     + "&client_secret=" + kakaoClientSecret;
-            default -> throw new IllegalStateException("unexpected value");
+            default -> throw new SocialException(username, "social", social);
         };
         url += "&grant_type=refresh_token"
                 + "&refresh_token=" + refreshToken;

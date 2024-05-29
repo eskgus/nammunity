@@ -35,7 +35,7 @@ var postsMain = {
             window.location.href = '/';
         }).fail(function(xhRequest) {
             indexMain.fail(xhRequest, (errors) => {
-                indexMain.handleValidException(errors, '', '');
+                indexMain.handleValidException(errors, true);
             });
         });
     },
@@ -57,7 +57,7 @@ var postsMain = {
             window.location.href = '/posts/read/' + id;
         }).fail(function(xhRequest) {
             indexMain.fail(xhRequest, (errors) => {
-                indexMain.handleValidException(errors, '', '');
+                indexMain.handleValidException(errors, true);
             });
         });
     },
@@ -73,7 +73,7 @@ var postsMain = {
                 alert('삭제됐습니다.');
                 window.location.href = '/';
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest, null);
+                indexMain.fail(xhRequest);
             });
         }
     }

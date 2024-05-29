@@ -1,26 +1,24 @@
 package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
+import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.util.TestDB;
-import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.user.*;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.Period;
-import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -28,24 +26,17 @@ public class SignInApiControllerExceptionTest {
     @Autowired
     private TestDB testDB;
 
-    private MockMvc mockMvc;
+    @Autowired
+    private MockMvcTestHelper mockMvcTestHelper;
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private ContentReportsRepository contentReportsRepository;
+    private ContentReportSummaryRepository reportSummaryRepository;
 
     @Autowired
     private BannedUsersRepository bannedUsersRepository;
-
-    @Autowired
-    private ContentReportSummaryRepository reportSummaryRepository;
-
-    @BeforeEach
-    public void setUp() {
-        this.mockMvc = testDB.setUp();
-    }
 
     @AfterEach
     public void cleanUp() {
@@ -53,74 +44,78 @@ public class SignInApiControllerExceptionTest {
     }
 
     @Test
-    public void causeExceptionsOnFindingUsername() throws Exception {
+    public void findUsernameExceptions() throws Exception {
         // 예외 1. 이메일 입력 x
-        requestAndAssertForExceptionOnFindingUsername("", "입력");
+        requestAndAssertFindUsernameExceptions("", "이메일을 입력하세요.");
 
         // 예외 2. 이메일 형식 x
-        requestAndAssertForExceptionOnFindingUsername("email", "형식");
+        requestAndAssertFindUsernameExceptions("email", "이메일 형식이 맞지 않습니다.");
 
         // 예외 3. 가입되지 x 이메일
-        requestAndAssertForExceptionOnFindingUsername("email111@naver.com", "가입되지");
+        requestAndAssertFindUsernameExceptions("email@naver.com", "가입되지 않은 이메일입니다.");
+    }
+
+    private void requestAndAssertFindUsernameExceptions(String email, String expectedContent) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = get("/api/users/sign-in/username");
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(expectedContent);
+
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithParam(
+                requestBuilder, "email", email, resultMatcher);
     }
 
     @Test
-    public void causeExceptionsOnFindingPassword() throws Exception {
+    public void findPasswordExceptions() throws Exception {
         // 예외 1. username 입력 x
-        requestAndAssertForExceptionOnFindingPassword("", "입력");
+        requestAndAssertFindPasswordExceptions("", "ID를 입력하세요.");
 
         // 예외 2. 존재하지 x username
-        String username = "username1";
-        requestAndAssertForExceptionOnFindingPassword(username, "존재하지");
+        requestAndAssertFindPasswordExceptions("username", "존재하지 않는 ID입니다.");
 
         // 예외 3. 활동 정지된 사용자
-        // 1-1. user1 회원가입 + user2 회원가입
-        User user1 = userRepository.findById(testDB.signUp(1L, Role.USER)).get();
-        User user2 = userRepository.findById(testDB.signUp(2L, Role.USER)).get();
-        Assertions.assertThat(userRepository.count()).isEqualTo(2);
-
-        // 1-2. user2가 user1 사용자 신고 * 3
-        testDB.saveUserReports(user1, user2);
-        Assertions.assertThat(contentReportsRepository.count()).isEqualTo(3);
-
-        Long reportSummaryId = testDB.saveUserReportSummary(user1, user2);
-        Assertions.assertThat(reportSummaryRepository.count()).isEqualTo(reportSummaryId);
-
-        // 1-3. user1 활동 정지
-        testDB.saveBannedUsers(user1, Period.ofWeeks(1));
-        Assertions.assertThat(bannedUsersRepository.count()).isOne();
-
-        // 1-4. 비밀번호 찾기 요청
-        requestAndAssertForExceptionOnFindingPassword(username, "활동 정지");
+        findPasswordWithBannedUser();
     }
 
-    private void requestAndAssertForExceptionOnFindingUsername(String email, String responseValue) throws Exception {
-        // 1. "/api/users/sign-in"으로 parameter email=email 담아서 get 요청
-        MvcResult mvcResult = mockMvc.perform(get("/api/users/sign-in")
-                        .param("email", email))
-                .andExpect(status().isOk())
-                .andReturn();
+    private void requestAndAssertFindPasswordExceptions(String username, String expectedContent) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = put("/api/users/sign-in/password");
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(expectedContent);
 
-        // 2. 응답으로 "error" 왔는지 확인
-        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("error");
-
-        // 3. "error"의 값이 responseValue인지 확인
-        Assertions.assertThat((String) map.get("error")).contains(responseValue);
+        mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithParam(
+                requestBuilder, "username", username, resultMatcher);
     }
 
-    private void requestAndAssertForExceptionOnFindingPassword(String username, String responseValue) throws Exception {
-        // 1. "/api/users/sign-in"으로 parameter username=username 담아서 put 요청
-        MvcResult mvcResult = mockMvc.perform(put("/api/users/sign-in")
-                        .param("username", username))
-                .andExpect(status().isOk())
-                .andReturn();
+    private void findPasswordWithBannedUser() throws Exception {
+        User bannedUser = banUser();
 
-        // 2. 응답으로 "error" 왔는지 확인
-        Map<String, Object> map = testDB.parseResponseJSON(mvcResult.getResponse().getContentAsString());
-        Assertions.assertThat(map).containsKey("error");
+        requestAndAssertFindPasswordExceptions(bannedUser.getUsername(),
+                "활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.");
+    }
 
-        // 3. "error"의 값이 responseValue인지 확인
-        Assertions.assertThat((String) map.get("error")).contains(responseValue);
+    private User banUser() {
+        User user = saveUser(1L);
+        User reporter = saveUser(2L);
+
+        saveUserReportSummary(user, reporter);
+        saveBannedUser(user);
+
+        return user;
+    }
+
+    private User saveUser(Long id) {
+        Long userId = testDB.signUp(id, Role.USER);
+        return assertOptionalAndGetEntity(userRepository::findById, userId);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDB.assertOptionalAndGetEntity(finder, contentId);
+    }
+
+    private void saveUserReportSummary(User user, User reporter) {
+        Long userReportSummaryId = testDB.saveUserReportSummary(user, reporter);
+        assertOptionalAndGetEntity(reportSummaryRepository::findById, userReportSummaryId);
+    }
+
+    private void saveBannedUser(User user) {
+        Long bannedUserId = testDB.saveBannedUsers(user, Period.ofWeeks(1));
+        assertOptionalAndGetEntity(bannedUsersRepository::findById, bannedUserId);
     }
 }

@@ -42,10 +42,19 @@ public class MockMvcTestHelper {
                 .andExpect(status().isOk());
     }
 
-    public void requestAndAssertStatusIsOkWithParam(MockHttpServletRequestBuilder requestBuilder, String name, Long id) throws Exception {
+    public <T> void requestAndAssertStatusIsOkWithParam(MockHttpServletRequestBuilder requestBuilder,
+                                                        String name, T value) throws Exception {
         mockMvc.perform(requestBuilder
-                        .param(name, String.valueOf(id)))
+                        .param(name, value.toString()))
                 .andExpect(status().isOk());
+    }
+
+    public void requestAndAssertStatusIsOkWithReferer(MockHttpServletRequestBuilder requestBuilder,
+                                                      String referer, ResultMatcher resultMatcher) throws Exception {
+        mockMvc.perform(requestBuilder
+                    .header("referer", referer))
+                .andExpect(status().isOk())
+                .andExpect(resultMatcher);
     }
 
     public <T> void requestAndAssertStatusIsBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
@@ -61,10 +70,23 @@ public class MockMvcTestHelper {
                 });
     }
 
-    public void requestAndAssertStatusIsBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder,
-                                                            String name, Long id, ResultMatcher resultMatcher) throws Exception {
+    public <T> void requestAndAssertStatusIsBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder,
+                                                            String name, T value, ResultMatcher... resultMatchers) throws Exception {
         mockMvc.perform(requestBuilder
-                        .param(name, String.valueOf(id)))
+                        .param(name, value.toString()))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> {
+                    for (ResultMatcher resultMatcher : resultMatchers) {
+                        resultMatcher.match(result);
+                    }
+                });
+    }
+
+    public void requestAndAssertStatusIsBadRequestWithReferer(MockHttpServletRequestBuilder requestBuilder,
+                                                              String referer,
+                                                              ResultMatcher resultMatcher) throws Exception {
+        mockMvc.perform(requestBuilder
+                        .header("referer", referer))
                 .andExpect(status().isBadRequest())
                 .andExpect(resultMatcher);
     }

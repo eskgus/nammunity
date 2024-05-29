@@ -12,9 +12,12 @@ public class PrincipalHelper {
     @Autowired
     private UserService userService;
 
-    public User getUserFromPrincipal(Principal principal) {
+    public User getUserFromPrincipal(Principal principal, boolean throwExceptionOnMissingPrincipal) {
         if (principal != null) {
             return userService.findByUsername(principal.getName());
+        }
+        if (throwExceptionOnMissingPrincipal) {
+            throw new IllegalArgumentException("로그인하세요.");
         }
         return null;
     }

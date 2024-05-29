@@ -142,7 +142,7 @@ var reportsMain = {
             alert('신고됐습니다.');
             reportsMain.closeReportPopup();
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest, null);
+            indexMain.fail(xhRequest);
         });
     },
     generateData: function(type, reasonsId) {

@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.service.user.ActivityService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
@@ -26,6 +27,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserIndexController {
     private final UserService userService;
+    private final ActivityService activityService;
     private final PostsService postsService;
     private final CommentsService commentsService;
     private final LikesService likesService;
@@ -80,7 +82,7 @@ public class UserIndexController {
         Map<String, Object> attr = new HashMap<>();
         try {
             ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> contentsPages
-                    = userService.getMyPage(principal);
+                    = activityService.getMyPage(principal);
             attr.put("contentsPages", contentsPages);
         } catch (IllegalArgumentException ex) {
             attr.put("exception", ex.getMessage());
@@ -200,7 +202,7 @@ public class UserIndexController {
                                       @RequestParam(name = "page", defaultValue = "1") int page,
                                       Model model) {
         try {
-            ActivityHistoryDto history = userService.findActivityHistory(id, type, page);
+            ActivityHistoryDto history = activityService.findActivityHistory(id, type, page);
             model.addAttribute("history", history);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("exception", ex.getMessage());

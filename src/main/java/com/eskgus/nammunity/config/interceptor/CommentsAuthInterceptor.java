@@ -2,8 +2,8 @@ package com.eskgus.nammunity.config.interceptor;
 
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ public class CommentsAuthInterceptor implements HandlerInterceptor {
     CommentsSearchService commentsSearchService;
 
     @Autowired
-    UserService userService;
+    PrincipalHelper principalHelper;
 
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -30,7 +30,8 @@ public class CommentsAuthInterceptor implements HandlerInterceptor {
 
         if (httpMethod.equals("PUT") || httpMethod.equals("DELETE")) {
             try {
-                User user = userService.findByUsername(request.getUserPrincipal().getName());
+                User user = principalHelper.getUserFromPrincipal(request.getUserPrincipal(), true);
+
                 // http method가 delete고, user의 role이 admin이면 통과
                 if (httpMethod.equals("DELETE") && user.getRole().equals(Role.ADMIN)) {
                     return true;

@@ -1,7 +1,8 @@
 package com.eskgus.nammunity.handler;
 
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.helper.PrincipalHelper;
+import com.eskgus.nammunity.service.user.SignInService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,16 +15,19 @@ import java.io.IOException;
 
 public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
     @Autowired
-    UserService userService;
+    PrincipalHelper principalHelper;
+
+    @Autowired
+    SignInService signInService;
 
     @Transactional
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication)
             throws IOException, ServletException {
-        User user = userService.findByUsername(authentication.getName());
+        User user = principalHelper.getUserFromPrincipal(authentication, true);
         if (user.getAttempt() != 0) {
-            userService.resetAttempt(user);
+            signInService.resetAttempt(user);
         }
 
         Object prePage = request.getSession().getAttribute("prePage");

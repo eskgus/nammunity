@@ -30,7 +30,7 @@ public class CommentsService {
 
     @Transactional
     public Long save(CommentsSaveDto requestDto, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, true);
         Posts post = postsSearchService.findById(requestDto.getPostsId());
 
         CommentsSaveDto commentsSaveDto = CommentsSaveDto.builder()
@@ -65,7 +65,7 @@ public class CommentsService {
 
     @Transactional(readOnly = true)
     public ContentsPageDto<CommentsListDto> listComments(Principal principal, int page) {
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, true);
         Page<CommentsListDto> contents = commentsSearchService.findByUser(user, page, 20);
         return new ContentsPageDto<>(contents);
     }

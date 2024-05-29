@@ -17,35 +17,39 @@ var indexMain = {
             });
         });
     },
-    redBox: function(field, pre) {
-        var box = document.getElementById(field);
-
-        box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
-        box.addEventListener('input', function() {
-            if (pre != box.value) {
-                box.style = 'border: 1px solid #205943';
-            } else {
-                box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
+    fail: function(xhRequest, validExceptionHandler = null) {  // 요청 실패 시 처리
+        if (xhRequest.status === 400) {
+            var errors = xhRequest.responseJSON;
+            if (Array.isArray(errors) && errors.length > 0) {   // MethodArgumentNotValidException, CustomValidException
+                validExceptionHandler(errors);
+            } else {    // IllegalArgumentException
+                alert(xhRequest.responseText);
+                window.location.reload();
             }
-        });
+        } else {
+            this.notBadRequestError(xhRequest);
+        }
     },
-    redBoxNBC: function(field, pre) {  // 배경 색 없는 빨간 박스
-        var box = document.getElementById(field);
+    handleValidException: function(errors, useRedBorder = false, prefix = '', suffix = '') {
+        for (var i = 0; i < errors.length; i++) {
+            var error = errors[i];
+            var field = prefix + error.field + suffix;
 
-        box.style = 'border: 1px solid #ea3636';
-        box.addEventListener('input', function() {
-            if (pre != box.value) {
-                box.style = 'border: none';
+            if (useRedBorder) {
+                indexMain.redBorder(field, error.rejectedValue);
             } else {
-                box.style = 'border: 1px solid #ea3636';
+                indexMain.redBox(field, error.rejectedValue);
             }
-        });
+        }
+        var firstError = errors[0];
+        alert(firstError.defaultMessage);
+        document.getElementById(prefix + firstError.field + suffix).focus();
     },
-    redBoxWithoutBackgroundColour: function(field, rejectedValue) {
-        console.log('red box without background colour...');
+    redBorder: function(field, rejectedValue) {
         var box = document.getElementById(field);
 
         var red = 'border: 1px solid #ea3636';
+
         box.style = red;
         box.addEventListener('input', function() {
             if (rejectedValue != box.value) {
@@ -55,54 +59,34 @@ var indexMain = {
             }
         });
     },
-    fail: function (response, data, rb) {  // ajax 응답 알림 창 띄우기
-        console.log('indexMain.fail(response, data, redBox)...');
-        var size = Object.keys(response).length;
-        let firstData = 4;
+    redBox: function(field, rejectedValue) {
+        var box = document.getElementById(field);
 
-        for (let i = 0; i < size; i++) {
-            let error = Object.keys(response)[i];
-            let index = Object.keys(data).indexOf(error);
-            firstData = firstData > index ? index : firstData;
-            rb(error, data[Object.keys(data)[index]]);
-        }
+        var red = 'border: 2px solid #ea3636; background-color: #ffc0cb';
+        var green = 'border: 1px solid #205943';
 
-        var firstError = Object.keys(data)[firstData];
-        alert(response[firstError]);
-        document.getElementById(Object.keys(data)[firstData]).focus();
+        box.style = red;
+        box.addEventListener('input', function() {
+            if (rejectedValue != box.value) {
+                box.style = green;
+            } else {
+                box.style = red;
+            }
+        });
     },
-    fail: function(xhRequest, validExceptionHandler) {  // 요청 실패 시 처리
-        if (xhRequest.status === 400) {
-            var errors = xhRequest.responseJSON;
-            if (Array.isArray(errors) && errors.length > 0) {   // MethodArgumentNotValidException
-                validExceptionHandler(errors);
-            } else {    // IllegalArgumentException
-                alert(xhRequest.responseText);
+    notBadRequestError: function(xhRequest) {
+        alert(xhRequest.responseText);
+        switch (xhRequest.status) {
+            case 401:
+                window.location.href = '/users/sign-in';
+                break;
+            case 403:
+                window.location.href = '/';
+                break;
+            default:    // Exception
                 window.location.reload();
-            }
-        } else {
-            alert(xhRequest.responseText);
-            switch (xhRequest.status) {
-                case 401:
-                    window.location.href = '/users/sign-in';
-                    break;
-                case 403:
-                    window.location.href = '/';
-                    break;
-                default:    // Exception
-                    window.location.reload();
-                    break;
-            }
+                break;
         }
-    },
-    handleValidException: function(errors, prefix, suffix) {
-        for (var i = 0; i < errors.length; i++) {
-            var error = errors[i];
-            this.redBoxWithoutBackgroundColour(prefix + error.field + suffix, error.rejectedValue);
-        }
-        var firstError = errors[0];
-        alert(firstError.defaultMessage);
-        document.getElementById(prefix + firstError.field + suffix).focus();
     },
     search: function(searchBtn) {
         var keywords = searchBtn.previousElementSibling.value;

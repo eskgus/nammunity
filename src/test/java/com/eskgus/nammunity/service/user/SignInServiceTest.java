@@ -1,10 +1,9 @@
-package com.eskgus.nammunity.web.user;
+package com.eskgus.nammunity.service.user;
 
-import com.eskgus.nammunity.helper.MockMvcTestHelper;
-import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.util.TestDB;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,25 +11,24 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.function.Function;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class SignInApiControllerTest {
+@SpringBootTest
+public class SignInServiceTest {
     @Autowired
     private TestDB testDB;
 
     @Autowired
-    private MockMvcTestHelper mockMvcTestHelper;
+    private UserRepository userRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private SignInService signInService;
 
     private User user;
 
@@ -50,16 +48,27 @@ public class SignInApiControllerTest {
     }
 
     @Test
-    public void findUsername() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = get("/api/users/sign-in/username");
-
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, "email", user.getEmail());
+    public void findUsername() {
+        String username = signInService.findUsername(user.getEmail());
+        assertFindUsername(username);
     }
 
-    @Test
-    public void findPassword() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = put("/api/users/sign-in/password");
+    private void assertFindUsername(String username) {
+        String expectedEncryptedUsername = user.getUsername().substring(0, 3);
+        assertThat(username).contains(expectedEncryptedUsername);
+    }
 
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, "username", user.getUsername());
+    @Transactional
+    @Test
+    public void findPassword() {
+        String oldPassword = user.getPassword();
+
+        signInService.findPassword(user.getUsername());
+        assertFindPassword(oldPassword);
+    }
+
+    private void assertFindPassword(String oldPassword) {
+        String newPassword = user.getPassword();
+        assertThat(newPassword).isNotEqualTo(oldPassword);
     }
 }

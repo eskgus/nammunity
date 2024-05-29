@@ -112,9 +112,6 @@ var usersMain = {
             email: $('#email').val()
         };
 
-        var rb = indexMain.redBox;
-        var fail = indexMain.fail;
-
         var button = document.getElementById('btn-sign-up');
         button.disabled = true;
 
@@ -124,56 +121,46 @@ var usersMain = {
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                var id = response[Object.keys(response)];
-                window.location.href = '/users/sign-up/' + id;
-            } else {
-                fail(response, data, rb);
-                button.disabled = false;
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            window.location.href = '/users/sign-up/' + response;
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest, indexMain.handleValidException);
             button.disabled = false;
         });
     },
     checkUsername: function() {
         var username = $('#username').val();
         var check = document.getElementById('ch-username');
-        var rb = indexMain.redBox;
 
         $.ajax({
             type: 'GET',
-            url: '/api/users?username=' + username
+            url: '/api/users/validation?username=' + username
         }).done(function(response) {
-            if (response == 'OK') {
-                check.style = 'display: none';
-            } else {
-                check.textContent = response;
-                check.style = 'display: inline-block';
-                rb('username', username);
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response))
+            check.style = 'display: none';
+        }).fail(function(xhRequest) {
+            usersMain.failToCheck(xhRequest, check);
         });
+    },
+    failToCheck: function(xhRequest, check) {
+        if (xhRequest.status === 400) { // CustomValidException
+            var error = xhRequest.responseJSON[0];  // 예외 하나씩만 발생
+            check.textContent = error.defaultMessage;
+            check.style = 'display: inline-block';
+            indexMain.redBox(error.field, error.rejectedValue);
+        } else {
+            indexMain.notBadRequestError(xhRequest);
+        }
     },
     checkNickname: function() {
         var nickname = $('#nickname').val();
         var check = document.getElementById('ch-nickname');
-        var rb = indexMain.redBox;
 
         $.ajax({
             type: 'GET',
-            url: '/api/users?nickname=' + nickname
+            url: '/api/users/validation?nickname=' + nickname
         }).done(function(response) {
-            if (response == 'OK') {
-                check.style = 'display: none';
-            } else {
-                check.textContent = response;
-                check.style = 'display: inline-block';
-                rb('nickname', nickname);
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response))
+            check.style = 'display: none';
+        }).fail(function(xhRequest) {
+            usersMain.failToCheck(xhRequest, check);
         });
     },
     checkPassword: function() {
@@ -195,24 +182,28 @@ var usersMain = {
         var box = document.getElementById('confirmPassword');
         var check = document.getElementById('ch-confirmPassword');
 
+        var red = 'border: 2px solid #ea3636; background-color: #ffc0cb';
+        var green = 'border: 1px solid #205943; background-color: #C1DAC0';
+        var inlineBlock = 'display: inline-block';
+
         if (event == 'input') {
             if (password == confirmPassword) {
-                box.style = 'border: 1px solid #205943; background-color: #C1DAC0';
+                box.style = green;
                 check.style = 'display: none';
             } else {
-                box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
+                box.style = red;
                 check.textContent = '비밀번호가 일치하지 않습니다.';
-                check.style = 'display: inline-block';
+                check.style = inlineBlock;
             }
         } else if (event == 'focusout') {
             if (confirmPassword == '') {
-                box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
+                box.style = red;
                 check.textContent = '비밀번호를 확인하세요.';
-                check.style = 'display: inline-block';
+                check.style = inlineBlock;
             } else if (password != confirmPassword) {
-                box.style = 'border: 2px solid #ea3636; background-color: #ffc0cb';
+                box.style = red;
                 check.textContent = '비밀번호가 일치하지 않습니다.';
-                check.style = 'display: inline-block';
+                check.style = inlineBlock;
             }
         }
     },
@@ -232,21 +223,14 @@ var usersMain = {
     checkEmail: function() {
         var email = $('#email').val();
         var check = document.getElementById('ch-email');
-        var rb = indexMain.redBox;
 
         $.ajax({
             type: 'GET',
-            url: '/api/users?email=' + email
+            url: '/api/users/validation?email=' + email
         }).done(function(response) {
-            if (response == 'OK') {
-                check.style = 'display: none';
-            } else {
-                check.textContent = response;
-                check.style = 'display: inline-block';
-                rb('email', email);
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response))
+            check.style = 'display: none';
+        }).fail(function(xhRequest) {
+            usersMain.failToCheck(xhRequest, check);
         });
     },
     confirmEmail: function() {
@@ -254,25 +238,22 @@ var usersMain = {
 
         $.ajax({
             type: 'GET',
-            url: '/api/users/confirm/' + id
+            url: '/api/users/' + id + '/confirm'
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                var url = response[Object.keys(response)];
-                if (url.includes('update/user-info')) {
-                    alert('수정 완료');
-                }
-                window.location.href = url;
-            } else {
-                alert(response[Object.keys(response)]);
+            if (response.includes('/update/user-info')) {
+                alert('수정됐습니다.');
             }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            window.location.href = response;
+        }).fail(function(xhRequest) {
+            if (xhRequest.status === 400) { // IllegalArgumentException
+                alert(xhRequest.responseText);
+            } else {
+                indexMain.notBadRequestError(xhRequest);
+            }
         });
     },
     resendEmail: function() {
-        var data = {
-            id: $('#id').val()
-        };
+        var id = $('#id').val();
 
         var button = document.getElementById('btn-resend');
         button.disabled = true;
@@ -281,13 +262,17 @@ var usersMain = {
             type: 'POST',
             url: '/api/users/confirm',
             contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data)
+            data: JSON.stringify(id)
         }).done(function(response) {
-            alert(response[Object.keys(response)]);
+            alert('발송됐습니다.');
             button.disabled = false;
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
-            button.disabled = false;
+        }).fail(function(xhRequest) {
+            if (xhRequest.status === 400) { // IllegalArgumentException
+                alert(xhRequest.responseText);
+                button.disabled = false;
+            } else {
+                indexMain.notBadRequestError(xhRequest);
+            }
         });
     },
     findUsername: function() {
@@ -296,15 +281,17 @@ var usersMain = {
 
         $.ajax({
             type: 'GET',
-            url: '/api/users/sign-in?email=' + email
+            url: '/api/users/sign-in/username?email=' + email
         }).done(function(response) {
-            result.textContent = response[Object.keys(response)];
+            result.textContent = response;
             result.style = 'display: block';
-            if (Object.keys(response) != 'OK') {
-                result.style = 'display:block; color: #ea3636';
+        }).fail(function(xhRequest) {
+            if (xhRequest.status === 400) { // IllegalArgumentException, ConstraintViolationException
+                result.textContent = xhRequest.responseText;
+                result.style = 'display: block; color: #ea3636';
+            } else {
+                indexMain.notBadRequestError(xhRequest);
             }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
         });
     },
     findPassword: function() {
@@ -316,20 +303,21 @@ var usersMain = {
 
         $.ajax({
             type: 'PUT',
-            url: '/api/users/sign-in?username=' + username
+            url: '/api/users/sign-in/password?username=' + username
         }).done(function(response) {
-            result.textContent = response[Object.keys(response)];
-            result.style = 'display:block';
-            if (Object.keys(response) != 'OK') {
-                result.style = 'display:block; color: #ea3636';
+            result.textContent = '가입된 이메일로 임시 비밀번호를 발송했습니다.';
+            result.style = 'display: block';
+            button.textContent = '재발송';
+            button.disabled = false;
+        }).fail(function(xhRequest) {
+            if (xhRequest.status === 400) { // IllegalArgumentException, ConstraintViolationException
+                result.textContent = xhRequest.responseText;
+                result.style = 'display: block; color: #ea3636';
                 button.textContent = '찾기';
+                button.disabled = false;
             } else {
-                button.textContent = '재발송';
+                indexMain.notBadRequestError(xhRequest);
             }
-            button.disabled = false;
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
-            button.disabled = false;
         });
     },
     updatePassword: function() {
@@ -339,25 +327,16 @@ var usersMain = {
             confirmPassword: $('#confirmPassword').val()
         };
 
-        var rb = indexMain.redBox;
-        var fail = indexMain.fail;
-
         $.ajax({
             type: 'PUT',
-            url: '/api/users/update/password',
+            url: '/api/users/password',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                alert(response[Object.keys(response)]);
-                window.location.href = '/users/my-page';
-            } else if (Object.keys(response) == 'username') {
-                alert(response[Object.keys(response)]);
-            } else {
-                fail(response, data, rb);
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            alert('비밀번호가 변경됐습니다.');
+            window.location.href = '/users/my-page';
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest, indexMain.handleValidException);
         });
     },
     updateNickname: function() {
@@ -367,16 +346,16 @@ var usersMain = {
 
         $.ajax({
             type: 'PUT',
-            url: '/api/users/update/nickname',
+            url: '/api/users/nickname',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            alert(response[Object.keys(response)]);
-            if (Object.keys(response) == 'OK') {
-                window.location.reload();
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            alert('닉네임이 변경됐습니다.');
+            window.location.reload();
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest, (errors) => {
+                indexMain.handleValidException(errors, false, 'u-');
+            });
         });
     },
     updateEmail: function() {
@@ -390,34 +369,32 @@ var usersMain = {
 
         $.ajax({
             type: 'PUT',
-            url: '/api/users/update/email',
+            url: '/api/users/email',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data)
         }).done(function(response) {
-            alert(response[Object.keys(response)]);
-            if (Object.keys(response) == 'OK') {
-                button1.textContent = '재발송';
-                button2.style = 'display: inline-block';
-            } else {
-                button1.textContent = '인증';
-            }
+            alert('발송됐습니다.');
+            button1.textContent = '재발송';
+            button2.style = 'display:inline-block';
             button1.disabled = false;
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest, (errors) => {
+                indexMain.handleValidException(errors, false, 'u-');
+            });
+            button1.textContent = '인증';
             button1.disabled = false;
         });
     },
     deleteAccount: function() {
         $.ajax({
             type: 'DELETE',
-            url: '/api/users/delete'
+            url: '/api/users'
         }).done(function(response) {
-            alert(response[Object.keys(response)]);
-            if (Object.keys(response) == 'OK') {
-                window.location.href = '/users/sign-out';
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            alert('탈퇴됐습니다.');
+            window.location.href = '/users/sign-out';
+        }).fail(function(xhRequest) {
+            indexMain.fail(xhRequest);
+            window.location.href = '/users/sign-out';
         });
     },
     unlinkSocial: function(social) {
@@ -425,14 +402,11 @@ var usersMain = {
             type: 'POST',
             url: '/api/users/unlink/' + social
         }).done(function(response) {
-            if (Object.keys(response) == 'OK') {
-                alert(response[Object.keys(response)]);
-                window.location.reload();
-            } else {
-                alert(response[Object.keys(response)]);
-            }
-        }).fail(function(response) {
-            alert(JSON.stringify(response));
+            alert('연동 해제됐습니다.')
+            window.location.reload();
+        }).fail(function(xhRequest) {
+            console.log(xhRequest);
+            indexMain.fail(xhRequest);
         });
     }
 };

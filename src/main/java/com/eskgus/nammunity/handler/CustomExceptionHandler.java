@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.handler;
 
+import com.eskgus.nammunity.exception.CustomValidException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,20 +10,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 @RestControllerAdvice
 public class CustomExceptionHandler {
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    public Map<String, String> patternExceptionHandler(MethodArgumentNotValidException ex) {
-//        Map<String, String> errors = new HashMap<>();
-//        ex.getBindingResult().getFieldErrors()
-//                    .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
-//        return errors;
-//    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<FieldError>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         Errors errors = ex.getBindingResult();
@@ -30,10 +22,14 @@ public class CustomExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public Map<String, String> handleConstraintViolationException(ConstraintViolationException ex) {
-        Map<String, String> error = new HashMap<>();
-        ex.getConstraintViolations().forEach(e -> error.put("error", e.getMessage()));
-        return error;
+    public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
+        String message = ex.getConstraintViolations().iterator().next().getMessage();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    }
+
+    @ExceptionHandler(CustomValidException.class)
+    public ResponseEntity<List<CustomValidException>> handleCustomValidException(CustomValidException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonList(ex));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -4,6 +4,7 @@ import com.eskgus.nammunity.handler.*;
 import com.eskgus.nammunity.domain.user.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -68,18 +69,16 @@ public class SecurityConfig {
         http.csrf().disable().headers().frameOptions().disable()
                 .and()
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**"))
-                        .permitAll()
-                        .requestMatchers("/", "/main", "/posts/read/**",
-                                "/api/users", "/api/users/confirm/**", "/api/users/sign-in",
-                                "/users/sign-up/**", "/users/sign-in", "/users/confirm-email", "/users/find/**",
-                                "/users/activity-history/**", "/search/**", "/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/api/posts/**", "/posts/save/**", "/posts/update/**",
-                                "/api/users/update/**", "/api/users/delete", "/users/my-page/**",
-                                "/api/comments/**", "/api/likes/**", "/api/reports/content")
-                        .hasAnyRole(Role.USER.name(), Role.ADMIN.name())
-                        .requestMatchers("/admin/my-page/content-report/**",
-                                "/api/reports/content/selected-delete", "/api/reports/process").hasRole(Role.ADMIN.name())
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers("/api/users/confirm", "/api/users/*/confirm", "/api/users/sign-in/*",
+                                "/api/users/validation", "/", "/main", "/posts/read/**", "/search/**",
+                                "/users/sign-up/**", "/users/confirm-email", "/users/sign-in", "/users/find/*",
+                                "/users/activity-history/**", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/api/comments/**", "/api/likes/**", "/api/reports/content",
+                                "/api/users/unlink*").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+                        .requestMatchers("/api/reports/content/selected-delete", "/api/reports/process",
+                                "/admin/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated())
                 .exceptionHandling()
                     .authenticationEntryPoint(customAuthenticationEntryPoint())

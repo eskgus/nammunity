@@ -10,17 +10,10 @@ import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.tokens.TokensRepository;
 import com.eskgus.nammunity.domain.user.*;
-import com.google.gson.Gson;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -28,13 +21,9 @@ import java.util.*;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @Component
 public class TestDB {
-    @Autowired
-    private WebApplicationContext context;
-
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -71,16 +60,6 @@ public class TestDB {
     @Autowired
     private BannedUsersRepository bannedUsersRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    public MockMvc setUp() {
-        return MockMvcBuilders.webAppContextSetup(context)
-//                .addFilter(new CharacterEncodingFilter("UTF-8", true))
-                .apply(springSecurity())
-                .build();
-    }
-
     public void cleanUp() {
         // 테이블 초기화
         userRepository.deleteAll();
@@ -103,7 +82,7 @@ public class TestDB {
         String username = "username" + id;
         String password = encoder.encode("password" + id);
         String nickname = "nickname" + id;
-        String email = "email" + id + "@naver.com";
+        String email = "email" + id + id + id + "@naver.com";
 
         User user = User.builder()
                 .username(username).password(password).nickname(nickname).email(email).role(role).build();
@@ -124,9 +103,6 @@ public class TestDB {
         Tokens newToken = Tokens.builder().token(token).createdAt(LocalDateTime.now())
                 .expiredAt(LocalDateTime.now().plusMinutes(3)).user(user).build();
         tokensRepository.save(newToken);
-
-        // 이거 해야 user로 tokens 가져오기 가능
-        entityManager.clear();
 
         return newToken.getId();
     }
@@ -314,11 +290,6 @@ public class TestDB {
                 .user(user).startedDate(startedDate).expiredDate(expiredDate).period(period).reason(reasonDetail)
                 .build();
         return bannedUsersRepository.save(bannedUser).getId();
-    }
-
-    public Map<String, Object> parseResponseJSON(String response) {
-        Gson gson = new Gson();
-        return gson.fromJson(response, Map.class);
     }
 
     public <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {

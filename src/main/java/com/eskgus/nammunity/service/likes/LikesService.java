@@ -35,7 +35,7 @@ public class LikesService {
 
     @Transactional
     public Long save(Long postsId, Long commentsId, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, true);
 
         Posts posts = null;
         Comments comments = null;
@@ -53,7 +53,7 @@ public class LikesService {
 
     @Transactional
     public void deleteByContentId(Long postsId, Long commentsId, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, true);
 
         if (postsId != null) {
             Posts posts = postsSearchService.findById(postsId);
@@ -83,7 +83,7 @@ public class LikesService {
     @Transactional(readOnly = true)
     public ContentsPageDto<LikesListDto> listLikes(BiFunction<User, Pageable, Page<LikesListDto>> finder,
                                                    Principal principal, int page) {
-        User user = principalHelper.getUserFromPrincipal(principal);
+        User user = principalHelper.getUserFromPrincipal(principal, true);
         Page<LikesListDto> contents = likesSearchService.findLikesByUser(user, finder, page, 20);
         return new ContentsPageDto<>(contents);
     }

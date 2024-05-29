@@ -45,7 +45,7 @@ var commentsMain = {
             window.location.reload();
         }).fail(function(xhRequest) {
             indexMain.fail(xhRequest, (errors) => {
-                indexMain.handleValidException(errors, 'cmt-', '');
+                indexMain.handleValidException(errors, true, 'cmt-');
             });
         });
     },
@@ -115,7 +115,7 @@ var commentsMain = {
             window.location.reload();
         }).fail(function(xhRequest) {
             indexMain.fail(xhRequest, (errors) => {
-                indexMain.handleValidException(errors, 'cmt-', '-' + id);
+                indexMain.handleValidException(errors, true, 'cmt-', '-' + id);
             });
         });
 
@@ -143,7 +143,7 @@ var commentsMain = {
                 alert('삭제됐습니다.');
                 window.location.reload();
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest, null);
+                indexMain.fail(xhRequest);
             });
         }
         return ['d', divId];

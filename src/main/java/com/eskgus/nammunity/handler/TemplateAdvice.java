@@ -2,9 +2,10 @@ package com.eskgus.nammunity.handler;
 
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.helper.PrincipalHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -16,7 +17,8 @@ import java.util.Map;
 @ControllerAdvice
 @RequiredArgsConstructor
 public class TemplateAdvice {
-    private final UserService userService;
+    @Autowired
+    private PrincipalHelper principalHelper;
 
     @ModelAttribute
     public void addDefaultAttributes(Principal principal, Model model, HttpServletRequest request) {
@@ -24,7 +26,7 @@ public class TemplateAdvice {
 
         if (principal != null) {
             try {
-                User user = userService.findByUsername(principal.getName());
+                User user = principalHelper.getUserFromPrincipal(principal, true);
                 String nickname = user.getNickname();
                 attr.put("auth", nickname);
 

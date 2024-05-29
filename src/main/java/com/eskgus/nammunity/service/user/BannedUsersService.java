@@ -23,6 +23,11 @@ public class BannedUsersService {
     private final EmailService emailService;
     private final ReportSummaryService reportSummaryService;
 
+    @Transactional(readOnly = true)
+    public Optional<BannedUsers> findByUser(User user) {
+        return bannedUsersRepository.findByUser(user);
+    }
+
     @Transactional
     public Long banUser(Long userId) {
         User user = userService.findById(userId);
@@ -34,16 +39,13 @@ public class BannedUsersService {
     }
 
     private BannedUsers saveOrUpdateBannedUser(User user) {
-        Optional<BannedUsers> result = bannedUsersRepository.findByUser(user);
+        Optional<BannedUsers> result = findByUser(user);
 
         LocalDateTime startedDate = LocalDateTime.now();
         String reasonDetail = createReasonDetail(user);
 
-        if (result.isEmpty()) {
-            return saveBannedUser(user, startedDate, reasonDetail);
-        } else {
-            return updateBannedUser(result.get(), startedDate, reasonDetail);
-        }
+        return result.map(bannedUser -> updateBannedUser(bannedUser, startedDate, reasonDetail))
+                .orElseGet(() -> saveBannedUser(user, startedDate, reasonDetail));
     }
 
     private String createReasonDetail(User user) {
@@ -77,7 +79,7 @@ public class BannedUsersService {
 
     private void sendBannedUserEmail(BannedUsers bannedUser, User user) {
         BannedUsersEmailDto emailDto = BannedUsersEmailDto.builder().bannedUser(bannedUser).build();
-        String text = emailService.setEmailText(emailDto);
+        String text = emailService.setBannedUserEmailText(emailDto);
         emailService.send(user.getEmail(), text);
     }
 
@@ -86,7 +88,7 @@ public class BannedUsersService {
         User user = userService.findByUsername(username);
 
         // BannedUsers 테이블에 user가 없으면 활동 정지 x
-        Optional<BannedUsers> result = bannedUsersRepository.findByUser(user);
+        Optional<BannedUsers> result = findByUser(user);
         if (result.isEmpty()) {
             return true;
         }

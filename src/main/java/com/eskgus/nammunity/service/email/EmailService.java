@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -21,17 +20,10 @@ public class EmailService implements EmailSender{
     @Value("${spring.mail.username}")
     private String from;
 
-    @Transactional
     @Override
     public void send(String email, String text) {
-        String title;
-        if (text.contains("이메일 인증")) {
-            title = "나뮤니티 이메일 인증";
-        } else if (text.contains("임시")) {
-            title = "나뮤니티 임시 비밀번호";
-        } else {
-            title = "나뮤니티 계정 정지";
-        }
+        String title = setTitle(text);
+
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
@@ -46,7 +38,17 @@ public class EmailService implements EmailSender{
         }
     }
 
-    public String setEmailText(String username, String token) {
+    private String setTitle(String text) {
+        if (text.contains("이메일 인증")) {
+            return "나뮤니티 이메일 인증";
+        } else if (text.contains("임시")) {
+            return "나뮤니티 임시 비밀번호";
+        } else {
+            return "나뮤니티 계정 정지";
+        }
+    }
+
+    public String setConfirmEmailText(String username, String token) {
         String text = "<div style=\"font-size: 18px; font-family: sans-serif\">";
 
         if (!username.isBlank()) {
@@ -59,13 +61,13 @@ public class EmailService implements EmailSender{
         return text;
     }
 
-    public String setEmailText(String password) {
+    public String setRandomPasswordEmailText(String password) {
         return "<div style=\"font-size: 18px; font-family: sans-serif\">" +
                 "<p>임시 비밀번호를 복사해서 로그인해 주세요.</p>" +
                 password + "</div>";
     }
 
-    public String setEmailText(BannedUsersEmailDto emailDto) {
+    public String setBannedUserEmailText(BannedUsersEmailDto emailDto) {
         return "<div style=\"font-size: 18px; font-family: sans-serif\">" +
                 "<p>안녕하세요, " + emailDto.getUsername() + "님</p>" +
                 "<p>회원님의 나뮤니티 계정이 " + emailDto.getPeriod() + "(" + emailDto.getStartedDate() +

@@ -6,15 +6,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @RequiredArgsConstructor
 @Service
 public class TokensService {
     private final TokensRepository tokensRepository;
 
-    public Optional<Tokens> findByToken(String token) {
-        return tokensRepository.findByToken(token);
+    @Transactional(readOnly = true)
+    public Tokens findByToken(String token) {
+        return tokensRepository.findByToken(token).orElseThrow(() -> new
+                IllegalArgumentException("인증 링크가 존재하지 않습니다."));
     }
 
     @Transactional

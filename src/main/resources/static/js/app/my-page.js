@@ -125,7 +125,7 @@ var reportDetailsMain = {
                 alert('삭제됐습니다.');
                 window.location.reload();
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest, null);
+                indexMain.fail(xhRequest);
             });
         }
     },
@@ -140,7 +140,7 @@ var reportDetailsMain = {
                 alert('삭제됐습니다.');
                 window.location.reload();
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest, null);
+                indexMain.fail(xhRequest);
             });
         }
     },
@@ -155,7 +155,7 @@ var reportDetailsMain = {
                 alert('삭제됐습니다.');
                 window.location.reload();
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest, null);
+                indexMain.fail(xhRequest);
             });
         }
     },
@@ -170,7 +170,7 @@ var reportDetailsMain = {
                 alert('삭제됐습니다.');
                 window.location.reload();
             }).fail(function(xhRequest) {
-                indexMain.fail(xhRequest, null);
+                indexMain.fail(xhRequest);
             });
         }
     },
@@ -187,7 +187,7 @@ var reportDetailsMain = {
             alert('활동 정지 처리됐습니다.');
             window.location.reload();
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest, null);
+            indexMain.fail(xhRequest);
         });
     }
 };
