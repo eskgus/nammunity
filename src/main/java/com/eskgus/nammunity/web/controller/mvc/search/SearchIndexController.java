@@ -25,56 +25,43 @@ public class SearchIndexController {
     @GetMapping
     public String search(@RequestParam(name = "keywords") String keywords,
                          Model model) {
-        Map<String, Object> attr = new HashMap<>();
-
-        ContentsPageMoreDtos<PostsListDto, CommentsListDto, UsersListDto> contentsPages
-                = searchService.search(keywords);
-        attr.put("contentsPages", contentsPages);
-        attr.put("keywords", keywords);
-
-        model.addAllAttributes(attr);
+        ContentsPageMoreDtos<PostsListDto, CommentsListDto, UsersListDto> contentsPages = searchService.search(keywords);
+        addAttributes(new HashMap<>(), contentsPages, keywords, model);
         return "search/search";
+    }
+
+    private <T> void addAttributes(Map<String, Object> attr, T contentsPages, String keywords, Model model) {
+        attr.put("contentsPage", contentsPages);
+        attr.put("keywords", keywords);
+        model.addAllAttributes(attr);
     }
 
     @GetMapping("/posts")
     public String searchPosts(@RequestParam(name = "keywords") String keywords,
                               @RequestParam(name = "searchBy") String searchBy,
                               @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
-        Map<String, Object> attr = new HashMap<>();
-
         ContentsPageDto<PostsListDto> contentsPage = searchService.searchPosts(keywords, searchBy, page);
-        attr.put("contentsPage", contentsPage);
+
+        Map<String, Object> attr = new HashMap<>();
         attr.put(searchBy, true);
         attr.put("searchBy", searchBy);
-        attr.put("keywords", keywords);
-
-        model.addAllAttributes(attr);
+        addAttributes(attr, contentsPage, keywords, model);
         return "search/search-posts";
     }
 
     @GetMapping("/comments")
     public String searchComments(@RequestParam(name = "keywords") String keywords,
                                  @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
-        Map<String, Object> attr = new HashMap<>();
-
         ContentsPageDto<CommentsListDto> contentsPage = searchService.searchComments(keywords, page);
-        attr.put("contentsPage", contentsPage);
-        attr.put("keywords", keywords);
-
-        model.addAllAttributes(attr);
+        addAttributes(new HashMap<>(), contentsPage, keywords, model);
         return "search/search-comments";
     }
 
     @GetMapping("/users")
     public String searchUsers(@RequestParam(name = "keywords") String keywords,
                               @RequestParam(name = "page", defaultValue = "1") int page, Model model) {
-        Map<String, Object> attr = new HashMap<>();
-
         ContentsPageDto<UsersListDto> contentsPage = searchService.searchUsers(keywords, page);
-        attr.put("contentsPage", contentsPage);
-        attr.put("keywords", keywords);
-
-        model.addAllAttributes(attr);
+        addAttributes(new HashMap<>(), contentsPage, keywords, model);
         return "search/search-users";
     }
 }
