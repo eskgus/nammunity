@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.comments;
+package com.eskgus.nammunity.web.controller.api.comments;
 
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;

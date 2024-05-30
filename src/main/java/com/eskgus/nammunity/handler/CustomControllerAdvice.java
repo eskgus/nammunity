@@ -8,44 +8,50 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
-@ControllerAdvice
+@ControllerAdvice(basePackages = "com.eskgus.nammunity.web.controller.mvc")
 @RequiredArgsConstructor
-public class TemplateAdvice {
+public class CustomControllerAdvice {
     @Autowired
     private PrincipalHelper principalHelper;
 
     @ModelAttribute
     public void addDefaultAttributes(Principal principal, Model model, HttpServletRequest request) {
-        Map<String, String> attr = new HashMap<>();
+        Map<String, Object> attr = new HashMap<>();
+        addAuthAndAdmin(principal, attr);
+        addPrePage(request, attr);
 
-        if (principal != null) {
-            try {
-                User user = principalHelper.getUserFromPrincipal(principal, true);
-                String nickname = user.getNickname();
-                attr.put("auth", nickname);
+        model.addAllAttributes(attr);
+    }
 
-                if (user.getRole().equals(Role.ADMIN)) {
-                    attr.put("admin", "true");
-                }
-            } catch (IllegalArgumentException ex) {
-                attr.put("error", ex.getMessage());
-                attr.put("signOut", "/users/sign-out");
+    private void addAuthAndAdmin(Principal principal, Map<String, Object> attr) {
+        User user = principalHelper.getUserFromPrincipal(principal, false);
+        if (user != null) {
+            attr.put("auth", user.getNickname());
+
+            if (user.getRole().equals(Role.ADMIN)) {
+                attr.put("admin", true);
             }
         }
+    }
 
+    private void addPrePage(HttpServletRequest request, Map<String, Object> attr) {
         Object url = request.getSession().getAttribute("prePage");
         if (url != null) {
             attr.put("prePage", url.toString());
         } else {
             attr.put("prePage", "/");
         }
+    }
 
-        model.addAllAttributes(attr);
+    @ExceptionHandler(IllegalArgumentException.class)
+    public void handleIllegalArgumentException(IllegalArgumentException ex) {
+        System.out.println("ControllerAdvice.handleIllegalArgumentException().....");
     }
 }

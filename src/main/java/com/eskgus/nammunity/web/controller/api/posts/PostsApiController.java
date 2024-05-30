@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.posts;
+package com.eskgus.nammunity.web.controller.api.posts;
 
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;

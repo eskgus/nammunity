@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.user;
+package com.eskgus.nammunity.web.controller.api.user;
 
 import com.eskgus.nammunity.service.user.SignInService;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.reports;
+package com.eskgus.nammunity.web.controller.api.reports;
 
 import com.eskgus.nammunity.service.reports.ReportSummaryService;
 import com.eskgus.nammunity.service.reports.ReportsService;

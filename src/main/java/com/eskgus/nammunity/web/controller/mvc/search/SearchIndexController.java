@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.search;
+package com.eskgus.nammunity.web.controller.mvc.search;
 
 import com.eskgus.nammunity.service.search.SearchService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;

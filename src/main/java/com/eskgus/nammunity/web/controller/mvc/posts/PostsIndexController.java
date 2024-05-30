@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.posts;
+package com.eskgus.nammunity.web.controller.mvc.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;

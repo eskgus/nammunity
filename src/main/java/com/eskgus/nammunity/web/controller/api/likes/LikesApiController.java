@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.likes;
+package com.eskgus.nammunity.web.controller.api.likes;
 
 import com.eskgus.nammunity.service.likes.LikesService;
 import lombok.RequiredArgsConstructor;

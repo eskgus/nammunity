@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.Collections;
 import java.util.List;
 
-@RestControllerAdvice
-public class CustomExceptionHandler {
+@RestControllerAdvice(basePackages = "com.eskgus.nammunity.web.controller.api")
+public class CustomRestControllerAdvice {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<FieldError>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         Errors errors = ex.getBindingResult();

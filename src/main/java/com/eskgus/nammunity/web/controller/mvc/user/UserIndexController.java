@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.user;
+package com.eskgus.nammunity.web.controller.mvc.user;
 
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.user.User;

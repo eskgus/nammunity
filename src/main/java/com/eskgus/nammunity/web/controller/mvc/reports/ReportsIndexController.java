@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.reports;
+package com.eskgus.nammunity.web.controller.mvc.reports;
 
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.service.reports.ReportSummaryService;

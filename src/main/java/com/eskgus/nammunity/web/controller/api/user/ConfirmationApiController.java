@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.web.controller.user;
+package com.eskgus.nammunity.web.controller.api.user;
 
 import com.eskgus.nammunity.service.user.RegistrationService;
 import com.eskgus.nammunity.service.user.UserService;
@@ -20,6 +20,7 @@ public class ConfirmationApiController {
     @GetMapping("/confirm")
     public RedirectView confirmToken(@RequestParam String token,
                                      RedirectAttributes ra) {
+        // TODO: confirmToken()
         try {
             registrationService.confirmToken(token);
         } catch (IllegalArgumentException ex) {
