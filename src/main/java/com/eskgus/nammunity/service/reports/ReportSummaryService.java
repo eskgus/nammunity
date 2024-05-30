@@ -6,7 +6,7 @@ import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
@@ -28,7 +28,7 @@ import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 public class ReportSummaryService {
     private final ContentReportSummaryRepository contentReportSummaryRepository;
     private final TypesService typesService;
-    private final PostsSearchService postsSearchService;
+    private final PostsService postsService;
     private final CommentsSearchService commentsSearchService;
     private final UserService userService;
 
@@ -92,7 +92,7 @@ public class ReportSummaryService {
     public void deleteSelectedReportSummary(ContentReportSummaryDeleteDto deleteDto) {
         validateDeleteDto(deleteDto);
 
-        deleteByContents(deleteDto.getPostsId(), postsSearchService::findById);
+        deleteByContents(deleteDto.getPostsId(), postsService::findById);
         deleteByContents(deleteDto.getCommentsId(), commentsSearchService::findById);
         deleteByContents(deleteDto.getUserId(), userService::findById);
     }

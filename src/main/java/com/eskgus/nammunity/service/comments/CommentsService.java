@@ -5,7 +5,7 @@ import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 public class CommentsService {
     private final CommentsRepository commentsRepository;
-    private final PostsSearchService postsSearchService;
+    private final PostsService postsService;
     private final CommentsSearchService commentsSearchService;
 
     @Autowired
@@ -31,7 +31,7 @@ public class CommentsService {
     @Transactional
     public Long save(CommentsSaveDto requestDto, Principal principal) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
-        Posts post = postsSearchService.findById(requestDto.getPostsId());
+        Posts post = postsService.findById(requestDto.getPostsId());
 
         CommentsSaveDto commentsSaveDto = CommentsSaveDto.builder()
                 .content(requestDto.getContent()).posts(post).user(user).build();

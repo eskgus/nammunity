@@ -6,7 +6,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.reports.ReportsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
@@ -31,7 +31,7 @@ import java.util.Set;
 public class ActivityService {
     private final UserService userService;
     private final BannedUsersService bannedUsersService;
-    private final PostsSearchService postsSearchService;
+    private final PostsService postsService;
     private final CommentsSearchService commentsSearchService;
     private final ReportsService reportsService;
     private final LikesSearchService likesSearchService;
@@ -65,7 +65,7 @@ public class ActivityService {
             return null;
         }
 
-        Page<PostsListDto> contents = postsSearchService.findByUser(user, page, 10);
+        Page<PostsListDto> contents = postsService.findByUser(user, page, 10);
         ContentsPageDto<PostsListDto> postsPage = createContentsPageDto(contents);
         long numberOfComments = commentsSearchService.countByUser(user);
 
@@ -84,7 +84,7 @@ public class ActivityService {
 
         Page<CommentsListDto> contents = commentsSearchService.findByUser(user, page, 10);
         ContentsPageDto<CommentsListDto> commentsPage = createContentsPageDto(contents);
-        long numberOfPosts = postsSearchService.countByUser(user);
+        long numberOfPosts = postsService.countByUser(user);
 
         return CommentsHistoryDto.builder()
                 .contentsPage(commentsPage).numberOfPosts(numberOfPosts).build();
@@ -110,7 +110,7 @@ public class ActivityService {
         int page = 1;
         int size = 5;
 
-        Page<PostsListDto> postsPage = postsSearchService.findByUser(user, page, size);
+        Page<PostsListDto> postsPage = postsService.findByUser(user, page, size);
         ContentsPageMoreDto<PostsListDto> postsPageMoreDto = new ContentsPageMoreDto<>(postsPage);
 
         Page<CommentsListDto> commentsPage = commentsSearchService.findByUser(user, page, size);

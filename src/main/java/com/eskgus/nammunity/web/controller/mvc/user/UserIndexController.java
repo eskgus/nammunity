@@ -4,7 +4,7 @@ import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.likes.LikesService;
-import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.service.posts.PostsViewService;
 import com.eskgus.nammunity.service.user.ActivityService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
@@ -28,7 +28,7 @@ import java.util.Map;
 public class UserIndexController {
     private final UserService userService;
     private final ActivityService activityService;
-    private final PostsService postsService;
+    private final PostsViewService postsViewService;
     private final CommentsService commentsService;
     private final LikesService likesService;
     private final LikesRepository likesRepository;
@@ -119,7 +119,7 @@ public class UserIndexController {
                             Principal principal, Model model) {
         Map<String, Object> attr = new HashMap<>();
         try {
-            ContentsPageDto<PostsListDto> contentsPage = postsService.listPosts(principal, page);
+            ContentsPageDto<PostsListDto> contentsPage = postsViewService.listPosts(principal, page);
             attr.put("contentsPage", contentsPage);
         } catch (IllegalArgumentException ex) {
             attr.put("exception", ex.getMessage());

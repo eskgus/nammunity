@@ -6,7 +6,7 @@ var indexMain = {
             window.close();
         });
 
-        $('#btn-back').on('click', function() { // 403
+        $('#btn-back').on('click', function() { // mvc controller IllegalArgumentException
             window.history.back();
         });
 
@@ -17,7 +17,7 @@ var indexMain = {
             });
         });
     },
-    fail: function(xhRequest, validExceptionHandler = null) {  // 요청 실패 시 처리
+    fail: function(xhRequest, validExceptionHandler = null) {  // rest controller 요청 실패 시 처리
         if (xhRequest.status === 400) {
             var errors = xhRequest.responseJSON;
             if (Array.isArray(errors) && errors.length > 0) {   // MethodArgumentNotValidException, CustomValidException

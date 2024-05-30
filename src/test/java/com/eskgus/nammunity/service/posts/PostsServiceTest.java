@@ -1,25 +1,19 @@
 package com.eskgus.nammunity.service.posts;
 
-import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.converter.PostsConverterForTest;
-import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.comments.CommentsRepository;
+import com.eskgus.nammunity.domain.enums.SearchType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.domain.reports.ReasonsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.helper.PaginationTestHelper;
+import com.eskgus.nammunity.helper.Range;
 import com.eskgus.nammunity.util.TestDB;
-import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
-import com.eskgus.nammunity.web.dto.posts.PostWithReasonsDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
-import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
-import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,13 +21,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
-import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -49,19 +45,7 @@ public class PostsServiceTest {
     private PostsRepository postsRepository;
 
     @Autowired
-    private CommentsRepository commentsRepository;
-
-    @Autowired
-    private ReasonsRepository reasonsRepository;
-
-    @Autowired
     private PostsService postsService;
-
-    @Autowired
-    private PostsSearchService postsSearchService;
-
-    @Autowired
-    private CommentsSearchService commentsSearchService;
 
     private User[] users;
     private Posts post;
@@ -91,105 +75,6 @@ public class PostsServiceTest {
     }
 
     @Test
-    public void readPosts() {
-        PostWithReasonsDto postWithReasonsDto = callReadPostsAndGetPostWithReasonsDto();
-        assertPostWithReasonsDto(postWithReasonsDto);
-    }
-
-    private PostWithReasonsDto callReadPostsAndGetPostWithReasonsDto() {
-        Principal principal = createPrincipal(users[0]);
-        return postsService.readPosts(post.getId(), principal);
-    }
-
-    private Principal createPrincipal(User user) {
-        return user::getUsername;
-    }
-
-    private void assertPostWithReasonsDto(PostWithReasonsDto postWithReasonsDto) {
-        assertPostReadDto(postWithReasonsDto.getPost());
-        assertReasons(postWithReasonsDto.getReasons());
-    }
-
-    private void assertPostReadDto(PostsReadDto postsReadDto) {
-        assertThat(postsReadDto.getId()).isEqualTo(post.getId());
-        assertThat(postsReadDto.isDoesUserWritePost()).isEqualTo(true); // user1이 post 작성
-        assertThat(postsReadDto.isDoesUserLikePost()).isEqualTo(false); // 좋아요 저장 x
-    }
-
-    private void assertReasons(List<ReasonsListDto> reasons) {
-        for (long i = 1; i < reasonsRepository.count(); i++) {
-            ReasonsListDto reason = reasons.get((int) (i - 1));
-            assertThat(reason.getId()).isEqualTo(i);
-        }
-    }
-
-    @Test
-    public void readComments() {
-        saveComments();
-
-        callAndAssertReadCommentS();
-    }
-
-    private void saveComments() {
-        int numberOfCommentsByUser = 15;
-        for (int i = 0; i < numberOfCommentsByUser; i++) {
-            for (User user : users) {
-                testDB.saveComments(post.getId(), user);
-            }
-        }
-        assertThat(commentsRepository.count()).isEqualTo((long) numberOfCommentsByUser * users.length);
-    }
-
-    private void callAndAssertReadCommentS() {
-        User user = users[0];
-        ContentsPageDto<CommentsReadDto> actualResult = callReadCommentsAndGetActualResult(user);
-        Page<CommentsReadDto> expectedContents = commentsSearchService.findByPosts(post, user, page);
-
-        ContentsPageDtoTestHelper<CommentsReadDto, Comments> findHelper = ContentsPageDtoTestHelper.<CommentsReadDto, Comments>builder()
-                    .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new CommentsConverterForTest<>(CommentsReadDto.class)).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
-    }
-
-    private ContentsPageDto<CommentsReadDto> callReadCommentsAndGetActualResult(User user) {
-        Principal principal = createPrincipal(user);
-        return postsService.readComments(post.getId(), principal, page);
-    }
-
-    @Test
-    public void listPosts() {
-        savePosts();
-
-        callAndAssertListPosts();
-    }
-
-    private void savePosts() {
-        int numberOfPostsByUser = 30;
-        for (int i = 0; i < numberOfPostsByUser; i++) {
-            for (User user : users) {
-                testDB.savePosts(user);
-            }
-        }
-        assertThat(postsRepository.count()).isEqualTo((long) numberOfPostsByUser * users.length + post.getId());
-    }
-
-    private void callAndAssertListPosts() {
-        User user = users[0];
-        ContentsPageDto<PostsListDto> actualResult = callListPostsAndGetActualResult(user);
-        Page<PostsListDto> expectedContents = postsSearchService.findByUser(user, page, 20);
-
-        ContentsPageDtoTestHelper<PostsListDto, Posts> findHelper = ContentsPageDtoTestHelper.<PostsListDto, Posts>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new PostsConverterForTest()).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
-    }
-
-    private ContentsPageDto<PostsListDto> callListPostsAndGetActualResult(User user) {
-        Principal principal = createPrincipal(user);
-        return postsService.listPosts(principal, page);
-    }
-
-    @Test
     public void save() {
         User user = users[0];
 
@@ -206,5 +91,126 @@ public class PostsServiceTest {
         assertThat(post.getTitle()).isEqualTo(requestDto.getTitle());
         assertThat(post.getContent()).isEqualTo(requestDto.getContent());
         assertThat(post.getUser().getId()).isEqualTo(user.getId());
+    }
+
+    @Test
+    public void findAllDesc() {
+        savePosts();
+
+        callAndAssertFindAllDesc();
+    }
+
+    private void savePosts() {
+        int numberOfPostsByUser = 15;
+        for (int i = 0; i < numberOfPostsByUser; i++) {
+            for (User user : users) {
+                testDB.savePosts(user);
+            }
+        }
+        assertThat(postsRepository.count()).isEqualTo((long) numberOfPostsByUser * users.length + post.getId());
+    }
+
+    private void callAndAssertFindAllDesc() {
+        ContentsPageDto<PostsListDto> actualResult = postsService.findAllDesc(page);
+        Page<PostsListDto> expectedContents = createExpectedContents();
+
+        ContentsPageDtoTestHelper<PostsListDto, Posts> findHelper = ContentsPageDtoTestHelper.<PostsListDto, Posts>builder()
+                .actualResult(actualResult).expectedContents(expectedContents)
+                .entityConverter(new PostsConverterForTest()).build();
+        findHelper.createExpectedResultAndAssertContentsPage();
+    }
+
+    private Page<PostsListDto> createExpectedContents() {
+        Pageable pageable = createPageable(page, 20);
+        return postsRepository.findAllDesc(pageable);
+    }
+
+    @Test
+    public void findByUser() {
+        savePosts();
+
+        callAndAssertFindByUser();
+    }
+
+    private void callAndAssertFindByUser() {
+        int size = 4;
+        User user = users[0];
+
+        Page<PostsListDto> actualContents = postsService.findByUser(user, page, size);
+        Page<PostsListDto> expectedContents = createExpectedPage(size, user);
+
+        assertContents(actualContents, expectedContents);
+    }
+
+    private Page<PostsListDto> createExpectedPage(int size, User user) {
+        Pageable pageable = createPageable(page, size);
+        return postsRepository.findByUser(user, pageable);
+    }
+
+    private void assertContents(Page<PostsListDto> actualContents, Page<PostsListDto> expectedContents) {
+        PaginationTestHelper<PostsListDto, Posts> paginationHelper
+                = new PaginationTestHelper<>(actualContents, expectedContents, new PostsConverterForTest());
+        paginationHelper.assertContents();
+    }
+
+    @Test
+    public void search() {
+        savePostsWithTitleAndContent();
+
+        // 1. searchBy = title (title)
+        callAndAssertSearch("title", SearchType.TITLE);
+
+        // 2. searchBy = content (content)
+        callAndAssertSearch("content", SearchType.CONTENT);
+
+        // 3. searchBy = title and content (제목 내용)
+        callAndAssertSearch("제목 내용", SearchType.TITLE_AND_CONTENT);
+    }
+
+    private void savePostsWithTitleAndContent() {
+        long numberOfPosts = 20;
+        long half = numberOfPosts / 2;
+
+        Range firstRange = Range.builder()
+                .startIndex(1).endIndex(half)
+                .title("title").content("content").build();
+        Range secondRange = Range.builder()
+                .startIndex(half + 1).endIndex(numberOfPosts)
+                .title("제목").content("내용").build();
+
+        savePostsInRange(firstRange);
+        savePostsInRange(secondRange);
+    }
+
+    private void savePostsInRange(Range range) {
+        for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
+            Long postId = testDB.savePostWithTitleAndContent(users[0], range.getTitle() + i, range.getContent() + i);
+            assertOptionalAndGetEntity(postsRepository::findById, postId);
+        }
+    }
+
+    private void callAndAssertSearch(String keywords, SearchType searchType) {
+        String searchBy = searchType.getKey();
+        int size = 3;
+
+        Page<PostsListDto> actualContents = postsService.search(keywords, searchBy, page, size);
+        Page<PostsListDto> expectedContents = createExpectedPage(keywords, searchType, size);
+
+        assertContents(actualContents, expectedContents);
+    }
+
+    private Page<PostsListDto> createExpectedPage(String keywords, SearchType searchType, int size) {
+        Pageable pageable = createPageable(page, size);
+        BiFunction<String, Pageable, Page<PostsListDto>> searcher = getSearcher(searchType);
+        return searcher.apply(keywords, pageable);
+    }
+
+    private BiFunction<String, Pageable, Page<PostsListDto>> getSearcher(SearchType searchType) {
+        if (searchType.equals(SearchType.TITLE)) {
+            return postsRepository::searchByTitle;
+        } else if (searchType.equals(SearchType.CONTENT)) {
+            return postsRepository::searchByContent;
+        }
+        return postsRepository::searchByTitleAndContent;
     }
 }

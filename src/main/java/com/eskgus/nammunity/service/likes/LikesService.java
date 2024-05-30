@@ -7,7 +7,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesSaveDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -25,7 +25,7 @@ import java.util.function.BiFunction;
 @RequiredArgsConstructor
 @Service
 public class LikesService {
-    private final PostsSearchService postsSearchService;
+    private final PostsService postsService;
     private final CommentsSearchService commentsSearchService;
     private final LikesSearchService likesSearchService;
     private final LikesRepository likesRepository;
@@ -40,7 +40,7 @@ public class LikesService {
         Posts posts = null;
         Comments comments = null;
         if (postsId != null) {
-            posts = postsSearchService.findById(postsId);
+            posts = postsService.findById(postsId);
         } else {
             comments = commentsSearchService.findById(commentsId);
         }
@@ -56,7 +56,7 @@ public class LikesService {
         User user = principalHelper.getUserFromPrincipal(principal, true);
 
         if (postsId != null) {
-            Posts posts = postsSearchService.findById(postsId);
+            Posts posts = postsService.findById(postsId);
             likesRepository.deleteByPosts(posts, user);
         } else {
             Comments comments = commentsSearchService.findById(commentsId);

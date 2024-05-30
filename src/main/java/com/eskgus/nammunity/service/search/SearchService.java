@@ -2,7 +2,7 @@ package com.eskgus.nammunity.service.search;
 
 import com.eskgus.nammunity.domain.enums.SearchType;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 public class SearchService {
-    private final PostsSearchService postsSearchService;
+    private final PostsService postsService;
     private final CommentsSearchService commentsSearchService;
     private final UserService userService;
 
@@ -28,7 +28,7 @@ public class SearchService {
         int size = 5;
 
         Page<PostsListDto> postsPage
-                = postsSearchService.search(keywords, SearchType.TITLE_AND_CONTENT.getKey(), page, size);
+                = postsService.search(keywords, SearchType.TITLE_AND_CONTENT.getKey(), page, size);
         ContentsPageMoreDto<PostsListDto> postsPageMoreDto = new ContentsPageMoreDto<>(postsPage);
 
         Page<CommentsListDto> commentsPage = commentsSearchService.searchByContent(keywords, page, size);
@@ -44,7 +44,7 @@ public class SearchService {
 
     @Transactional(readOnly = true)
     public ContentsPageDto<PostsListDto> searchPosts(String keywords, String searchBy, int page) {
-        Page<PostsListDto> contents = postsSearchService.search(keywords, searchBy, page, 30);
+        Page<PostsListDto> contents = postsService.search(keywords, searchBy, page, 30);
         return new ContentsPageDto<>(contents);
     }
 

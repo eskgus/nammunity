@@ -1,9 +1,8 @@
 package com.eskgus.nammunity.web.controller.mvc.posts;
 
-import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.posts.PostsService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsViewService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
@@ -22,12 +21,12 @@ import java.security.Principal;
 @Controller
 public class PostsIndexController {
     private final PostsService postsService;
-    private final PostsSearchService postsSearchService;
+    private final PostsViewService postsViewService;
     private final CommentsSearchService commentsSearchService;
 
     @GetMapping({"/", "/main"})
     public String mainPage(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
-        ContentsPageDto<PostsListDto> contentsPage = postsSearchService.findAllDesc(page);
+        ContentsPageDto<PostsListDto> contentsPage = postsService.findAllDesc(page);
         model.addAttribute("contentsPage", contentsPage);
         return "main-page";
     }
@@ -52,12 +51,8 @@ public class PostsIndexController {
     }
 
     private String readPosts(Long id, Principal principal, Model model) {
-        try {
-            PostWithReasonsDto postWithReasons = postsService.readPosts(id, principal);
-            model.addAttribute("postWithReasons", postWithReasons);
-        } catch (IllegalArgumentException ex) {
-            model.addAttribute("exception", ex.getMessage());
-        }
+        PostWithReasonsDto postWithReasons = postsViewService.readPosts(id, principal);
+        model.addAttribute("postWithReasons", postWithReasons);
         return "posts/posts-read";
     }
 
@@ -67,27 +62,15 @@ public class PostsIndexController {
     }
 
     private String readComments(Long id, Principal principal, int page, Model model) {
-        try {
-            ContentsPageDto<CommentsReadDto> contentsPage = postsService.readComments(id, principal, page);
-            model.addAttribute("contentsPage", contentsPage);
-        } catch (IllegalArgumentException ex) {
-            model.addAttribute("exception", ex.getMessage());
-        }
+        ContentsPageDto<CommentsReadDto> contentsPage = postsViewService.readComments(id, principal, page);
+        model.addAttribute("contentsPage", contentsPage);
         return "posts/comments-read";
     }
 
     @GetMapping("/posts/update/{id}")
     public String updatePosts(@PathVariable Long id, Model model) {
-        try {
-            Posts posts = postsSearchService.findById(id);
-            PostsUpdateDto postsUpdateDto = PostsUpdateDto.builder()
-                    .id(id)
-                    .title(posts.getTitle())
-                    .content(posts.getContent()).build();
-            model.addAttribute("post", postsUpdateDto);
-        } catch (IllegalArgumentException ex) {
-            model.addAttribute("exception", ex.getMessage());
-        }
+        PostsUpdateDto postsUpdateDto = postsViewService.updatePosts(id);
+        model.addAttribute("post", postsUpdateDto);
         return "posts/posts-update";
     }
 }

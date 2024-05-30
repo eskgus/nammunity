@@ -17,7 +17,7 @@ import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.helper.ContentsPageMoreDtoTestHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
 import com.eskgus.nammunity.service.likes.LikesSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
@@ -78,7 +78,7 @@ public class ActivityServiceTest {
     private ActivityService activityService;
 
     @Autowired
-    private PostsSearchService postsSearchService;
+    private PostsService postsService;
 
     @Autowired
     private CommentsSearchService commentsSearchService;
@@ -170,7 +170,7 @@ public class ActivityServiceTest {
         if (type.equals(ContentType.POSTS.getDetailInEng())) {
             PostsHistoryDto postsHistoryDto = activityHistoryDto.getPostsHistoryDto();
 
-            assertContentsPage(postsSearchService::findByUser, postsHistoryDto.getContentsPage(),
+            assertContentsPage(postsService::findByUser, postsHistoryDto.getContentsPage(),
                     new PostsConverterForTest());
 
             actualNumberOfPosts = postsHistoryDto.getNumberOfPosts();
@@ -252,7 +252,7 @@ public class ActivityServiceTest {
 
         ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> actualResult = callGetMyPageAndGetActualResult();
 
-        Page<PostsListDto> postsPage = postsSearchService.findByUser(user1, page, size);
+        Page<PostsListDto> postsPage = postsService.findByUser(user1, page, size);
         Page<CommentsListDto> commentsPage = commentsSearchService.findByUser(user1, page, size);
         Page<LikesListDto> likesPage = likesSearchService.findLikesByUser(user1, likesRepository::findByUser, page, size);
 

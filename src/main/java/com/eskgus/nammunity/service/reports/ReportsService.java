@@ -9,7 +9,7 @@ import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -33,7 +33,7 @@ import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 public class ReportsService {
     private final ContentReportsRepository contentReportsRepository;
     private final UserService userService;
-    private final PostsSearchService postsSearchService;
+    private final PostsService postsService;
     private final CommentsSearchService commentsSearchService;
     private final ReasonsService reasonsService;
     private final TypesService typesService;
@@ -69,7 +69,7 @@ public class ReportsService {
         ContentType contentType;
 
         if (requestDto.getPostsId() != null) {
-            posts = postsSearchService.findById(requestDto.getPostsId());
+            posts = postsService.findById(requestDto.getPostsId());
             contentType = ContentType.POSTS;
         } else if (requestDto.getCommentsId() != null) {
             comments = commentsSearchService.findById(requestDto.getCommentsId());
@@ -134,7 +134,7 @@ public class ReportsService {
         int page = requestDto.getPage();
 
         if (requestDto.getPostId() != null) {
-            Posts post = postsSearchService.findById(requestDto.getPostId());
+            Posts post = postsService.findById(requestDto.getPostId());
             return createContentReportDetailDto(post, new PostsListDto(post), ContentType.POSTS, page);
         } else if (requestDto.getCommentId() != null) {
             Comments comment = commentsSearchService.findById(requestDto.getCommentId());

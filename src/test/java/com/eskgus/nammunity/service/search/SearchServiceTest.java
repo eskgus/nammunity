@@ -15,7 +15,7 @@ import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.helper.ContentsPageMoreDtoTestHelper;
 import com.eskgus.nammunity.helper.Range;
 import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.posts.PostsSearchService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
@@ -51,7 +51,7 @@ public class SearchServiceTest {
     private CommentsRepository commentsRepository;
 
     @Autowired
-    private PostsSearchService postsSearchService;
+    private PostsService postsService;
 
     @Autowired
     private CommentsSearchService commentsSearchService;
@@ -117,7 +117,7 @@ public class SearchServiceTest {
 
         ContentsPageMoreDtos<PostsListDto, CommentsListDto, UsersListDto> actualResult = searchService.search(keywords);
 
-        Page<PostsListDto> postsPage = postsSearchService.search(keywords, SearchType.TITLE_AND_CONTENT.getKey(), page, size);
+        Page<PostsListDto> postsPage = postsService.search(keywords, SearchType.TITLE_AND_CONTENT.getKey(), page, size);
         Page<CommentsListDto> commentsPage = commentsSearchService.searchByContent(keywords, page, size);
         Page<UsersListDto> usersPage = userService.searchByNickname(keywords, page, size);
 
@@ -141,7 +141,7 @@ public class SearchServiceTest {
     private void callAndAssertSearchPosts(String keywords, SearchType searchType) {
         String searchBy = searchType.getKey();
         ContentsPageDto<PostsListDto> actualResult = searchService.searchPosts(keywords, searchBy, page);
-        Page<PostsListDto> expectedContents = postsSearchService.search(keywords, searchBy, page, 30);
+        Page<PostsListDto> expectedContents = postsService.search(keywords, searchBy, page, 30);
 
         ContentsPageDtoTestHelper<PostsListDto, Posts> findHelper = ContentsPageDtoTestHelper.<PostsListDto, Posts>builder()
                 .actualResult(actualResult).expectedContents(expectedContents)
