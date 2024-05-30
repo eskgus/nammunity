@@ -9,8 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
@@ -52,7 +50,7 @@ public class PostsAuthInterceptor implements HandlerInterceptor {
         Long authorId = getAuthorIdFromRequest(request);
 
         if (!userId.equals(authorId)) {
-            denyAccess(request, response);
+            principalHelper.denyAccess(request, response);
             return false;
         }
         return true;
@@ -64,21 +62,5 @@ public class PostsAuthInterceptor implements HandlerInterceptor {
         Posts post = postsService.findById(postId);
         User author = post.getUser();
         return author.getId();
-    }
-
-    private void denyAccess(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        final String FORBIDDEN_MESSAGE = "권한이 없습니다.";
-
-        if (request.getRequestURI().startsWith("/api")) {
-            sendResponse(response, FORBIDDEN_MESSAGE);
-        } else {
-            throw new AccessDeniedException(FORBIDDEN_MESSAGE);
-        }
-    }
-
-    private void sendResponse(HttpServletResponse response, String message) throws Exception {
-        response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.setContentType("application/json; charset=UTF-8");
-        response.getWriter().write(message);
     }
 }

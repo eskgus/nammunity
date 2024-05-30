@@ -56,7 +56,7 @@ public class PostsViewService {
                 .post(post).doesUserWritePost(doesUserWritePost).doesUserLikePost(doesUserLikePost).build();
     }
 
-    public boolean doesUserWritePost(User user, Long postAuthorId) {
+    private boolean doesUserWritePost(User user, Long postAuthorId) {
         if (user != null) {
             return postAuthorId.equals(user.getId());
         }
