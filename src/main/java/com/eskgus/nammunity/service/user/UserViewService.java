@@ -4,8 +4,8 @@ import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.likes.LikesSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
+import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.reports.ReportsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
@@ -32,9 +32,9 @@ public class UserViewService {
     private final UserService userService;
     private final BannedUsersService bannedUsersService;
     private final PostsService postsService;
-    private final CommentsSearchService commentsSearchService;
+    private final CommentsService commentsService;
     private final ReportsService reportsService;
-    private final LikesSearchService likesSearchService;
+    private final LikesService likesService;
     private final LikesRepository likesRepository;
 
     @Autowired
@@ -67,7 +67,7 @@ public class UserViewService {
 
         Page<PostsListDto> contents = postsService.findByUser(user, page, 10);
         ContentsPageDto<PostsListDto> postsPage = createContentsPageDto(contents);
-        long numberOfComments = commentsSearchService.countByUser(user);
+        long numberOfComments = commentsService.countByUser(user);
 
         return PostsHistoryDto.builder()
                 .contentsPage(postsPage).numberOfComments(numberOfComments).build();
@@ -82,7 +82,7 @@ public class UserViewService {
             return null;
         }
 
-        Page<CommentsListDto> contents = commentsSearchService.findByUser(user, page, 10);
+        Page<CommentsListDto> contents = commentsService.findByUser(user, page, 10);
         ContentsPageDto<CommentsListDto> commentsPage = createContentsPageDto(contents);
         long numberOfPosts = postsService.countByUser(user);
 
@@ -113,10 +113,10 @@ public class UserViewService {
         Page<PostsListDto> postsPage = postsService.findByUser(user, page, size);
         ContentsPageMoreDto<PostsListDto> postsPageMoreDto = new ContentsPageMoreDto<>(postsPage);
 
-        Page<CommentsListDto> commentsPage = commentsSearchService.findByUser(user, page, size);
+        Page<CommentsListDto> commentsPage = commentsService.findByUser(user, page, size);
         ContentsPageMoreDto<CommentsListDto> commentsPageMoreDto = new ContentsPageMoreDto<>(commentsPage);
 
-        Page<LikesListDto> likesPage = likesSearchService.findLikesByUser(user, likesRepository::findByUser, page, size);
+        Page<LikesListDto> likesPage = likesService.findLikesByUser(user, likesRepository::findByUser, page, size);
         ContentsPageMoreDto<LikesListDto> likesPageMoreDto = new ContentsPageMoreDto<>(likesPage);
 
         return ContentsPageMoreDtos.<PostsListDto, CommentsListDto, LikesListDto>builder()

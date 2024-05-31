@@ -5,7 +5,7 @@ import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -29,7 +29,7 @@ public class ReportSummaryService {
     private final ContentReportSummaryRepository contentReportSummaryRepository;
     private final TypesService typesService;
     private final PostsService postsService;
-    private final CommentsSearchService commentsSearchService;
+    private final CommentsService commentsService;
     private final UserService userService;
 
     @Transactional
@@ -93,7 +93,7 @@ public class ReportSummaryService {
         validateDeleteDto(deleteDto);
 
         deleteByContents(deleteDto.getPostsId(), postsService::findById);
-        deleteByContents(deleteDto.getCommentsId(), commentsSearchService::findById);
+        deleteByContents(deleteDto.getCommentsId(), commentsService::findById);
         deleteByContents(deleteDto.getUserId(), userService::findById);
     }
 

@@ -11,7 +11,7 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.comments.CommentsViewService;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -57,7 +57,7 @@ public class PostsViewServiceTest {
     private PostsViewService postsViewService;
 
     @Autowired
-    private CommentsSearchService commentsSearchService;
+    private CommentsViewService commentsViewService;
 
     @Autowired
     private PostsService postsService;
@@ -142,7 +142,7 @@ public class PostsViewServiceTest {
     private void callAndAssertReadCommentS() {
         User user = users[0];
         ContentsPageDto<CommentsReadDto> actualResult = callReadCommentsAndGetActualResult(user);
-        Page<CommentsReadDto> expectedContents = commentsSearchService.findByPosts(post, user, page);
+        Page<CommentsReadDto> expectedContents = commentsViewService.findCommentsPageByPosts(post, user, page);
 
         ContentsPageDtoTestHelper<CommentsReadDto, Comments> findHelper = ContentsPageDtoTestHelper.<CommentsReadDto, Comments>builder()
                 .actualResult(actualResult).expectedContents(expectedContents)

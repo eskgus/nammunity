@@ -4,7 +4,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import java.util.Map;
 @Component
 public class CommentsAuthInterceptor implements HandlerInterceptor {
     @Autowired
-    CommentsSearchService commentsSearchService;
+    CommentsService commentsService;
 
     @Autowired
     PrincipalHelper principalHelper;
@@ -57,7 +57,7 @@ public class CommentsAuthInterceptor implements HandlerInterceptor {
     private Long getAuthorIdFromRequest(HttpServletRequest request) {
         Map<?, ?> pathVariables = (Map<?, ?>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         Long commentId = Long.parseLong((String) pathVariables.get("id"));
-        Comments comment = commentsSearchService.findById(commentId);
+        Comments comment = commentsService.findById(commentId);
         User author = comment.getUser();
         return author.getId();
     }

@@ -15,8 +15,8 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.helper.ContentsPageMoreDtoTestHelper;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.likes.LikesSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
+import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
@@ -81,10 +81,10 @@ public class UserViewServiceTest {
     private PostsService postsService;
 
     @Autowired
-    private CommentsSearchService commentsSearchService;
+    private CommentsService commentsService;
 
     @Autowired
-    private LikesSearchService likesSearchService;
+    private LikesService likesService;
 
     private User user1;
     private User user2;
@@ -178,7 +178,7 @@ public class UserViewServiceTest {
         } else {
             CommentsHistoryDto commentsHistoryDto = activityHistoryDto.getCommentsHistoryDto();
 
-            assertContentsPage(commentsSearchService::findByUser, commentsHistoryDto.getContentsPage(),
+            assertContentsPage(commentsService::findByUser, commentsHistoryDto.getContentsPage(),
                     new CommentsConverterForTest<>(CommentsListDto.class));
 
             actualNumberOfPosts = commentsHistoryDto.getNumberOfPosts();
@@ -253,8 +253,8 @@ public class UserViewServiceTest {
         ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> actualResult = callGetMyPageAndGetActualResult();
 
         Page<PostsListDto> postsPage = postsService.findByUser(user1, page, size);
-        Page<CommentsListDto> commentsPage = commentsSearchService.findByUser(user1, page, size);
-        Page<LikesListDto> likesPage = likesSearchService.findLikesByUser(user1, likesRepository::findByUser, page, size);
+        Page<CommentsListDto> commentsPage = commentsService.findByUser(user1, page, size);
+        Page<LikesListDto> likesPage = likesService.findLikesByUser(user1, likesRepository::findByUser, page, size);
 
         ContentsPageMoreDtoTestHelper<PostsListDto, CommentsListDto, LikesListDto> findHelper
                 = new ContentsPageMoreDtoTestHelper<>(actualResult, postsPage, commentsPage, likesPage);

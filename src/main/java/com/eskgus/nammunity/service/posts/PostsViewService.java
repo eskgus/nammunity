@@ -3,8 +3,8 @@ package com.eskgus.nammunity.service.posts;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
-import com.eskgus.nammunity.service.likes.LikesSearchService;
+import com.eskgus.nammunity.service.comments.CommentsViewService;
+import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.reports.ReasonsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -27,8 +27,8 @@ import java.util.List;
 public class PostsViewService {
     private final PostsService postsService;
     private final ReasonsService reasonsService;
-    private final LikesSearchService likesSearchService;
-    private final CommentsSearchService commentsSearchService;
+    private final LikesService likesService;
+    private final CommentsViewService commentsViewService;
 
     @Autowired
     private PrincipalHelper principalHelper;
@@ -50,7 +50,7 @@ public class PostsViewService {
             postsService.countView(post);
         }
 
-        boolean doesUserLikePost = likesSearchService.existsByPostsAndUser(post, user);
+        boolean doesUserLikePost = likesService.existsByPostsAndUser(post, user);
 
         return PostsReadDto.builder()
                 .post(post).doesUserWritePost(doesUserWritePost).doesUserLikePost(doesUserLikePost).build();
@@ -72,7 +72,7 @@ public class PostsViewService {
     private Page<CommentsReadDto> createCommentsPage(Long postId, Principal principal, int page) {
         Posts post = postsService.findById(postId);
         User user = principalHelper.getUserFromPrincipal(principal, false);
-        return commentsSearchService.findByPosts(post, user, page);
+        return commentsViewService.findCommentsPageByPosts(post, user, page);
     }
 
     @Transactional(readOnly = true)

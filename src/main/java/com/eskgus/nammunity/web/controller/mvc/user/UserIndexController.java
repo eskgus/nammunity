@@ -1,8 +1,8 @@
 package com.eskgus.nammunity.web.controller.mvc.user;
 
 import com.eskgus.nammunity.domain.likes.LikesRepository;
-import com.eskgus.nammunity.service.comments.CommentsService;
-import com.eskgus.nammunity.service.likes.LikesService;
+import com.eskgus.nammunity.service.comments.CommentsViewService;
+import com.eskgus.nammunity.service.likes.LikesViewService;
 import com.eskgus.nammunity.service.posts.PostsViewService;
 import com.eskgus.nammunity.service.user.UserViewService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
@@ -25,8 +25,8 @@ import java.security.Principal;
 public class UserIndexController {
     private final UserViewService userViewService;
     private final PostsViewService postsViewService;
-    private final CommentsService commentsService;
-    private final LikesService likesService;
+    private final CommentsViewService commentsViewService;
+    private final LikesViewService likesViewService;
     private final LikesRepository likesRepository;
 
     @GetMapping("/sign-up")
@@ -100,7 +100,7 @@ public class UserIndexController {
     @GetMapping("/my-page/comments")
     public String listComments(@RequestParam(name = "page", defaultValue = "1") int page,
                                Principal principal, Model model) {
-        ContentsPageDto<CommentsListDto> contentsPage = commentsService.listComments(principal, page);
+        ContentsPageDto<CommentsListDto> contentsPage = commentsViewService.listComments(principal, page);
         model.addAttribute("contentsPage", contentsPage);
         return "user/my-page/comments-list";
     }
@@ -109,7 +109,7 @@ public class UserIndexController {
     public String listLikes(@RequestParam(name = "page", defaultValue = "1") int page,
                             Principal principal, Model model) {
         ContentsPageDto<LikesListDto> contentsPage
-                = likesService.listLikes(likesRepository::findByUser, principal, page);
+                = likesViewService.listLikes(likesRepository::findByUser, principal, page);
         model.addAttribute("contentsPage", contentsPage);
         return "user/my-page/likes-list";
     }
@@ -118,7 +118,7 @@ public class UserIndexController {
     public String listPostLikes(@RequestParam(name = "page", defaultValue = "1") int page,
                                 Principal principal, Model model) {
         ContentsPageDto<LikesListDto> contentsPage
-                = likesService.listLikes(likesRepository::findPostLikesByUser, principal, page);
+                = likesViewService.listLikes(likesRepository::findPostLikesByUser, principal, page);
         model.addAttribute("contentsPage", contentsPage);
         return "user/my-page/likes-list-posts";
     }
@@ -127,7 +127,7 @@ public class UserIndexController {
     public String listCommentLikes(@RequestParam(name = "page", defaultValue = "1") int page,
                                    Principal principal, Model model) {
         ContentsPageDto<LikesListDto> contentsPage
-                = likesService.listLikes(likesRepository::findCommentLikesByUser, principal, page);
+                = likesViewService.listLikes(likesRepository::findCommentLikesByUser, principal, page);
         model.addAttribute("contentsPage", contentsPage);
         return "user/my-page/likes-list-comments";
     }

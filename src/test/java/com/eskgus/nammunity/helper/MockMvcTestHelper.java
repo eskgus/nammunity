@@ -90,4 +90,13 @@ public class MockMvcTestHelper {
                 .andExpect(status().isBadRequest())
                 .andExpect(resultMatcher);
     }
+
+    public void requestAndAssertStatusIsFound(MockHttpServletRequestBuilder requestBuilder,
+                                              String token, ResultMatcher resultMatcher) throws Exception {
+        mockMvc.perform(requestBuilder
+                        .param("token", token))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/users/confirm-email"))
+                .andExpect(resultMatcher);
+    }
 }

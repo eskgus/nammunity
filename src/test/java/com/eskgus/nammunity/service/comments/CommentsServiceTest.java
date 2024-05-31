@@ -8,11 +8,11 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
+import com.eskgus.nammunity.helper.PaginationTestHelper;
+import com.eskgus.nammunity.helper.Range;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
-import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,12 +20,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
@@ -46,11 +48,9 @@ public class CommentsServiceTest {
     @Autowired
     private CommentsService commentsService;
 
-    @Autowired
-    private CommentsSearchService commentsSearchService;
-
     private User[] users;
     private Posts post;
+    private final int page = 1;
 
     @BeforeEach
     public void setUp() {
@@ -76,40 +76,6 @@ public class CommentsServiceTest {
     }
 
     @Test
-    public void listPosts() {
-        saveComments();
-
-        callAndAssertListComments();
-    }
-
-    private void saveComments() {
-        int numberOfCommentsByUser = 20;
-        for (int i = 0; i < numberOfCommentsByUser; i++) {
-            for (User user : users) {
-                Long commentId = testDB.saveComments(post.getId(), user);
-                assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-            }
-        }
-    }
-
-    private void callAndAssertListComments() {
-        User user = users[0];
-        int page = 1;
-        ContentsPageDto<CommentsListDto> actualResult = callListCommentsAndGetActualResult(user, page);
-        Page<CommentsListDto> expectedContents = commentsSearchService.findByUser(user, page, 20);
-
-        ContentsPageDtoTestHelper<CommentsListDto, Comments> findHelper = ContentsPageDtoTestHelper.<CommentsListDto, Comments>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new CommentsConverterForTest<>(CommentsListDto.class)).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
-    }
-
-    private ContentsPageDto<CommentsListDto> callListCommentsAndGetActualResult(User user, int page) {
-        Principal principal = user::getUsername;
-        return commentsService.listComments(principal, page);
-    }
-
-    @Test
     public void save() {
         User user = users[0];
 
@@ -126,5 +92,110 @@ public class CommentsServiceTest {
         assertThat(comment.getContent()).isEqualTo(requestDto.getContent());
         assertThat(comment.getPosts().getId()).isEqualTo(requestDto.getPostsId());
         assertThat(comment.getUser().getId()).isEqualTo(user.getId());
+    }
+
+    @Test
+    public void findByUser() {
+        saveComments();
+
+        callAndAssertFindByUser();
+    }
+
+    private void saveComments() {
+        int numberOfCommentsByUser = 15;
+        for (int i = 0; i < numberOfCommentsByUser; i++) {
+            for (User user : users) {
+                Long commentId = testDB.saveComments(post.getId(), user);
+                assertOptionalAndGetEntity(commentsRepository::findById, commentId);
+            }
+        }
+    }
+
+    private void callAndAssertFindByUser() {
+        int size = 4;
+        User user = users[0];
+
+        Page<CommentsListDto> actualContents = commentsService.findByUser(user, page, size);
+        Page<CommentsListDto> expectedContents = createExpectedPageByUser(size, user);
+
+        assertContents(actualContents, expectedContents);
+    }
+
+    private Page<CommentsListDto> createExpectedPageByUser(int size, User user) {
+        Pageable pageable = createPageable(page, size);
+        return commentsRepository.findByUser(user, pageable);
+    }
+
+    @Test
+    public void searchByContent() {
+        saveCommentsWithContent();
+
+        // 1. 검색 제외 단어 x
+        callAndAssertSearchByContent("com 댓");
+
+        // 2. 검색 제외 단어 o
+        callAndAssertSearchByContent("com 댓 -ent");
+    }
+
+    private void saveCommentsWithContent() {
+        long numberOfComments = 20;
+        long half = numberOfComments / 2;
+
+        Range firstRange = Range.builder().startIndex(1).endIndex(half).comment("comment").build();
+        Range secondRange = Range.builder().startIndex(half + 1).endIndex(numberOfComments).comment("댓글").build();
+
+        saveCommentsInRange(firstRange);
+        saveCommentsInRange(secondRange);
+    }
+
+    private void saveCommentsInRange(Range range) {
+        for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
+            Long commentId = testDB.saveCommentWithContent(post.getId(), users[0], range.getComment() + i);
+            assertOptionalAndGetEntity(commentsRepository::findById, commentId);
+        }
+    }
+
+    private void callAndAssertSearchByContent(String keywords) {
+        int size = 3;
+
+        Page<CommentsListDto> actualContents = commentsService.searchByContent(keywords, page, size);
+        Page<CommentsListDto> expectedContents = createExpectedContents(keywords, size);
+
+        assertContents(actualContents, expectedContents);
+    }
+
+    private Page<CommentsListDto> createExpectedContents(String keywords, int size) {
+        Pageable pageable = createPageable(page, size);
+        return commentsRepository.searchByContent(keywords, pageable);
+    }
+
+    private void assertContents(Page<CommentsListDto> actualContents, Page<CommentsListDto> expectedContents) {
+        PaginationTestHelper<CommentsListDto, Comments> paginationHelper
+                = new PaginationTestHelper<>(
+                        actualContents, expectedContents, new CommentsConverterForTest<>(CommentsListDto.class));
+        paginationHelper.assertContents();
+    }
+
+    @Test
+    public void calculateCommentPage() {
+        saveComments();
+
+        callAndAssertCalculateCommentPage();
+    }
+
+    private void callAndAssertCalculateCommentPage() {
+        // Long postId, Long commentId
+        long commentIndex = 3;
+        Comments comment = assertOptionalAndGetEntity(
+                commentsRepository::findById, commentsRepository.count() - commentIndex);
+        int expectedCommentPage = getExpectedCommentPage((int) commentIndex);
+
+        int actualCommentPage = commentsService.calculateCommentPage(post.getId(), comment.getId());
+
+        assertThat(actualCommentPage).isEqualTo(expectedCommentPage);
+    }
+
+    private int getExpectedCommentPage(int commentIndex) {
+        return commentIndex / 30 + 1;
     }
 }

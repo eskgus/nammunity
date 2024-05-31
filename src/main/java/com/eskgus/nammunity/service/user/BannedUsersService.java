@@ -87,14 +87,7 @@ public class BannedUsersService {
     public boolean isAccountNonBanned(String username) {
         User user = userService.findByUsername(username);
 
-        // BannedUsers 테이블에 user가 없으면 활동 정지 x
-        Optional<BannedUsers> result = findByUser(user);
-        if (result.isEmpty()) {
-            return true;
-        }
-
-        // BannedUsers 테이블에 있는 user의 활동 정지 종료일이 현재 날짜 이전이면 활동 정지 x, 아니면 활동 정지 o
-        BannedUsers bannedUser = result.get();
-        return bannedUser.getExpiredDate().isBefore(LocalDateTime.now());
+        return findByUser(user).map(bannedUser -> bannedUser.getExpiredDate().isBefore(LocalDateTime.now()))
+                .orElse(true);
     }
 }

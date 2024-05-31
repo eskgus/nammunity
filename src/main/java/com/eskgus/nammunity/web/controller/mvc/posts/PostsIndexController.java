@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.web.controller.mvc.posts;
 
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.posts.PostsViewService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
@@ -22,7 +22,7 @@ import java.security.Principal;
 public class PostsIndexController {
     private final PostsService postsService;
     private final PostsViewService postsViewService;
-    private final CommentsSearchService commentsSearchService;
+    private final CommentsService commentsService;
 
     @GetMapping({"/", "/main"})
     public String mainPage(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
@@ -57,7 +57,7 @@ public class PostsIndexController {
     }
 
     private String readSpecificComments(Long postId, Long commentId, Principal principal, Model model) {
-        int page = commentsSearchService.calculateCommentPage(postId, commentId);
+        int page = commentsService.calculateCommentPage(postId, commentId);
         return readComments(postId, principal, page, model);
     }
 

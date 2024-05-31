@@ -6,11 +6,10 @@ import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesSaveDto;
-import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,12 +21,13 @@ import java.security.Principal;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
+
 @RequiredArgsConstructor
 @Service
 public class LikesService {
     private final PostsService postsService;
-    private final CommentsSearchService commentsSearchService;
-    private final LikesSearchService likesSearchService;
+    private final CommentsService commentsService;
     private final LikesRepository likesRepository;
 
     @Autowired
@@ -37,18 +37,17 @@ public class LikesService {
     public Long save(Long postsId, Long commentsId, Principal principal) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
 
-        Posts posts = null;
-        Comments comments = null;
-        if (postsId != null) {
-            posts = postsService.findById(postsId);
-        } else {
-            comments = commentsSearchService.findById(commentsId);
-        }
-
-        LikesSaveDto likesSaveDto = LikesSaveDto.builder()
-                .posts(posts).comments(comments).user(user).build();
+        LikesSaveDto likesSaveDto = createLikesSaveDto(postsId, commentsId, user);
 
         return likesRepository.save(likesSaveDto.toEntity()).getId();
+    }
+
+    private LikesSaveDto createLikesSaveDto(Long postsId, Long commentsId, User user) {
+        Posts posts = postsId != null ? postsService.findById(postsId) : null;
+        Comments comments = commentsId != null ? commentsService.findById(commentsId) : null;
+
+        return LikesSaveDto.builder()
+                .posts(posts).comments(comments).user(user).build();
     }
 
     @Transactional
@@ -56,12 +55,20 @@ public class LikesService {
         User user = principalHelper.getUserFromPrincipal(principal, true);
 
         if (postsId != null) {
-            Posts posts = postsService.findById(postsId);
-            likesRepository.deleteByPosts(posts, user);
+            deleteByPostId(postsId, user);
         } else {
-            Comments comments = commentsSearchService.findById(commentsId);
-            likesRepository.deleteByComments(comments, user);
+            deleteByCommentId(commentsId, user);
         }
+    }
+
+    private void deleteByPostId(Long postsId, User user) {
+        Posts posts = postsService.findById(postsId);
+        likesRepository.deleteByPosts(posts, user);
+    }
+
+    private void deleteByCommentId(Long commentsId, User user) {
+        Comments comments = commentsService.findById(commentsId);
+        likesRepository.deleteByComments(comments, user);
     }
 
     @Transactional
@@ -81,10 +88,20 @@ public class LikesService {
     }
 
     @Transactional(readOnly = true)
-    public ContentsPageDto<LikesListDto> listLikes(BiFunction<User, Pageable, Page<LikesListDto>> finder,
-                                                   Principal principal, int page) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-        Page<LikesListDto> contents = likesSearchService.findLikesByUser(user, finder, page, 20);
-        return new ContentsPageDto<>(contents);
+    public Page<LikesListDto> findLikesByUser(User user, BiFunction<User, Pageable, Page<LikesListDto>> finder,
+                                              int page, int size) {
+        // finder: likesRepository.findByUser(전체 좋아요), findPostLikesByUser(게시글 좋아요), findCommentLikesByUser(댓글 좋아요)
+        Pageable pageable = createPageable(page, size);
+        return finder.apply(user, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByPostsAndUser(Posts post, User user) {
+        return likesRepository.existsByPostsAndUser(post, user);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByCommentsAndUser(Comments comment, User user) {
+        return likesRepository.existsByCommentsAndUser(comment, user);
     }
 }

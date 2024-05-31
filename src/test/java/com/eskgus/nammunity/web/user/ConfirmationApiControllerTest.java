@@ -25,6 +25,7 @@ import java.util.function.Function;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -62,33 +63,12 @@ public class ConfirmationApiControllerTest {
         testDB.cleanUp();
     }
 
-    @Transactional
     @Test
     public void confirmToken() throws Exception {
-//        // 1. user1 회원가입
-//        User user1 = userRepository.findById(1L).get();
-//
-//        // 2. user1 이메일 인증 토큰 저장
-//        // 3. user1의 token 찾기
-//        List<Tokens> result = tokensRepository.findByUser(user1);
-//        Assertions.assertThat(result.size()).isGreaterThan(0);
-//        Tokens token = result.get(0);
-//
-//        // 4. "/api/users/confirm"으로 parameter token=token 담아서 get 요청
-//        // 5. 상태가 302 found인지 확인
-//        MvcResult mvcResult = mockMvc.perform(get("/api/users/confirm")
-//                        .param("token", token.getToken()))
-//                .andExpect(status().isFound())
-//                .andReturn();
-//
-//        // 5. 응답 flash attribute에 "error" 없는지 확인
-//        Assertions.assertThat(mvcResult.getFlashMap().containsKey("error")).isFalse();
-//
-//        // 6. token confirmedAt이 null이 아닌지 확인
-//        Assertions.assertThat(token.getConfirmedAt()).isNotNull();
-//
-//        // 7. user enabled true인지 확인
-//        Assertions.assertThat(user1.isEnabled()).isTrue();
+        MockHttpServletRequestBuilder requestBuilder = get("/api/users/confirm");
+        ResultMatcher resultMatcher = flash().attributeCount(0);
+
+        mockMvcTestHelper.requestAndAssertStatusIsFound(requestBuilder, token.getToken(), resultMatcher);
     }
 
     @Transactional

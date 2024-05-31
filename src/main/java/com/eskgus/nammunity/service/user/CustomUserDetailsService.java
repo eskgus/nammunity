@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -27,13 +27,15 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new
                 UsernameNotFoundException("username not found"));
 
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        if (user.getRole().equals(Role.ADMIN)) {
-            authorities.add(new SimpleGrantedAuthority(Role.ADMIN.getKey()));
-        } else {
-            authorities.add(new SimpleGrantedAuthority(Role.USER.getKey()));
-        }
+        List<GrantedAuthority> authorities = createAuthorities(user);
 
         return new CustomUserDetails(user, authorities);
+    }
+
+    private List<GrantedAuthority> createAuthorities(User user) {
+        if (user.getRole().equals(Role.ADMIN)) {
+            return Collections.singletonList(new SimpleGrantedAuthority(Role.ADMIN.getKey()));
+        }
+        return Collections.singletonList(new SimpleGrantedAuthority(Role.USER.getKey()));
     }
 }

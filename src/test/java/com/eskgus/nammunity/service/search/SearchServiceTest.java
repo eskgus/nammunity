@@ -14,7 +14,7 @@ import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.helper.ContentsPageMoreDtoTestHelper;
 import com.eskgus.nammunity.helper.Range;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.util.TestDB;
@@ -54,7 +54,7 @@ public class SearchServiceTest {
     private PostsService postsService;
 
     @Autowired
-    private CommentsSearchService commentsSearchService;
+    private CommentsService commentsService;
 
     @Autowired
     private UserService userService;
@@ -118,7 +118,7 @@ public class SearchServiceTest {
         ContentsPageMoreDtos<PostsListDto, CommentsListDto, UsersListDto> actualResult = searchService.search(keywords);
 
         Page<PostsListDto> postsPage = postsService.search(keywords, SearchType.TITLE_AND_CONTENT.getKey(), page, size);
-        Page<CommentsListDto> commentsPage = commentsSearchService.searchByContent(keywords, page, size);
+        Page<CommentsListDto> commentsPage = commentsService.searchByContent(keywords, page, size);
         Page<UsersListDto> usersPage = userService.searchByNickname(keywords, page, size);
 
         ContentsPageMoreDtoTestHelper<PostsListDto, CommentsListDto, UsersListDto> findHelper
@@ -153,7 +153,7 @@ public class SearchServiceTest {
     public void searchComments() {
         String keywords = "comment";
         ContentsPageDto<CommentsListDto> actualResult = searchService.searchComments(keywords, page);
-        Page<CommentsListDto> expectedContents = commentsSearchService.searchByContent(keywords, page, 30);
+        Page<CommentsListDto> expectedContents = commentsService.searchByContent(keywords, page, 30);
 
         ContentsPageDtoTestHelper<CommentsListDto, Comments> findHelper = ContentsPageDtoTestHelper.<CommentsListDto, Comments>builder()
                 .actualResult(actualResult).expectedContents(expectedContents)

@@ -3,6 +3,7 @@ package com.eskgus.nammunity.service.reports;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.reports.TypesRepository;
+import com.eskgus.nammunity.util.TestDB;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class TypesServiceTest {
+    @Autowired
+    private TestDB testDB;
+
     @Autowired
     private TypesRepository typesRepository;
 
@@ -35,6 +39,6 @@ public class TypesServiceTest {
     }
 
     private Types getExpectedType(ContentType contentType) {
-        return typesRepository.findByDetail(contentType.getDetailInKor()).get();
+        return testDB.assertOptionalAndGetEntity(typesRepository::findByDetail, contentType.getDetailInKor());
     }
 }

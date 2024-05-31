@@ -48,7 +48,6 @@ public class SignInService {
     public void findPassword(String username) {
         User user = userService.findByUsername(username);
 
-        // 활동 정지된 계정이면 예외 메시지 던지기
         if (!bannedUsersService.isAccountNonBanned(username)) {
             throw new IllegalArgumentException("활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.");
         }

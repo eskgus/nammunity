@@ -8,7 +8,7 @@ import com.eskgus.nammunity.domain.reports.Reasons;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
-import com.eskgus.nammunity.service.comments.CommentsSearchService;
+import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
@@ -34,7 +34,7 @@ public class ReportsService {
     private final ContentReportsRepository contentReportsRepository;
     private final UserService userService;
     private final PostsService postsService;
-    private final CommentsSearchService commentsSearchService;
+    private final CommentsService commentsService;
     private final ReasonsService reasonsService;
     private final TypesService typesService;
     private final ReportSummaryService reportSummaryService;
@@ -72,7 +72,7 @@ public class ReportsService {
             posts = postsService.findById(requestDto.getPostsId());
             contentType = ContentType.POSTS;
         } else if (requestDto.getCommentsId() != null) {
-            comments = commentsSearchService.findById(requestDto.getCommentsId());
+            comments = commentsService.findById(requestDto.getCommentsId());
             contentType = ContentType.COMMENTS;
         } else if (requestDto.getUserId() != null){
             user = userService.findById(requestDto.getUserId());
@@ -137,7 +137,7 @@ public class ReportsService {
             Posts post = postsService.findById(requestDto.getPostId());
             return createContentReportDetailDto(post, new PostsListDto(post), ContentType.POSTS, page);
         } else if (requestDto.getCommentId() != null) {
-            Comments comment = commentsSearchService.findById(requestDto.getCommentId());
+            Comments comment = commentsService.findById(requestDto.getCommentId());
             return createContentReportDetailDto(comment, new CommentsListDto(comment), ContentType.COMMENTS, page);
         } else {
             User user = userService.findById(requestDto.getUserId());

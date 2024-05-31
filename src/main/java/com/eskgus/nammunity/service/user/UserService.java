@@ -41,8 +41,7 @@ public class UserService {
 
     @Transactional
     public void delete(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("존재하지 않는 회원입니다."));
+        User user = findById(id);
         userRepository.delete(user);
     }
 

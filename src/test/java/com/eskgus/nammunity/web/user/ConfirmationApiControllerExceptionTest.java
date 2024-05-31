@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.user;
 
+import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.util.TestDB;
 import com.eskgus.nammunity.domain.tokens.TokensRepository;
@@ -15,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -23,6 +23,7 @@ import java.util.function.Function;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -59,39 +60,52 @@ public class ConfirmationApiControllerExceptionTest {
         testDB.cleanUp();
     }
 
-    @Transactional
     @Test
-    public void causeExceptionsOnConfirmingToken() throws Exception {
-//        // 1. user1 회원가입
-//        User user1 = userRepository.findById(1L).get();
-//
-//        // 2. user1 이메일 인증 토큰 저장
-//        // 예외 1. 인증 링크 존재 x
-//        requestAndAssertForExceptionOnConfirmingToken("abcde", "인증 링크가 존재하지");
-//
-//        // 예외 2. 인증 링크 만료
-//        // 1-1. token expiredAt 만료 시키기
-//        user1.getTokens().forEach(token -> token.updateExpiredAt(LocalDateTime.now()));
-//
-//        // 1-2. 만료된 token으로 인증 요청
-//        Tokens token = tokensRepository.findByUser(user1).get(0);
-//        requestAndAssertForExceptionOnConfirmingToken(token.getToken(), "만료");
-//
-//        // 1-3. token confirmedAt이 null, user1의 enabled가 false인지 확인
-//        Assertions.assertThat(token.getConfirmedAt()).isNull();
-//        Assertions.assertThat(user1.isEnabled()).isFalse();
-//
-//        // 예외 3. 이미 인증된 메일
-//        // 1-1. token confirmedAt 업데이트 + user enabled 업데이트해서 인증 완료시키기
-//        token.updateConfirmedAt(LocalDateTime.now());
-//        user1.updateEnabled();
-//
-//        // 1-2. 이미 인증된 token으로 인증 요청
-//        requestAndAssertForExceptionOnConfirmingToken(token.getToken(), "이미");
-//
-//        // 1-3. token confirmedAt이 not null, user1의 enabled가 true인지 확인
-//        Assertions.assertThat(token.getConfirmedAt()).isNotNull();
-//        Assertions.assertThat(user1.isEnabled()).isTrue();
+    public void confirmTokenExceptions() throws Exception {
+        // 예외 1. 인증 링크 존재 x
+        requestAndAssertConfirmTokenExceptions("인증 링크가 존재하지 않습니다.", "token");
+
+        // 예외 2. 인증 링크 만료
+        confirmTokenWithExpiredToken();
+
+        // 예외 3. 이미 인증된 메일
+        confirmTokenWithConfirmedToken();
+    }
+
+    private void requestAndAssertConfirmTokenExceptions(String expectedErrorMessage, String token) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = get("/api/users/confirm");
+        ResultMatcher resultMatcher = flash().attribute("error", expectedErrorMessage);
+
+        mockMvcTestHelper.requestAndAssertStatusIsFound(requestBuilder, token, resultMatcher);
+    }
+
+    private void confirmTokenWithExpiredToken() throws Exception {
+        Tokens token = saveToken();
+        updateTokenExpiredAt(token);
+
+        requestAndAssertConfirmTokenExceptions("인증 링크가 만료됐습니다.", token.getToken());
+    }
+
+    private Tokens saveToken() {
+        Long tokenId = testDB.saveTokens(user);
+        return assertOptionalAndGetEntity(tokensRepository::findById, tokenId);
+    }
+
+    private void updateTokenExpiredAt(Tokens token) {
+        token.updateExpiredAt(LocalDateTime.now());
+        tokensRepository.save(token);
+    }
+
+    private void confirmTokenWithConfirmedToken() throws Exception {
+        Tokens token = saveToken();
+        updateTokenConfirmedAt(token);
+
+        requestAndAssertConfirmTokenExceptions("이미 인증된 이메일입니다.", token.getToken());
+    }
+
+    private void updateTokenConfirmedAt(Tokens token) {
+        token.updateConfirmedAt(LocalDateTime.now());
+        tokensRepository.save(token);
     }
 
     @Test
@@ -161,19 +175,4 @@ public class ConfirmationApiControllerExceptionTest {
         user.updateEnabled();
         userRepository.save(user);
     }
-
-//    private void requestAndAssertForExceptionOnConfirmingToken(String token, String responseValue) throws Exception {
-//        // 1. "/api/users/confirm"으로 parameter token=token 담아서 get 요청
-//        // 2. 상태가 302 found인지 확인
-//        MvcResult mvcResult = mockMvc.perform(get("/api/users/confirm")
-//                        .param("token", token))
-//                .andExpect(status().isFound())
-//                .andReturn();
-//
-//        // 3. 응답으로 "error" 왔는지 확인
-//        Assertions.assertThat(mvcResult.getFlashMap().containsKey("error")).isTrue();
-//
-//        // 4. "error"의 값이 responseValue인지 확인
-//        Assertions.assertThat((String) mvcResult.getFlashMap().get("error")).contains(responseValue);
-//    }
 }

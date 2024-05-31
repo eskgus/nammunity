@@ -7,23 +7,25 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
+import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
-import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.util.List;
 
+import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
+
 @RequiredArgsConstructor
 @Service
 public class CommentsService {
     private final CommentsRepository commentsRepository;
     private final PostsService postsService;
-    private final CommentsSearchService commentsSearchService;
 
     @Autowired
     private PrincipalHelper principalHelper;
@@ -64,9 +66,37 @@ public class CommentsService {
     }
 
     @Transactional(readOnly = true)
-    public ContentsPageDto<CommentsListDto> listComments(Principal principal, int page) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-        Page<CommentsListDto> contents = commentsSearchService.findByUser(user, page, 20);
-        return new ContentsPageDto<>(contents);
+    public Page<CommentsReadDto> findByPosts(Posts post, User user, int page) {
+        Pageable pageable = createPageable(page, 30);
+        return commentsRepository.findByPosts(post, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Comments findById(Long id) {
+        return commentsRepository.findById(id).orElseThrow(() -> new
+                IllegalArgumentException("해당 댓글이 없습니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CommentsListDto> findByUser(User user, int page, int size) {
+        Pageable pageable = createPageable(page, size);
+        return commentsRepository.findByUser(user, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public long countByUser(User user) {
+        return commentsRepository.countByUser(user);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CommentsListDto> searchByContent(String keywords, int page, int size) {
+        Pageable pageable = createPageable(page, size);
+        return commentsRepository.searchByContent(keywords, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public int calculateCommentPage(Long postId, Long commentId) {
+        long commentIndex = commentsRepository.countCommentIndex(postId, commentId);
+        return (int) commentIndex / 30 + 1;
     }
 }
