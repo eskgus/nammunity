@@ -49,7 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-public class ActivityServiceTest {
+public class UserViewServiceTest {
     @Autowired
     private TestDB testDB;
 
@@ -75,7 +75,7 @@ public class ActivityServiceTest {
     private LikesRepository likesRepository;
 
     @Autowired
-    private ActivityService activityService;
+    private UserViewService userViewService;
 
     @Autowired
     private PostsService postsService;
@@ -153,7 +153,7 @@ public class ActivityServiceTest {
     }
 
     private void callAndAssertFindActivityHistory(String type) {
-        this.activityHistoryDto = activityService.findActivityHistory(user1.getId(), type, page);
+        this.activityHistoryDto = userViewService.findActivityHistory(user1.getId(), type, page);
         assertActivityHistoryDto(type);
     }
 
@@ -263,7 +263,7 @@ public class ActivityServiceTest {
 
     private ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> callGetMyPageAndGetActualResult() {
         Principal principal = createPrincipalWithUser(user1);
-        return activityService.getMyPage(principal);
+        return userViewService.getMyPage(principal);
     }
 
     private Principal createPrincipalWithUser(User user) {

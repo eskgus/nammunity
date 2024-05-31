@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 
+import static com.eskgus.nammunity.util.ResponseUtil.sendRedirect;
+
 public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
     @Autowired
     PrincipalHelper principalHelper;
@@ -25,13 +27,16 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication)
             throws IOException, ServletException {
+        resetAttempt(authentication);
+
+        sendRedirect(request, response);
+    }
+
+    private void resetAttempt(Authentication authentication) {
         User user = principalHelper.getUserFromPrincipal(authentication, true);
+
         if (user.getAttempt() != 0) {
             signInService.resetAttempt(user);
         }
-
-        Object prePage = request.getSession().getAttribute("prePage");
-        String url = (prePage != null) ? prePage.toString() : "/";
-        response.sendRedirect(url);
     }
 }

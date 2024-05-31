@@ -20,7 +20,6 @@ public class ConfirmationApiController {
     @GetMapping("/confirm")
     public RedirectView confirmToken(@RequestParam String token,
                                      RedirectAttributes ra) {
-        // TODO: confirmToken()
         try {
             registrationService.confirmToken(token);
         } catch (IllegalArgumentException ex) {

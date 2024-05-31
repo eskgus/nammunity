@@ -14,9 +14,9 @@
             <div class="content-area">
                 {{>layout/my-page-nav}}
                 <div class="user-info-area">
+                    {{#user}}
                     <div id="info-area">
                         <h2>기본 정보 수정</h2>
-                        {{#user}}
                         <table>
                             <tbody>
                             <tr>
@@ -55,7 +55,6 @@
                             </tr>
                             </tbody>
                         </table>
-                        {{/user}}
                     </div>
                     <div id="social-area">
                         <h2>SNS 간편 로그인 계정 연동</h2>
@@ -100,6 +99,7 @@
                         </table>
                         <div class="valid">SNS 계정 연동은 최대 1개까지만 가능합니다.</div>
                     </div>
+                    {{/user}}
                     <div class="btn-area">
                         <a role="button" class="btn" href="/users/my-page">취소</a>
                     </div>

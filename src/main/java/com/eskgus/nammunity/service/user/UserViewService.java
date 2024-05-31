@@ -28,7 +28,7 @@ import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
-public class ActivityService {
+public class UserViewService {
     private final UserService userService;
     private final BannedUsersService bannedUsersService;
     private final PostsService postsService;
@@ -122,5 +122,17 @@ public class ActivityService {
         return ContentsPageMoreDtos.<PostsListDto, CommentsListDto, LikesListDto>builder()
                 .contentsPageMore1(postsPageMoreDto).contentsPageMore2(commentsPageMoreDto)
                 .contentsPageMore3(likesPageMoreDto).build();
+    }
+
+    @Transactional(readOnly = true)
+    public UserUpdateDto afterSignUp(Long id) {
+        User user = userService.findById(id);
+        return new UserUpdateDto(user);
+    }
+
+    @Transactional(readOnly = true)
+    public UserUpdateDto updateUserInfo(Principal principal) {
+        User user = principalHelper.getUserFromPrincipal(principal, true);
+        return new UserUpdateDto(user);
     }
 }

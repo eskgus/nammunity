@@ -120,10 +120,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public void authenticateOAuth2User(User user) throws OAuth2AuthenticationException {
         log.info("authenticateOAuth2User.....");
 
-        if (!bannedUsersService.isAccountNonBanned(user.getUsername())) {   // user의 banned 확인
+        if (!bannedUsersService.isAccountNonBanned(user.getUsername())) {
             throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED),
                     "활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.");
-        } else if (user.isLocked()) {   // user의 locked 확인
+        } else if (user.isLocked()) {
             throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED),
                     "로그인에 5번 이상 실패했습니다. ID 또는 비밀번호 찾기를 하세요.");
         }

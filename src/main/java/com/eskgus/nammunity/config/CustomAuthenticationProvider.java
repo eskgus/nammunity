@@ -27,6 +27,14 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
+        if (username.isBlank()) {
+            throw new AuthenticationServiceException("ID를 입력하세요.");
+        }
+
+        String password = authentication.getCredentials().toString();
+        if (password.isBlank()) {
+            throw new AuthenticationServiceException("비밀번호를 입력하세요.");
+        }
 
         UserDetails user;
         try {
@@ -45,7 +53,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             throw new AccountExpiredException("만료된 계정입니다.");
         }
 
-        String password = authentication.getCredentials().toString();
         if (!this.passwordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("ID가 존재하지 않거나 비밀번호가 일치하지 않습니다.");
         }
