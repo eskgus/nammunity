@@ -52,12 +52,16 @@ public class RegistrationService {
     }
 
     private RegistrationDto encryptRegistrationDto(RegistrationDto registrationDto) {
-        String encryptedPassword = encoder.encode(registrationDto.getPassword());
+        String encryptedPassword = encryptPassword(registrationDto.getPassword());
         return RegistrationDto.builder()
                 .username(registrationDto.getUsername()).password(encryptedPassword)
                 .nickname(registrationDto.getNickname())
                 .email(registrationDto.getEmail())
                 .role(Role.USER).build();
+    }
+
+    public String encryptPassword(String password) {
+        return encoder.encode(password);
     }
 
     @Transactional

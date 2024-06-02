@@ -57,12 +57,8 @@ public class UserUpdateService {
 
     @Transactional
     public void encryptAndUpdatePassword(User user, String password) {
-        String encryptedPassword = encryptPassword(password);
+        String encryptedPassword = registrationService.encryptPassword(password);
         user.updatePassword(encryptedPassword);
-    }
-
-    private String encryptPassword(String password) {
-        return encoder.encode(password);
     }
 
     @Transactional
@@ -132,7 +128,7 @@ public class UserUpdateService {
         if (user.getSocial().equals("none")) {
             return null;
         }
-        return customOAuth2UserService.unlinkSocial(user.getUsername(), user.getSocial(), accessToken);
+        return customOAuth2UserService.unlinkSocial(user.getSocial(), accessToken, user);
     }
 
     private HttpHeaders createHeaders(Cookie cookie) {
@@ -155,7 +151,7 @@ public class UserUpdateService {
     public HttpHeaders unlinkSocial(Principal principal, String social, String accessToken) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
 
-        Cookie cookie = customOAuth2UserService.unlinkSocial(user.getUsername(), social, accessToken);
+        Cookie cookie = customOAuth2UserService.unlinkSocial(social, accessToken, user);
 
         return createHeaders(cookie);
     }

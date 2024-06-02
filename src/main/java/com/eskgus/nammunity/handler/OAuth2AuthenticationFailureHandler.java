@@ -16,9 +16,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
-        String url = "/users/sign-in?error";
-
-        signOut(request, response);
+        String url = setUrl(exception, request, response);
 
         setMessage(exception, request, response);
 
@@ -26,8 +24,16 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
         super.onAuthenticationFailure(request, response, exception);
     }
 
+    private String setUrl(AuthenticationException ex, HttpServletRequest request, HttpServletResponse response) {
+        if (ex.getMessage().equals("연동할 계정을 사용 중인 다른 사용자가 있습니다.")) {
+            return "/users/my-page/update/user-info";
+        } else {    // locked/banned
+            signOut(request, response);
+            return "/users/sign-in?error";
+        }
+    }
+
     private void signOut(HttpServletRequest request, HttpServletResponse response) {
-        // 마이 페이지에서 소셜 연동 시 locked/banned에 걸려서 던져진 예외일 때는 로그아웃도 해줘야 함 !
         LogoutHandler logoutHandler = new SecurityContextLogoutHandler();
         logoutHandler.logout(request, response, null);
     }
