@@ -5,7 +5,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class LikesRepositoryTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -60,18 +60,18 @@ public class LikesRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.USER);
+        Long user2Id = testDataHelper.signUp(2L, Role.USER);
         User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
 
-        Long post1Id = testDB.savePosts(user1);
+        Long post1Id = testDataHelper.savePosts(user1);
         this.post1 = assertOptionalAndGetEntity(postsRepository::findById, post1Id);
 
-        Long comment1Id = testDB.saveComments(post1Id, user1);
+        Long comment1Id = testDataHelper.saveComments(post1Id, user1);
         this.comment1 = assertOptionalAndGetEntity(commentsRepository::findById, comment1Id);
 
         saveLikes();
@@ -79,21 +79,21 @@ public class LikesRepositoryTest {
 
     private void saveLikes() {
         for (User user : users) {
-            Long postLikeId = testDB.savePostLikes(post1.getId(), user);
+            Long postLikeId = testDataHelper.savePostLikes(post1.getId(), user);
             assertOptionalAndGetEntity(likesRepository::findById, postLikeId);
 
-            Long commentLikeId = testDB.saveCommentLikes(comment1.getId(), user);
+            Long commentLikeId = testDataHelper.saveCommentLikes(comment1.getId(), user);
             assertOptionalAndGetEntity(likesRepository::findById, commentLikeId);
         }
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -173,11 +173,11 @@ public class LikesRepositoryTest {
     public void deleteByPosts() {
         Posts post2 = savePost();
 
-        callAndAssertDeleteByContent(testDB::savePostLikes, likesRepository::deleteByPosts, post2);
+        callAndAssertDeleteByContent(testDataHelper::savePostLikes, likesRepository::deleteByPosts, post2);
     }
 
     private Posts savePost() {
-        Long postId = testDB.savePosts(users[0]);
+        Long postId = testDataHelper.savePosts(users[0]);
         return assertOptionalAndGetEntity(postsRepository::findById, postId);
     }
 
@@ -210,11 +210,11 @@ public class LikesRepositoryTest {
     public void deleteByComments() {
         Comments comment2 = saveComment();
 
-        callAndAssertDeleteByContent(testDB::saveCommentLikes, likesRepository::deleteByComments, comment2);
+        callAndAssertDeleteByContent(testDataHelper::saveCommentLikes, likesRepository::deleteByComments, comment2);
     }
 
     private Comments saveComment() {
-        Long commentId = testDB.saveComments(post1.getId(), users[0]);
+        Long commentId = testDataHelper.saveComments(post1.getId(), users[0]);
         return assertOptionalAndGetEntity(commentsRepository::findById, commentId);
     }
 

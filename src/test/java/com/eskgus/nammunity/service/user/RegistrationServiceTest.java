@@ -5,7 +5,7 @@ import com.eskgus.nammunity.domain.tokens.TokensRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.web.dto.user.RegistrationDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class RegistrationServiceTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -41,17 +41,17 @@ public class RegistrationServiceTest {
 
     @BeforeEach
     public void setUp() {
-        Long userId = testDB.signUp(1L, Role.USER);
+        Long userId = testDataHelper.signUp(1L, Role.USER);
         this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -96,7 +96,7 @@ public class RegistrationServiceTest {
     }
 
     private void saveToken(User user) {
-        Long tokenId = testDB.saveTokens(user);
+        Long tokenId = testDataHelper.saveTokens(user);
         assertOptionalAndGetEntity(tokensRepository::findById, tokenId);
     }
 

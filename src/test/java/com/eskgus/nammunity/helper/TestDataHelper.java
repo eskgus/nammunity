@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.util;
+package com.eskgus.nammunity.helper;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
@@ -23,7 +23,7 @@ import java.util.function.Function;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Component
-public class TestDB {
+public class TestDataHelper {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 

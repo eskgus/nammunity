@@ -2,7 +2,7 @@ package com.eskgus.nammunity.web.likes;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class LikesApiControllerExceptionTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private MockMvcTestHelper mockMvcTestHelper;
@@ -52,17 +52,17 @@ public class LikesApiControllerExceptionTest {
 
     @BeforeEach
     public void setUp() {
-        Long userId = testDB.signUp(1L, Role.USER);
+        Long userId = testDataHelper.signUp(1L, Role.USER);
         this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -127,12 +127,12 @@ public class LikesApiControllerExceptionTest {
         List<Long> requestDto = new ArrayList<>();
 
         Long postId = savePost();
-        Long postLikeId = testDB.savePostLikes(postId, user);
+        Long postLikeId = testDataHelper.savePostLikes(postId, user);
         assertOptionalAndGetEntity(likesRepository::findById, postLikeId);
         requestDto.add(postLikeId);
 
         Long commentId = saveComment(postId);
-        Long commentLikeId = testDB.saveCommentLikes(commentId, user);
+        Long commentLikeId = testDataHelper.saveCommentLikes(commentId, user);
         assertOptionalAndGetEntity(likesRepository::findById, commentLikeId);
         requestDto.add(commentLikeId + 1);
 
@@ -140,13 +140,13 @@ public class LikesApiControllerExceptionTest {
     }
 
     private Long savePost() {
-        Long postId = testDB.savePosts(user);
+        Long postId = testDataHelper.savePosts(user);
         assertOptionalAndGetEntity(postsRepository::findById, postId);
         return postId;
     }
 
     private Long saveComment(Long postId) {
-        Long commentId = testDB.saveComments(postId, user);
+        Long commentId = testDataHelper.saveComments(postId, user);
         assertOptionalAndGetEntity(commentsRepository::findById, commentId);
         return commentId;
     }

@@ -10,7 +10,7 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class ContentReportSummaryRepositoryTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -61,26 +61,26 @@ public class ContentReportSummaryRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.USER);
+        Long user2Id = testDataHelper.signUp(2L, Role.USER);
         this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
-        Long post1Id = testDB.savePosts(user1);
+        Long post1Id = testDataHelper.savePosts(user1);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, post1Id);
 
-        Long comment1Id = testDB.saveComments(post1Id, user1);
+        Long comment1Id = testDataHelper.saveComments(post1Id, user1);
         this.comment = assertOptionalAndGetEntity(commentsRepository::findById, comment1Id);
     }
 
     private <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
-        return testDB.assertOptionalAndGetEntity(finder, content);
+        return testDataHelper.assertOptionalAndGetEntity(finder, content);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -104,13 +104,13 @@ public class ContentReportSummaryRepositoryTest {
     }
 
     private void saveReportSummaries() {
-        Long postReportSummaryId = testDB.savePostReportSummary(post, user1);
+        Long postReportSummaryId = testDataHelper.savePostReportSummary(post, user1);
         assertOptionalAndGetEntity(contentReportSummaryRepository::findById, postReportSummaryId);
 
-        Long commentReportSummaryId = testDB.saveCommentReportSummary(comment, user1);
+        Long commentReportSummaryId = testDataHelper.saveCommentReportSummary(comment, user1);
         assertOptionalAndGetEntity(contentReportSummaryRepository::findById, commentReportSummaryId);
 
-        Long userReportSummaryId = testDB.saveUserReportSummary(user1, user2);
+        Long userReportSummaryId = testDataHelper.saveUserReportSummary(user1, user2);
         assertOptionalAndGetEntity(contentReportSummaryRepository::findById, userReportSummaryId);
     }
 

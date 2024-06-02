@@ -4,7 +4,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.reports.*;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ReportsApiControllerTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private MockMvcTestHelper mockMvcTestHelper;
@@ -56,26 +56,26 @@ public class ReportsApiControllerTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.ADMIN);
+        Long user2Id = testDataHelper.signUp(2L, Role.ADMIN);
         this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
-        Long postId = testDB.savePosts(user1);
+        Long postId = testDataHelper.savePosts(user1);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
-        Long commentId = testDB.saveComments(postId, user1);
+        Long commentId = testDataHelper.saveComments(postId, user1);
         this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -128,9 +128,9 @@ public class ReportsApiControllerTest {
     private List<Long> savePostReportSummaries() {
         List<Long> postIds = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            Long postId = testDB.savePosts(user1);
+            Long postId = testDataHelper.savePosts(user1);
             Posts post = assertOptionalAndGetEntity(postsRepository::findById, postId);
-            saveReportSummary(testDB::savePostReportSummary, post);
+            saveReportSummary(testDataHelper::savePostReportSummary, post);
             postIds.add(postId);
         }
         return postIds;
@@ -145,9 +145,9 @@ public class ReportsApiControllerTest {
     private List<Long> saveCommentReportSummaries() {
         List<Long> commentIds = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            Long commentId = testDB.saveComments(post.getId(), user1);
+            Long commentId = testDataHelper.saveComments(post.getId(), user1);
             Comments comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-            saveReportSummary(testDB::saveCommentReportSummary, comment);
+            saveReportSummary(testDataHelper::saveCommentReportSummary, comment);
             commentIds.add(commentId);
         }
         return commentIds;
@@ -156,9 +156,9 @@ public class ReportsApiControllerTest {
     private List<Long> saveUserReportSummaries() {
         List<Long> userIds = new ArrayList<>();
         for (int i = 1; i < 5; i++) {
-            Long userId = testDB.signUp(i + user2.getId(), Role.USER);
+            Long userId = testDataHelper.signUp(i + user2.getId(), Role.USER);
             User user = assertOptionalAndGetEntity(userRepository::findById, userId);
-            saveReportSummary(testDB::saveUserReportSummary, user);
+            saveReportSummary(testDataHelper::saveUserReportSummary, user);
             userIds.add(userId);
         }
         return userIds;
@@ -183,7 +183,7 @@ public class ReportsApiControllerTest {
     @WithMockUser(username = "username2", roles = {"ADMIN"})
     public void banUser() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = post("/api/reports/process");
-        Long requestDto = saveReportSummary(testDB::saveUserReportSummary, user1);
+        Long requestDto = saveReportSummary(testDataHelper::saveUserReportSummary, user1);
 
         mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
     }

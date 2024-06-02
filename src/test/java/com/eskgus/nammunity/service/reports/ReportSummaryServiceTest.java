@@ -11,7 +11,7 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class ReportSummaryServiceTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -69,30 +69,30 @@ public class ReportSummaryServiceTest {
     @BeforeEach
     public void setUp() {
         // 1. user1 회원가입 + user2 회원가입
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.USER);
+        Long user2Id = testDataHelper.signUp(2L, Role.USER);
         User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
 
         // 2. user1이 게시글 작성
-        Long postId = testDB.savePosts(user1);
+        Long postId = testDataHelper.savePosts(user1);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
         // 3. user1이 댓글 작성
-        Long commentId = testDB.saveComments(postId, user1);
+        Long commentId = testDataHelper.saveComments(postId, user1);
         this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
     }
 
     private <T,U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
-        return testDB.assertOptionalAndGetEntity(finder, content);
+        return testDataHelper.assertOptionalAndGetEntity(finder, content);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -189,9 +189,9 @@ public class ReportSummaryServiceTest {
     }
 
     private void saveReportSummaries() {
-        testDB.savePostReportSummary(post, users[1]);
-        testDB.saveCommentReportSummary(comment, users[1]);
-        Long userReportSummaryId = testDB.saveUserReportSummary(users[0], users[1]);
+        testDataHelper.savePostReportSummary(post, users[1]);
+        testDataHelper.saveCommentReportSummary(comment, users[1]);
+        Long userReportSummaryId = testDataHelper.saveUserReportSummary(users[0], users[1]);
         assertThat(contentReportSummaryRepository.count()).isEqualTo(userReportSummaryId);
     }
 

@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.web.likes;
 
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class LikesApiControllerTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private MockMvcTestHelper mockMvcTestHelper;
@@ -55,23 +55,23 @@ public class LikesApiControllerTest {
 
     @BeforeEach
     public void setUp() {
-        Long userId = testDB.signUp(1L, Role.USER);
+        Long userId = testDataHelper.signUp(1L, Role.USER);
         this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
-        Long postId = testDB.savePosts(user);
+        Long postId = testDataHelper.savePosts(user);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
-        Long commentId = testDB.saveComments(postId, user);
+        Long commentId = testDataHelper.saveComments(postId, user);
         this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -90,12 +90,12 @@ public class LikesApiControllerTest {
     @WithMockUser(username = "username1")
     public void deleteLikes() throws Exception {
         // 일반 1. 게시글 좋아요 취소
-        saveLike(testDB::savePostLikes, post.getId());
+        saveLike(testDataHelper::savePostLikes, post.getId());
         mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(
                 delete("/api/likes"), "postsId", post.getId());
 
         // 일반 2. 댓글 좋아요 취소
-        saveLike(testDB::saveCommentLikes, comment.getId());
+        saveLike(testDataHelper::saveCommentLikes, comment.getId());
         mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(
                 delete("/api/likes"), "commentsId", comment.getId());
     }
@@ -117,10 +117,10 @@ public class LikesApiControllerTest {
     private List<Long> createLikeIds() {
         List<Long> requestDto = new ArrayList<>();
 
-        Long postLikeId = saveLike(testDB::savePostLikes, post.getId());
+        Long postLikeId = saveLike(testDataHelper::savePostLikes, post.getId());
         requestDto.add(postLikeId);
 
-        Long commentLikeId = saveLike(testDB::saveCommentLikes, comment.getId());
+        Long commentLikeId = saveLike(testDataHelper::saveCommentLikes, comment.getId());
         requestDto.add(commentLikeId);
 
         return requestDto;

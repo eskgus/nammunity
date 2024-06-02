@@ -2,7 +2,7 @@ package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.tokens.TokensRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ConfirmationApiControllerExceptionTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private MockMvcTestHelper mockMvcTestHelper;
@@ -44,20 +44,20 @@ public class ConfirmationApiControllerExceptionTest {
 
     @BeforeEach
     public void setUp() {
-        Long userId = testDB.signUp(1L, Role.USER);
+        Long userId = testDataHelper.signUp(1L, Role.USER);
         this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
-        Long tokenId = testDB.saveTokens(user);
+        Long tokenId = testDataHelper.saveTokens(user);
         assertOptionalAndGetEntity(tokensRepository::findById, tokenId);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -87,7 +87,7 @@ public class ConfirmationApiControllerExceptionTest {
     }
 
     private Tokens saveToken() {
-        Long tokenId = testDB.saveTokens(user);
+        Long tokenId = testDataHelper.saveTokens(user);
         return assertOptionalAndGetEntity(tokensRepository::findById, tokenId);
     }
 
@@ -163,7 +163,7 @@ public class ConfirmationApiControllerExceptionTest {
     }
 
     private User saveUserAndUpdateEnabled() {
-        Long user2Id = testDB.signUp(user.getId() + 1, Role.USER);
+        Long user2Id = testDataHelper.signUp(user.getId() + 1, Role.USER);
         User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         updateUserEnabled(user2);

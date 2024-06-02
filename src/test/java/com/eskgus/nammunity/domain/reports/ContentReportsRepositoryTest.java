@@ -5,7 +5,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
@@ -37,7 +37,7 @@ import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent
 @SpringBootTest
 public class ContentReportsRepositoryTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -64,26 +64,26 @@ public class ContentReportsRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.USER);
+        Long user2Id = testDataHelper.signUp(2L, Role.USER);
         this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
-        Long post1Id = testDB.savePosts(user1);
+        Long post1Id = testDataHelper.savePosts(user1);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, post1Id);
 
-        Long comment1Id = testDB.saveComments(post1Id, user1);
+        Long comment1Id = testDataHelper.saveComments(post1Id, user1);
         this.comment = assertOptionalAndGetEntity(commentsRepository::findById, comment1Id);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -97,13 +97,13 @@ public class ContentReportsRepositoryTest {
     }
 
     private void saveReports() {
-        Long postReportId = testDB.savePostReports(post.getId(), user2);
+        Long postReportId = testDataHelper.savePostReports(post.getId(), user2);
         this.latestPostReport = assertOptionalAndGetEntity(contentReportsRepository::findById, postReportId);
 
-        Long commentReportId = testDB.saveCommentReports(comment.getId(), user2);
+        Long commentReportId = testDataHelper.saveCommentReports(comment.getId(), user2);
         this.latestCommentReport = assertOptionalAndGetEntity(contentReportsRepository::findById, commentReportId);
 
-        Long userReportId = testDB.saveUserReports(user1, user2);
+        Long userReportId = testDataHelper.saveUserReports(user1, user2);
         this.latestUserReport = assertOptionalAndGetEntity(contentReportsRepository::findById, userReportId);
     }
 
@@ -155,9 +155,9 @@ public class ContentReportsRepositoryTest {
         Long commentReportId = 0L;
         Long userReportId = 0L;
         for (String otherReason : otherReasons) {
-            postReportId = testDB.savePostReportsWithOtherReason(post.getId(), user2, otherReason);
-            commentReportId = testDB.saveCommentReportsWithOtherReason(comment.getId(), user2, otherReason);
-            userReportId = testDB.saveUserReportsWithOtherReason(user1, user2, otherReason);
+            postReportId = testDataHelper.savePostReportsWithOtherReason(post.getId(), user2, otherReason);
+            commentReportId = testDataHelper.saveCommentReportsWithOtherReason(comment.getId(), user2, otherReason);
+            userReportId = testDataHelper.saveUserReportsWithOtherReason(user1, user2, otherReason);
         }
 
         this.latestPostReport = assertOptionalAndGetEntity(contentReportsRepository::findById, postReportId);
@@ -227,14 +227,14 @@ public class ContentReportsRepositoryTest {
         // 1-1. 게시글 신고 x 후 호출
         callAndAssertCountReportsByContentTypeAndUser(postType, 0);
         // 1-2. 게시글 신고 후 호출
-        Long postReportId = saveReportsAndGetLatestReportId(testDB::savePostReports, post.getId(), user2);
+        Long postReportId = saveReportsAndGetLatestReportId(testDataHelper::savePostReports, post.getId(), user2);
         callAndAssertCountReportsByContentTypeAndUser(postType, postReportId);
 
         // 2. 댓글
         // 2-1. 댓글 신고 x 후 호출
         callAndAssertCountReportsByContentTypeAndUser(commentType, 0);
         // 2-2. 댓글 신고 후 호출
-        Long commentReportId = saveReportsAndGetLatestReportId(testDB::saveCommentReports, comment.getId(), user2);
+        Long commentReportId = saveReportsAndGetLatestReportId(testDataHelper::saveCommentReports, comment.getId(), user2);
         callAndAssertCountReportsByContentTypeAndUser(commentType, commentReportId - postReportId);
 
 
@@ -242,7 +242,7 @@ public class ContentReportsRepositoryTest {
         // 3-1. 사용자 신고 x 후 호출
         callAndAssertCountReportsByContentTypeAndUser(userType, 0);
         // 3-2. 사용자 신고 후 호출
-        Long userReportId = saveReportsAndGetLatestReportId(testDB::saveUserReports, user1, user2);
+        Long userReportId = saveReportsAndGetLatestReportId(testDataHelper::saveUserReports, user1, user2);
         callAndAssertCountReportsByContentTypeAndUser(userType, userReportId - commentReportId);
     }
 

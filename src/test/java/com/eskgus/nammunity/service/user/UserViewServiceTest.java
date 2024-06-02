@@ -18,7 +18,7 @@ import com.eskgus.nammunity.helper.ContentsPageMoreDtoTestHelper;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.posts.PostsService;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -51,7 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class UserViewServiceTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -97,20 +97,20 @@ public class UserViewServiceTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.ADMIN);
+        Long user2Id = testDataHelper.signUp(2L, Role.ADMIN);
         this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
     }
 
     private <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
-        return testDB.assertOptionalAndGetEntity(finder, content);
+        return testDataHelper.assertOptionalAndGetEntity(finder, content);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -130,25 +130,25 @@ public class UserViewServiceTest {
     private void savePostsAndComments() {
         int numberOfContents = 11;
         for (int i = 0; i < numberOfContents; i++) {
-            Long postId = testDB.savePosts(user1);
-            testDB.saveComments(postId, user1);
+            Long postId = testDataHelper.savePosts(user1);
+            testDataHelper.saveComments(postId, user1);
         }
         assertThat(postsRepository.count()).isEqualTo(numberOfContents);
         assertThat(commentsRepository.count()).isEqualTo(numberOfContents);
     }
 
     private void reportUser() {
-        Long latestUserReportId = testDB.saveUserReports(user1, user2);
+        Long latestUserReportId = testDataHelper.saveUserReports(user1, user2);
         assertThat(contentReportsRepository.count()).isEqualTo(latestUserReportId);
     }
 
     private void saveUserReportSummary() {
-        Long reportSummaryId = testDB.saveUserReportSummary(user1, user2);
+        Long reportSummaryId = testDataHelper.saveUserReportSummary(user1, user2);
         assertThat(reportSummaryRepository.count()).isEqualTo(reportSummaryId);
     }
 
     private void banUser() {
-        Long bannedUserId = testDB.saveBannedUsers(user1, Period.ofWeeks(1));
+        Long bannedUserId = testDataHelper.saveBannedUsers(user1, Period.ofWeeks(1));
         assertThat(bannedUsersRepository.count()).isEqualTo(bannedUserId);
     }
 
@@ -236,12 +236,12 @@ public class UserViewServiceTest {
     private void saveLikes() {
         long numberOfPosts = postsRepository.count();
         for (long i = 1; i <= numberOfPosts; i++) {
-            testDB.savePostLikes(i, user1);
+            testDataHelper.savePostLikes(i, user1);
         }
 
         long numberOfComments = commentsRepository.count();
         for (long i = 1; i <= numberOfComments; i++) {
-            testDB.saveCommentLikes(i, user1);
+            testDataHelper.saveCommentLikes(i, user1);
         }
 
         assertThat(likesRepository.count()).isEqualTo(numberOfPosts + numberOfComments);

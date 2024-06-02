@@ -12,7 +12,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
 import com.eskgus.nammunity.service.comments.CommentsViewService;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostWithReasonsDto;
@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class PostsViewServiceTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -68,25 +68,25 @@ public class PostsViewServiceTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.USER);
+        Long user2Id = testDataHelper.signUp(2L, Role.USER);
         User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
 
-        Long postId = testDB.savePosts(user1);
+        Long postId = testDataHelper.savePosts(user1);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -133,7 +133,7 @@ public class PostsViewServiceTest {
         int numberOfCommentsByUser = 15;
         for (int i = 0; i < numberOfCommentsByUser; i++) {
             for (User user : users) {
-                testDB.saveComments(post.getId(), user);
+                testDataHelper.saveComments(post.getId(), user);
             }
         }
         assertThat(commentsRepository.count()).isEqualTo((long) numberOfCommentsByUser * users.length);
@@ -166,7 +166,7 @@ public class PostsViewServiceTest {
         int numberOfPostsByUser = 30;
         for (int i = 0; i < numberOfPostsByUser; i++) {
             for (User user : users) {
-                testDB.savePosts(user);
+                testDataHelper.savePosts(user);
             }
         }
         assertThat(postsRepository.count()).isEqualTo((long) numberOfPostsByUser * users.length + post.getId());

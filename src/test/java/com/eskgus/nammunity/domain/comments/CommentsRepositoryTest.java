@@ -3,7 +3,7 @@ package com.eskgus.nammunity.domain.comments;
 import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.helper.*;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class CommentsRepositoryTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -51,30 +51,30 @@ public class CommentsRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.USER);
+        Long user2Id = testDataHelper.signUp(2L, Role.USER);
         User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
 
-        Long post1Id = testDB.savePosts(user1);
+        Long post1Id = testDataHelper.savePosts(user1);
         Posts post1 = assertOptionalAndGetEntity(postsRepository::findById, post1Id);
 
-        Long post2Id = testDB.savePosts(user1);
+        Long post2Id = testDataHelper.savePosts(user1);
         Posts post2 = assertOptionalAndGetEntity(postsRepository::findById, post2Id);
 
         this.posts = new Posts[]{ post1, post2 };
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -93,7 +93,7 @@ public class CommentsRepositoryTest {
     }
 
     private Comments saveCommentAndGetSavedComment() {
-        Long commentId = testDB.saveComments(posts[0].getId(), users[0]);
+        Long commentId = testDataHelper.saveComments(posts[0].getId(), users[0]);
         return assertOptionalAndGetEntity(commentsRepository::findById, commentId);
     }
 
@@ -123,7 +123,7 @@ public class CommentsRepositoryTest {
         for (int i = 0; i < posts.length; i++) {
             for (long j = range.getStartIndex(); j <= range.getEndIndex(); j++) {
                 Long commentId
-                        = testDB.saveCommentWithContent(posts[i].getId(), users[i], range.getComment() + j);
+                        = testDataHelper.saveCommentWithContent(posts[i].getId(), users[i], range.getComment() + j);
                 assertOptionalAndGetEntity(commentsRepository::findById, commentId);
             }
         }

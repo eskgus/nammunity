@@ -3,7 +3,7 @@ package com.eskgus.nammunity.service.user;
 import com.eskgus.nammunity.converter.UserConverterForTest;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.helper.Range;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
@@ -27,7 +27,7 @@ import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 @SpringBootTest
 public class UserServiceTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -39,20 +39,20 @@ public class UserServiceTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.ADMIN);
+        Long user2Id = testDataHelper.signUp(2L, Role.ADMIN);
         assertOptionalAndGetEntity(userRepository::findById, user2Id);
     }
 
     private void assertOptionalAndGetEntity(Function<Long, Optional<User>> finder, Long contentId) {
-        testDB.assertOptionalAndGetEntity(finder, contentId);
+        testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -79,7 +79,7 @@ public class UserServiceTest {
 
     private void saveUsersInRange(Range range) {
         for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
-            Long userId = testDB.signUp(range.getNickname() + i, i, Role.USER);
+            Long userId = testDataHelper.signUp(range.getNickname() + i, i, Role.USER);
             assertOptionalAndGetEntity(userRepository::findById, userId);
         }
     }

@@ -1,7 +1,7 @@
 package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UserApiControllerExceptionTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private MockMvcTestHelper mockMvcTestHelper;
@@ -47,17 +47,17 @@ public class UserApiControllerExceptionTest {
     }
 
     private User saveUser(Long id) {
-        Long userId = testDB.signUp(id, Role.USER);
+        Long userId = testDataHelper.signUp(id, Role.USER);
         return assertOptionalAndGetEntity(userRepository::findById, userId);
     }
 
     private User assertOptionalAndGetEntity(Function<Long, Optional<User>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test

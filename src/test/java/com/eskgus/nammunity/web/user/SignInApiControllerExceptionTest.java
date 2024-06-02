@@ -2,7 +2,7 @@ package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.user.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SignInApiControllerExceptionTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private MockMvcTestHelper mockMvcTestHelper;
@@ -40,7 +40,7 @@ public class SignInApiControllerExceptionTest {
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -101,21 +101,21 @@ public class SignInApiControllerExceptionTest {
     }
 
     private User saveUser(Long id) {
-        Long userId = testDB.signUp(id, Role.USER);
+        Long userId = testDataHelper.signUp(id, Role.USER);
         return assertOptionalAndGetEntity(userRepository::findById, userId);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     private void saveUserReportSummary(User user, User reporter) {
-        Long userReportSummaryId = testDB.saveUserReportSummary(user, reporter);
+        Long userReportSummaryId = testDataHelper.saveUserReportSummary(user, reporter);
         assertOptionalAndGetEntity(reportSummaryRepository::findById, userReportSummaryId);
     }
 
     private void saveBannedUser(User user) {
-        Long bannedUserId = testDB.saveBannedUsers(user, Period.ofWeeks(1));
+        Long bannedUserId = testDataHelper.saveBannedUsers(user, Period.ofWeeks(1));
         assertOptionalAndGetEntity(bannedUsersRepository::findById, bannedUserId);
     }
 }

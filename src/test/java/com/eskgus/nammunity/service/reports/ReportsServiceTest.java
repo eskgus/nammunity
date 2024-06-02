@@ -3,7 +3,7 @@ package com.eskgus.nammunity.service.reports;
 import com.eskgus.nammunity.converter.*;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class ReportsServiceTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -76,26 +76,26 @@ public class ReportsServiceTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.ADMIN);
+        Long user2Id = testDataHelper.signUp(2L, Role.ADMIN);
         this.user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
-        Long postId = testDB.savePosts(user1);
+        Long postId = testDataHelper.savePosts(user1);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
 
-        Long commentId = testDB.saveComments(postId, user1);
+        Long commentId = testDataHelper.saveComments(postId, user1);
         this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
     }
 
     private <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
-        return testDB.assertOptionalAndGetEntity(finder, content);
+        return testDataHelper.assertOptionalAndGetEntity(finder, content);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -174,9 +174,9 @@ public class ReportsServiceTest {
     }
 
     private void saveReports() {
-        testDB.savePostReports(post.getId(), user2);
-        this.latestCommentReportId = testDB.saveCommentReports(comment.getId(), user2);
-        this.latestUserReportId = testDB.saveUserReports(user1, user2);
+        testDataHelper.savePostReports(post.getId(), user2);
+        this.latestCommentReportId = testDataHelper.saveCommentReports(comment.getId(), user2);
+        this.latestUserReportId = testDataHelper.saveUserReports(user1, user2);
         assertThat(contentReportsRepository.count()).isEqualTo(latestUserReportId);
     }
 

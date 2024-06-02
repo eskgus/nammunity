@@ -4,7 +4,7 @@ import com.eskgus.nammunity.converter.UserConverterForTest;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.helper.Range;
 import com.eskgus.nammunity.helper.SearchTestHelper;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -28,7 +28,7 @@ import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent
 @SpringBootTest
 public class UserRepositoryTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -37,17 +37,17 @@ public class UserRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         this.user = assertOptionalAndGetEntity(userRepository::findById, user1Id);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -89,7 +89,7 @@ public class UserRepositoryTest {
 
     private void saveUsersInRange(Range range) {
         for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
-            Long userId = testDB.signUp(range.getNickname() + i, i, Role.USER);
+            Long userId = testDataHelper.signUp(range.getNickname() + i, i, Role.USER);
             assertOptionalAndGetEntity(userRepository::findById, userId);
         }
     }

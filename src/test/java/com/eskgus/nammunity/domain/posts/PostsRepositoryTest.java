@@ -2,7 +2,7 @@ package com.eskgus.nammunity.domain.posts;
 
 import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.helper.*;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class PostsRepositoryTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -46,22 +46,22 @@ public class PostsRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.USER);
+        Long user2Id = testDataHelper.signUp(2L, Role.USER);
         User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
         this.users = new User[]{ user1, user2 };
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -96,7 +96,7 @@ public class PostsRepositoryTest {
     }
 
     private Posts savePostAndGetSavedPost() {
-        Long postId = testDB.savePosts(users[0]);
+        Long postId = testDataHelper.savePosts(users[0]);
         return assertOptionalAndGetEntity(postsRepository::findById, postId);
     }
 
@@ -141,7 +141,7 @@ public class PostsRepositoryTest {
     private void savePostsInRange(Range range) {
         for (User user : users) {
             for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
-                Long postId = testDB.savePostWithTitleAndContent(user, range.getTitle() + i, range.getContent() + i);
+                Long postId = testDataHelper.savePostWithTitleAndContent(user, range.getTitle() + i, range.getContent() + i);
                 assertOptionalAndGetEntity(postsRepository::findById, postId);
             }
         }

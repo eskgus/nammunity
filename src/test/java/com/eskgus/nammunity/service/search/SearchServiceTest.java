@@ -17,7 +17,7 @@ import com.eskgus.nammunity.helper.Range;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
@@ -39,7 +39,7 @@ import java.util.function.Function;
 @SpringBootTest
 public class SearchServiceTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -86,24 +86,24 @@ public class SearchServiceTest {
 
     private void saveContentsInRange(Range range) {
         for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
-            Long userId = testDB.signUp(range.getNickname() + i, i, Role.USER);
+            Long userId = testDataHelper.signUp(range.getNickname() + i, i, Role.USER);
             User user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
-            Long postId = testDB.savePostWithTitleAndContent(user, range.getTitle() + i, range.getContent() + i);
+            Long postId = testDataHelper.savePostWithTitleAndContent(user, range.getTitle() + i, range.getContent() + i);
             assertOptionalAndGetEntity(postsRepository::findById, postId);
 
-            Long commentId = testDB.saveCommentWithContent(postId, user, range.getComment() + i);
+            Long commentId = testDataHelper.saveCommentWithContent(postId, user, range.getComment() + i);
             assertOptionalAndGetEntity(commentsRepository::findById, commentId);
         }
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test

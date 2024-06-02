@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.service.user;
 
-import com.eskgus.nammunity.util.TestDB;
+import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.reports.*;
 import com.eskgus.nammunity.domain.user.*;
 import org.junit.jupiter.api.AfterEach;
@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class BannedUsersServiceTest {
     @Autowired
-    private TestDB testDB;
+    private TestDataHelper testDataHelper;
 
     @Autowired
     private UserRepository userRepository;
@@ -43,26 +43,26 @@ public class BannedUsersServiceTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDB.signUp(1L, Role.USER);
+        Long user1Id = testDataHelper.signUp(1L, Role.USER);
         this.user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
 
-        Long user2Id = testDB.signUp(2L, Role.ADMIN);
+        Long user2Id = testDataHelper.signUp(2L, Role.ADMIN);
         User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
 
-        Long reportId = testDB.saveUserReports(user1, user2);
+        Long reportId = testDataHelper.saveUserReports(user1, user2);
         assertOptionalAndGetEntity(contentReportsRepository::findById, reportId);
 
-        Long reportSummaryId = testDB.saveUserReportSummary(user1, user2);
+        Long reportSummaryId = testDataHelper.saveUserReportSummary(user1, user2);
         assertOptionalAndGetEntity(reportSummaryRepository::findById, reportSummaryId);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDB.assertOptionalAndGetEntity(finder, contentId);
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
     public void cleanUp() {
-        testDB.cleanUp();
+        testDataHelper.cleanUp();
     }
 
     @Test
@@ -122,7 +122,7 @@ public class BannedUsersServiceTest {
     }
 
     private Long saveBannedUsers() {
-        Long bannedUserId = testDB.saveBannedUsers(user1, Period.ofWeeks(1));
+        Long bannedUserId = testDataHelper.saveBannedUsers(user1, Period.ofWeeks(1));
         assertThat(bannedUsersRepository.count()).isEqualTo(bannedUserId);
         return bannedUserId;
     }
