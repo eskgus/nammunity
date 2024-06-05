@@ -62,7 +62,7 @@ public class TestDataHelper {
 
     public void cleanUp() {
         // 테이블 초기화
-        userRepository.deleteAll();
+//        userRepository.deleteAll();
 
         // 테이블 id 초기화
         String[] queries = {

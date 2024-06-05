@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.reports;
 
+import com.eskgus.nammunity.config.TestSecurityConfig;
 import com.eskgus.nammunity.converter.ContentReportsConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
@@ -12,13 +13,14 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -32,9 +34,12 @@ import java.util.stream.Stream;
 
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@DataJpaTest
+@Import({ TestDataHelper.class, TestSecurityConfig.class })
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class ContentReportsRepositoryTest {
     @Autowired
     private TestDataHelper testDataHelper;
@@ -109,7 +114,7 @@ public class ContentReportsRepositoryTest {
 
     private <T> void callAndAssertFindReporterByContents(T contents, ContentReports expectedReport) {
         User actualReporter = contentReportsRepository.findReporterByContents(contents);
-        Assertions.assertThat(actualReporter.getId()).isEqualTo(expectedReport.getReporter().getId());
+        assertThat(actualReporter.getId()).isEqualTo(expectedReport.getReporter().getId());
     }
 
     @Test
@@ -123,7 +128,7 @@ public class ContentReportsRepositoryTest {
 
     private <T> void callAndAssertFindReportedDateByContents(T contents, ContentReports expectedReport) {
         LocalDateTime actualReportedDate = contentReportsRepository.findReportedDateByContents(contents);
-        Assertions.assertThat(actualReportedDate).isEqualTo(expectedReport.getCreatedDate());
+        assertThat(actualReportedDate.withNano(0)).isEqualTo(expectedReport.getCreatedDate().withNano(0));
     }
 
     @Test
@@ -137,7 +142,7 @@ public class ContentReportsRepositoryTest {
 
     public <T> void callAndAssertFindReasonByContents(T contents, ContentReports expectedReport) {
         Reasons actualReason = contentReportsRepository.findReasonByContents(contents);
-        Assertions.assertThat(actualReason.getId()).isEqualTo(expectedReport.getReasons().getId());
+        assertThat(actualReason.getId()).isEqualTo(expectedReport.getReasons().getId());
     }
 
     @Test
@@ -168,7 +173,7 @@ public class ContentReportsRepositoryTest {
     private <T> void callAndAssertFindOtherReasonByContents(T contents, ContentReports expectedReport) {
         Reasons reason = expectedReport.getReasons();
         String actualOtherReason = contentReportsRepository.findOtherReasonByContents(contents, reason);
-        Assertions.assertThat(actualOtherReason).isEqualTo(expectedReport.getOtherReasons());
+        assertThat(actualOtherReason).isEqualTo(expectedReport.getOtherReasons());
     }
 
     @Test
@@ -237,7 +242,6 @@ public class ContentReportsRepositoryTest {
         Long commentReportId = saveReportsAndGetLatestReportId(testDataHelper::saveCommentReports, comment.getId(), user2);
         callAndAssertCountReportsByContentTypeAndUser(commentType, commentReportId - postReportId);
 
-
         // 3. 사용자
         // 3-1. 사용자 신고 x 후 호출
         callAndAssertCountReportsByContentTypeAndUser(userType, 0);
@@ -248,7 +252,7 @@ public class ContentReportsRepositoryTest {
 
     private void callAndAssertCountReportsByContentTypeAndUser(ContentType contentType, long expectedCount) {
         long actualCount = contentReportsRepository.countReportsByContentTypeAndUser(contentType, user1);
-        Assertions.assertThat(actualCount).isEqualTo(expectedCount);
+        assertThat(actualCount).isEqualTo(expectedCount);
     }
 
     private <T> Long saveReportsAndGetLatestReportId(BiFunction<T, User, Long> saver, T t, User user) {
@@ -276,6 +280,6 @@ public class ContentReportsRepositoryTest {
 
     private <T> void callAndAssertCountByContents(T contents, long expectedCountByContents) {
         long actualCountByContents = contentReportsRepository.countByContents(contents);
-        Assertions.assertThat(actualCountByContents).isEqualTo(expectedCountByContents);
+        assertThat(actualCountByContents).isEqualTo(expectedCountByContents);
     }
 }

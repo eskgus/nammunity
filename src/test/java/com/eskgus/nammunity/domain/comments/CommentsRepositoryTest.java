@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.comments;
 
+import com.eskgus.nammunity.config.TestSecurityConfig;
 import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.helper.*;
@@ -16,7 +17,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -31,7 +34,9 @@ import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@DataJpaTest
+@Import({ TestDataHelper.class, TestSecurityConfig.class })
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class CommentsRepositoryTest {
     @Autowired
     private TestDataHelper testDataHelper;

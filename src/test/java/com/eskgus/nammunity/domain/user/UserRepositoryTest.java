@@ -1,18 +1,20 @@
 package com.eskgus.nammunity.domain.user;
 
+import com.eskgus.nammunity.config.TestSecurityConfig;
 import com.eskgus.nammunity.converter.UserConverterForTest;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.helper.Range;
 import com.eskgus.nammunity.helper.SearchTestHelper;
 import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -23,9 +25,12 @@ import java.util.stream.Stream;
 
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@DataJpaTest
+@Import({ TestDataHelper.class, TestSecurityConfig.class })
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class UserRepositoryTest {
     @Autowired
     private TestDataHelper testDataHelper;
@@ -62,7 +67,7 @@ public class UserRepositoryTest {
 
     private void callAndAssertExistsByUser(String username, boolean expectedResult) {
         boolean result = userRepository.existsByUsername(username);
-        Assertions.assertThat(result).isEqualTo(expectedResult);
+        assertThat(result).isEqualTo(expectedResult);
     }
 
     @Test

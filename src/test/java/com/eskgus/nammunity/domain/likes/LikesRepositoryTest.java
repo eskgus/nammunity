@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.likes;
 
+import com.eskgus.nammunity.config.TestSecurityConfig;
 import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
@@ -12,13 +13,14 @@ import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -35,7 +37,9 @@ import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@DataJpaTest
+@Import({ TestDataHelper.class, TestSecurityConfig.class })
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class LikesRepositoryTest {
     @Autowired
     private TestDataHelper testDataHelper;
@@ -202,8 +206,8 @@ public class LikesRepositoryTest {
     }
 
     private void assertDeleteByContent(Long likeId) {
-        Optional<Likes> result = likesRepository.findById(likeId);
-        Assertions.assertThat(result).isNotPresent();
+        boolean result = likesRepository.existsById(likeId);
+        assertThat(result).isFalse();
     }
 
     @Test
