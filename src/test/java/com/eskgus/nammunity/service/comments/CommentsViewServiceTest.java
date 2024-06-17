@@ -1,179 +1,147 @@
 package com.eskgus.nammunity.service.comments;
 
-import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
-import com.eskgus.nammunity.helper.PaginationTestHelper;
-import com.eskgus.nammunity.helper.TestDataHelper;
+import com.eskgus.nammunity.helper.PrincipalHelper;
+import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.data.domain.PageImpl;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.*;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class CommentsViewServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PostsRepository postsRepository;
-
-    @Autowired
-    private CommentsRepository commentsRepository;
-
-    @Autowired
-    private CommentsViewService commentsViewService;
-
-    @Autowired
+    @Mock
     private CommentsService commentsService;
 
-    private User[] users;
-    private Posts post;
-    private final int page = 1;
+    @Mock
+    private LikesService likesService;
 
-    @BeforeEach
-    public void setUp() {
-        Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
+    @Mock
+    private PrincipalHelper principalHelper;
 
-        Long user2Id = testDataHelper.signUp(2L, Role.USER);
-        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
-
-        this.users = new User[]{ user1, user2 };
-
-        Long postId = testDataHelper.savePosts(user1);
-        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
-    }
-
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        testDataHelper.cleanUp();
-    }
+    @InjectMocks
+    private CommentsViewService commentsViewService;
 
     @Test
     public void findCommentsPageByPosts() {
-        saveComments();
+        // given
+        CommentsReadDto commentsReadDto = mock(CommentsReadDto.class);
+        when(commentsReadDto.getAuthorId()).thenReturn(1L);
+        when(commentsReadDto.getId()).thenReturn(1L);
 
-        callAndAssertFindByPosts();
+        List<CommentsReadDto> comments = Collections.singletonList(commentsReadDto);
+
+        Page<CommentsReadDto> commentsPage = new PageImpl<>(comments);
+        when(commentsService.findByPosts(any(Posts.class), anyInt())).thenReturn(commentsPage);
+
+        Comments comment = mock(Comments.class);
+        when(commentsService.findById(anyLong())).thenReturn(comment);
+
+        when(likesService.existsByCommentsAndUser(any(Comments.class), any(User.class))).thenReturn(false);
+
+        Posts post = mock(Posts.class);
+
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(1L);
+
+        int page = 1;
+
+        // when
+        Page<CommentsReadDto> result = commentsViewService.findCommentsPageByPosts(post, user, page);
+
+        // then
+        assertEquals(commentsPage, result);
+
+        verify(commentsService).findByPosts(eq(post), eq(page));
+        verify(commentsReadDto).setDoesUserWriteComment(true);
+        verify(commentsService).findById(eq(commentsReadDto.getId()));
+
+        verify(likesService).existsByCommentsAndUser(eq(comment), eq(user));
+        verify(commentsReadDto).setDoesUserLikeComment(false);
     }
 
-    private void callAndAssertFindByPosts() {
-        User user = users[0];
+    @Test
+    public void findCommentsPageByPostsWithNonExistentCommentId() {
+        // given
+        CommentsReadDto commentsReadDto = mock(CommentsReadDto.class);
+        when(commentsReadDto.getAuthorId()).thenReturn(1L);
+        when(commentsReadDto.getId()).thenReturn(1L);
 
-        Page<CommentsReadDto> actualContents = commentsViewService.findCommentsPageByPosts(post, user, page);
-        Page<CommentsReadDto> expectedContents = createExpectedPageByPosts();
+        List<CommentsReadDto> comments = Collections.singletonList(commentsReadDto);
 
-        assertFindByPosts(actualContents, expectedContents, user);
-    }
+        Page<CommentsReadDto> commentsPage = new PageImpl<>(comments);
+        when(commentsService.findByPosts(any(Posts.class), anyInt())).thenReturn(commentsPage);
 
-    private Page<CommentsReadDto> createExpectedPageByPosts() {
-        Pageable pageable = createPageable(page, 30);
-        return commentsRepository.findByPosts(post, pageable);
-    }
+        when(commentsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
 
-    private void assertFindByPosts(Page<CommentsReadDto> actualContents, Page<CommentsReadDto> expectedContents, User user) {
-        assertContents(actualContents, expectedContents);
-        assertBooleanValues(actualContents.getContent(), user);
-    }
+        Posts post = mock(Posts.class);
 
-    private void assertContents(Page<CommentsReadDto> actualContents, Page<CommentsReadDto> expectedContents) {
-        PaginationTestHelper<CommentsReadDto, Comments> paginationHelper
-                = new PaginationTestHelper<>(actualContents, expectedContents, new CommentsConverterForTest<>(CommentsReadDto.class));
-        paginationHelper.assertContents();
-    }
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(1L);
 
-    private void assertBooleanValues(List<CommentsReadDto> comments, User user) {
-        List<Boolean> expectedDoesUserWriteComment = getExpectedDoesUserWriteComment(user);
-        List<Boolean> expectedDoesUserLikeComment = getExpectedDoesUserLikeComment();
+        int page = 1;
 
-        for (int i = 0; i < comments.size(); i++) {
-            CommentsReadDto comment = comments.get(i);
-            assertThat(comment.isDoesUserWriteComment()).isEqualTo(expectedDoesUserWriteComment.get(i));
-            assertThat(comment.isDoesUserLikeComment()).isEqualTo(expectedDoesUserLikeComment.get(i));
-        }
-    }
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> commentsViewService.findCommentsPageByPosts(post, user, page));
 
-    private List<Boolean> getExpectedDoesUserWriteComment(User user) {
-        List<Boolean> expectedDoesUserWriteComment = new ArrayList<>();
-        for (long i = commentsRepository.count(); i >= 1; i--) {
-            Comments comment = assertOptionalAndGetEntity(commentsRepository::findById, i);
-            Long authorId = comment.getUser().getId();
-            Long userId = user.getId();
-            expectedDoesUserWriteComment.add(authorId.equals(userId));
-        }
-        return expectedDoesUserWriteComment;
-    }
+        verify(commentsService).findByPosts(eq(post), eq(page));
+        verify(commentsReadDto).setDoesUserWriteComment(true);
+        verify(commentsService).findById(eq(commentsReadDto.getId()));
 
-    private List<Boolean> getExpectedDoesUserLikeComment() {
-        List<Boolean> expectedDoesUserLikeComment = new ArrayList<>();
-        for (long i = 0; i < commentsRepository.count(); i++) {
-            expectedDoesUserLikeComment.add(false); // 댓글 좋아요 안 함
-        }
-        return expectedDoesUserLikeComment;
+        verify(likesService, never()).existsByCommentsAndUser(any(Comments.class), any(User.class));
+        verify(commentsReadDto, never()).setDoesUserLikeComment(anyBoolean());
     }
 
     @Test
     public void listComments() {
-        saveComments();
+        // given
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
-        callAndAssertListComments();
-    }
+        Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
+        when(commentsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(commentsPage);
 
-    private void saveComments() {
-        int numberOfCommentsByUser = 20;
-        for (int i = 0; i < numberOfCommentsByUser; i++) {
-            for (User user : users) {
-                Long commentId = testDataHelper.saveComments(post.getId(), user);
-                assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-            }
-        }
-    }
-
-    private void callAndAssertListComments() {
-        User user = users[0];
         int page = 1;
-        ContentsPageDto<CommentsListDto> actualResult = callListCommentsAndGetActualResult(user, page);
-        Page<CommentsListDto> expectedContents = commentsService.findByUser(user, page, 20);
 
-        ContentsPageDtoTestHelper<CommentsListDto, Comments> findHelper = ContentsPageDtoTestHelper.<CommentsListDto, Comments>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new CommentsConverterForTest<>(CommentsListDto.class)).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
+        // when
+        ContentsPageDto<CommentsListDto> result = commentsViewService.listComments(principal, page);
+
+        // then
+        assertEquals(commentsPage, result.getContents());
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(commentsService).findByUser(eq(user), eq(page), anyInt());
     }
 
-    private ContentsPageDto<CommentsListDto> callListCommentsAndGetActualResult(User user, int page) {
-        Principal principal = user::getUsername;
-        return commentsViewService.listComments(principal, page);
+    @Test
+    public void listCommentsWithoutPrincipal() {
+        // given
+        when(principalHelper.getUserFromPrincipal(null, true))
+                .thenThrow(IllegalArgumentException.class);
+
+        int page = 1;
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> commentsViewService.listComments(null, page));
+
+        verify(principalHelper).getUserFromPrincipal(null, true);
+
+        verify(commentsService, never()).findByUser(any(User.class), anyInt(), anyInt());
     }
 }

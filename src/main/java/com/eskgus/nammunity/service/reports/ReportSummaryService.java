@@ -45,9 +45,9 @@ public class ReportSummaryService {
     }
 
     private <T> T getContents(ContentReportSummarySaveDto requestDto) {
-        if (requestDto.getTypes().getDetail().equals("게시글")) {
+        if (requestDto.getTypes().getDetail().equals(ContentType.POSTS.getDetailInKor())) {
             return (T) requestDto.getPosts();
-        } else if (requestDto.getTypes().getDetail().equals("댓글")) {
+        } else if (requestDto.getTypes().getDetail().equals(ContentType.COMMENTS.getDetailInKor())) {
             return (T) requestDto.getComments();
         } else {
             return (T) requestDto.getUser();
@@ -55,7 +55,7 @@ public class ReportSummaryService {
     }
 
     @Transactional
-    public <T> Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, T contents) {
+    private <T> Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, T contents) {
         ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
         reportSummary.update(requestDto.getReportedDate(), requestDto.getReporter(),
                 requestDto.getReasons(), requestDto.getOtherReasons());
@@ -63,7 +63,7 @@ public class ReportSummaryService {
     }
 
     @Transactional
-    public Long saveContentReportSummary(ContentReportSummarySaveDto requestDto) {
+    private Long saveContentReportSummary(ContentReportSummarySaveDto requestDto) {
         return contentReportSummaryRepository.save(requestDto.toEntity()).getId();
     }
 

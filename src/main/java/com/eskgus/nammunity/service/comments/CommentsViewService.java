@@ -9,7 +9,6 @@ import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +21,11 @@ import java.util.List;
 public class CommentsViewService {
     private final CommentsService commentsService;
     private final LikesService likesService;
-
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @Transactional(readOnly = true)
     public Page<CommentsReadDto> findCommentsPageByPosts(Posts post, User user, int page) {
-        Page<CommentsReadDto> comments = commentsService.findByPosts(post, user, page);
+        Page<CommentsReadDto> comments = commentsService.findByPosts(post, page);
         setCommentsReadDto(comments.getContent(), user);
         return comments;
     }

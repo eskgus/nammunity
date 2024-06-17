@@ -1,312 +1,349 @@
 package com.eskgus.nammunity.service.reports;
 
-import com.eskgus.nammunity.converter.ContentReportSummaryConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.reports.*;
-import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
-import com.eskgus.nammunity.helper.TestDataHelper;
+import com.eskgus.nammunity.service.comments.CommentsService;
+import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.service.user.UserService;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummarySaveDto;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.data.util.Pair;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class ReportSummaryServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PostsRepository postsRepository;
-
-    @Autowired
-    private CommentsRepository commentsRepository;
-
-    @Autowired
-    private TypesRepository typesRepository;
-
-    @Autowired
-    private ReasonsRepository reasonsRepository;
-
-    @Autowired
+    @Mock
     private ContentReportSummaryRepository contentReportSummaryRepository;
 
-    @Autowired
+    @Mock
+    private TypesService typesService;
+
+    @Mock
+    private PostsService postsService;
+
+    @Mock
+    private CommentsService commentsService;
+
+    @Mock
+    private UserService userService;
+
+    @InjectMocks
     private ReportSummaryService reportSummaryService;
 
-    private User[] users;
-    private Posts post;
-    private Comments comment;
-    private final int page = 1;
+    @Test
+    public void savePostReportSummary() {
+        Pair<ContentReportSummarySaveDto, Posts> pair = createRequestDtoAndPost();
 
-    @BeforeEach
-    public void setUp() {
-        // 1. user1 회원가입 + user2 회원가입
-        Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
-
-        Long user2Id = testDataHelper.signUp(2L, Role.USER);
-        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
-
-        this.users = new User[]{ user1, user2 };
-
-        // 2. user1이 게시글 작성
-        Long postId = testDataHelper.savePosts(user1);
-        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
-
-        // 3. user1이 댓글 작성
-        Long commentId = testDataHelper.saveComments(postId, user1);
-        this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-    }
-
-    private <T,U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, content);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        testDataHelper.cleanUp();
+        testSaveContentReportSummary(pair);
     }
 
     @Test
-    public void saveContentReportSummary() {
-        // 1. post, reporter = user2로 summarySaveDto 생성 후 호출
-        callAndAssertSaveContentReportSummary(post);
+    public void updatePostReportSummary() {
+        Pair<ContentReportSummarySaveDto, Posts> pair = createRequestDtoAndPost();
 
-        // 2. comment, reporter = user2로 summarySaveDto 생성 후 호출
-        callAndAssertSaveContentReportSummary(comment);
-
-        // 3. user = user1, reporter = user2로 summarySaveDto 생성 후 호출
-        callAndAssertSaveContentReportSummary(users[0]);
-    }
-
-    private <T> void callAndAssertSaveContentReportSummary(T contents) {
-        ContentReportSummarySaveDto summarySaveDto = createSummarySaveDto(contents);
-        Long id = reportSummaryService.saveContentReportSummary(summarySaveDto);
-
-        assertSaveContentReportSummary(id, contents);
-    }
-
-    private <T> ContentReportSummarySaveDto createSummarySaveDto(T contents) {
-        Posts post = null;
-        Comments comment = null;
-        User user = null;
-        Types type;
-        Reasons reason = assertOptionalAndGetEntity(reasonsRepository::findById, reasonsRepository.count());
-
-        if (contents instanceof Posts) {
-            post = (Posts) contents;
-            type = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.POSTS.getDetailInKor());
-        } else if (contents instanceof Comments) {
-            comment = (Comments) contents;
-            type = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.COMMENTS.getDetailInKor());
-        } else {
-            user = (User) contents;
-            type = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.USERS.getDetailInKor());
-        }
-
-        return ContentReportSummarySaveDto.builder()
-                .posts(post).comments(comment).user(user)
-                .types(type).reportedDate(LocalDateTime.now()).reporter(users[1])
-                .reasons(reason).otherReasons("기타 사유")
-                .build();
-    }
-
-    private <T> void assertSaveContentReportSummary(Long id, T contents) {
-        Optional<ContentReportSummary> result = contentReportSummaryRepository.findById(id);
-        assertThat(result).isPresent();
-
-        ContentReportSummary reportSummary = result.get();
-        assertThat(reportSummary.getReporter().getId()).isEqualTo(users[1].getId());
-        assertContentId(reportSummary, contents);
-    }
-
-    private <T> void assertContentId(ContentReportSummary reportSummary, T contents) {
-        Long actualId = getActualId(reportSummary);
-        Long expectedId = getExpectedId(contents);
-        assertThat(actualId).isEqualTo(expectedId);
-    }
-
-    private Long getActualId(ContentReportSummary reportSummary) {
-        if (reportSummary.getTypes().getDetail().equals("게시글")) {
-            return reportSummary.getPosts().getId();
-        } else if (reportSummary.getTypes().getDetail().equals("댓글")) {
-            return reportSummary.getComments().getId();
-        } else {
-            return reportSummary.getUser().getId();
-        }
-    }
-
-    private <T> Long getExpectedId(T contents) {
-        if (contents instanceof Posts) {
-            return ((Posts) contents).getId();
-        } else if (contents instanceof Comments) {
-            return ((Comments) contents).getId();
-        } else {
-            return ((User) contents).getId();
-        }
+        testUpdateContentReportSummary(pair);
     }
 
     @Test
-    public void updateContentReportSummary() {
-        saveReportSummaries();
+    public void saveCommentReportSummary() {
+        Pair<ContentReportSummarySaveDto, Comments> pair = createRequestDtoAndComment();
 
-        // 1. contents = post
-        callAndAssertUpdateContentReportSummary(post);
-
-        // 2. contents = comment
-        callAndAssertUpdateContentReportSummary(comment);
-
-        // 3. contents = user1
-        callAndAssertUpdateContentReportSummary(users[0]);
-    }
-
-    private void saveReportSummaries() {
-        testDataHelper.savePostReportSummary(post, users[1]);
-        testDataHelper.saveCommentReportSummary(comment, users[1]);
-        Long userReportSummaryId = testDataHelper.saveUserReportSummary(users[0], users[1]);
-        assertThat(contentReportSummaryRepository.count()).isEqualTo(userReportSummaryId);
-    }
-
-    private <T> void callAndAssertUpdateContentReportSummary(T contents) {
-        ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
-
-        ContentReportSummarySaveDto summarySaveDto = createSummarySaveDto(contents);
-        Long id = reportSummaryService.updateContentReportSummary(summarySaveDto, contents);
-
-        assertUpdateContentReportSummary(id, reportSummary);
-    }
-
-    private void assertUpdateContentReportSummary(Long id, ContentReportSummary reportSummary) {
-        Optional<ContentReportSummary> result = contentReportSummaryRepository.findById(id);
-        assertThat(result).isPresent();
-
-        ContentReportSummary updatedReportSummary = result.get();
-        assertThat(updatedReportSummary.getReportedDate().isAfter(reportSummary.getReportedDate())).isTrue();
+        testSaveContentReportSummary(pair);
     }
 
     @Test
-    public void saveOrUpdateContentReportSummary() {
-        // 1. 신고 요약 저장 전 => 저장
-        callAndAssertSaveOrUpdateContentReportSummary(post);
-        callAndAssertSaveOrUpdateContentReportSummary(comment);
-        callAndAssertSaveOrUpdateContentReportSummary(users[0]);
+    public void updateCommentReportSummary() {
+        Pair<ContentReportSummarySaveDto, Comments> pair = createRequestDtoAndComment();
 
-        // 2. 신고 요약 저장 후 => 업데이트
-        callAndAssertSaveOrUpdateContentReportSummary(post);
-        callAndAssertSaveOrUpdateContentReportSummary(comment);
-        callAndAssertSaveOrUpdateContentReportSummary(users[0]);
+        testUpdateContentReportSummary(pair);
     }
 
-    private <T> void callAndAssertSaveOrUpdateContentReportSummary(T contents) {
-        ContentReportSummarySaveDto summarySaveDto = createSummarySaveDto(contents);
-        Long id = reportSummaryService.saveOrUpdateContentReportSummary(summarySaveDto);
+    @Test
+    public void saveUserReportSummary() {
+        Pair<ContentReportSummarySaveDto, User> pair = createRequestDtoAndUser();
 
-        assertSaveOrUpdateContentReportSummary(id, contents);
+        testSaveContentReportSummary(pair);
     }
 
-    private <T> void assertSaveOrUpdateContentReportSummary(Long id, T contents) {
-        Optional<ContentReportSummary> result = contentReportSummaryRepository.findById(id);
-        assertThat(result).isPresent();
+    @Test
+    public void updateUserReportSummary() {
+        Pair<ContentReportSummarySaveDto, User> pair = createRequestDtoAndUser();
 
-        ContentReportSummary reportSummary = result.get();
-        assertContentId(reportSummary, contents);
+        testUpdateContentReportSummary(pair);
     }
 
     @Test
     public void findAllDesc() {
-        saveReportSummaries();
+        // given
+        Page<ContentReportSummaryDto> reportSummaryPage = new PageImpl<>(Collections.emptyList());
+        when(contentReportSummaryRepository.findAllDesc(any(Pageable.class))).thenReturn(reportSummaryPage);
 
-        callAndAssertFindAllDesc();
-    }
+        int page = 1;
 
-    private void callAndAssertFindAllDesc() {
-        ContentsPageDto<ContentReportSummaryDto> actualResult = reportSummaryService.findAllDesc(page);
-        Page<ContentReportSummaryDto> expectedContents = createExpectedContents();
+        // when
+        ContentsPageDto<ContentReportSummaryDto> result = reportSummaryService.findAllDesc(page);
 
-        ContentsPageDtoTestHelper<ContentReportSummaryDto, ContentReportSummary> findHelper
-                = ContentsPageDtoTestHelper.<ContentReportSummaryDto, ContentReportSummary>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new ContentReportSummaryConverterForTest()).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
-    }
+        // then
+        assertEquals(reportSummaryPage, result.getContents());
 
-    private Page<ContentReportSummaryDto> createExpectedContents() {
-        Pageable pageable = createPageable(page, 20);
-        return contentReportSummaryRepository.findAllDesc(pageable);
+        verify(contentReportSummaryRepository).findAllDesc(any(Pageable.class));
     }
 
     @Test
-    public void findByTypes() {
-        saveReportSummaries();
-
-        callAndAssertFindByTypes(ContentType.POSTS);
-        callAndAssertFindByTypes(ContentType.COMMENTS);
-        callAndAssertFindByTypes(ContentType.USERS);
+    public void findByPostTypes() {
+        testFindByTypes(ContentType.POSTS);
     }
 
-    private void callAndAssertFindByTypes(ContentType contentType) {
-        ContentsPageDto<ContentReportSummaryDto> actualResult = reportSummaryService.findByTypes(contentType, page);
-        Page<ContentReportSummaryDto> expectedContents = createExpectedContentsByTypes(contentType);
-
-        ContentsPageDtoTestHelper<ContentReportSummaryDto, ContentReportSummary> findHelper
-                = ContentsPageDtoTestHelper.<ContentReportSummaryDto, ContentReportSummary>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new ContentReportSummaryConverterForTest()).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
+    @Test
+    public void findByCommentTypes() {
+        testFindByTypes(ContentType.COMMENTS);
     }
 
-    private Page<ContentReportSummaryDto> createExpectedContentsByTypes(ContentType contentType) {
-        Pageable pageable = createPageable(page, 20);
-        Types type = assertOptionalAndGetEntity(typesRepository::findByDetail, contentType.getDetailInKor());
-        return contentReportSummaryRepository.findByTypes(type, pageable);
+    @Test
+    public void findByUserTypes() {
+        testFindByTypes(ContentType.USERS);
+    }
+
+    @Test
+    public void findByTypesWithNonExistentContentType() {
+        // given
+        when(typesService.findByContentType(any(ContentType.class))).thenThrow(IllegalArgumentException.class);
+
+        ContentType contentType = ContentType.POSTS;
+        int page = 1;
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> reportSummaryService.findByTypes(contentType, page));
+
+        verify(typesService).findByContentType(eq(contentType));
+        verify(contentReportSummaryRepository, never()).findByTypes(any(Types.class), any(Pageable.class));
     }
 
     @Test
     public void deleteSelectedReportSummary() {
-        saveReportSummaries();
+        // given
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(post.getId())).thenReturn(post);
 
-        callAndAssertDeleteSelectedReportSummary();
-    }
+        Comments comment = mock(Comments.class);
+        when(comment.getId()).thenReturn(1L);
+        when(commentsService.findById(comment.getId())).thenReturn(comment);
 
-    private void callAndAssertDeleteSelectedReportSummary() {
-        ContentReportSummaryDeleteDto deleteDto = createDeleteDto();
+        ContentReportSummaryDeleteDto deleteDto
+                = createDeleteDto(Collections.singletonList(post.getId()),
+                    Collections.singletonList(comment.getId()),
+                    Collections.emptyList());
+
+        // when
         reportSummaryService.deleteSelectedReportSummary(deleteDto);
 
-        assertThat(contentReportSummaryRepository.count()).isZero();
+        // then
+        verify(postsService).findById(eq(post.getId()));
+        verify(commentsService).findById(eq(comment.getId()));
+        verify(userService, never()).findById(anyLong());
+        verify(contentReportSummaryRepository, times(2)).deleteByContents(any());
     }
 
-    private ContentReportSummaryDeleteDto createDeleteDto() {
+    @Test
+    public void deleteSelectedReportSummaryWithEmptyContentsId() {
+        // given
+        ContentReportSummaryDeleteDto deleteDto
+                = createDeleteDto(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+
+        // when/then
+        String exceptionMessage = assertThrowsAndVerify(deleteDto, null);
+        assertEquals("삭제할 항목을 선택하세요.", exceptionMessage);
+    }
+
+    @Test
+    public void deleteSelectedReportSummaryWithNonExistentPostId() {
+        // given
+        when(postsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
+
+        Long postId = 1L;
+        ContentReportSummaryDeleteDto deleteDto
+                = createDeleteDto(Collections.singletonList(postId), Collections.emptyList(), Collections.emptyList());
+
+        // when/then
+        assertThrowsAndVerify(deleteDto, ContentType.POSTS);
+        verify(postsService).findById(eq(postId));
+    }
+
+    @Test
+    public void deleteSelectedReportSummaryWithNonExistentCommentId() {
+        // given
+        when(commentsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
+
+        Long commentId = 1L;
+        ContentReportSummaryDeleteDto deleteDto
+                = createDeleteDto(Collections.emptyList(), Collections.singletonList(commentId), Collections.emptyList());
+
+        // when/then
+        assertThrowsAndVerify(deleteDto, ContentType.COMMENTS);
+        verify(commentsService).findById(eq(commentId));
+    }
+
+    @Test
+    public void deleteSelectedReportSummaryWithNonExistentUserId() {
+        // given
+        when(userService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
+
+        Long userId = 1L;
+        ContentReportSummaryDeleteDto deleteDto
+                = createDeleteDto(Collections.emptyList(), Collections.emptyList(), Collections.singletonList(userId));
+
+        // when/then
+        assertThrowsAndVerify(deleteDto, ContentType.USERS);
+        verify(userService).findById(eq(userId));
+    }
+
+    private Pair<ContentReportSummarySaveDto, Posts> createRequestDtoAndPost() {
+        Posts post = mock(Posts.class);
+        ContentReportSummarySaveDto requestDto = createContentReportSummarySaveDto(post, null, null);
+        return Pair.of(requestDto, post);
+    }
+
+    private Pair<ContentReportSummarySaveDto, Comments> createRequestDtoAndComment() {
+        Comments comment = mock(Comments.class);
+        ContentReportSummarySaveDto requestDto = createContentReportSummarySaveDto(null, comment, null);
+        return Pair.of(requestDto, comment);
+    }
+
+    private Pair<ContentReportSummarySaveDto, User> createRequestDtoAndUser() {
+        User user = mock(User.class);
+        ContentReportSummarySaveDto requestDto = createContentReportSummarySaveDto(null, null, user);
+        return Pair.of(requestDto, user);
+    }
+
+    private ContentReportSummarySaveDto createContentReportSummarySaveDto(Posts post, Comments comment, User user) {
+        ContentType contentType = Optional.ofNullable(post).map(p -> ContentType.POSTS)
+                .orElse(Optional.ofNullable(comment).map(c -> ContentType.COMMENTS)
+                        .orElse(ContentType.USERS));
+
+        Types type = mock(Types.class);
+        when(type.getDetail()).thenReturn(contentType.getDetailInKor());
+
+        LocalDateTime reportedDate = LocalDateTime.now();
+        User reporter = mock(User.class);
+        Reasons reason = mock(Reasons.class);
+        return ContentReportSummarySaveDto.builder()
+                .posts(post).comments(comment).user(user)
+                .types(type).reportedDate(reportedDate).reporter(reporter).reasons(reason).build();
+    }
+
+    private <T> void testSaveContentReportSummary(Pair<ContentReportSummarySaveDto, T> pair) {
+        ContentReportSummary reportSummary = testSaveOrUpdateContentReportSummary(pair, false);
+
+        verify(contentReportSummaryRepository).save(any(ContentReportSummary.class));
+        verify(contentReportSummaryRepository, never()).findByContents(any());
+        verify(reportSummary, never()).update(any(LocalDateTime.class), any(User.class), any(Reasons.class), isNull());
+    }
+
+    private <T> void testUpdateContentReportSummary(Pair<ContentReportSummarySaveDto, T> pair) {
+        ContentReportSummary reportSummary = testSaveOrUpdateContentReportSummary(pair, true);
+
+        verify(contentReportSummaryRepository, never()).save(any(ContentReportSummary.class));
+        verify(contentReportSummaryRepository).findByContents(eq(pair.getSecond()));
+
+        ContentReportSummarySaveDto requestDto = pair.getFirst();
+        verify(reportSummary)
+                .update(eq(requestDto.getReportedDate()), eq(requestDto.getReporter()),
+                        eq(requestDto.getReasons()), isNull());
+    }
+
+    private <T> ContentReportSummary testSaveOrUpdateContentReportSummary(Pair<ContentReportSummarySaveDto, T> pair,
+                                                                          boolean doContentsExist) {
+        // given
+        when(contentReportSummaryRepository.existsByContents(any())).thenReturn(doContentsExist);
+
+        ContentReportSummary reportSummary = mock(ContentReportSummary.class);
+        when(reportSummary.getId()).thenReturn(1L);
+
+        if (doContentsExist) {
+            when(contentReportSummaryRepository.findByContents(any())).thenReturn(reportSummary);
+        } else {
+            when(contentReportSummaryRepository.save(any(ContentReportSummary.class))).thenReturn(reportSummary);
+        }
+
+        // when
+        Long result = reportSummaryService.saveOrUpdateContentReportSummary(pair.getFirst());
+
+        // then
+        assertEquals(reportSummary.getId(), result);
+
+        verify(contentReportSummaryRepository).existsByContents(eq(pair.getSecond()));
+
+        return reportSummary;
+    }
+
+    private void testFindByTypes(ContentType contentType) {
+        // given
+        Types type = mock(Types.class);
+        when(typesService.findByContentType(any(ContentType.class))).thenReturn(type);
+
+        Page<ContentReportSummaryDto> reportSummaryPage = new PageImpl<>(Collections.emptyList());
+        when(contentReportSummaryRepository.findByTypes(any(Types.class), any(Pageable.class)))
+                .thenReturn(reportSummaryPage);
+
+        int page = 1;
+
+        // when
+        ContentsPageDto<ContentReportSummaryDto> result = reportSummaryService.findByTypes(contentType, page);
+
+        // then
+        assertEquals(reportSummaryPage, result.getContents());
+
+        verify(typesService).findByContentType(eq(contentType));
+        verify(contentReportSummaryRepository).findByTypes(eq(type), any(Pageable.class));
+    }
+
+    private ContentReportSummaryDeleteDto createDeleteDto(List<Long> postsId, List<Long> commentsId, List<Long> userId) {
         return ContentReportSummaryDeleteDto.builder()
-                .postsId(List.of(post.getId()))
-                .commentsId(List.of(comment.getId()))
-                .userId(List.of(users[0].getId())).build();
+                .postsId(postsId).commentsId(commentsId).userId(userId).build();
+    }
+
+    private String assertThrowsAndVerify(ContentReportSummaryDeleteDto deleteDto, ContentType contentType) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> reportSummaryService.deleteSelectedReportSummary(deleteDto));
+
+        verifyDelete(contentType);
+
+        return exception.getMessage();
+    }
+
+    private void verifyDelete(ContentType contentType) {
+        if (!ContentType.POSTS.equals(contentType)) {
+            verify(postsService, never()).findById(anyLong());
+        }
+        if (!ContentType.COMMENTS.equals(contentType)) {
+            verify(commentsService, never()).findById(anyLong());
+        }
+        if (!ContentType.USERS.equals(contentType)) {
+            verify(userService, never()).findById(anyLong());
+        }
+        verify(contentReportSummaryRepository, never()).deleteByContents(any());
     }
 }

@@ -1,201 +1,145 @@
 package com.eskgus.nammunity.service.comments;
 
-import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.PaginationTestHelper;
-import com.eskgus.nammunity.helper.Range;
-import com.eskgus.nammunity.helper.TestDataHelper;
+import com.eskgus.nammunity.helper.PrincipalHelper;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.Collections;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class CommentsServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PostsRepository postsRepository;
-
-    @Autowired
+    @Mock
     private CommentsRepository commentsRepository;
 
-    @Autowired
+    @Mock
+    private PostsService postsService;
+
+    @Mock
+    private PrincipalHelper principalHelper;
+
+    @InjectMocks
     private CommentsService commentsService;
-
-    private User[] users;
-    private Posts post;
-    private final int page = 1;
-
-    @BeforeEach
-    public void setUp() {
-        Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
-
-        Long user2Id = testDataHelper.signUp(2L, Role.USER);
-        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
-
-        this.users = new User[]{ user1, user2 };
-
-        Long postId = testDataHelper.savePosts(user1);
-        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
-    }
-
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        testDataHelper.cleanUp();
-    }
 
     @Test
     public void save() {
-        User user = users[0];
+        // given
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(post.getId())).thenReturn(post);
 
         CommentsSaveDto requestDto = new CommentsSaveDto("comment", post.getId());
-        Principal principal = user::getUsername;
 
-        Long id = commentsService.save(requestDto, principal);
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
-        Comments comment = assertOptionalAndGetEntity(commentsRepository::findById, id);
-        assertSavedComment(requestDto, user, comment);
+        Comments comment = mock(Comments.class);
+        when(comment.getId()).thenReturn(1L);
+        when(commentsRepository.save(any(Comments.class))).thenReturn(comment);
+
+        // when
+        Long result = commentsService.save(requestDto, principal);
+
+        // then
+        assertEquals(comment.getId(), result);
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(postsService).findById(eq(post.getId()));
+        verify(commentsRepository).save(any(Comments.class));
     }
 
-    private void assertSavedComment(CommentsSaveDto requestDto, User user, Comments comment) {
-        assertThat(comment.getContent()).isEqualTo(requestDto.getContent());
-        assertThat(comment.getPosts().getId()).isEqualTo(requestDto.getPostsId());
-        assertThat(comment.getUser().getId()).isEqualTo(user.getId());
+    @Test
+    public void saveWithoutPrincipal() {
+        // given
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+
+        CommentsSaveDto requestDto = new CommentsSaveDto("comment", post.getId());
+
+        when(principalHelper.getUserFromPrincipal(null, true))
+                .thenThrow(IllegalArgumentException.class);
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> commentsService.save(requestDto, null));
+
+        verify(principalHelper).getUserFromPrincipal(null, true);
+
+        verify(postsService, never()).findById(anyLong());
+        verify(commentsRepository, never()).save(any(Comments.class));
     }
 
     @Test
     public void findByUser() {
-        saveComments();
+        // given
+        Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
+        when(commentsRepository.findByUser(any(User.class), any(Pageable.class))).thenReturn(commentsPage);
 
-        callAndAssertFindByUser();
-    }
-
-    private void saveComments() {
-        int numberOfCommentsByUser = 15;
-        for (int i = 0; i < numberOfCommentsByUser; i++) {
-            for (User user : users) {
-                Long commentId = testDataHelper.saveComments(post.getId(), user);
-                assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-            }
-        }
-    }
-
-    private void callAndAssertFindByUser() {
+        User user = mock(User.class);
+        int page = 1;
         int size = 4;
-        User user = users[0];
 
-        Page<CommentsListDto> actualContents = commentsService.findByUser(user, page, size);
-        Page<CommentsListDto> expectedContents = createExpectedPageByUser(size, user);
+        // when
+        Page<CommentsListDto> result = commentsService.findByUser(user, page, size);
 
-        assertContents(actualContents, expectedContents);
-    }
+        // then
+        assertEquals(commentsPage, result);
 
-    private Page<CommentsListDto> createExpectedPageByUser(int size, User user) {
-        Pageable pageable = createPageable(page, size);
-        return commentsRepository.findByUser(user, pageable);
+        verify(commentsRepository).findByUser(eq(user), any(Pageable.class));
     }
 
     @Test
     public void searchByContent() {
-        saveCommentsWithContent();
+        // given
+        Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
+        when(commentsRepository.searchByContent(anyString(), any(Pageable.class))).thenReturn(commentsPage);
 
-        // 1. 검색 제외 단어 x
-        callAndAssertSearchByContent("com 댓");
+        String keywords = "keyword";
+        int page = 1;
+        int size = 4;
 
-        // 2. 검색 제외 단어 o
-        callAndAssertSearchByContent("com 댓 -ent");
-    }
+        // when
+        Page<CommentsListDto> result = commentsService.searchByContent(keywords, page, size);
 
-    private void saveCommentsWithContent() {
-        long numberOfComments = 20;
-        long half = numberOfComments / 2;
+        // then
+        assertEquals(commentsPage, result);
 
-        Range firstRange = Range.builder().startIndex(1).endIndex(half).comment("comment").build();
-        Range secondRange = Range.builder().startIndex(half + 1).endIndex(numberOfComments).comment("댓글").build();
-
-        saveCommentsInRange(firstRange);
-        saveCommentsInRange(secondRange);
-    }
-
-    private void saveCommentsInRange(Range range) {
-        for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
-            Long commentId = testDataHelper.saveCommentWithContent(post.getId(), users[0], range.getComment() + i);
-            assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-        }
-    }
-
-    private void callAndAssertSearchByContent(String keywords) {
-        int size = 3;
-
-        Page<CommentsListDto> actualContents = commentsService.searchByContent(keywords, page, size);
-        Page<CommentsListDto> expectedContents = createExpectedContents(keywords, size);
-
-        assertContents(actualContents, expectedContents);
-    }
-
-    private Page<CommentsListDto> createExpectedContents(String keywords, int size) {
-        Pageable pageable = createPageable(page, size);
-        return commentsRepository.searchByContent(keywords, pageable);
-    }
-
-    private void assertContents(Page<CommentsListDto> actualContents, Page<CommentsListDto> expectedContents) {
-        PaginationTestHelper<CommentsListDto, Comments> paginationHelper
-                = new PaginationTestHelper<>(
-                        actualContents, expectedContents, new CommentsConverterForTest<>(CommentsListDto.class));
-        paginationHelper.assertContents();
+        verify(commentsRepository).searchByContent(eq(keywords), any(Pageable.class));
     }
 
     @Test
     public void calculateCommentPage() {
-        saveComments();
+        // given
+        long commentIndex = 55;
+        when(commentsRepository.countCommentIndex(anyLong(), anyLong())).thenReturn(commentIndex);
 
-        callAndAssertCalculateCommentPage();
-    }
+        Long postId = 1L;
+        Long commentId = 123L;
 
-    private void callAndAssertCalculateCommentPage() {
-        // Long postId, Long commentId
-        long commentIndex = 3;
-        Comments comment = assertOptionalAndGetEntity(
-                commentsRepository::findById, commentsRepository.count() - commentIndex);
-        int expectedCommentPage = getExpectedCommentPage((int) commentIndex);
+        // when
+        int result = commentsService.calculateCommentPage(postId, commentId);
 
-        int actualCommentPage = commentsService.calculateCommentPage(post.getId(), comment.getId());
+        // then
+        assertEquals(commentIndex / 30 + 1, result);
 
-        assertThat(actualCommentPage).isEqualTo(expectedCommentPage);
-    }
-
-    private int getExpectedCommentPage(int commentIndex) {
-        return commentIndex / 30 + 1;
+        verify(commentsRepository).countCommentIndex(eq(postId), eq(commentId));
     }
 }

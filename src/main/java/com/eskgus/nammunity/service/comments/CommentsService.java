@@ -10,7 +10,6 @@ import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,7 @@ import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 public class CommentsService {
     private final CommentsRepository commentsRepository;
     private final PostsService postsService;
-
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @Transactional
     public Long save(CommentsSaveDto requestDto, Principal principal) {
@@ -66,7 +63,7 @@ public class CommentsService {
     }
 
     @Transactional(readOnly = true)
-    public Page<CommentsReadDto> findByPosts(Posts post, User user, int page) {
+    public Page<CommentsReadDto> findByPosts(Posts post, int page) {
         Pageable pageable = createPageable(page, 30);
         return commentsRepository.findByPosts(post, pageable);
     }

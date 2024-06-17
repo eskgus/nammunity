@@ -11,7 +11,6 @@ import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesSaveDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,9 +28,7 @@ public class LikesService {
     private final PostsService postsService;
     private final CommentsService commentsService;
     private final LikesRepository likesRepository;
-
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @Transactional
     public Long save(Long postsId, Long commentsId, Principal principal) {

@@ -16,7 +16,6 @@ import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.user.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,9 +35,7 @@ public class UserViewService {
     private final ReportsService reportsService;
     private final LikesService likesService;
     private final LikesRepository likesRepository;
-
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @Transactional(readOnly = true)
     public ActivityHistoryDto findActivityHistory(Long id, String type, int page) {

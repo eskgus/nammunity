@@ -8,7 +8,6 @@ import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,9 +24,7 @@ public class UserUpdateService {
     private final UserService userService;
     private final RegistrationService registrationService;
     private final CustomOAuth2UserService customOAuth2UserService;
-
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @Transactional
     public Long updatePassword(PasswordUpdateDto requestDto, Principal principal) {

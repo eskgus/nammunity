@@ -1,190 +1,220 @@
 package com.eskgus.nammunity.service.posts;
 
-import com.eskgus.nammunity.converter.CommentsConverterForTest;
-import com.eskgus.nammunity.converter.PostsConverterForTest;
-import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.domain.reports.ReasonsRepository;
-import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
+import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsViewService;
-import com.eskgus.nammunity.helper.TestDataHelper;
+import com.eskgus.nammunity.service.likes.LikesService;
+import com.eskgus.nammunity.service.reports.ReasonsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostWithReasonsDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
-import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.data.domain.PageImpl;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class PostsViewServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PostsRepository postsRepository;
-
-    @Autowired
-    private ReasonsRepository reasonsRepository;
-
-    @Autowired
-    private CommentsRepository commentsRepository;
-
-    @Autowired
-    private PostsViewService postsViewService;
-
-    @Autowired
-    private CommentsViewService commentsViewService;
-
-    @Autowired
+    @Mock
     private PostsService postsService;
 
-    private User[] users;
-    private Posts post;
-    private final int page = 1;
+    @Mock
+    private ReasonsService reasonsService;
 
-    @BeforeEach
-    public void setUp() {
-        Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
+    @Mock
+    private LikesService likesService;
 
-        Long user2Id = testDataHelper.signUp(2L, Role.USER);
-        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
+    @Mock
+    private CommentsViewService commentsViewService;
 
-        this.users = new User[]{ user1, user2 };
+    @Mock
+    private PrincipalHelper principalHelper;
 
-        Long postId = testDataHelper.savePosts(user1);
-        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
-    }
-
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        testDataHelper.cleanUp();
-    }
+    @InjectMocks
+    private PostsViewService postsViewService;
 
     @Test
     public void readPosts() {
-        PostWithReasonsDto postWithReasonsDto = callReadPostsAndGetPostWithReasonsDto();
-        assertPostWithReasonsDto(postWithReasonsDto);
+        // given
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(post.getCreatedDate()).thenReturn(LocalDateTime.now());
+        when(post.getModifiedDate()).thenReturn(LocalDateTime.now());
+        when(postsService.findById(post.getId())).thenReturn(post);
+
+        User author = mock(User.class);
+        when(post.getUser()).thenReturn(author);
+        when(author.getId()).thenReturn(1L);
+
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(2L);
+        when(principalHelper.getUserFromPrincipal(principal, false)).thenReturn(user);
+
+        when(likesService.existsByPostsAndUser(any(Posts.class), any(User.class))).thenReturn(true);
+
+        List<ReasonsListDto> reasonsListDtos = Collections.emptyList();
+        when(reasonsService.findAllAsc()).thenReturn(reasonsListDtos);
+
+        // when
+        PostWithReasonsDto result = postsViewService.readPosts(post.getId(), principal);
+
+        // then
+        assertNotNull(result);
+        assertEquals(post.getId(), result.getPost().getId());
+        assertFalse(result.getPost().isDoesUserWritePost());
+        assertTrue(result.getPost().isDoesUserLikePost());
+        assertEquals(reasonsListDtos, result.getReasons());
+
+        verify(postsService).findById(eq(post.getId()));
+        verify(principalHelper).getUserFromPrincipal(principal, false);
+        verify(postsService).countView(eq(post));
+        verify(likesService).existsByPostsAndUser(eq(post), eq(user));
+        verify(reasonsService).findAllAsc();
     }
 
-    private PostWithReasonsDto callReadPostsAndGetPostWithReasonsDto() {
-        Principal principal = createPrincipal(users[0]);
-        return postsViewService.readPosts(post.getId(), principal);
-    }
+    @Test
+    public void readPostsWithNonExistentPostId() {
+        // given
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
 
-    private Principal createPrincipal(User user) {
-        return user::getUsername;
-    }
+        Principal principal = mock(Principal.class);
 
-    private void assertPostWithReasonsDto(PostWithReasonsDto postWithReasonsDto) {
-        assertPostReadDto(postWithReasonsDto.getPost());
-        assertReasons(postWithReasonsDto.getReasons());
-    }
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> postsViewService.readPosts(1L, principal));
 
-    private void assertPostReadDto(PostsReadDto postsReadDto) {
-        assertThat(postsReadDto.getId()).isEqualTo(post.getId());
-        assertThat(postsReadDto.isDoesUserWritePost()).isEqualTo(true); // user1이 post 작성
-        assertThat(postsReadDto.isDoesUserLikePost()).isEqualTo(false); // 좋아요 저장 x
-    }
+        verify(postsService).findById(eq(post.getId()));
 
-    private void assertReasons(List<ReasonsListDto> reasons) {
-        for (long i = 1; i < reasonsRepository.count(); i++) {
-            ReasonsListDto reason = reasons.get((int) (i - 1));
-            assertThat(reason.getId()).isEqualTo(i);
-        }
+        verify(principalHelper, never()).getUserFromPrincipal(any(Principal.class), anyBoolean());
+        verify(postsService, never()).countView(any(Posts.class));
+        verify(likesService, never()).existsByPostsAndUser(any(Posts.class), any(User.class));
+        verify(reasonsService, never()).findAllAsc();
     }
 
     @Test
     public void readComments() {
-        saveComments();
+        // given
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(post.getId())).thenReturn(post);
 
-        callAndAssertReadCommentS();
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, false)).thenReturn(user);
+
+        Page<CommentsReadDto> commentsPage = new PageImpl<>(Collections.emptyList());
+        when(commentsViewService.findCommentsPageByPosts(any(Posts.class), any(User.class), anyInt()))
+                .thenReturn(commentsPage);
+
+        int page = 1;
+
+        // when
+        ContentsPageDto<CommentsReadDto> result = postsViewService.readComments(post.getId(), principal, page);
+
+        // then
+        assertEquals(commentsPage, result.getContents());
+
+        verify(postsService).findById(eq(post.getId()));
+        verify(principalHelper).getUserFromPrincipal(principal, false);
+        verify(commentsViewService).findCommentsPageByPosts(eq(post), eq(user), eq(page));
     }
 
-    private void saveComments() {
-        int numberOfCommentsByUser = 15;
-        for (int i = 0; i < numberOfCommentsByUser; i++) {
-            for (User user : users) {
-                testDataHelper.saveComments(post.getId(), user);
-            }
-        }
-        assertThat(commentsRepository.count()).isEqualTo((long) numberOfCommentsByUser * users.length);
+    @Test
+    public void readCommentsWithNonExistentPostId() {
+        // given
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
+
+        Principal principal = mock(Principal.class);
+
+        int page = 1;
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> postsViewService.readComments(post.getId(), principal, page));
+
+        verify(postsService).findById(eq(post.getId()));
+
+        verify(principalHelper, never()).getUserFromPrincipal(any(Principal.class), anyBoolean());
+        verify(commentsViewService, never()).findCommentsPageByPosts(any(Posts.class), any(User.class), anyInt());
     }
 
-    private void callAndAssertReadCommentS() {
-        User user = users[0];
-        ContentsPageDto<CommentsReadDto> actualResult = callReadCommentsAndGetActualResult(user);
-        Page<CommentsReadDto> expectedContents = commentsViewService.findCommentsPageByPosts(post, user, page);
+    @Test
+    public void readCommentsWithNonExistentCommentId() {
+        // given
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(post.getId())).thenReturn(post);
 
-        ContentsPageDtoTestHelper<CommentsReadDto, Comments> findHelper = ContentsPageDtoTestHelper.<CommentsReadDto, Comments>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new CommentsConverterForTest<>(CommentsReadDto.class)).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
-    }
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, false)).thenReturn(user);
 
-    private ContentsPageDto<CommentsReadDto> callReadCommentsAndGetActualResult(User user) {
-        Principal principal = createPrincipal(user);
-        return postsViewService.readComments(post.getId(), principal, page);
+        when(commentsViewService.findCommentsPageByPosts(any(Posts.class), any(User.class), anyInt()))
+                .thenThrow(IllegalArgumentException.class);
+
+        int page = 1;
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> postsViewService.readComments(post.getId(), principal, page));
+
+        verify(postsService).findById(eq(post.getId()));
+        verify(principalHelper).getUserFromPrincipal(principal, false);
+        verify(commentsViewService).findCommentsPageByPosts(eq(post), eq(user), eq(page));
     }
 
     @Test
     public void listPosts() {
-        savePosts();
+        // given
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
-        callAndAssertListPosts();
+        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
+        when(postsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(postsPage);
+
+        int page = 1;
+
+        // when
+        ContentsPageDto<PostsListDto> result = postsViewService.listPosts(principal, page);
+
+        // then
+        assertEquals(postsPage, result.getContents());
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(postsService).findByUser(eq(user), eq(page), anyInt());
     }
 
-    private void savePosts() {
-        int numberOfPostsByUser = 30;
-        for (int i = 0; i < numberOfPostsByUser; i++) {
-            for (User user : users) {
-                testDataHelper.savePosts(user);
-            }
-        }
-        assertThat(postsRepository.count()).isEqualTo((long) numberOfPostsByUser * users.length + post.getId());
-    }
+    @Test
+    public void listPostsWithoutPrincipal() {
+        // given
+        when(principalHelper.getUserFromPrincipal(null, true))
+                .thenThrow(IllegalArgumentException.class);
 
-    private void callAndAssertListPosts() {
-        User user = users[0];
-        ContentsPageDto<PostsListDto> actualResult = callListPostsAndGetActualResult(user);
-        Page<PostsListDto> expectedContents = postsService.findByUser(user, page, 20);
+        int page = 1;
 
-        ContentsPageDtoTestHelper<PostsListDto, Posts> findHelper = ContentsPageDtoTestHelper.<PostsListDto, Posts>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new PostsConverterForTest()).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
-    }
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> postsViewService.listPosts(null, page));
 
-    private ContentsPageDto<PostsListDto> callListPostsAndGetActualResult(User user) {
-        Principal principal = createPrincipal(user);
-        return postsViewService.listPosts(principal, page);
+        // then
+        verify(principalHelper).getUserFromPrincipal(null, true);
+
+        verify(postsService, never()).findByUser(any(User.class), anyInt(), anyInt());
     }
 }

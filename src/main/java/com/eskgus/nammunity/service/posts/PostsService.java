@@ -8,7 +8,6 @@ import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,9 +23,7 @@ import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 @Service
 public class PostsService {
     private final PostsRepository postsRepository;
-
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @Transactional
     public Long save(PostsSaveDto requestDto, Principal principal) {

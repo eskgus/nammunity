@@ -1,170 +1,78 @@
 package com.eskgus.nammunity.service.likes;
 
-import com.eskgus.nammunity.converter.LikesConverterForTest;
-import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.likes.Likes;
-import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
-import com.eskgus.nammunity.helper.TestDataHelper;
-import com.eskgus.nammunity.domain.comments.CommentsRepository;
-import com.eskgus.nammunity.domain.likes.LikesRepository;
-import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.domain.user.Role;
+import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.domain.user.UserRepository;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.Collections;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class LikesViewServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PostsRepository postsRepository;
-
-    @Autowired
-    private CommentsRepository commentsRepository;
-
-    @Autowired
-    private LikesRepository likesRepository;
-
-    @Autowired
-    private LikesViewService likesViewService;
-
-    @Autowired
+    @Mock
     private LikesService likesService;
 
-    private User[] users;
-    private Posts post;
-    private Comments comment;
-    private Long commentLikeId;
+    @Mock
+    private PrincipalHelper principalHelper;
 
-    @BeforeEach
-    public void setUp() {
-        Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        Long user2Id = testDataHelper.signUp(2L, Role.USER);
-
-        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
-        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
-
-        this.users = new User[]{ user1, user2 };
-
-        Long postId = testDataHelper.savePosts(user1);
-        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
-
-        Long commentId = testDataHelper.saveComments(postId, user1);
-        this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-
-        Long postLikeId = testDataHelper.savePostLikes(postId, user1);
-        assertOptionalAndGetEntity(likesRepository::findById, postLikeId);
-
-        this.commentLikeId = testDataHelper.saveCommentLikes(commentId, user1);
-        assertOptionalAndGetEntity(likesRepository::findById, commentLikeId);
-    }
-
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        testDataHelper.cleanUp();
-    }
+    @InjectMocks
+    private LikesViewService likesViewService;
 
     @Test
     public void listLikes() {
-        User user = users[1];
-        saveLikes(user);
+        // given
+        BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
 
-        // 1. listLikes()
-        callAndAssertListLikes(user, likesRepository::findByUser);
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
-        // 2. listPostLikes()
-        callAndAssertListLikes(user, likesRepository::findPostLikesByUser);
+        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
+        when(likesService.findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt())).thenReturn(likesPage);
 
-        // 3. listCommentLikes()
-        callAndAssertListLikes(user, likesRepository::findCommentLikesByUser);
-    }
-
-    private void saveLikes(User user) {
-        List<Posts> posts = savePosts(user);
-        List<Comments> comments = saveComments(user);
-
-        for (int i = 0; i < posts.size(); i++) {
-            testDataHelper.savePostLikes(posts.get(i).getId(), user);
-            testDataHelper.saveCommentLikes(comments.get(i).getId(), user);
-        }
-        assertThat(likesRepository.count()).isEqualTo(posts.size() + comments.size() + commentLikeId);
-    }
-
-    private List<Posts> savePosts(User user) {
-        List<Posts> posts = new ArrayList<>();
-        posts.add(post);
-
-        for (int i = 0; i < 30; i++) {
-            posts.add(savePost(user));
-        }
-        return posts;
-    }
-
-    private Posts savePost(User user) {
-        Long postId = testDataHelper.savePosts(user);
-        return assertOptionalAndGetEntity(postsRepository::findById, postId);
-    }
-
-    private List<Comments> saveComments(User user) {
-        List<Comments> comments = new ArrayList<>();
-        comments.add(comment);
-
-        for (int i = 0; i < 30; i++) {
-            comments.add(saveComment(user));
-        }
-        return comments;
-    }
-
-    private Comments saveComment(User user) {
-        Long commentId = testDataHelper.saveComments(post.getId(), user);
-        return assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-    }
-
-    private void callAndAssertListLikes(User user, BiFunction<User, Pageable, Page<LikesListDto>> finder) {
         int page = 1;
-        ContentsPageDto<LikesListDto> actualResult = callListLikesAndGetActualResult(user, finder, page);
-        Page<LikesListDto> expectedContents = likesService.findLikesByUser(user, finder, page, 20);
 
-        ContentsPageDtoTestHelper<LikesListDto, Likes> findHelper = ContentsPageDtoTestHelper.<LikesListDto, Likes>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new LikesConverterForTest()).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
+        // when
+        ContentsPageDto<LikesListDto> result = likesViewService.listLikes(finder, principal, page);
+
+        // then
+        assertEquals(likesPage, result.getContents());
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(likesService).findLikesByUser(eq(user), eq(finder), eq(page), anyInt());
     }
 
-    private ContentsPageDto<LikesListDto> callListLikesAndGetActualResult(User user,
-                                                                          BiFunction<User, Pageable, Page<LikesListDto>> finder,
-                                                                          int page) {
-        Principal principal = user::getUsername;
-        return likesViewService.listLikes(finder, principal, page);
+    @Test
+    public void listLikesWithoutPrincipal() {
+        // given
+        when(principalHelper.getUserFromPrincipal(null, true))
+                .thenThrow(IllegalArgumentException.class);
+
+        BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
+
+        int page = 1;
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> likesViewService.listLikes(finder, null, page));
+
+        verify(principalHelper).getUserFromPrincipal(null, true);
+
+        verify(likesService, never()).findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt());
     }
 }

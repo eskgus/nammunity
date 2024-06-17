@@ -17,7 +17,6 @@ import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.reports.*;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,9 +37,7 @@ public class ReportsService {
     private final ReasonsService reasonsService;
     private final TypesService typesService;
     private final ReportSummaryService reportSummaryService;
-
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @Transactional
     public Long saveContentReports(ContentReportsSaveDto requestDto, Principal principal) {

@@ -1,216 +1,159 @@
 package com.eskgus.nammunity.service.posts;
 
-import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.domain.enums.SearchType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.ContentsPageDtoTestHelper;
-import com.eskgus.nammunity.helper.PaginationTestHelper;
-import com.eskgus.nammunity.helper.Range;
-import com.eskgus.nammunity.helper.TestDataHelper;
+import com.eskgus.nammunity.helper.*;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
-import java.util.Optional;
+import java.util.Collections;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class PostsServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
+    @Mock
     private PostsRepository postsRepository;
 
-    @Autowired
+    @Mock
+    private PrincipalHelper principalHelper;
+
+    @InjectMocks
     private PostsService postsService;
-
-    private User[] users;
-    private Posts post;
-    private final int page = 1;
-
-    @BeforeEach
-    public void setUp() {
-        Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
-
-        Long user2Id = testDataHelper.signUp(2L, Role.USER);
-        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
-
-        this.users = new User[]{ user1, user2 };
-
-        Long postId = testDataHelper.savePosts(user1);
-        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
-    }
-
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        testDataHelper.cleanUp();
-    }
 
     @Test
     public void save() {
-        User user = users[0];
-
+        // given
         PostsSaveDto requestDto = PostsSaveDto.builder().title("title").content("content").build();
-        Principal principal = user::getUsername;
 
-        Long id = postsService.save(requestDto, principal);
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
-        Posts post = assertOptionalAndGetEntity(postsRepository::findById, id);
-        assertSavedPost(requestDto, user, post);
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsRepository.save(any(Posts.class))).thenReturn(post);
+
+        // when
+        Long result = postsService.save(requestDto, principal);
+
+        // then
+        assertEquals(post.getId(), result);
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(postsRepository).save(any(Posts.class));
     }
 
-    private void assertSavedPost(PostsSaveDto requestDto, User user, Posts post) {
-        assertThat(post.getTitle()).isEqualTo(requestDto.getTitle());
-        assertThat(post.getContent()).isEqualTo(requestDto.getContent());
-        assertThat(post.getUser().getId()).isEqualTo(user.getId());
+    @Test
+    public void saveWithoutPrincipal() {
+        // given
+        PostsSaveDto requestDto = PostsSaveDto.builder().title("title").content("content").build();
+
+        when(principalHelper.getUserFromPrincipal(null, true))
+                .thenThrow(IllegalArgumentException.class);
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> postsService.save(requestDto, null));
+
+        verify(principalHelper).getUserFromPrincipal(null, true);
+
+        verify(postsRepository, never()).save(any(Posts.class));
     }
 
     @Test
     public void findAllDesc() {
-        savePosts();
+        // given
+        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
+        when(postsRepository.findAllDesc(any(Pageable.class))).thenReturn(postsPage);
 
-        callAndAssertFindAllDesc();
-    }
+        int page = 1;
 
-    private void savePosts() {
-        int numberOfPostsByUser = 15;
-        for (int i = 0; i < numberOfPostsByUser; i++) {
-            for (User user : users) {
-                testDataHelper.savePosts(user);
-            }
-        }
-        assertThat(postsRepository.count()).isEqualTo((long) numberOfPostsByUser * users.length + post.getId());
-    }
+        // when
+        ContentsPageDto<PostsListDto> result = postsService.findAllDesc(page);
 
-    private void callAndAssertFindAllDesc() {
-        ContentsPageDto<PostsListDto> actualResult = postsService.findAllDesc(page);
-        Page<PostsListDto> expectedContents = createExpectedContents();
+        // then
+        assertEquals(postsPage, result.getContents());
 
-        ContentsPageDtoTestHelper<PostsListDto, Posts> findHelper = ContentsPageDtoTestHelper.<PostsListDto, Posts>builder()
-                .actualResult(actualResult).expectedContents(expectedContents)
-                .entityConverter(new PostsConverterForTest()).build();
-        findHelper.createExpectedResultAndAssertContentsPage();
-    }
-
-    private Page<PostsListDto> createExpectedContents() {
-        Pageable pageable = createPageable(page, 20);
-        return postsRepository.findAllDesc(pageable);
+        verify(postsRepository).findAllDesc(any(Pageable.class));
     }
 
     @Test
     public void findByUser() {
-        savePosts();
+        // given
+        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
+        when(postsRepository.findByUser(any(User.class), any(Pageable.class))).thenReturn(postsPage);
 
-        callAndAssertFindByUser();
-    }
-
-    private void callAndAssertFindByUser() {
+        User user = mock(User.class);
+        int page= 1;
         int size = 4;
-        User user = users[0];
 
-        Page<PostsListDto> actualContents = postsService.findByUser(user, page, size);
-        Page<PostsListDto> expectedContents = createExpectedPage(size, user);
+        // when
+        Page<PostsListDto> result = postsService.findByUser(user, page, size);
 
-        assertContents(actualContents, expectedContents);
-    }
+        // then
+        assertEquals(postsPage, result);
 
-    private Page<PostsListDto> createExpectedPage(int size, User user) {
-        Pageable pageable = createPageable(page, size);
-        return postsRepository.findByUser(user, pageable);
-    }
-
-    private void assertContents(Page<PostsListDto> actualContents, Page<PostsListDto> expectedContents) {
-        PaginationTestHelper<PostsListDto, Posts> paginationHelper
-                = new PaginationTestHelper<>(actualContents, expectedContents, new PostsConverterForTest());
-        paginationHelper.assertContents();
+        verify(postsRepository).findByUser(eq(user), any(Pageable.class));
     }
 
     @Test
-    public void search() {
-        savePostsWithTitleAndContent();
+    public void searchByTitle() {
+        String keywords = testSearch(postsRepository::searchByTitle, SearchType.TITLE.getKey());
 
-        // 1. searchBy = title (title)
-        callAndAssertSearch("title", SearchType.TITLE);
-
-        // 2. searchBy = content (content)
-        callAndAssertSearch("content", SearchType.CONTENT);
-
-        // 3. searchBy = title and content (제목 내용)
-        callAndAssertSearch("제목 내용", SearchType.TITLE_AND_CONTENT);
+        verify(postsRepository).searchByTitle(eq(keywords), any(Pageable.class));
+        verify(postsRepository, never()).searchByContent(anyString(), any(Pageable.class));
+        verify(postsRepository, never()).searchByTitleAndContent(anyString(), any(Pageable.class));
     }
 
-    private void savePostsWithTitleAndContent() {
-        long numberOfPosts = 20;
-        long half = numberOfPosts / 2;
+    @Test
+    public void searchByContent() {
+        String keywords = testSearch(postsRepository::searchByContent, SearchType.CONTENT.getKey());
 
-        Range firstRange = Range.builder()
-                .startIndex(1).endIndex(half)
-                .title("title").content("content").build();
-        Range secondRange = Range.builder()
-                .startIndex(half + 1).endIndex(numberOfPosts)
-                .title("제목").content("내용").build();
-
-        savePostsInRange(firstRange);
-        savePostsInRange(secondRange);
+        verify(postsRepository, never()).searchByTitle(anyString(), any(Pageable.class));
+        verify(postsRepository).searchByContent(eq(keywords), any(Pageable.class));
+        verify(postsRepository, never()).searchByTitleAndContent(anyString(), any(Pageable.class));
     }
 
-    private void savePostsInRange(Range range) {
-        for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
-            Long postId = testDataHelper.savePostWithTitleAndContent(users[0], range.getTitle() + i, range.getContent() + i);
-            assertOptionalAndGetEntity(postsRepository::findById, postId);
-        }
+    @Test
+    public void searchByTitleAndContent() {
+        String keywords = testSearch(postsRepository::searchByTitleAndContent, SearchType.TITLE_AND_CONTENT.getKey());
+
+        verify(postsRepository, never()).searchByTitle(anyString(), any(Pageable.class));
+        verify(postsRepository, never()).searchByContent(anyString(), any(Pageable.class));
+        verify(postsRepository).searchByTitleAndContent(eq(keywords), any(Pageable.class));
     }
 
-    private void callAndAssertSearch(String keywords, SearchType searchType) {
-        String searchBy = searchType.getKey();
-        int size = 3;
+    private String testSearch(BiFunction<String, Pageable, Page<PostsListDto>> searcher, String searchBy) {
+        // given
+        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
+        when(searcher.apply(anyString(), any(Pageable.class))).thenReturn(postsPage);
 
-        Page<PostsListDto> actualContents = postsService.search(keywords, searchBy, page, size);
-        Page<PostsListDto> expectedContents = createExpectedPage(keywords, searchType, size);
+        String keywords = "keyword";
+        int page = 1;
+        int size = 4;
 
-        assertContents(actualContents, expectedContents);
-    }
+        // when
+        Page<PostsListDto> result = postsService.search(keywords, searchBy, page, size);
 
-    private Page<PostsListDto> createExpectedPage(String keywords, SearchType searchType, int size) {
-        Pageable pageable = createPageable(page, size);
-        BiFunction<String, Pageable, Page<PostsListDto>> searcher = getSearcher(searchType);
-        return searcher.apply(keywords, pageable);
-    }
+        // then
+        assertEquals(postsPage, result);
 
-    private BiFunction<String, Pageable, Page<PostsListDto>> getSearcher(SearchType searchType) {
-        if (searchType.equals(SearchType.TITLE)) {
-            return postsRepository::searchByTitle;
-        } else if (searchType.equals(SearchType.CONTENT)) {
-            return postsRepository::searchByContent;
-        }
-        return postsRepository::searchByTitleAndContent;
+        return keywords;
     }
 }

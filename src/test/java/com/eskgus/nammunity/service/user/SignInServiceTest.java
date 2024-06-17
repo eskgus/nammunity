@@ -1,74 +1,150 @@
 package com.eskgus.nammunity.service.user;
 
-import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.TestDataHelper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import com.eskgus.nammunity.service.email.EmailService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.annotation.Transactional;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.verification.VerificationMode;
 
-import java.util.Optional;
-import java.util.function.Function;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class SignInServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
+    @Mock
+    private UserService userService;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Mock
+    private BannedUsersService bannedUsersService;
 
-    @Autowired
+    @Mock
+    private UserUpdateService userUpdateService;
+
+    @Mock
+    private EmailService emailService;
+
+    @InjectMocks
     private SignInService signInService;
-
-    private User user;
-
-    @BeforeEach
-    public void setUp() {
-        Long userId = testDataHelper.signUp(1L, Role.USER);
-        this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
-    }
-
-    private User assertOptionalAndGetEntity(Function<Long, Optional<User>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        testDataHelper.cleanUp();
-    }
 
     @Test
     public void findUsername() {
-        String username = signInService.findUsername(user.getEmail());
-        assertFindUsername(username);
+        // given
+        User user = mock(User.class);
+        when(user.getUsername()).thenReturn("username");
+        when(user.getEmail()).thenReturn("email@naver.com");
+        when(userService.findByEmail(anyString())).thenReturn(user);
+
+        // when
+        String result = signInService.findUsername(user.getEmail());
+
+        // then
+        assertTrue(result.contains(user.getUsername().substring(0, 3)));
+
+        verify(userService).findByEmail(eq(user.getEmail()));
     }
 
-    private void assertFindUsername(String username) {
-        String expectedEncryptedUsername = user.getUsername().substring(0, 3);
-        assertThat(username).contains(expectedEncryptedUsername);
+    @Test
+    public void findUsernameWithNonExistentEmail() {
+        // given
+        when(userService.findByEmail(anyString())).thenThrow(IllegalArgumentException.class);
+
+        String email = "email@naver.com";
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> signInService.findUsername(email));
+
+        verify(userService).findByEmail(eq(email));
     }
 
-    @Transactional
     @Test
     public void findPassword() {
-        String oldPassword = user.getPassword();
+        // given
+        User user = giveUser();
 
+        when(bannedUsersService.isAccountNonBanned(anyString())).thenReturn(true);
+
+        when(user.getEmail()).thenReturn("email@naver.com");
+        when(emailService.setRandomPasswordEmailText(anyString())).thenReturn("text");
+
+        when(user.isLocked()).thenReturn(true);
+
+        // when
         signInService.findPassword(user.getUsername());
-        assertFindPassword(oldPassword);
+
+        // then
+        verify(userService).findByUsername(eq(user.getUsername()));
+        verify(bannedUsersService).isAccountNonBanned(eq(user.getUsername()));
+        verify(emailService).setRandomPasswordEmailText(anyString());
+        verify(emailService).send(eq(user.getEmail()), anyString());
+        verify(userUpdateService).encryptAndUpdatePassword(eq(user), anyString());
+        verify(user).isLocked();
+        verify(user).updateLocked();
     }
 
-    private void assertFindPassword(String oldPassword) {
-        String newPassword = user.getPassword();
-        assertThat(newPassword).isNotEqualTo(oldPassword);
+    @Test
+    public void findPasswordWithNonExistentUsername() {
+        // given
+        User user = createMockedUser();
+        when(userService.findByUsername(anyString())).thenThrow(IllegalArgumentException.class);
+
+        // when/then
+        assertThrowsAndVerifyFindPassword(user, never());
+    }
+
+    @Test
+    public void findPasswordWithNonExistentBannedUser() {
+        // given
+        User user = giveUser();
+
+        when(bannedUsersService.isAccountNonBanned(anyString())).thenThrow(IllegalArgumentException.class);
+
+        // when/then
+        assertThrowsAndVerifyFindPassword(user, times(1));
+    }
+
+    @Test
+    public void findPasswordWithBannedUser() {
+        // given
+        User user = giveUser();
+
+        when(bannedUsersService.isAccountNonBanned(anyString())).thenReturn(false);
+
+        // when/then
+        String exceptionMessage = assertThrowsAndVerifyFindPassword(user, times(1));
+        assertEquals("활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.", exceptionMessage);
+    }
+
+    private User giveUser() {
+        User user = createMockedUser();
+        when(userService.findByUsername(anyString())).thenReturn(user);
+
+        return user;
+    }
+
+    private User createMockedUser() {
+        User user = mock(User.class);
+        when(user.getUsername()).thenReturn("username");
+
+        return user;
+    }
+
+    private String assertThrowsAndVerifyFindPassword(User user, VerificationMode mode) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> signInService.findPassword(user.getUsername()));
+
+        verify(userService).findByUsername(eq(user.getUsername()));
+        verify(bannedUsersService, mode).isAccountNonBanned(eq(user.getUsername()));
+
+        verify(emailService, never()).setRandomPasswordEmailText(anyString());
+        verify(emailService, never()).send(anyString(), anyString());
+        verify(userUpdateService, never()).encryptAndUpdatePassword(any(User.class), anyString());
+        verify(user, never()).isLocked();
+        verify(user, never()).updateLocked();
+
+        return exception.getMessage();
     }
 }

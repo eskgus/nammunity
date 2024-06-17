@@ -14,7 +14,6 @@ import com.eskgus.nammunity.web.dto.posts.PostsReadDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,9 +28,7 @@ public class PostsViewService {
     private final ReasonsService reasonsService;
     private final LikesService likesService;
     private final CommentsViewService commentsViewService;
-
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @Transactional
     public PostWithReasonsDto readPosts(Long postId, Principal principal) {

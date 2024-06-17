@@ -1,257 +1,301 @@
 package com.eskgus.nammunity.service.likes;
 
-import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.comments.CommentsRepository;
-import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.posts.PostsRepository;
-import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.domain.user.UserRepository;
-import com.eskgus.nammunity.helper.PaginationTestHelper;
-import com.eskgus.nammunity.helper.TestDataHelper;
+import com.eskgus.nammunity.helper.PrincipalHelper;
+import com.eskgus.nammunity.service.comments.CommentsService;
+import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.Collections;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class LikesServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
+    @Mock
+    private PostsService postsService;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Mock
+    private CommentsService commentsService;
 
-    @Autowired
-    private PostsRepository postsRepository;
-
-    @Autowired
-    private CommentsRepository commentsRepository;
-
-    @Autowired
+    @Mock
     private LikesRepository likesRepository;
 
-    @Autowired
+    @Mock
+    private PrincipalHelper principalHelper;
+
+    @InjectMocks
     private LikesService likesService;
 
-    private User[] users;
-    private Posts post;
-    private Comments comment;
-    private Long commentLikeId;
+    @Test
+    public void savePostLikes() {
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(anyLong())).thenReturn(post);
 
-    @BeforeEach
-    public void setUp() {
-        Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        Long user2Id = testDataHelper.signUp(2L, Role.USER);
+        testSaveLikes(post.getId(), null);
 
-        User user1 = assertOptionalAndGetEntity(userRepository::findById, user1Id);
-        User user2 = assertOptionalAndGetEntity(userRepository::findById, user2Id);
-
-        this.users = new User[]{ user1, user2 };
-
-        Long postId = testDataHelper.savePosts(user1);
-        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
-
-        Long commentId = testDataHelper.saveComments(postId, user1);
-        this.comment = assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-
-        Long postLikeId = testDataHelper.savePostLikes(postId, user1);
-        assertOptionalAndGetEntity(likesRepository::findById, postLikeId);
-
-        this.commentLikeId = testDataHelper.saveCommentLikes(commentId, user1);
-        assertOptionalAndGetEntity(likesRepository::findById, commentLikeId);
-    }
-
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
-    @AfterEach
-    public void cleanUp() {
-        testDataHelper.cleanUp();
+        verify(postsService).findById(eq(post.getId()));
+        verify(commentsService, never()).findById(anyLong());
     }
 
     @Test
-    public void save() {
-        // 1. 게시글 좋아요
-        callAndAssertSave(post.getId(), ContentType.POSTS);
+    public void saveCommentLikes() {
+        Comments comment = mock(Comments.class);
+        when(comment.getId()).thenReturn(1L);
+        when(commentsService.findById(anyLong())).thenReturn(comment);
 
-        // 2. 댓글 좋아요
-        callAndAssertSave(comment.getId(), ContentType.COMMENTS);
-    }
+        testSaveLikes(null, comment.getId());
 
-    private void callAndAssertSave(Long contentId, ContentType contentType) {
-        User user = users[0];
-        Principal principal = user::getUsername;
-
-        Long postId = contentType.equals(ContentType.POSTS) ? contentId : null;
-        Long commentId = contentType.equals(ContentType.COMMENTS) ? contentId : null;
-        Long id = likesService.save(postId, commentId, principal);
-
-        Likes like = assertOptionalAndGetEntity(likesRepository::findById, id);
-        assertSavedLike(contentId, contentType, user, like);
-    }
-
-    private void assertSavedLike(Long contentId, ContentType contentType, User user, Likes like) {
-        Long actualContentId = contentType.equals(ContentType.POSTS)
-                ? like.getPosts().getId() : like.getComments().getId();
-
-        assertThat(actualContentId).isEqualTo(contentId);
-        assertThat(like.getUser().getId()).isEqualTo(user.getId());
+        verify(postsService, never()).findById(anyLong());
+        verify(commentsService).findById(eq(comment.getId()));
     }
 
     @Test
-    public void deleteByContentId() {
-        // 1. 게시글 좋아요 취소
-        callAndAssertDeleteByContentId(post.getId(), ContentType.POSTS);
+    public void saveWithoutPrincipal() {
+        // given
+        when(principalHelper.getUserFromPrincipal(null, true))
+                .thenThrow(IllegalArgumentException.class);
 
-        // 2. 댓글 좋아요 취소
-        callAndAssertDeleteByContentId(comment.getId(), ContentType.COMMENTS);
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> likesService.save(1L, null, null));
+
+        verify(principalHelper).getUserFromPrincipal(null, true);
+
+        verify(postsService, never()).findById(anyLong());
+        verify(commentsService, never()).findById(anyLong());
+        verify(likesRepository, never()).save(any(Likes.class));
     }
 
-    private void callAndAssertDeleteByContentId(Long contentId, ContentType contentType) {
-        User user = users[0];
+    @Test
+    public void savePostLikesWithNonExistentPostId() {
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
 
-        Long likeId = saveLike(contentId, contentType, user);
+        testSaveLikesWithNonExistentContentId(post.getId(), null);
 
-        deleteLike(contentId, contentType, user);
+        verify(postsService).findById(eq(post.getId()));
 
-        assertDeletedLike(likeId);
+        verify(commentsService, never()).findById(anyLong());
     }
 
-    private Long saveLike(Long contentId, ContentType contentType, User user) {
-        Long likeId = contentType.equals(ContentType.POSTS)
-                ? testDataHelper.savePostLikes(contentId, user) : testDataHelper.saveCommentLikes(contentId, user);
+    @Test
+    public void saveCommentLikesWithNonExistentPostId() {
+        Comments comment = mock(Comments.class);
+        when(comment.getId()).thenReturn(1L);
+        when(commentsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
 
-        assertOptionalAndGetEntity(likesRepository::findById, likeId);
-        return likeId;
+        testSaveLikesWithNonExistentContentId(null, comment.getId());
+
+        verify(commentsService).findById(eq(comment.getId()));
+
+        verify(postsService, never()).findById(anyLong());
     }
 
-    private void deleteLike(Long contentId, ContentType contentType, User user) {
-        Principal principal = user::getUsername;
+    @Test
+    public void deletePostLikes() {
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(anyLong())).thenReturn(post);
 
-        Long postId = contentType.equals(ContentType.POSTS) ? contentId : null;
-        Long commentId = contentType.equals(ContentType.COMMENTS) ? contentId : null;
+        User user = testDeleteByContentId(post.getId(), null);
 
-        likesService.deleteByContentId(postId, commentId, principal);
+        verify(postsService).findById(eq(post.getId()));
+        verify(likesRepository).deleteByPosts(eq(post), eq(user));
     }
 
-    private void assertDeletedLike(Long likeId) {
-        Optional<Likes> result = likesRepository.findById(likeId);
-        assertThat(result).isNotPresent();
+    @Test
+    public void deleteCommentLikes() {
+        Comments comment = mock(Comments.class);
+        when(comment.getId()).thenReturn(1L);
+        when(commentsService.findById(anyLong())).thenReturn(comment);
+
+        User user = testDeleteByContentId(null, comment.getId());
+
+        verify(commentsService).findById(eq(comment.getId()));
+        verify(likesRepository).deleteByComments(eq(comment), eq(user));
+    }
+
+    @Test
+    public void deleteWithoutPrincipal() {
+        // given
+        when(principalHelper.getUserFromPrincipal(null, true))
+                .thenThrow(IllegalArgumentException.class);
+
+        // when/then
+        assertThrows(IllegalArgumentException.class,
+                () -> likesService.deleteByContentId(1L, null, null));
+
+        verify(principalHelper).getUserFromPrincipal(null, true);
+
+        verify(postsService, never()).findById(anyLong());
+        verify(likesRepository, never()).deleteByPosts(any(Posts.class), any(User.class));
+        verify(commentsService, never()).findById(anyLong());
+        verify(likesRepository, never()).deleteByComments(any(Comments.class), any(User.class));
+    }
+
+    @Test
+    public void deletePostLikesWithNonExistentPostId() {
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(1L);
+        when(postsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
+
+        testDeleteByNonExistentContentId(post.getId(), null);
+
+        verify(postsService).findById(post.getId());
+
+        verify(commentsService, never()).findById(anyLong());
+    }
+
+    @Test
+    public void deleteCommentLikesWithNonExistentCommentId() {
+        Comments comment = mock(Comments.class);
+        when(comment.getId()).thenReturn(1L);
+        when(commentsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
+
+        testDeleteByNonExistentContentId(null, comment.getId());
+
+        verify(commentsService).findById(eq(comment.getId()));
+
+        verify(postsService, never()).findById(anyLong());
     }
 
     @Test
     public void findLikesByUser() {
-        saveLikesWithUser2();
+        // given
+        User user = mock(User.class);
 
-        // 1. findByUser()
-        callAndAssertFindLikesByUser(5, likesRepository::findByUser);
+        BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
 
-        // 2. findPostLikesByUser()
-        callAndAssertFindLikesByUser(2, likesRepository::findPostLikesByUser);
+        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
+        when(finder.apply(any(User.class), any(Pageable.class))).thenReturn(likesPage);
 
-        // 3. findCommentLikesByUser()
-        callAndAssertFindLikesByUser(2, likesRepository::findCommentLikesByUser);
-    }
-
-    private void saveLikesWithUser2() {
-        List<Posts> posts = new ArrayList<>();
-        List<Comments> comments = new ArrayList<>();
-        posts.add(post);
-        comments.add(comment);
-        for (int i = 0; i < 2; i++) {
-            posts.add(savePost());
-            comments.add(saveComment());
-        }
-
-        for (int i = 0; i < posts.size(); i++) {
-            testDataHelper.savePostLikes(posts.get(i).getId(), users[1]);
-            testDataHelper.saveCommentLikes(comments.get(i).getId(), users[1]);
-        }
-        assertThat(likesRepository.count()).isEqualTo(posts.size() + comments.size() + commentLikeId);
-    }
-
-    private Posts savePost() {
-        Long postId = testDataHelper.savePosts(users[0]);
-        return assertOptionalAndGetEntity(postsRepository::findById, postId);
-    }
-
-    private Comments saveComment() {
-        Long commentId = testDataHelper.saveComments(post.getId(), users[0]);
-        return assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-    }
-
-    private void callAndAssertFindLikesByUser(int size, BiFunction<User, Pageable, Page<LikesListDto>> finder) {
         int page = 1;
-        User user = users[1];
+        int size = 4;
 
-        Page<LikesListDto> actualPage = likesService.findLikesByUser(user, finder, page, size);
-        Page<LikesListDto> expectedPage = createExpectedPage(page, size, user, finder);
+        // when
+        Page<LikesListDto> result = likesService.findLikesByUser(user, finder, page, size);
 
-        assertFindLikesByUser(actualPage, expectedPage);
-    }
+        // then
+        assertEquals(likesPage, result);
 
-    private Page<LikesListDto> createExpectedPage(int page, int size, User user,
-                                                  BiFunction<User, Pageable, Page<LikesListDto>> finder) {
-        Pageable pageable = createPageable(page, size);
-        return finder.apply(user, pageable);
-    }
-
-    private void assertFindLikesByUser(Page<LikesListDto> actualPage, Page<LikesListDto> expectedPage) {
-        PaginationTestHelper<LikesListDto, Likes> paginationHelper
-                = new PaginationTestHelper<>(actualPage, expectedPage, new LikesConverterForTest());
-        paginationHelper.assertContents();
+        verify(finder).apply(eq(user), any(Pageable.class));
     }
 
     @Test
     public void existsByPostsAndUser() {
-        // 1. user1이 post1 좋아요 후 호출
-        callAndAssertExistsByContentsAndUser(post, users[0], true);
+        // given
+        Posts post = mock(Posts.class);
+        User user = mock(User.class);
 
-        // 2. user2가 post1 좋아요 x 후 호출
-        callAndAssertExistsByContentsAndUser(post, users[1], false);
-    }
+        when(likesRepository.existsByPostsAndUser(any(Posts.class), any(User.class))).thenReturn(true);
 
-    private <T> void callAndAssertExistsByContentsAndUser(T content, User user, boolean expectedDoesUserLikeContent) {
-        boolean actualDoesUserLikeContent = callExistsByContentsAndUser(content, user);
-        assertThat(actualDoesUserLikeContent).isEqualTo(expectedDoesUserLikeContent);
-    }
+        // when
+        boolean result = likesService.existsByPostsAndUser(post, user);
 
-    private <T> boolean callExistsByContentsAndUser(T content, User user) {
-        if (content instanceof Posts) {
-            return likesService.existsByPostsAndUser((Posts) content, user);
-        }
-        return likesService.existsByCommentsAndUser((Comments) content, user);
+        // then
+        assertTrue(result);
+
+        verify(likesRepository).existsByPostsAndUser(eq(post), eq(user));
     }
 
     @Test
     public void existsByCommentsAndUser() {
-        // 1. user1이 comment1 좋아요 후 호출
-        callAndAssertExistsByContentsAndUser(comment, users[0], true);
+        // given
+        Comments comment = mock(Comments.class);
+        User user = mock(User.class);
 
-        // 2. user2가 comment1 좋아요 x 후 호출
-        callAndAssertExistsByContentsAndUser(comment, users[1], false);
+        when(likesRepository.existsByCommentsAndUser(any(Comments.class), any(User.class))).thenReturn(true);
+
+        // when
+        boolean result = likesService.existsByCommentsAndUser(comment, user);
+
+        // then
+        assertTrue(result);
+
+        verify(likesRepository).existsByCommentsAndUser(eq(comment), eq(user));
+    }
+
+    private void testSaveLikes(Long postId, Long commentId) {
+        // given
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+
+        Likes like = mock(Likes.class);
+        when(like.getId()).thenReturn(1L);
+        when(likesRepository.save(any(Likes.class))).thenReturn(like);
+
+        // when
+        Long result = likesService.save(postId, commentId, principal);
+
+        // then
+        assertEquals(like.getId(), result);
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(likesRepository).save(any(Likes.class));
+    }
+
+    private void testSaveLikesWithNonExistentContentId(Long postId, Long commentId) {
+        // given
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> likesService.save(postId, commentId, principal));
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+
+        verify(likesRepository, never()).save(any(Likes.class));
+    }
+
+    private User testDeleteByContentId(Long postId, Long commentId) {
+        // given
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+
+        // when
+        likesService.deleteByContentId(postId, commentId, principal);
+
+        // then
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+
+        return user;
+    }
+
+    private void testDeleteByNonExistentContentId(Long postId, Long commentId) {
+        // given
+        Principal principal = mock(Principal.class);
+        User user = mock(User.class);
+        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+
+        // when/then
+        assertThrows(IllegalArgumentException.class,
+                () -> likesService.deleteByContentId(postId, commentId, principal));
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+
+        verify(likesRepository, never()).deleteByPosts(any(Posts.class), any(User.class));
+        verify(likesRepository, never()).deleteByComments(any(Comments.class), any(User.class));
     }
 }

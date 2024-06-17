@@ -3,42 +3,64 @@ package com.eskgus.nammunity.service.reports;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.reports.TypesRepository;
-import com.eskgus.nammunity.helper.TestDataHelper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
 public class TypesServiceTest {
-    @Autowired
-    private TestDataHelper testDataHelper;
-
-    @Autowired
+    @Mock
     private TypesRepository typesRepository;
 
-    @Autowired
+    @InjectMocks
     private TypesService typesService;
 
     @Test
-    public void findByContentType() {
-        callAndAssertFindByContentType(ContentType.POSTS);
-        callAndAssertFindByContentType(ContentType.COMMENTS);
-        callAndAssertFindByContentType(ContentType.USERS);
+    public void findByPostType() {
+        testFindByContentType(ContentType.POSTS);
     }
 
-    private void callAndAssertFindByContentType(ContentType contentType) {
-        Types expectedType = getExpectedType(contentType);
-        Types actualType = typesService.findByContentType(contentType);
-
-        assertThat(actualType.getId()).isEqualTo(expectedType.getId());
+    @Test
+    public void findByCommentType() {
+        testFindByContentType(ContentType.COMMENTS);
     }
 
-    private Types getExpectedType(ContentType contentType) {
-        return testDataHelper.assertOptionalAndGetEntity(typesRepository::findByDetail, contentType.getDetailInKor());
+    @Test
+    public void findByUserType() {
+        testFindByContentType(ContentType.USERS);
+    }
+
+    @Test
+    public void findByTypesWithNonExistentContentType() {
+        // given
+        when(typesRepository.findByDetail(anyString())).thenThrow(IllegalArgumentException.class);
+
+        // when/then
+        assertThrows(IllegalArgumentException.class, () -> typesService.findByContentType(ContentType.POSTS));
+
+        verify(typesRepository).findByDetail(anyString());
+    }
+
+    private void testFindByContentType(ContentType contentType) {
+        // given
+        Types type = mock(Types.class);
+        when(typesRepository.findByDetail(anyString())).thenReturn(Optional.of(type));
+
+        // when
+        Types result = typesService.findByContentType(contentType);
+
+        // then
+        assertEquals(type, result);
+
+        verify(typesRepository).findByDetail(contentType.getDetailInKor());
     }
 }
