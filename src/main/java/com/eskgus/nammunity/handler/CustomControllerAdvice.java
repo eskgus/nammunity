@@ -5,7 +5,6 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -19,8 +18,7 @@ import java.util.Map;
 @ControllerAdvice(basePackages = "com.eskgus.nammunity.web.controller.mvc")
 @RequiredArgsConstructor
 public class CustomControllerAdvice {
-    @Autowired
-    private PrincipalHelper principalHelper;
+    private final PrincipalHelper principalHelper;
 
     @ModelAttribute
     public void addDefaultAttributes(Principal principal, Model model, HttpServletRequest request) {
@@ -53,14 +51,12 @@ public class CustomControllerAdvice {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public String handleIllegalArgumentException(IllegalArgumentException ex, Model model) {
-        System.out.println("ControllerAdvice.handleIllegalArgumentException().....");
         model.addAttribute("message", ex.getMessage());
         return "error/error";
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public String handleAccessDeniedException(AccessDeniedException ex, Model model) {
-        System.out.println("ControllerAdvice.handleAccessDeniedException().....");
         model.addAttribute("message", ex.getMessage());
         return "error/error";
     }

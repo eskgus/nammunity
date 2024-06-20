@@ -2,6 +2,7 @@ package com.eskgus.nammunity.config;
 
 import com.eskgus.nammunity.handler.*;
 import com.eskgus.nammunity.domain.user.Role;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,7 +26,29 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    private CustomAuthenticationProvider customAuthenticationProvider;
+    @Autowired
+    private CustomAuthenticationProvider authenticationProvider;
+
+    @Autowired
+    private CustomAuthenticationEntryPoint authenticationEntryPoint;
+
+    @Autowired
+    private CustomAuthenticationSuccessHandler authenticationSuccessHandler;
+
+    @Autowired
+    private CustomAuthenticationFailureHandler authenticationFailureHandler;
+
+    @Autowired
+    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @Autowired
+    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+
+    @Autowired
+    private CustomLogoutSuccessHandler logoutSuccessHandler;
+
+    @Autowired
+    private BCryptPasswordEncoder encoder;
 
     @Bean
     public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
@@ -45,26 +68,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CustomAuthenticationFailureHandler authenticationFailureHandler() {
-        return new CustomAuthenticationFailureHandler();
-    }
-
-    @Bean
-    public CustomAuthenticationSuccessHandler authenticationSuccessHandler() {
-        return new CustomAuthenticationSuccessHandler();
-    }
-
-    @Bean
-    public BCryptPasswordEncoder encoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public CustomAuthenticationEntryPoint customAuthenticationEntryPoint() {
-        return new CustomAuthenticationEntryPoint();
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable().headers().frameOptions().disable()
                 .and()
@@ -81,23 +84,23 @@ public class SecurityConfig {
                                 "/admin/**").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated())
                 .exceptionHandling()
-                    .authenticationEntryPoint(customAuthenticationEntryPoint())
+                    .authenticationEntryPoint(authenticationEntryPoint)
                 .and()
                 .httpBasic(withDefaults())
                 .formLogin(login -> login
                         .loginPage("/users/sign-in")
-                        .successHandler(authenticationSuccessHandler())
-                        .failureHandler(authenticationFailureHandler())
+                        .successHandler(authenticationSuccessHandler)
+                        .failureHandler(authenticationFailureHandler)
                         .permitAll())
                 .oauth2Login(login -> login
                         .loginPage("/users/sign-in")
                         .tokenEndpoint().accessTokenResponseClient(accessTokenResponseClient())
                         .and()
-                        .successHandler(new OAuth2AuthenticationSuccessHandler())
-                        .failureHandler(new OAuth2AuthenticationFailureHandler()))
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler))
                 .logout(logout -> logout
                         .logoutUrl("/users/sign-out")
-                        .logoutSuccessHandler(new CustomLogoutSuccessHandler())
+                        .logoutSuccessHandler(logoutSuccessHandler)
                         .permitAll());
         return http.build();
     }

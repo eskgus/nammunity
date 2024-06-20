@@ -40,16 +40,14 @@ public class CommentsService {
 
     @Transactional
     public Long update(Long id, String content) {
-        Comments comments = commentsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("해당 댓글이 없습니다."));
+        Comments comments = findById(id);
         comments.update(content);
         return id;
     }
 
     @Transactional
     public void delete(Long id) {
-        Comments comments = commentsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("해당 댓글이 없습니다."));
+        Comments comments = findById(id);
         commentsRepository.delete(comments);
     }
 

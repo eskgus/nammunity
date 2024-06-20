@@ -14,15 +14,18 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final BCryptPasswordEncoder encoder;
+    private final BannedUsersService bannedUsersService;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-
-    @Autowired
-    private BannedUsersService bannedUsersService;
-
+    public CustomAuthenticationProvider(CustomUserDetailsService customUserDetailsService,
+                                        BCryptPasswordEncoder encoder,
+                                        BannedUsersService bannedUsersService) {
+        this.customUserDetailsService = customUserDetailsService;
+        this.encoder = encoder;
+        this.bannedUsersService = bannedUsersService;
+    }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -53,7 +56,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             throw new AccountExpiredException("만료된 계정입니다.");
         }
 
-        if (!this.passwordEncoder.matches(password, user.getPassword())) {
+        if (!this.encoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("ID가 존재하지 않거나 비밀번호가 일치하지 않습니다.");
         }
 

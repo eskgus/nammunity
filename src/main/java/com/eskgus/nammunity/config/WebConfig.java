@@ -11,13 +11,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     @Autowired
-    PostsAuthInterceptor postsAuthInterceptor;
+    private PostsAuthInterceptor postsAuthInterceptor;
 
     @Autowired
-    UserAuthInterceptor userAuthInterceptor;
+    private UserAuthInterceptor userAuthInterceptor;
 
     @Autowired
-    CommentsAuthInterceptor commentsAuthInterceptor;
+    private CommentsAuthInterceptor commentsAuthInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

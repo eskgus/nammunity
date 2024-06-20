@@ -63,9 +63,9 @@ public class UserUpdateService {
         User user = principalHelper.getUserFromPrincipal(principal, true);
 
         String email = requestDto.getEmail();
+        validateEmailUpdateDto(email, user);
 
-        if (user.isEnabled()) {
-            validateEmailUpdateDto(email, user);
+        if (user.isEnabled()) { // 회원 정보 수정에서 최초 이메일 변경 (재발송 x)
             user.updateEnabled();
         }
 

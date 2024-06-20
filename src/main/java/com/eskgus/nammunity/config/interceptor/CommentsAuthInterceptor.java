@@ -17,11 +17,14 @@ import java.util.Map;
 
 @Component
 public class CommentsAuthInterceptor implements HandlerInterceptor {
-    @Autowired
-    CommentsService commentsService;
+    private final CommentsService commentsService;
+    private final PrincipalHelper principalHelper;
 
     @Autowired
-    PrincipalHelper principalHelper;
+    public CommentsAuthInterceptor(CommentsService commentsService, PrincipalHelper principalHelper) {
+        this.commentsService = commentsService;
+        this.principalHelper = principalHelper;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request,

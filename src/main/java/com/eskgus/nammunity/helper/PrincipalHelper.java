@@ -13,8 +13,12 @@ import java.security.Principal;
 
 @Component
 public class PrincipalHelper {
+    private final UserService userService;
+
     @Autowired
-    private UserService userService;
+    public PrincipalHelper(UserService userService) {
+        this.userService = userService;
+    }
 
     public User getUserFromPrincipal(Principal principal, boolean throwExceptionOnMissingPrincipal) {
         if (principal != null) {

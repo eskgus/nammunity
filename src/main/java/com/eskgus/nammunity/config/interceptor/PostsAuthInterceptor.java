@@ -17,11 +17,14 @@ import java.util.Map;
 
 @Component
 public class PostsAuthInterceptor implements HandlerInterceptor {
-    @Autowired
-    PostsService postsService;
+    private final PostsService postsService;
+    private final PrincipalHelper principalHelper;
 
     @Autowired
-    PrincipalHelper principalHelper;
+    public PostsAuthInterceptor(PostsService postsService, PrincipalHelper principalHelper) {
+        this.postsService = postsService;
+        this.principalHelper = principalHelper;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request,
