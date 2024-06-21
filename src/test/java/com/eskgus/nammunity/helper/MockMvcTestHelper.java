@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -10,7 +11,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Component
@@ -28,31 +31,52 @@ public class MockMvcTestHelper {
         return content().string(expectedContent);
     }
 
-    public ResultMatcher[] createResultMatchers(String expectedField, String expectedDefaultMessage) {
+    public ResultMatcher[] createResultMatchers(String expectedField, String expectedDefaultMessage,
+                                                String expectedRejectedValue) {
         return new ResultMatcher[]{
                 jsonPath("$[0].field").value(expectedField),
-                jsonPath("$[0].defaultMessage").value(expectedDefaultMessage)
+                jsonPath("$[0].defaultMessage").value(expectedDefaultMessage),
+                jsonPath("$[0].rejectedValue").value(expectedRejectedValue)
         };
     }
 
     public <T> void requestAndAssertStatusIsOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
         mockMvc.perform(requestBuilder
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(new ObjectMapper().writeValueAsString(requestDto)))
+                    .content(new ObjectMapper().writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andDo(print())
                 .andExpect(status().isOk());
     }
 
     public <T> void requestAndAssertStatusIsOkWithParam(MockHttpServletRequestBuilder requestBuilder,
                                                         String name, T value) throws Exception {
         mockMvc.perform(requestBuilder
-                        .param(name, value.toString()))
+                        .param(name, value.toString())
+                        .with(csrf()))
+                .andDo(print())
                 .andExpect(status().isOk());
     }
 
     public void requestAndAssertStatusIsOkWithReferer(MockHttpServletRequestBuilder requestBuilder,
                                                       String referer, ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(requestBuilder
-                    .header("referer", referer))
+                    .header("referer", referer)
+                    .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(resultMatcher);
+    }
+
+    public void requestAndAssertStatusIsOkWithCookie(MockHttpServletRequestBuilder requestBuilder,
+                                                     Cookie cookie, ResultMatcher resultMatcher) throws Exception {
+        if (cookie != null) {
+            requestBuilder.cookie(cookie);
+        }
+
+        mockMvc.perform(requestBuilder
+                    .with(csrf()))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(resultMatcher);
     }
@@ -61,7 +85,9 @@ public class MockMvcTestHelper {
                                                        ResultMatcher... resultMatchers) throws Exception {
         mockMvc.perform(requestBuilder
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(requestDto)))
+                        .content(new ObjectMapper().writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> {
                     for (ResultMatcher resultMatcher : resultMatchers) {
@@ -73,7 +99,9 @@ public class MockMvcTestHelper {
     public <T> void requestAndAssertStatusIsBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder,
                                                             String name, T value, ResultMatcher... resultMatchers) throws Exception {
         mockMvc.perform(requestBuilder
-                        .param(name, value.toString()))
+                        .param(name, value.toString())
+                        .with(csrf()))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> {
                     for (ResultMatcher resultMatcher : resultMatchers) {
@@ -86,7 +114,9 @@ public class MockMvcTestHelper {
                                                               String referer,
                                                               ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(requestBuilder
-                        .header("referer", referer))
+                        .header("referer", referer)
+                        .with(csrf()))
+                .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(resultMatcher);
     }
@@ -94,9 +124,37 @@ public class MockMvcTestHelper {
     public void requestAndAssertStatusIsFound(MockHttpServletRequestBuilder requestBuilder,
                                               String token, ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(requestBuilder
-                        .param("token", token))
+                        .param("token", token)
+                        .with(csrf()))
+                .andDo(print())
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/users/confirm-email"))
+                .andExpect(resultMatcher);
+    }
+
+    public void requestAndAssertStatusIsBadRequestWithCookie(MockHttpServletRequestBuilder requestBuilder,
+                                                             Cookie cookie, ResultMatcher resultMatcher) throws Exception {
+        if (cookie != null) {
+            requestBuilder.cookie(cookie);
+        }
+
+        mockMvc.perform(requestBuilder
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(resultMatcher);
+    }
+
+    public void requestAndAssertStatusIsInternalServerError(MockHttpServletRequestBuilder requestBuilder,
+                                                            Cookie cookie, ResultMatcher resultMatcher) throws Exception {
+        if (cookie != null) {
+            requestBuilder.cookie(cookie);
+        }
+
+        mockMvc.perform(requestBuilder
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isInternalServerError())
                 .andExpect(resultMatcher);
     }
 }
