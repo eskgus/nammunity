@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+
 @RequiredArgsConstructor
 @Service
 public class RegistrationService {
@@ -102,10 +104,10 @@ public class RegistrationService {
 
     private void validateToken(Tokens token) {
         if (token.getConfirmedAt() != null) {
-            throw new IllegalArgumentException("이미 인증된 이메일입니다.");
+            throw new IllegalArgumentException(CONFIRMED_EMAIL.getMessage());
         }
         if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("인증 링크가 만료됐습니다.");
+            throw new IllegalArgumentException(EXPIRED_TOKEN.getMessage());
         }
     }
 
@@ -166,9 +168,9 @@ public class RegistrationService {
 
     private void checkTokenResendAvailability(User user) {
         if (user.isEnabled()) {
-            throw new IllegalArgumentException("이미 인증된 이메일입니다.");
+            throw new IllegalArgumentException(CONFIRMED_EMAIL.getMessage());
         } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
-            throw new IllegalArgumentException("더 이상 재발송할 수 없어요. 다시 가입해 주세요.");
+            throw new IllegalArgumentException(RESEND_NOT_ALLOWED.getMessage());
         }
     }
 
@@ -178,7 +180,7 @@ public class RegistrationService {
         boolean enabled = user.isEnabled();
 
         if (!enabled) {
-            throw new IllegalArgumentException("인증되지 않은 이메일입니다.");
+            throw new IllegalArgumentException(NOT_CONFIRMED_EMAIL.getMessage());
         } else {
             if (referer.contains("/sign-up")) {
                 return "/users/sign-in";

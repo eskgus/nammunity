@@ -47,11 +47,15 @@ public enum ExceptionMessages {
     NON_EXISTENT_REASONS_ID("해당 신고 사유가 없습니다."),
     NON_EXISTENT_TYPE("해당 분류가 없습니다."),
     NON_EXISTENT_USER_REPORT_SUMMARY("신고 요약 내역이 존재하지 않는 회원입니다."),
+    NON_EXISTENT_TOKEN("인증 링크가 존재하지 않습니다."),
 
     EXISTENT_USERNAME("이미 사용 중인 ID입니다."),
     EXISTENT_NICKNAME("이미 사용 중인 닉네임입니다."),
     EXISTENT_EMAIL("이미 사용 중인 이메일입니다."),
 
+    CONFIRMED_EMAIL("이미 인증된 이메일입니다."),
+    NOT_CONFIRMED_EMAIL("인증되지 않은 이메일입니다."),
+    EXPIRED_TOKEN("인증 링크가 만료됐습니다."),
     RESEND_NOT_ALLOWED("더 이상 재발송할 수 없어요. 다시 가입해 주세요."),
 
     UNAUTHORIZED("로그인하세요."),

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_TOKEN;
+
 @RequiredArgsConstructor
 @Service
 public class TokensService {
@@ -14,7 +16,7 @@ public class TokensService {
     @Transactional(readOnly = true)
     public Tokens findByToken(String token) {
         return tokensRepository.findByToken(token).orElseThrow(() -> new
-                IllegalArgumentException("인증 링크가 존재하지 않습니다."));
+                IllegalArgumentException(NON_EXISTENT_TOKEN.getMessage()));
     }
 
     @Transactional

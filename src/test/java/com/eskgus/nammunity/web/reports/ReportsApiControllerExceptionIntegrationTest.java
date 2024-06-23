@@ -23,8 +23,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.domain.enums.Fields.*;
@@ -53,10 +51,10 @@ public class ReportsApiControllerExceptionIntegrationTest {
     @BeforeEach
     public void setUp() {
         Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        assertOptionalAndGetEntity(userRepository::findById, user1Id);
+        assertOptionalAndGetEntity(user1Id);
 
         Long user2Id = testDataHelper.signUp(2L, Role.ADMIN);
-        assertOptionalAndGetEntity(userRepository::findById, user2Id);
+        assertOptionalAndGetEntity(user2Id);
     }
 
     @AfterEach
@@ -184,25 +182,25 @@ public class ReportsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void deleteSelectedContentReportsWithEmptyReportIds() throws Exception {
-        testDeleteSelectedContentReports(null, EMPTY_CONTENT_IDS);
+        testDeleteSelectedContentReportsException(null, EMPTY_CONTENT_IDS);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void deleteSelectedPostReportsWithNonExistentPostId() throws Exception {
-        testDeleteSelectedContentReports(POSTS_ID, NON_EXISTENT_POST);
+        testDeleteSelectedContentReportsException(POSTS_ID, NON_EXISTENT_POST);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void deleteSelectedCommentReportsWithNonExistentCommentId() throws Exception {
-        testDeleteSelectedContentReports(COMMENTS_ID, NON_EXISTENT_COMMENT);
+        testDeleteSelectedContentReportsException(COMMENTS_ID, NON_EXISTENT_COMMENT);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void deleteSelectedUserReportsWithNonExistentUserId() throws Exception {
-        testDeleteSelectedContentReports(USER_ID, NON_EXISTENT_USER_ID);
+        testDeleteSelectedContentReportsException(USER_ID, NON_EXISTENT_USER_ID);
     }
 
     @Test
@@ -217,13 +215,13 @@ public class ReportsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void banUserWithNonExistentUserId() throws Exception {
-        testBanUser(NON_EXISTENT_USER_ID, userRepository.count() + 1);
+        testBanUserException(NON_EXISTENT_USER_ID, userRepository.count() + 1);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void banUserWithNonExistentUserReportSummary() throws Exception {
-        testBanUser(NON_EXISTENT_USER_REPORT_SUMMARY, ID);
+        testBanUserException(NON_EXISTENT_USER_REPORT_SUMMARY, ID);
     }
 
     private void testSaveContentReportsThrowsMethodArgumentNotValidException(ContentReportsSaveDto requestDto,
@@ -239,7 +237,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
-    private void testDeleteSelectedContentReports(Fields field, ExceptionMessages exceptionMessage) throws Exception {
+    private void testDeleteSelectedContentReportsException(Fields field, ExceptionMessages exceptionMessage) throws Exception {
         // given
         ContentReportSummaryDeleteDto requestDto = createContentReportSummaryDeleteDto(field);
 
@@ -249,7 +247,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
     }
 
-    private void testBanUser(ExceptionMessages exceptionMessage, Long requestDto) throws Exception {
+    private void testBanUserException(ExceptionMessages exceptionMessage, Long requestDto) throws Exception {
         // given
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/process");
@@ -305,7 +303,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
+    private void assertOptionalAndGetEntity(Long contentId) {
+        testDataHelper.assertOptionalAndGetEntity(userRepository::findById, contentId);
     }
 }

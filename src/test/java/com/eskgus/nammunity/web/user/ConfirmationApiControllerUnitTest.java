@@ -58,7 +58,7 @@ public class ConfirmationApiControllerUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/confirm");
         ResultMatcher resultMatcher = flash().attributeCount(0);
-        mockMvcTestHelper.requestAndAssertStatusIsFound(requestBuilder, token, resultMatcher);
+        mockMvcTestHelper.performAndExpectFound(requestBuilder, token, resultMatcher);
 
         verify(registrationService).confirmToken(eq(token));
     }
@@ -76,7 +76,7 @@ public class ConfirmationApiControllerUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/{id}/confirm", ID);
         ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(redirectUrl);
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithReferer(requestBuilder, referer, resultMatcher);
+        mockMvcTestHelper.performAndExpectOkWithReferer(requestBuilder, referer, resultMatcher);
 
         verify(registrationService).checkUserEnabled(eq(ID), eq(referer));
     }
@@ -89,7 +89,7 @@ public class ConfirmationApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/confirm");
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, ID);
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, ID);
 
         verify(registrationService).resendToken(eq(ID));
         verify(userService, never()).delete(anyLong());

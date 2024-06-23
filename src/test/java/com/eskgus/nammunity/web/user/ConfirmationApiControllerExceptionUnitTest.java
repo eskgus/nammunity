@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web.user;
 import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
+import com.eskgus.nammunity.domain.enums.ExceptionMessages;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.service.user.RegistrationService;
@@ -62,7 +63,7 @@ public class ConfirmationApiControllerExceptionUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/confirm");
         ResultMatcher resultMatcher = flash().attribute("error", ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
-        mockMvcTestHelper.requestAndAssertStatusIsFound(requestBuilder, token, resultMatcher);
+        mockMvcTestHelper.performAndExpectFound(requestBuilder, token, resultMatcher);
 
         verify(registrationService).confirmToken(eq(token));
     }
@@ -78,8 +79,8 @@ public class ConfirmationApiControllerExceptionUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/{id}/confirm", ID);
-        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithReferer(requestBuilder, referer, resultMatcher);
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
+        mockMvcTestHelper.performAndExpectBadRequestWithReferer(requestBuilder, referer, resultMatcher);
 
         verify(registrationService).checkUserEnabled(eq(ID), eq(referer));
     }
@@ -87,23 +88,23 @@ public class ConfirmationApiControllerExceptionUnitTest {
     @Test
     @WithMockUser
     public void resendTokenThrowsIllegalArgumentException () throws Exception {
-        testResendTokenException(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage(), never());
+        testResendTokenException(ILLEGAL_ARGUMENT_EXCEPTION_TEST, never());
     }
 
     @Test
     @WithMockUser
     public void resendTokenThrowsResendNotAllowedIllegalArgumentException() throws Exception {
-        testResendTokenException(RESEND_NOT_ALLOWED.getMessage(), times(1));
+        testResendTokenException(RESEND_NOT_ALLOWED, times(1));
     }
 
-    private void testResendTokenException(String exceptionMessage, VerificationMode mode) throws Exception {
+    private void testResendTokenException(ExceptionMessages exceptionMessage, VerificationMode mode) throws Exception {
         // given
-        doThrow(new IllegalArgumentException(exceptionMessage)).when(registrationService).resendToken(anyLong());
+        doThrow(new IllegalArgumentException(exceptionMessage.getMessage())).when(registrationService).resendToken(anyLong());
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/confirm");
         ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(exceptionMessage);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, ID, resultMatcher);
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, ID, resultMatcher);
 
         verify(registrationService).resendToken(eq(ID));
         verify(userService, mode).delete(eq(ID));

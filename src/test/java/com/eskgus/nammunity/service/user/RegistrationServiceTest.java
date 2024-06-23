@@ -39,7 +39,7 @@ public class RegistrationServiceTest {
     private RegistrationService registrationService;
 
     @Test
-    public void checkUserEnabledInSignIn() {
+    public void checkUserEnabledInSignUp() {
         testCheckUserEnabled("/users/sign-up", "/users/sign-in");
     }
 

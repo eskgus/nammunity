@@ -13,23 +13,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.function.Function;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ConfirmationApiControllerTest {
+public class ConfirmationApiControllerIntegrationTest {
     @Autowired
     private TestDataHelper testDataHelper;
 
@@ -45,6 +43,8 @@ public class ConfirmationApiControllerTest {
     private User user;
     private Tokens token;
 
+    private static final String REQUEST_MAPPING = "/api/users";
+
     @BeforeEach
     public void setUp() {
         Long userId = testDataHelper.signUp(1L, Role.USER);
@@ -54,55 +54,62 @@ public class ConfirmationApiControllerTest {
         this.token = assertOptionalAndGetEntity(tokensRepository::findById, tokenId);
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
     @AfterEach
     public void cleanUp() {
         testDataHelper.cleanUp();
     }
 
     @Test
+    @WithAnonymousUser
     public void confirmToken() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = get("/api/users/confirm");
+        // given
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/confirm");
         ResultMatcher resultMatcher = flash().attributeCount(0);
-
-        mockMvcTestHelper.requestAndAssertStatusIsFound(requestBuilder, token.getToken(), resultMatcher);
+        mockMvcTestHelper.performAndExpectFound(requestBuilder, token.getToken(), resultMatcher);
     }
 
-    @Transactional
+    @Test
+    @WithAnonymousUser
+    public void checkUserEnabledInSignUp() throws Exception {
+        String signUp = "/users/sign-up";
+        String signIn = "/users/sign-in";
+
+        testCheckUserEnabled(signUp, signIn);
+    }
+
     @Test
     @WithMockUser(username = "username1")
-    public void checkUserEnabled() throws Exception {
-        confirmEmail();
-
-        // 일반 1. 회원가입
-        requestAndAssertCheckUserEnabled("/users/sign-up/" + user.getId(), "/users/sign-in");
-
-        // 일반 2. 이메일 변경
-        String userInfo = "/users/my-page/update/user-info";
-        requestAndAssertCheckUserEnabled(userInfo, userInfo);
-    }
-
-    private void confirmEmail() {
-        testDataHelper.confirmTokens(token);
-        assertThat(token.getConfirmedAt()).isNotNull();
-        assertThat(token.getUser().isEnabled()).isTrue();
-    }
-
-    private void requestAndAssertCheckUserEnabled(String referer, String expectedContent) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = get("/api/users/{id}/confirm", user.getId());
-        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(expectedContent);
-
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithReferer(requestBuilder, referer, resultMatcher);
+    public void checkUserEnabledInMyPage() throws Exception {
+        String myPage = "/users/my-page/update/user-info";
+        testCheckUserEnabled(myPage, myPage);
     }
 
     @Test
+    @WithAnonymousUser
     public void resendToken() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = post("/api/users/confirm");
-        Long requestDto = user.getId();
+        // given
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/confirm");
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, user.getId());
+    }
 
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+    private void testCheckUserEnabled(String referer, String redirectUrl) throws Exception {
+        // given
+        updateUserEnabled();
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/{id}/confirm", user.getId());
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(redirectUrl);
+        mockMvcTestHelper.performAndExpectOkWithReferer(requestBuilder, referer, resultMatcher);
+    }
+
+    private void updateUserEnabled() {
+        user.updateEnabled();
+        userRepository.save(user);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.RESEND_NOT_ALLOWED;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/users")
@@ -40,7 +42,7 @@ public class ConfirmationApiController {
             registrationService.resendToken(id);
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (IllegalArgumentException ex) {
-            if ("더 이상 재발송할 수 없어요. 다시 가입해 주세요.".equals(ex.getMessage())) {
+            if (RESEND_NOT_ALLOWED.getMessage().equals(ex.getMessage())) {
                 userService.delete(id); // 이거 트랜잭션 때문에 따로 처리함 !
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());

@@ -90,11 +90,11 @@ public class MockMvcTestHelper {
                 .andExpect(status().isOk());
     }
 
-    public void requestAndAssertStatusIsOkWithReferer(MockHttpServletRequestBuilder requestBuilder,
-                                                      String referer, ResultMatcher resultMatcher) throws Exception {
+    public void performAndExpectOkWithReferer(MockHttpServletRequestBuilder requestBuilder, String referer,
+                                              ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(requestBuilder
-                    .header("referer", referer)
-                    .with(csrf()))
+                        .header("referer", referer)
+                        .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(resultMatcher);
@@ -113,8 +113,8 @@ public class MockMvcTestHelper {
                 .andExpect(resultMatcher);
     }
 
-    public void requestAndAssertStatusIsFound(MockHttpServletRequestBuilder requestBuilder,
-                                              String token, ResultMatcher resultMatcher) throws Exception {
+    public void performAndExpectFound(MockHttpServletRequestBuilder requestBuilder,
+                                      String token, ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(requestBuilder
                         .param("token", token)
                         .with(csrf()))
@@ -182,9 +182,8 @@ public class MockMvcTestHelper {
                 });
     }
 
-    public void requestAndAssertStatusIsBadRequestWithReferer(MockHttpServletRequestBuilder requestBuilder,
-                                                              String referer,
-                                                              ResultMatcher resultMatcher) throws Exception {
+    public void performAndExpectBadRequestWithReferer(MockHttpServletRequestBuilder requestBuilder,
+                                                      String referer, ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(requestBuilder
                         .header("referer", referer)
                         .with(csrf()))
