@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web.comments;
 import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
+import com.eskgus.nammunity.domain.enums.ExceptionMessages;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.service.comments.CommentsService;
@@ -29,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -60,7 +62,7 @@ public class CommentsApiControllerExceptionUnitTest {
     @WithMockUser
     public void saveCommentsWithEmptyContent() throws Exception {
         String content = "";
-        ResultMatcher[] resultMatchers = createResultMatchers(EMPTY_COMMENT.getMessage(), content);
+        ResultMatcher[] resultMatchers = createResultMatchers(content, EMPTY_COMMENT);
         testSaveCommentsException(content, never(), resultMatchers);
     }
 
@@ -68,7 +70,7 @@ public class CommentsApiControllerExceptionUnitTest {
     @WithMockUser
     public void saveCommentsWithInvalidContentLength() throws Exception {
         String content = TEN_CHAR_STRING.repeat(150) + "!";
-        ResultMatcher[] resultMatchers = createResultMatchers(INVALID_COMMENT.getMessage(), content);
+        ResultMatcher[] resultMatchers = createResultMatchers(content, INVALID_COMMENT);
         testSaveCommentsException(content, never(), resultMatchers);
     }
 
@@ -86,7 +88,7 @@ public class CommentsApiControllerExceptionUnitTest {
     @WithMockUser
     public void updateCommentsWithEmptyContent() throws Exception {
         String content = "";
-        ResultMatcher[] resultMatchers = createResultMatchers(EMPTY_COMMENT.getMessage(), content);
+        ResultMatcher[] resultMatchers = createResultMatchers(content, EMPTY_COMMENT);
         testUpdateCommentsException(content, never(), resultMatchers);
     }
 
@@ -94,7 +96,7 @@ public class CommentsApiControllerExceptionUnitTest {
     @WithMockUser
     public void updateCommentsWithInvalidContentLength() throws Exception {
         String content = TEN_CHAR_STRING.repeat(150) + "!";
-        ResultMatcher[] resultMatchers = createResultMatchers(INVALID_COMMENT.getMessage(), content);
+        ResultMatcher[] resultMatchers = createResultMatchers(content, INVALID_COMMENT);
         testUpdateCommentsException(content, never(), resultMatchers);
     }
 
@@ -118,7 +120,7 @@ public class CommentsApiControllerExceptionUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", ID);
         ResultMatcher resultMatcher = createResultMatcher();
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, null, resultMatcher);
+        performAndExpectBadRequest(requestBuilder, null, resultMatcher);
 
         verify(commentsService).delete(eq(ID));
     }
@@ -135,18 +137,17 @@ public class CommentsApiControllerExceptionUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
         ResultMatcher resultMatcher = createResultMatcher();
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatcher);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
 
         verify(commentsService).deleteSelectedComments(eq(requestDto));
     }
 
-    private ResultMatcher[] createResultMatchers(String expectedDefaultMessage, String expectedRejectedValue) {
-        return mockMvcTestHelper.createResultMatchers(
-                "content", expectedDefaultMessage, expectedRejectedValue);
+    private ResultMatcher[] createResultMatchers(String rejectedValue, ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatchers(CONTENT, rejectedValue, exceptionMessage);
     }
 
     private ResultMatcher createResultMatcher() {
-        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
+        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 
     private void testSaveCommentsException(String content, VerificationMode mode,
@@ -156,7 +157,7 @@ public class CommentsApiControllerExceptionUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
 
         verify(commentsService, mode).save(any(CommentsSaveDto.class), any(Principal.class));
     }
@@ -168,8 +169,13 @@ public class CommentsApiControllerExceptionUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", ID);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
 
         verify(commentsService, mode).update(eq(ID), eq(requestDto.getContent()));
+    }
+
+    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
+                                                ResultMatcher... resultMatchers) throws Exception {
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 }

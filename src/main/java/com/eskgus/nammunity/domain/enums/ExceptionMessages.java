@@ -19,6 +19,7 @@ public enum ExceptionMessages {
     EMPTY_COMMENT("댓글을 입력하세요."),
 
     EMPTY_REASONS_ID("신고 사유를 선택하세요."),
+    EMPTY_CONTENT_IDS("삭제할 항목을 선택하세요."),
 
     MISMATCH_OLD_PASSWORD("현재 비밀번호가 일치하지 않습니다."),
     MISMATCH_CONFIRM_PASSWORD("비밀번호가 일치하지 않습니다."),
@@ -35,11 +36,18 @@ public enum ExceptionMessages {
 
     INVALID_OTHER_REASONS("기타 사유는 500글자 이하로 작성해 주세요."),
 
-    EXISTS_USERNAME("이미 사용 중인 ID입니다."),
-    EXISTS_NICKNAME("이미 사용 중인 닉네임입니다."),
-    EXISTS_EMAIL("이미 사용 중인 이메일입니다."),
+    NON_EXISTENT_USER("존재하지 않는 ID입니다."),
+    NON_EXISTENT_POST("해당 게시글이 없습니다."),
+    NON_EXISTENT_COMMENT("해당 댓글이 없습니다."),
+
+    EXISTENT_USERNAME("이미 사용 중인 ID입니다."),
+    EXISTENT_NICKNAME("이미 사용 중인 닉네임입니다."),
+    EXISTENT_EMAIL("이미 사용 중인 이메일입니다."),
 
     RESEND_NOT_ALLOWED("더 이상 재발송할 수 없어요. 다시 가입해 주세요."),
+
+    UNAUTHORIZED("로그인하세요."),
+    FORBIDDEN("권한이 없습니다."),
 
     INTERNAL_SERVER_ERROR("서버 오류가 발생했습니다. 관리자에게 문의하세요."),
 

@@ -3,7 +3,6 @@ package com.eskgus.nammunity.web.comments;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
-import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
@@ -29,7 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class CommentsApiControllerTest {
+public class CommentsApiControllerIntegrationTest {
     @Autowired
     private TestDataHelper testDataHelper;
 
@@ -46,7 +45,11 @@ public class CommentsApiControllerTest {
     private CommentsRepository commentsRepository;
 
     private User user;
-    private Posts post;
+    private Long postId;
+
+    private static final String COMMENT = "comment";
+
+    private static final String REQUEST_MAPPING = "/api/comments";
 
     @BeforeEach
     public void setUp() {
@@ -54,7 +57,8 @@ public class CommentsApiControllerTest {
         this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
         Long postId = testDataHelper.savePosts(user);
-        this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);
+        assertOptionalAndGetEntity(postsRepository::findById, postId);
+        this.postId = postId;
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
@@ -69,16 +73,10 @@ public class CommentsApiControllerTest {
     @Test
     @WithMockUser(username = "username1")
     public void saveComments() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = post("/api/comments");
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
         CommentsSaveDto requestDto = createCommentsSaveDto();
 
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
-    }
-
-    private CommentsSaveDto createCommentsSaveDto() {
-        String content = "comment";
-        Long postId = post.getId();
-        return new CommentsSaveDto(content, postId);
+        performAndExpectOk(requestBuilder, requestDto);
     }
 
     @Test
@@ -86,21 +84,10 @@ public class CommentsApiControllerTest {
     public void updateComments() throws Exception {
         Long commentId = saveComment();
 
-        MockHttpServletRequestBuilder requestBuilder = put("/api/comments/{id}", commentId);
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", commentId);
         CommentsUpdateDto requestDto = createCommentsUpdateDto();
 
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
-    }
-
-    private Long saveComment() {
-        Long commentId = testDataHelper.saveComments(post.getId(), user);
-        assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-        return commentId;
-    }
-
-    private CommentsUpdateDto createCommentsUpdateDto() {
-        String content = "updated comment";
-        return new CommentsUpdateDto(content);
+        performAndExpectOk(requestBuilder, requestDto);
     }
 
     @Test
@@ -108,18 +95,28 @@ public class CommentsApiControllerTest {
     public void deleteComments() throws Exception {
         Long commentId = saveComment();
 
-        MockHttpServletRequestBuilder requestBuilder = delete("/api/comments/{id}", commentId);
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", commentId);
 
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, null);
+        performAndExpectOk(requestBuilder, null);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deleteSelectedComments() throws Exception {
         List<Long> requestDto = createCommentIds();
-        MockHttpServletRequestBuilder requestBuilder = delete("/api/comments/selected-delete");
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
 
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
+    }
+
+    private CommentsSaveDto createCommentsSaveDto() {
+        return new CommentsSaveDto(COMMENT, postId);
+    }
+
+    private CommentsUpdateDto createCommentsUpdateDto() {
+        String content = "updated " + COMMENT;
+
+        return new CommentsUpdateDto(content);
     }
 
     private List<Long> createCommentIds() {
@@ -128,6 +125,18 @@ public class CommentsApiControllerTest {
             Long commentId = saveComment();
             requestDto.add(commentId);
         }
+
         return requestDto;
+    }
+
+    private Long saveComment() {
+        Long commentId = testDataHelper.saveComments(postId, user);
+        assertOptionalAndGetEntity(commentsRepository::findById, commentId);
+
+        return commentId;
+    }
+
+    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 }

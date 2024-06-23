@@ -59,7 +59,7 @@ public class CommentsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(commentsService).save(any(CommentsSaveDto.class), any(Principal.class));
     }
@@ -74,7 +74,7 @@ public class CommentsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", ID);
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(commentsService).update(eq(ID), eq(requestDto.getContent()));
     }
@@ -87,7 +87,7 @@ public class CommentsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", ID);
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, null);
+        performAndExpectOk(requestBuilder, null);
 
         verify(commentsService).delete(eq(ID));
     }
@@ -102,8 +102,12 @@ public class CommentsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(commentsService).deleteSelectedComments(eq(requestDto));
+    }
+
+    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 }

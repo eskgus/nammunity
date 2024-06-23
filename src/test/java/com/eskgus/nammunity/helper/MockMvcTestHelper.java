@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.helper;
 
+import com.eskgus.nammunity.domain.enums.ExceptionMessages;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,10 @@ public class MockMvcTestHelper {
         return content().string(expectedContent);
     }
 
+    public ResultMatcher createResultMatcher(ExceptionMessages exceptionMessage) {
+        return content().string(exceptionMessage.getMessage());
+    }
+
     public ResultMatcher[] createResultMatchers(String expectedField, String expectedDefaultMessage,
                                                 String expectedRejectedValue) {
         return new ResultMatcher[]{
@@ -40,10 +46,27 @@ public class MockMvcTestHelper {
         };
     }
 
+    public ResultMatcher[] createResultMatchers(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {
+        return new ResultMatcher[]{
+                jsonPath("$[0].field").value(field.getKey()),
+                jsonPath("$[0].rejectedValue").value(rejectedValue),
+                jsonPath("$[0].defaultMessage").value(exceptionMessage.getMessage())
+        };
+    }
+
     public <T> void requestAndAssertStatusIsOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
         mockMvc.perform(requestBuilder
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(new ObjectMapper().writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    public <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvc.perform(requestBuilder
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto))
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -81,8 +104,34 @@ public class MockMvcTestHelper {
                 .andExpect(resultMatcher);
     }
 
+    public void requestAndAssertStatusIsFound(MockHttpServletRequestBuilder requestBuilder,
+                                              String token, ResultMatcher resultMatcher) throws Exception {
+        mockMvc.perform(requestBuilder
+                        .param("token", token)
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/users/confirm-email"))
+                .andExpect(resultMatcher);
+    }
+
     public <T> void requestAndAssertStatusIsBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
                                                        ResultMatcher... resultMatchers) throws Exception {
+        mockMvc.perform(requestBuilder
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> {
+                    for (ResultMatcher resultMatcher : resultMatchers) {
+                        resultMatcher.match(result);
+                    }
+                });
+    }
+
+    public <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
+                                               ResultMatcher... resultMatchers) throws Exception {
         mockMvc.perform(requestBuilder
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto))
@@ -121,17 +170,6 @@ public class MockMvcTestHelper {
                 .andExpect(resultMatcher);
     }
 
-    public void requestAndAssertStatusIsFound(MockHttpServletRequestBuilder requestBuilder,
-                                              String token, ResultMatcher resultMatcher) throws Exception {
-        mockMvc.perform(requestBuilder
-                        .param("token", token)
-                        .with(csrf()))
-                .andDo(print())
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/users/confirm-email"))
-                .andExpect(resultMatcher);
-    }
-
     public void requestAndAssertStatusIsBadRequestWithCookie(MockHttpServletRequestBuilder requestBuilder,
                                                              Cookie cookie, ResultMatcher resultMatcher) throws Exception {
         if (cookie != null) {
@@ -142,6 +180,30 @@ public class MockMvcTestHelper {
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
+                .andExpect(resultMatcher);
+    }
+
+    public <T> void performAndExpectUnauthorized(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        ResultMatcher resultMatcher = createResultMatcher(ExceptionMessages.UNAUTHORIZED);
+
+        mockMvc.perform(requestBuilder
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+                .andExpect(resultMatcher);
+    }
+
+    public <T> void performAndExpectForbidden(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        ResultMatcher resultMatcher = createResultMatcher(ExceptionMessages.FORBIDDEN);
+
+        mockMvc.perform(requestBuilder
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isForbidden())
                 .andExpect(resultMatcher);
     }
 
