@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.handler;
 
+import com.eskgus.nammunity.domain.enums.ExceptionMessages;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +26,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     private void sendRestResponse(HttpServletResponse response) throws IOException {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType("application/json; charset=UTF-8");
-        response.getWriter().write("로그인하세요.");
+        response.getWriter().write(ExceptionMessages.UNAUTHORIZED.getMessage());
     }
 
     private void sendMvcResponse(HttpServletRequest request, HttpServletResponse response) throws IOException {

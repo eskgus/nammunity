@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Principal;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+
 @Component
 public class PrincipalHelper {
     private final UserService userService;
@@ -25,24 +27,22 @@ public class PrincipalHelper {
             return userService.findByUsername(principal.getName());
         }
         if (throwExceptionOnMissingPrincipal) {
-            throw new IllegalArgumentException("로그인하세요.");
+            throw new IllegalArgumentException(UNAUTHORIZED.getMessage());
         }
         return null;
     }
 
     public void denyAccess(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        final String FORBIDDEN_MESSAGE = "권한이 없습니다.";
-
         if (request.getRequestURI().startsWith("/api")) {
-            sendResponse(response, FORBIDDEN_MESSAGE);
+            sendResponse(response);
         } else {
-            throw new AccessDeniedException(FORBIDDEN_MESSAGE);
+            throw new AccessDeniedException(FORBIDDEN.getMessage());
         }
     }
 
-    private void sendResponse(HttpServletResponse response, String message) throws Exception {
+    private void sendResponse(HttpServletResponse response) throws Exception {
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType("application/json; charset=UTF-8");
-        response.getWriter().write(message);
+        response.getWriter().write(FORBIDDEN.getMessage());
     }
 }

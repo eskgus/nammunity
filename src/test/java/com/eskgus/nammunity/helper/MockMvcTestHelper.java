@@ -81,6 +81,15 @@ public class MockMvcTestHelper {
                 .andExpect(status().isOk());
     }
 
+    public <T> void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder,
+                                                String name, T value) throws Exception {
+        mockMvc.perform(requestBuilder
+                        .param(name, value.toString())
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
     public void requestAndAssertStatusIsOkWithReferer(MockHttpServletRequestBuilder requestBuilder,
                                                       String referer, ResultMatcher resultMatcher) throws Exception {
         mockMvc.perform(requestBuilder
@@ -159,6 +168,20 @@ public class MockMvcTestHelper {
                 });
     }
 
+    public <T> void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder,
+                                                        String name, T value, ResultMatcher... resultMatchers) throws Exception {
+        mockMvc.perform(requestBuilder
+                        .param(name, value.toString())
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> {
+                    for (ResultMatcher resultMatcher : resultMatchers) {
+                        resultMatcher.match(result);
+                    }
+                });
+    }
+
     public void requestAndAssertStatusIsBadRequestWithReferer(MockHttpServletRequestBuilder requestBuilder,
                                                               String referer,
                                                               ResultMatcher resultMatcher) throws Exception {
@@ -189,6 +212,18 @@ public class MockMvcTestHelper {
         mockMvc.perform(requestBuilder
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto))
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+                .andExpect(resultMatcher);
+    }
+
+    public <T> void performAndExpectUnauthorizedWithParam(MockHttpServletRequestBuilder requestBuilder,
+                                                          String name, T value) throws Exception {
+        ResultMatcher resultMatcher = createResultMatcher(ExceptionMessages.UNAUTHORIZED);
+
+        mockMvc.perform(requestBuilder
+                        .param(name, value.toString())
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isUnauthorized())

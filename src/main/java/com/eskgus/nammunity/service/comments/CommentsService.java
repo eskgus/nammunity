@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.Principal;
 import java.util.List;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_COMMENT;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -69,7 +70,7 @@ public class CommentsService {
     @Transactional(readOnly = true)
     public Comments findById(Long id) {
         return commentsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("해당 댓글이 없습니다."));
+                IllegalArgumentException(NON_EXISTENT_COMMENT.getMessage()));
     }
 
     @Transactional(readOnly = true)

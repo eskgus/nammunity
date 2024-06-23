@@ -64,10 +64,6 @@ public class CommentsApiControllerExceptionIntegrationTest {
         this.postId = postId;
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
     @AfterEach
     public void cleanUp() {
         testDataHelper.cleanUp();
@@ -174,7 +170,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void deleteCommentsWithForbiddenUser() throws Exception {
-         saveUser();
+        saveUser();
         testDeleteCommentsExpectNotBadRequest(FORBIDDEN);
     }
 
@@ -182,7 +178,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @WithAnonymousUser
     public void deleteSelectedCommentsWithAnonymousUser() throws Exception {
         // given
-        List<Long> requestDto = saveComments();
+        List<Long> requestDto = createCommentIds();
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
@@ -193,7 +189,6 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @WithMockUser(username = "username1")
     public void deleteSelectedCommentsWithEmptyCommentIds() throws Exception {
         // given
-        saveComments();
         List<Long> requestDto = Collections.emptyList();
 
         // when/then
@@ -204,8 +199,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @WithMockUser(username = "username1")
     public void deleteSelectedCommentsWithNonExistentCommentId() throws Exception {
         // given
-        long count = commentsRepository.count();
-        List<Long> requestDto = Arrays.asList(count + 1, count + 2, count + 3);
+        List<Long> requestDto = createCommentIds();
 
         // when/then
         testDeleteSelectedCommentsExpectBadRequest(requestDto, NON_EXISTENT_COMMENT);
@@ -297,16 +291,6 @@ public class CommentsApiControllerExceptionIntegrationTest {
         assertOptionalAndGetEntity(userRepository::findById, userId);
     }
 
-    private List<Long> saveComments() {
-        List<Long> commentIds = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
-            Long commentId = saveComment();
-            commentIds.add(commentId);
-        }
-
-        return commentIds;
-    }
-
     private Long saveComment() {
         Long commentId = testDataHelper.saveComments(postId, user);
         assertOptionalAndGetEntity(commentsRepository::findById, commentId);
@@ -320,6 +304,12 @@ public class CommentsApiControllerExceptionIntegrationTest {
         return new CommentsSaveDto(content, postId);
     }
 
+    private List<Long> createCommentIds() {
+        long count = commentsRepository.count();
+
+        return Arrays.asList(count + 1, count + 2, count + 3);
+    }
+
     private ResultMatcher[] createResultMatchers(String rejectedValue,
                                                  ExceptionMessages exceptionMessage) {
         return mockMvcTestHelper.createResultMatchers(CONTENT, rejectedValue, exceptionMessage);
@@ -327,5 +317,9 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     private ResultMatcher createResultMatcher(ExceptionMessages exceptionMessage) {
         return mockMvcTestHelper.createResultMatcher(exceptionMessage);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

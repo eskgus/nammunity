@@ -43,6 +43,7 @@ public class LikesApiControllerExceptionUnitTest {
     @MockBean
     private LikesService likesService;
 
+    private static final String POST_ID = "postsId";
     private static final Long ID = 1L;
 
     private static final String REQUEST_MAPPING = "/api/likes";
@@ -56,8 +57,7 @@ public class LikesApiControllerExceptionUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithParam(requestBuilder, "postsId", ID, resultMatcher);
+        performAndExpectBadRequestWithParam(requestBuilder);
 
         verify(likesService).save(eq(ID), isNull(), any(Principal.class));
     }
@@ -71,8 +71,7 @@ public class LikesApiControllerExceptionUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING);
-        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithParam(requestBuilder, "postsId", ID, resultMatcher);
+        performAndExpectBadRequestWithParam(requestBuilder);
 
         verify(likesService).deleteByContentId(eq(ID), isNull(), any(Principal.class));
     }
@@ -88,9 +87,18 @@ public class LikesApiControllerExceptionUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
-        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatcher);
+        ResultMatcher resultMatcher = createResultMatcher();
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
 
         verify(likesService).deleteSelectedLikes(eq(requestDto));
+    }
+
+    private void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder) throws Exception {
+        ResultMatcher resultMatcher = createResultMatcher();
+        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, POST_ID, ID, resultMatcher);
+    }
+
+    private ResultMatcher createResultMatcher() {
+        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
     }
 }

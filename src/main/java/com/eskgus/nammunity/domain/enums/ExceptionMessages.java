@@ -39,6 +39,7 @@ public enum ExceptionMessages {
     NON_EXISTENT_USER("존재하지 않는 ID입니다."),
     NON_EXISTENT_POST("해당 게시글이 없습니다."),
     NON_EXISTENT_COMMENT("해당 댓글이 없습니다."),
+    NON_EXISTENT_LIKE("해당 좋아요가 없습니다."),
 
     EXISTENT_USERNAME("이미 사용 중인 ID입니다."),
     EXISTENT_NICKNAME("이미 사용 중인 닉네임입니다."),

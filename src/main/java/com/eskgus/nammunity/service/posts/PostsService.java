@@ -17,6 +17,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_POST;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -50,7 +52,7 @@ public class PostsService {
     @Transactional
     public void deleteSelectedPosts(List<Long> postIds) {
         if (postIds.isEmpty()) {
-            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+            throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
         }
 
         postIds.forEach(this::delete);
@@ -71,7 +73,7 @@ public class PostsService {
     @Transactional(readOnly = true)
     public Posts findById(Long id) {
         return postsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("해당 게시글이 없습니다."));
+                IllegalArgumentException(NON_EXISTENT_POST.getMessage()));
     }
 
     @Transactional(readOnly = true)

@@ -41,6 +41,8 @@ public class LikesApiControllerUnitTest {
     @MockBean
     private LikesService likesService;
 
+    private static final String POST_ID = "postsId";
+    private static final String COMMENT_ID = "commentsId";
     private static final Long ID = 1L;
 
     private static final String REQUEST_MAPPING = "/api/likes";
@@ -48,7 +50,7 @@ public class LikesApiControllerUnitTest {
     @Test
     @WithMockUser
     public void savePostLikes() throws Exception {
-        testSaveLikes("postsId");
+        testSaveLikes(POST_ID);
 
         verify(likesService).save(eq(ID), isNull(), any(Principal.class));
     }
@@ -56,7 +58,7 @@ public class LikesApiControllerUnitTest {
     @Test
     @WithMockUser
     public void saveCommentLikes() throws Exception {
-        testSaveLikes("commentsId");
+        testSaveLikes(COMMENT_ID);
 
         verify(likesService).save(isNull(), eq(ID), any(Principal.class));
     }
@@ -64,7 +66,7 @@ public class LikesApiControllerUnitTest {
     @Test
     @WithMockUser
     public void deletePostLikes() throws Exception {
-        testDeleteLikes("postsId");
+        testDeleteLikes(POST_ID);
 
         verify(likesService).deleteByContentId(eq(ID), isNull(), any(Principal.class));
     }
@@ -72,7 +74,7 @@ public class LikesApiControllerUnitTest {
     @Test
     @WithMockUser
     public void deleteCommentLikes() throws Exception {
-        testDeleteLikes("commentsId");
+        testDeleteLikes(COMMENT_ID);
 
         verify(likesService).deleteByContentId(isNull(), eq(ID), any(Principal.class));
     }
@@ -87,7 +89,7 @@ public class LikesApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
 
         verify(likesService).deleteSelectedLikes(eq(requestDto));
     }
@@ -98,7 +100,7 @@ public class LikesApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, name, ID);
+        performAndExpectOkWithParam(requestBuilder, name);
     }
 
     private void testDeleteLikes(String name) throws Exception {
@@ -107,6 +109,10 @@ public class LikesApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING);
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, name, ID);
+        performAndExpectOkWithParam(requestBuilder, name);
+    }
+
+    private void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder, String name) throws Exception {
+        mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, name, ID);
     }
 }

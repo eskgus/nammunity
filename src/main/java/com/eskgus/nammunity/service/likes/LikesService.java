@@ -20,6 +20,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_LIKE;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -71,7 +73,7 @@ public class LikesService {
     @Transactional
     public void deleteSelectedLikes(List<Long> likeIds) {
         if (likeIds.isEmpty()) {
-            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+            throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
         }
 
         likeIds.forEach(this::delete);
@@ -80,7 +82,7 @@ public class LikesService {
     @Transactional
     private void delete(Long id) {
         Likes like = likesRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("해당 좋아요가 없습니다."));
+                IllegalArgumentException(NON_EXISTENT_LIKE.getMessage()));
         likesRepository.delete(like);
     }
 
