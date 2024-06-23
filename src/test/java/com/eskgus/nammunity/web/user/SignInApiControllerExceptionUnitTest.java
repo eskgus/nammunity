@@ -23,6 +23,8 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+import static com.eskgus.nammunity.domain.enums.Fields.USERNAME;
+import static com.eskgus.nammunity.domain.enums.Fields.EMAIL;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -41,9 +43,6 @@ public class SignInApiControllerExceptionUnitTest {
     @MockBean
     private SignInService signInService;
 
-    private static final String EMAIL = "email";
-    private static final String USERNAME = "username";
-
     private static final String REQUEST_MAPPING = "/api/users/sign-in";
 
     @Test
@@ -55,7 +54,7 @@ public class SignInApiControllerExceptionUnitTest {
     @Test
     @WithMockUser
     public void findUsernameWithInvalidEmail() throws Exception {
-        testFindUsernameException(EMAIL, INVALID_EMAIL);
+        testFindUsernameException(EMAIL.getKey(), INVALID_EMAIL);
     }
 
     @Test
@@ -64,7 +63,7 @@ public class SignInApiControllerExceptionUnitTest {
         when(signInService.findUsername(anyString()))
                 .thenThrow(new IllegalArgumentException(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage()));
 
-        testFindUsernameException(EMAIL + "@naver.com", ILLEGAL_ARGUMENT_EXCEPTION_TEST);
+        testFindUsernameException(EMAIL.getKey() + "@naver.com", ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 
     @Test
@@ -79,24 +78,22 @@ public class SignInApiControllerExceptionUnitTest {
         doThrow(new IllegalArgumentException(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage()))
                 .when(signInService).findPassword(anyString());
 
-        testFindPasswordException(USERNAME, ILLEGAL_ARGUMENT_EXCEPTION_TEST);
+        testFindPasswordException(USERNAME.getKey(), ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 
     private void testFindUsernameException(String email, ExceptionMessages exceptionMessage) throws Exception {
         // given
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/username");
-        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(exceptionMessage.getMessage());
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithParam(
-                requestBuilder, EMAIL, email, resultMatcher);
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(exceptionMessage);
+        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, EMAIL, email, resultMatcher);
     }
 
     private void testFindPasswordException(String username, ExceptionMessages exceptionMessage) throws Exception {
         // given
         // when/then
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/password");
-        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(exceptionMessage.getMessage());
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithParam(
-                requestBuilder, USERNAME, username, resultMatcher);
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(exceptionMessage);
+        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, USERNAME, username, resultMatcher);
     }
 }

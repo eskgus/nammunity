@@ -60,6 +60,7 @@ public enum ExceptionMessages {
 
     UNAUTHORIZED("로그인하세요."),
     FORBIDDEN("권한이 없습니다."),
+    BANNED_USER("활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요."),
 
     INTERNAL_SERVER_ERROR("서버 오류가 발생했습니다. 관리자에게 문의하세요."),
 

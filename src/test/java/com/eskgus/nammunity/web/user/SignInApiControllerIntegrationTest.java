@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.web.user;
 
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.user.Role;
@@ -14,15 +15,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.util.Optional;
-import java.util.function.Function;
-
+import static com.eskgus.nammunity.domain.enums.Fields.EMAIL;
+import static com.eskgus.nammunity.domain.enums.Fields.USERNAME;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class SignInApiControllerTest {
+public class SignInApiControllerIntegrationTest {
     @Autowired
     private TestDataHelper testDataHelper;
 
@@ -37,11 +37,7 @@ public class SignInApiControllerTest {
     @BeforeEach
     public void setUp() {
         Long userId = testDataHelper.signUp(1L, Role.USER);
-        this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
-    }
-
-    private User assertOptionalAndGetEntity(Function<Long, Optional<User>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
+        this.user = testDataHelper.assertOptionalAndGetEntity(userRepository::findById, userId);
     }
 
     @AfterEach
@@ -52,14 +48,17 @@ public class SignInApiControllerTest {
     @Test
     public void findUsername() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = get("/api/users/sign-in/username");
-
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, "email", user.getEmail());
+        performAndExpectOkWithParam(requestBuilder, EMAIL, user.getEmail());
     }
 
     @Test
     public void findPassword() throws Exception {
         MockHttpServletRequestBuilder requestBuilder = put("/api/users/sign-in/password");
+        performAndExpectOkWithParam(requestBuilder, USERNAME, user.getUsername());
+    }
 
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, "username", user.getUsername());
+    private void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder, Fields field,
+                                             String value) throws Exception {
+        mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, field, value);
     }
 }

@@ -20,6 +20,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import static com.eskgus.nammunity.domain.enums.Fields.USERNAME;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -38,8 +39,6 @@ public class SignInApiControllerUnitTest {
     @MockBean
     private SignInService signInService;
 
-    private static final String USERNAME = "username";
-
     private static final String REQUEST_MAPPING = "/api/users/sign-in";
 
     @Test
@@ -48,7 +47,7 @@ public class SignInApiControllerUnitTest {
         // given
         String email = "email@naver.com";
 
-        when(signInService.findUsername(anyString())).thenReturn(USERNAME);
+        when(signInService.findUsername(anyString())).thenReturn(USERNAME.getKey());
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/username");
@@ -65,8 +64,8 @@ public class SignInApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/password");
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, "username", USERNAME);
+        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, "username", USERNAME.getKey());
 
-        verify(signInService).findPassword(eq(USERNAME));
+        verify(signInService).findPassword(eq(USERNAME.getKey()));
     }
 }

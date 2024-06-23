@@ -12,7 +12,9 @@ public enum Fields {
     COMMENTS_ID("commentsId"),
     USER_ID("userId"),
     REASONS_ID("reasonsId"),
-    OTHER_REASONS("otherReasons");
+    OTHER_REASONS("otherReasons"),
+    USERNAME("username"),
+    EMAIL("email");
 
     private final String key;
 }
