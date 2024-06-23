@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web.likes;
 import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.service.likes.LikesService;
@@ -24,6 +25,8 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.eskgus.nammunity.domain.enums.Fields.COMMENTS_ID;
+import static com.eskgus.nammunity.domain.enums.Fields.POSTS_ID;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -41,8 +44,6 @@ public class LikesApiControllerUnitTest {
     @MockBean
     private LikesService likesService;
 
-    private static final String POST_ID = "postsId";
-    private static final String COMMENT_ID = "commentsId";
     private static final Long ID = 1L;
 
     private static final String REQUEST_MAPPING = "/api/likes";
@@ -50,7 +51,7 @@ public class LikesApiControllerUnitTest {
     @Test
     @WithMockUser
     public void savePostLikes() throws Exception {
-        testSaveLikes(POST_ID);
+        testSaveLikes(POSTS_ID);
 
         verify(likesService).save(eq(ID), isNull(), any(Principal.class));
     }
@@ -58,7 +59,7 @@ public class LikesApiControllerUnitTest {
     @Test
     @WithMockUser
     public void saveCommentLikes() throws Exception {
-        testSaveLikes(COMMENT_ID);
+        testSaveLikes(COMMENTS_ID);
 
         verify(likesService).save(isNull(), eq(ID), any(Principal.class));
     }
@@ -66,7 +67,7 @@ public class LikesApiControllerUnitTest {
     @Test
     @WithMockUser
     public void deletePostLikes() throws Exception {
-        testDeleteLikes(POST_ID);
+        testDeleteLikes(POSTS_ID);
 
         verify(likesService).deleteByContentId(eq(ID), isNull(), any(Principal.class));
     }
@@ -74,7 +75,7 @@ public class LikesApiControllerUnitTest {
     @Test
     @WithMockUser
     public void deleteCommentLikes() throws Exception {
-        testDeleteLikes(COMMENT_ID);
+        testDeleteLikes(COMMENTS_ID);
 
         verify(likesService).deleteByContentId(isNull(), eq(ID), any(Principal.class));
     }
@@ -94,25 +95,25 @@ public class LikesApiControllerUnitTest {
         verify(likesService).deleteSelectedLikes(eq(requestDto));
     }
 
-    private void testSaveLikes(String name) throws Exception {
+    private void testSaveLikes(Fields field) throws Exception {
         // given
         when(likesService.save(anyLong(), anyLong(), any(Principal.class))).thenReturn(ID);
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        performAndExpectOkWithParam(requestBuilder, name);
+        performAndExpectOkWithParam(requestBuilder, field);
     }
 
-    private void testDeleteLikes(String name) throws Exception {
+    private void testDeleteLikes(Fields field) throws Exception {
         // given
         doNothing().when(likesService).deleteByContentId(anyLong(), anyLong(), any(Principal.class));
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING);
-        performAndExpectOkWithParam(requestBuilder, name);
+        performAndExpectOkWithParam(requestBuilder, field);
     }
 
-    private void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder, String name) throws Exception {
-        mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, name, ID);
+    private void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder, Fields field) throws Exception {
+        mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, field, ID);
     }
 }

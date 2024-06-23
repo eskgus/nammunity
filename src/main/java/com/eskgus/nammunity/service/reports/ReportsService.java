@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.Principal;
 import java.time.LocalDateTime;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_OTHER_REASONS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_TYPE;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -57,7 +59,7 @@ public class ReportsService {
         Reasons reasons = reasonsService.findById(requestDto.getReasonsId());
         String otherReasons = requestDto.getOtherReasons();
         if (reasons.getDetail().equals("기타") && (otherReasons == null)) {
-            throw new IllegalArgumentException("기타 사유를 입력하세요.");
+            throw new IllegalArgumentException(EMPTY_OTHER_REASONS.getMessage());
         }
 
         Posts posts = null;
@@ -75,7 +77,7 @@ public class ReportsService {
             user = userService.findById(requestDto.getUserId());
             contentType = ContentType.USERS;
         } else {
-            throw new IllegalArgumentException("신고 분류가 선택되지 않았습니다.");
+            throw new IllegalArgumentException(EMPTY_TYPE.getMessage());
         }
         Types types = typesService.findByContentType(contentType);
 

@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_USER;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("존재하지 않는 회원입니다."));
+                IllegalArgumentException(NON_EXISTENT_USER_ID.getMessage()));
     }
 
     @Transactional(readOnly = true)
@@ -37,7 +37,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new
-                IllegalArgumentException("가입되지 않은 이메일입니다."));
+                IllegalArgumentException(NON_EXISTENT_USER_EMAIL.getMessage()));
     }
 
     @Transactional

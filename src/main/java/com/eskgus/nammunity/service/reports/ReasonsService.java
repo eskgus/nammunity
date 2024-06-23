@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_REASONS_ID;
+
 @RequiredArgsConstructor
 @Service
 public class ReasonsService {
@@ -18,7 +20,7 @@ public class ReasonsService {
     @Transactional(readOnly = true)
     public Reasons findById(Long id) {
         return reasonsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException("해당 신고 사유가 없습니다."));
+                IllegalArgumentException(NON_EXISTENT_REASONS_ID.getMessage()));
     }
 
     @Transactional(readOnly = true)

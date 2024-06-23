@@ -82,9 +82,9 @@ public class MockMvcTestHelper {
     }
 
     public <T> void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder,
-                                                String name, T value) throws Exception {
+                                                Fields field, T value) throws Exception {
         mockMvc.perform(requestBuilder
-                        .param(name, value.toString())
+                        .param(field.getKey(), value.toString())
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -169,9 +169,9 @@ public class MockMvcTestHelper {
     }
 
     public <T> void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder,
-                                                        String name, T value, ResultMatcher... resultMatchers) throws Exception {
+                                                        Fields field, T value, ResultMatcher... resultMatchers) throws Exception {
         mockMvc.perform(requestBuilder
-                        .param(name, value.toString())
+                        .param(field.getKey(), value.toString())
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -219,11 +219,11 @@ public class MockMvcTestHelper {
     }
 
     public <T> void performAndExpectUnauthorizedWithParam(MockHttpServletRequestBuilder requestBuilder,
-                                                          String name, T value) throws Exception {
+                                                          Fields field, T value) throws Exception {
         ResultMatcher resultMatcher = createResultMatcher(ExceptionMessages.UNAUTHORIZED);
 
         mockMvc.perform(requestBuilder
-                        .param(name, value.toString())
+                        .param(field.getKey(), value.toString())
                         .with(csrf()))
                 .andDo(print())
                 .andExpect(status().isUnauthorized())

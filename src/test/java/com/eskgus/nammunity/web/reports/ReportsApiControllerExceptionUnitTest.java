@@ -3,6 +3,8 @@ package com.eskgus.nammunity.web.reports;
 import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
+import com.eskgus.nammunity.domain.enums.ExceptionMessages;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.service.reports.ReportSummaryService;
@@ -31,6 +33,8 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+import static com.eskgus.nammunity.domain.enums.Fields.OTHER_REASONS;
+import static com.eskgus.nammunity.domain.enums.Fields.REASONS_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -65,8 +69,7 @@ public class ReportsApiControllerExceptionUnitTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(null, null);
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                "reasonsId", EMPTY_REASONS_ID.getMessage(), null);
+        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASONS_ID);
         testSaveContentReportsException(requestDto, never(), resultMatchers);
     }
 
@@ -78,8 +81,7 @@ public class ReportsApiControllerExceptionUnitTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(ID, otherReasons);
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                "otherReasons", INVALID_OTHER_REASONS.getMessage(), otherReasons);
+        ResultMatcher[] resultMatchers = createResultMatchers(OTHER_REASONS, otherReasons, INVALID_OTHER_REASONS);
         testSaveContentReportsException(requestDto, never(), resultMatchers);
     }
 
@@ -112,7 +114,7 @@ public class ReportsApiControllerExceptionUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/content/selected-delete");
         ResultMatcher resultMatcher = createResultMatcher();
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatcher);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
 
         verify(reportSummaryService).deleteSelectedReportSummary(any(ContentReportSummaryDeleteDto.class));
     }
@@ -127,7 +129,7 @@ public class ReportsApiControllerExceptionUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/process");
         ResultMatcher resultMatcher = createResultMatcher();
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, ID, resultMatcher);
+        performAndExpectBadRequest(requestBuilder, ID, resultMatcher);
 
         verify(bannedUsersService).banUser(eq(ID));
     }
@@ -140,20 +142,24 @@ public class ReportsApiControllerExceptionUnitTest {
         return requestDto;
     }
 
-    private ResultMatcher[] createResultMatchers(String expectedField, String expectedDefaultMessage,
-                                                 String expectedRejectedValue) {
-        return mockMvcTestHelper.createResultMatchers(expectedField, expectedDefaultMessage, expectedRejectedValue);
+    private ResultMatcher[] createResultMatchers(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatchers(field, rejectedValue, exceptionMessage);
     }
 
     private ResultMatcher createResultMatcher() {
-        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
+        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 
     private void testSaveContentReportsException(ContentReportsSaveDto requestDto, VerificationMode mode,
                                                  ResultMatcher... resultMatchers) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/content");
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
 
         verify(reportsService, mode).saveContentReports(any(ContentReportsSaveDto.class), any(Principal.class));
+    }
+
+    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
+                                                ResultMatcher... resultMatchers) throws Exception {
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 }

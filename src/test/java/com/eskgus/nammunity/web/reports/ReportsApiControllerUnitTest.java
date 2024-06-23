@@ -66,7 +66,7 @@ public class ReportsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/content");
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(reportsService).saveContentReports(any(ContentReportsSaveDto.class), any(Principal.class));
     }
@@ -84,7 +84,7 @@ public class ReportsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/content/selected-delete");
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(reportSummaryService).deleteSelectedReportSummary(any(ContentReportSummaryDeleteDto.class));
     }
@@ -97,8 +97,12 @@ public class ReportsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/process");
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, ID);
+        performAndExpectOk(requestBuilder, ID);
 
         verify(bannedUsersService).banUser(eq(ID));
+    }
+
+    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 }

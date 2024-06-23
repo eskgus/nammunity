@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_USER_REPORT_SUMMARY;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -85,7 +87,7 @@ public class ReportSummaryService {
     @Transactional(readOnly = true)
     public ContentReportSummary findByUser(User user) {
         return contentReportSummaryRepository.findByUser(user)
-                .orElseThrow(() -> new IllegalArgumentException("신고 요약 내역이 존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new IllegalArgumentException(NON_EXISTENT_USER_REPORT_SUMMARY.getMessage()));
     }
 
     @Transactional
@@ -101,7 +103,7 @@ public class ReportSummaryService {
         if (deleteDto.getPostsId().isEmpty()
                 && deleteDto.getCommentsId().isEmpty()
                 && deleteDto.getUserId().isEmpty()) {
-            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+            throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
         }
     }
 

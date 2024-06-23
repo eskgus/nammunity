@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.ILLEGAL_ARGUMENT_EXCEPTION_TEST;
+import static com.eskgus.nammunity.domain.enums.Fields.POSTS_ID;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -43,7 +44,6 @@ public class LikesApiControllerExceptionUnitTest {
     @MockBean
     private LikesService likesService;
 
-    private static final String POST_ID = "postsId";
     private static final Long ID = 1L;
 
     private static final String REQUEST_MAPPING = "/api/likes";
@@ -95,7 +95,7 @@ public class LikesApiControllerExceptionUnitTest {
 
     private void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder) throws Exception {
         ResultMatcher resultMatcher = createResultMatcher();
-        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, POST_ID, ID, resultMatcher);
+        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, POSTS_ID, ID, resultMatcher);
     }
 
     private ResultMatcher createResultMatcher() {

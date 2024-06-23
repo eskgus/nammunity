@@ -19,6 +19,8 @@ public enum ExceptionMessages {
     EMPTY_COMMENT("댓글을 입력하세요."),
 
     EMPTY_REASONS_ID("신고 사유를 선택하세요."),
+    EMPTY_OTHER_REASONS("기타 사유를 입력하세요."),
+    EMPTY_TYPE("신고 분류가 선택되지 않았습니다."),
     EMPTY_CONTENT_IDS("삭제할 항목을 선택하세요."),
 
     MISMATCH_OLD_PASSWORD("현재 비밀번호가 일치하지 않습니다."),
@@ -37,9 +39,14 @@ public enum ExceptionMessages {
     INVALID_OTHER_REASONS("기타 사유는 500글자 이하로 작성해 주세요."),
 
     NON_EXISTENT_USER("존재하지 않는 ID입니다."),
+    NON_EXISTENT_USER_ID("존재하지 않는 회원입니다."),
+    NON_EXISTENT_USER_EMAIL("가입되지 않은 이메일입니다."),
     NON_EXISTENT_POST("해당 게시글이 없습니다."),
     NON_EXISTENT_COMMENT("해당 댓글이 없습니다."),
     NON_EXISTENT_LIKE("해당 좋아요가 없습니다."),
+    NON_EXISTENT_REASONS_ID("해당 신고 사유가 없습니다."),
+    NON_EXISTENT_TYPE("해당 분류가 없습니다."),
+    NON_EXISTENT_USER_REPORT_SUMMARY("신고 요약 내역이 존재하지 않는 회원입니다."),
 
     EXISTENT_USERNAME("이미 사용 중인 ID입니다."),
     EXISTENT_NICKNAME("이미 사용 중인 닉네임입니다."),
