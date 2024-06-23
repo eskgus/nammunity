@@ -21,13 +21,14 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.util.*;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.domain.enums.Fields.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class PostsApiControllerTest {
+public class PostsApiControllerIntegrationTest {
     @Autowired
     private TestDataHelper testDataHelper;
 
@@ -42,14 +43,12 @@ public class PostsApiControllerTest {
 
     private User user;
 
+    private static final String REQUEST_MAPPING = "/api/posts";
+
     @BeforeEach
     public void setUp() {
         Long userId = testDataHelper.signUp(1L, Role.USER);
         this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
-    }
-
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -60,57 +59,49 @@ public class PostsApiControllerTest {
     @Test
     @WithMockUser(username = "username1")
     public void savePosts() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = post("/api/posts");
-        PostsSaveDto requestDto = createPostsSaveDto();
+        // given
+        PostsSaveDto requestDto = PostsSaveDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
-    }
-
-    private PostsSaveDto createPostsSaveDto() {
-        String title = "title";
-        String content = "content";
-        return PostsSaveDto.builder().title(title).content(content).build();
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
+        performAndExpectOk(requestBuilder, requestDto);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void updatePosts() throws Exception {
+        // given
         Long postId = savePost();
-        MockHttpServletRequestBuilder requestBuilder = put("/api/posts/{id}", postId);
-        PostsUpdateDto requestDto = createPostsUpdateDto();
 
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
-    }
+        String prefix = "updated ";
+        PostsUpdateDto requestDto = PostsUpdateDto.builder()
+                .title(prefix + TITLE.getKey()).content(prefix + CONTENT.getKey()).build();
 
-    private Long savePost() {
-        Long postId = testDataHelper.savePosts(user);
-        assertOptionalAndGetEntity(postsRepository::findById, postId);
-        return postId;
-    }
-
-    private PostsUpdateDto createPostsUpdateDto() {
-        String title = "updated title";
-        String content = "updated content";
-        return PostsUpdateDto.builder().title(title).content(content).build();
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", postId);
+        performAndExpectOk(requestBuilder, requestDto);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deletePosts() throws Exception {
+        // given
         Long postId = savePost();
 
-        MockHttpServletRequestBuilder requestBuilder = delete("/api/posts/{id}", postId);
-
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, null);
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", postId);
+        performAndExpectOk(requestBuilder, null);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deleteSelectedPosts() throws Exception {
+        // given
         List<Long> requestDto = createPostIds();
-        MockHttpServletRequestBuilder requestBuilder = delete("/api/posts/selected-delete");
 
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
+        performAndExpectOk(requestBuilder, requestDto);
     }
 
     private List<Long> createPostIds() {
@@ -119,6 +110,22 @@ public class PostsApiControllerTest {
             Long postId = savePost();
             requestDto.add(postId);
         }
+
         return requestDto;
+    }
+
+    private Long savePost() {
+        Long postId = testDataHelper.savePosts(user);
+        assertOptionalAndGetEntity(postsRepository::findById, postId);
+
+        return postId;
+    }
+
+    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

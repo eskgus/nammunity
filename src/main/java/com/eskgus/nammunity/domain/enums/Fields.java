@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum Fields {
+    TITLE("title"),
     CONTENT("content");
 
     private final String key;

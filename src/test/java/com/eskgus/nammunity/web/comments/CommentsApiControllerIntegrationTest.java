@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @ExtendWith(SpringExtension.class)
@@ -46,8 +47,6 @@ public class CommentsApiControllerIntegrationTest {
 
     private User user;
     private Long postId;
-
-    private static final String COMMENT = "comment";
 
     private static final String REQUEST_MAPPING = "/api/comments";
 
@@ -110,11 +109,11 @@ public class CommentsApiControllerIntegrationTest {
     }
 
     private CommentsSaveDto createCommentsSaveDto() {
-        return new CommentsSaveDto(COMMENT, postId);
+        return new CommentsSaveDto(CONTENT.getKey(), postId);
     }
 
     private CommentsUpdateDto createCommentsUpdateDto() {
-        String content = "updated " + COMMENT;
+        String content = "updated " + CONTENT.getKey();
 
         return new CommentsUpdateDto(content);
     }

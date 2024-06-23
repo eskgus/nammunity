@@ -99,6 +99,6 @@ public class LikesApiControllerExceptionUnitTest {
     }
 
     private ResultMatcher createResultMatcher() {
-        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
+        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 }

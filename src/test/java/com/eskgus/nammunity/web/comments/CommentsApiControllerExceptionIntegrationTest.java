@@ -72,7 +72,12 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @Test
     @WithAnonymousUser
     public void saveCommentsWithAnonymousUser() throws Exception {
-        testSaveCommentsExpectNotBadRequest();
+        // given
+        CommentsSaveDto requestDto = createCommentsSaveDto(true, TEN_CHAR_STRING);
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
+        performAndExpectNotBadRequest(requestBuilder, requestDto, UNAUTHORIZED);
     }
 
     @Test
@@ -86,7 +91,6 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username1")
     public void saveCommentsWithInvalidContentLength() throws Exception {
-        // given
         String content = TEN_CHAR_STRING.repeat(150) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(content, INVALID_COMMENT);
         testSaveCommentsExpectBadRequest(true, content, resultMatchers);
@@ -205,35 +209,6 @@ public class CommentsApiControllerExceptionIntegrationTest {
         testDeleteSelectedCommentsExpectBadRequest(requestDto, NON_EXISTENT_COMMENT);
     }
 
-    private void testSaveCommentsExpectNotBadRequest() throws Exception {
-        // given
-        CommentsSaveDto requestDto = createCommentsSaveDto(true, TEN_CHAR_STRING);
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        performAndExpectNotBadRequest(requestBuilder, requestDto, UNAUTHORIZED);
-    }
-
-    private void testUpdateCommentsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
-        // given
-        Long commentId = saveComment();
-
-        CommentsUpdateDto requestDto = new CommentsUpdateDto(TEN_CHAR_STRING);
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", commentId);
-        performAndExpectNotBadRequest(requestBuilder, requestDto, exceptionMessage);
-    }
-
-    private void testDeleteCommentsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
-        // given
-        Long commentId = saveComment();
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", commentId);
-        performAndExpectNotBadRequest(requestBuilder, null, exceptionMessage);
-    }
-
     private void testSaveCommentsExpectBadRequest(boolean doesPostExist, String content,
                                                   ResultMatcher... resultMatchers) throws Exception {
         // given
@@ -272,6 +247,31 @@ public class CommentsApiControllerExceptionIntegrationTest {
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
     }
 
+    private void testUpdateCommentsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
+        // given
+        Long commentId = saveComment();
+
+        CommentsUpdateDto requestDto = new CommentsUpdateDto(TEN_CHAR_STRING);
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", commentId);
+        performAndExpectNotBadRequest(requestBuilder, requestDto, exceptionMessage);
+    }
+
+    private void testDeleteCommentsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
+        // given
+        Long commentId = saveComment();
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", commentId);
+        performAndExpectNotBadRequest(requestBuilder, null, exceptionMessage);
+    }
+
+    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
+                                                ResultMatcher... resultMatchers) throws Exception {
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
+    }
+
     private <T> void performAndExpectNotBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
                                                    ExceptionMessages exceptionMessage) throws Exception {
         if (UNAUTHORIZED.equals(exceptionMessage)) {
@@ -279,11 +279,6 @@ public class CommentsApiControllerExceptionIntegrationTest {
         } else if (FORBIDDEN.equals(exceptionMessage)) {
             mockMvcTestHelper.performAndExpectForbidden(requestBuilder, requestDto);
         }
-    }
-
-    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                                ResultMatcher... resultMatchers) throws Exception {
-        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
     private void saveUser() {

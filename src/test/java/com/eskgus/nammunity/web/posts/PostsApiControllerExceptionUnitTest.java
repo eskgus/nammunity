@@ -3,6 +3,8 @@ package com.eskgus.nammunity.web.posts;
 import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
+import com.eskgus.nammunity.domain.enums.ExceptionMessages;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.service.posts.PostsService;
@@ -29,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+import static com.eskgus.nammunity.domain.enums.Fields.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -46,8 +49,6 @@ public class PostsApiControllerExceptionUnitTest {
     private PostsService postsService;
 
     private static final Long ID = 1L;
-    private static final String TITLE = "title";
-    private static final String CONTENT = "content";
     private static final String TEN_CHAR_STRING = "10 letters";
 
     private static final String REQUEST_MAPPING = "/api/posts";
@@ -56,7 +57,7 @@ public class PostsApiControllerExceptionUnitTest {
     @WithMockUser
     public void savePostsWithEmptyTitle() throws Exception {
         String title = "";
-        ResultMatcher[] resultMatchers = createResultMatchers(TITLE, EMPTY_TITLE.getMessage(), title);
+        ResultMatcher[] resultMatchers = createResultMatchers(TITLE, title, EMPTY_TITLE);
         testSavePostsException(title, TEN_CHAR_STRING, never(), resultMatchers);
     }
 
@@ -64,7 +65,7 @@ public class PostsApiControllerExceptionUnitTest {
     @WithMockUser
     public void savePostsWithInvalidTitleLength() throws Exception {
         String title = TEN_CHAR_STRING.repeat(10) + "!";
-        ResultMatcher[] resultMatchers = createResultMatchers(TITLE, INVALID_TITLE.getMessage(), title);
+        ResultMatcher[] resultMatchers = createResultMatchers(TITLE, title, INVALID_TITLE);
         testSavePostsException(title, TEN_CHAR_STRING, never(), resultMatchers);
     }
 
@@ -72,7 +73,7 @@ public class PostsApiControllerExceptionUnitTest {
     @WithMockUser
     public void savePostsWithEmptyContent() throws Exception {
         String content = "";
-        ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, EMPTY_CONTENT.getMessage(), content);
+        ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, content, EMPTY_CONTENT);
         testSavePostsException(TEN_CHAR_STRING, content, never(), resultMatchers);
     }
 
@@ -80,7 +81,7 @@ public class PostsApiControllerExceptionUnitTest {
     @WithMockUser
     public void savePostsWithInvalidContentLength() throws Exception {
         String content = TEN_CHAR_STRING.repeat(300) + "!";
-        ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, INVALID_CONTENT.getMessage(), content);
+        ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, content, INVALID_CONTENT);
         testSavePostsException(TEN_CHAR_STRING, content, never(), resultMatchers);
     }
 
@@ -98,7 +99,7 @@ public class PostsApiControllerExceptionUnitTest {
     @WithMockUser
     public void updatePostsWithEmptyTitle() throws Exception {
         String title = "";
-        ResultMatcher[] resultMatchers = createResultMatchers(TITLE, EMPTY_TITLE.getMessage(), title);
+        ResultMatcher[] resultMatchers = createResultMatchers(TITLE, title, EMPTY_TITLE);
         testUpdatePostsException(title, TEN_CHAR_STRING, never(), resultMatchers);
     }
 
@@ -106,7 +107,7 @@ public class PostsApiControllerExceptionUnitTest {
     @WithMockUser
     public void updatePostsWithInvalidTitleLength() throws Exception {
         String title = TEN_CHAR_STRING.repeat(100) + "!";
-        ResultMatcher[] resultMatchers = createResultMatchers(TITLE, INVALID_TITLE.getMessage(), title);
+        ResultMatcher[] resultMatchers = createResultMatchers(TITLE, title, INVALID_TITLE);
         testUpdatePostsException(title, TEN_CHAR_STRING, never(), resultMatchers);
     }
 
@@ -114,7 +115,7 @@ public class PostsApiControllerExceptionUnitTest {
     @WithMockUser
     public void updatePostsWithEmptyContent() throws Exception {
         String content = "";
-        ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, EMPTY_CONTENT.getMessage(), content);
+        ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, content, EMPTY_CONTENT);
         testUpdatePostsException(TEN_CHAR_STRING, content, never(), resultMatchers);
     }
 
@@ -122,7 +123,7 @@ public class PostsApiControllerExceptionUnitTest {
     @WithMockUser
     public void updatePostsWithInvalidContentLength() throws Exception {
         String content = TEN_CHAR_STRING.repeat(300) + "!";
-        ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, INVALID_CONTENT.getMessage(), content);
+        ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, content, INVALID_CONTENT);
         testUpdatePostsException(TEN_CHAR_STRING, content, never(), resultMatchers);
     }
 
@@ -146,7 +147,7 @@ public class PostsApiControllerExceptionUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", ID);
         ResultMatcher resultMatcher = createResultMatcher();
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, null, resultMatcher);
+        performAndExpectBadRequest(requestBuilder, null, resultMatcher);
 
         verify(postsService).delete(eq(ID));
     }
@@ -163,18 +164,17 @@ public class PostsApiControllerExceptionUnitTest {
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
         ResultMatcher resultMatcher = createResultMatcher();
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatcher);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
 
         verify(postsService).deleteSelectedPosts(eq(requestDto));
     }
 
-    private ResultMatcher[] createResultMatchers(String expectedField, String expectedDefaultMessage,
-                                                 String expectedRejectedValue) {
-        return mockMvcTestHelper.createResultMatchers(expectedField, expectedDefaultMessage, expectedRejectedValue);
+    private ResultMatcher[] createResultMatchers(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatchers(field, rejectedValue, exceptionMessage);
     }
 
     private ResultMatcher createResultMatcher() {
-        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
+        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 
     private void testSavePostsException(String title, String content, VerificationMode mode,
@@ -184,7 +184,7 @@ public class PostsApiControllerExceptionUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
 
         verify(postsService, mode).save(any(PostsSaveDto.class), any(Principal.class));
     }
@@ -196,8 +196,13 @@ public class PostsApiControllerExceptionUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", ID);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
 
         verify(postsService, mode).update(eq(ID), any(PostsUpdateDto.class));
+    }
+
+    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
+                                                ResultMatcher... resultMatchers) throws Exception {
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 }

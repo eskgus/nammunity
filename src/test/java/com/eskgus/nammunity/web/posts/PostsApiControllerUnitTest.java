@@ -26,6 +26,7 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.eskgus.nammunity.domain.enums.Fields.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -42,8 +43,6 @@ public class PostsApiControllerUnitTest {
     @MockBean
     private PostsService postsService;
 
-    private static final String TITLE = "title";
-    private static final String CONTENT = "content";
     private static final Long ID = 1L;
 
     private static final String REQUEST_MAPPING = "/api/posts";
@@ -52,13 +51,13 @@ public class PostsApiControllerUnitTest {
     @WithMockUser
     public void savePosts() throws Exception {
         // given
-        PostsSaveDto requestDto = PostsSaveDto.builder().title(TITLE).content(CONTENT).build();
+        PostsSaveDto requestDto = PostsSaveDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
         when(postsService.save(any(PostsSaveDto.class), any(Principal.class))).thenReturn(1L);
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post("/api/posts");
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(postsService).save(any(PostsSaveDto.class), any(Principal.class));
     }
@@ -67,13 +66,13 @@ public class PostsApiControllerUnitTest {
     @WithMockUser
     public void updatePosts() throws Exception {
         // given
-        PostsUpdateDto requestDto = PostsUpdateDto.builder().title(TITLE).content(CONTENT).build();
+        PostsUpdateDto requestDto = PostsUpdateDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
         when(postsService.update(anyLong(), any(PostsUpdateDto.class))).thenReturn(ID);
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", ID);
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(postsService).update(eq(ID), any(PostsUpdateDto.class));
     }
@@ -86,7 +85,7 @@ public class PostsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", ID);
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, null);
+        performAndExpectOk(requestBuilder, null);
 
         verify(postsService).delete(eq(ID));
     }
@@ -101,8 +100,12 @@ public class PostsApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(postsService).deleteSelectedPosts(eq(requestDto));
+    }
+
+    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 }
