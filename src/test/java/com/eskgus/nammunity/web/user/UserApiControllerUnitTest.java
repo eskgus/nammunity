@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web.user;
 import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.service.user.RegistrationService;
@@ -32,6 +33,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.security.Principal;
 
+import static com.eskgus.nammunity.domain.enums.Fields.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -53,13 +55,10 @@ public class UserApiControllerUnitTest {
     private UserUpdateService userUpdateService;
 
     private static final Long ID = 1L;
-    private static final String USERNAME = "username";
-    private static final String USERNAME_VALUE = USERNAME + ID;
-    private static final String PASSWORD = "password";
-    private static final String PASSWORD_VALUE = PASSWORD + ID;
-    private static final String NICKNAME = "nickname";
-    private static final String EMAIL = "email";
-    private static final String EMAIL_VALUE = EMAIL + "@naver.com";
+    private static final String USERNAME_VALUE = USERNAME.getKey() + ID;
+    private static final String PASSWORD_VALUE = PASSWORD.getKey() + ID;
+    private static final String NICKNAME_VALUE = NICKNAME.getKey();
+    private static final String EMAIL_VALUE = EMAIL.getKey() + "@naver.com";
 
     private static final String REQUEST_MAPPING = "/api/users";
 
@@ -69,13 +68,13 @@ public class UserApiControllerUnitTest {
         // given
         RegistrationDto requestDto = RegistrationDto.builder()
                 .username(USERNAME_VALUE).password(PASSWORD_VALUE).confirmPassword(PASSWORD_VALUE)
-                .nickname(NICKNAME).email(EMAIL_VALUE).build();
+                .nickname(NICKNAME_VALUE).email(EMAIL_VALUE).build();
 
         when(registrationService.signUp(any(RegistrationDto.class))).thenReturn(ID);
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+        performAndExpectOk(requestBuilder, requestDto);
 
         verify(registrationService).signUp(any(RegistrationDto.class));
     }
@@ -99,9 +98,9 @@ public class UserApiControllerUnitTest {
         when(registrationService.check(isNull(), anyString(), isNull())).thenReturn(true);
 
         // when/then
-        testCheck(NICKNAME, NICKNAME);
+        testCheck(NICKNAME, NICKNAME_VALUE);
 
-        verify(registrationService).check(isNull(), eq(NICKNAME), isNull());
+        verify(registrationService).check(isNull(), eq(NICKNAME_VALUE), isNull());
     }
 
     @Test
@@ -135,7 +134,7 @@ public class UserApiControllerUnitTest {
     @WithMockUser
     public void updateNickname() throws Exception {
         // given
-        NicknameUpdateDto requestDto = new NicknameUpdateDto(NICKNAME);
+        NicknameUpdateDto requestDto = new NicknameUpdateDto(NICKNAME_VALUE);
 
         when(userUpdateService.updateNickname(any(NicknameUpdateDto.class), any(Principal.class))).thenReturn(ID);
 
@@ -206,14 +205,33 @@ public class UserApiControllerUnitTest {
         verify(userUpdateService).unlinkSocial(any(Principal.class), eq(social), eq(pair.getFirst().getValue()));
     }
 
-    private void testCheck(String name, String value) throws Exception {
+    private void testCheck(Fields field, String value) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/validation");
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, name, value);
+        mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, field, value);
     }
 
-    private <T> void testUpdate(String endpoint, T requestDto) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + endpoint);
-        mockMvcTestHelper.requestAndAssertStatusIsOk(requestBuilder, requestDto);
+    private <T> void testUpdate(Fields endpoint, T requestDto) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + endpoint.getKey());
+        performAndExpectOk(requestBuilder, requestDto);
+    }
+
+    private void testDeleteUser(Pair<Cookie, ResponseCookie> pair) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING);
+        testDeleteUserOrUnlinkSocial(requestBuilder, pair);
+    }
+
+    private void testDeleteUserOrUnlinkSocial(MockHttpServletRequestBuilder requestBuilder,
+                                              Pair<Cookie, ResponseCookie> pair) throws Exception {
+        Cookie cookie = pair != null ? pair.getFirst() : null;
+
+        ResultMatcher resultMatcher = cookie != null
+                ? header().string(HttpHeaders.SET_COOKIE, pair.getSecond().toString())
+                : header().doesNotExist(HttpHeaders.SET_COOKIE);
+        mockMvcTestHelper.performAndExpectOkWithCookie(requestBuilder, cookie, resultMatcher);
+    }
+
+    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 
     private Pair<Cookie, ResponseCookie> createCookies() {
@@ -229,20 +247,5 @@ public class UserApiControllerUnitTest {
         headers.add(HttpHeaders.SET_COOKIE, responseCookie.toString());
 
         return headers;
-    }
-
-    private void testDeleteUser(Pair<Cookie, ResponseCookie> pair) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING);
-        testDeleteUserOrUnlinkSocial(requestBuilder, pair);
-    }
-
-    private void testDeleteUserOrUnlinkSocial(MockHttpServletRequestBuilder requestBuilder,
-                                              Pair<Cookie, ResponseCookie> pair) throws Exception {
-        Cookie cookie = pair != null ? pair.getFirst() : null;
-
-        ResultMatcher resultMatcher = cookie != null
-                ? header().string(HttpHeaders.SET_COOKIE, pair.getSecond().toString())
-                : header().doesNotExist(HttpHeaders.SET_COOKIE);
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithCookie(requestBuilder, cookie, resultMatcher);
     }
 }

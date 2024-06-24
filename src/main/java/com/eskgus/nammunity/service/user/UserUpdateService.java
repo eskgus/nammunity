@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.Principal;
 import java.time.LocalDateTime;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+import static com.eskgus.nammunity.domain.enums.Fields.*;
+
 @RequiredArgsConstructor
 @Service
 public class UserUpdateService {
@@ -44,11 +47,11 @@ public class UserUpdateService {
         String confirmPassword = passwordUpdateDto.getConfirmPassword();
 
         if (!encoder.matches(oldPassword, currentPassword)) {
-            throw new CustomValidException("oldPassword", oldPassword, "현재 비밀번호가 일치하지 않습니다.");
+            throw new CustomValidException(OLD_PASSWORD, oldPassword, MISMATCH_OLD_PASSWORD);
         } else if (oldPassword.equals(newPassword)) {
-            throw new CustomValidException("password", newPassword, "현재 비밀번호와 새 비밀번호가 같으면 안 됩니다.");
+            throw new CustomValidException(PASSWORD, newPassword, INVALID_NEW_PASSWORD);
         } else if (!newPassword.equals(confirmPassword)) {
-            throw new CustomValidException("confirmPassword", confirmPassword, "비밀번호가 일치하지 않습니다.");
+            throw new CustomValidException(CONFIRM_PASSWORD, confirmPassword, MISMATCH_CONFIRM_PASSWORD);
         }
     }
 
@@ -78,9 +81,9 @@ public class UserUpdateService {
 
     private void validateEmailUpdateDto(String email, User user) {
         if (user.getEmail().equals(email)) {
-            throw new CustomValidException("email", email, "현재 이메일과 같습니다.");
+            throw new CustomValidException(EMAIL, email, INVALID_NEW_EMAIL);
         } else if (userService.existsByEmail(email)) {
-            throw new CustomValidException("email", email, "이미 사용 중인 이메일입니다.");
+            throw new CustomValidException(EMAIL, email, EXISTENT_EMAIL);
         }
     }
 
@@ -105,9 +108,9 @@ public class UserUpdateService {
         String newNickname = nicknameUpdateDto.getNickname();
 
         if (user.getNickname().equals(newNickname)) {
-            throw new CustomValidException("nickname", newNickname, "현재 닉네임과 같습니다.");
+            throw new CustomValidException(NICKNAME, newNickname, INVALID_NEW_NICKNAME);
         } else if (userService.existsByNickname(nicknameUpdateDto.getNickname())) {
-            throw new CustomValidException("nickname", newNickname, "이미 사용 중인 닉네임입니다.");
+            throw new CustomValidException(NICKNAME, newNickname, EXISTENT_NICKNAME);
         }
     }
 

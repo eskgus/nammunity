@@ -14,7 +14,12 @@ public enum Fields {
     REASONS_ID("reasonsId"),
     OTHER_REASONS("otherReasons"),
     USERNAME("username"),
-    EMAIL("email");
+    EMAIL("email"),
+    OLD_PASSWORD("oldPassword"),
+    PASSWORD("password"),
+    CONFIRM_PASSWORD("confirmPassword"),
+    NICKNAME("nickname"),
+    SOCIAL("social");
 
     private final String key;
 }

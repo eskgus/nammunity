@@ -3,6 +3,7 @@ package com.eskgus.nammunity.web.user;
 import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.service.user.SignInService;
@@ -20,6 +21,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import static com.eskgus.nammunity.domain.enums.Fields.EMAIL;
 import static com.eskgus.nammunity.domain.enums.Fields.USERNAME;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -51,7 +53,7 @@ public class SignInApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/username");
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, "email", email);
+        performAndExpectOkWithParam(requestBuilder, EMAIL, email);
 
         verify(signInService).findUsername(eq(email));
     }
@@ -64,8 +66,13 @@ public class SignInApiControllerUnitTest {
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/password");
-        mockMvcTestHelper.requestAndAssertStatusIsOkWithParam(requestBuilder, "username", USERNAME.getKey());
+        performAndExpectOkWithParam(requestBuilder, USERNAME, USERNAME.getKey());
 
         verify(signInService).findPassword(eq(USERNAME.getKey()));
+    }
+
+    private void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder, Fields field,
+                                             String value) throws Exception {
+        mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, field, value);
     }
 }

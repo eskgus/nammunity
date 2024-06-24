@@ -29,6 +29,8 @@ public enum ExceptionMessages {
     INVALID_USERNAME("ID는 영어 소문자로 시작, 숫자 1개 이상 포함, 한글/특수문자/공백 불가능, 8글자 이상 20글자 이하"),
     INVALID_PASSWORD("비밀번호는 영어와 숫자 1개 이상 포함, 특수문자 가능, 한글/공백 불가능, 8글자 이상 20글자 이하"),
     INVALID_NEW_PASSWORD("현재 비밀번호와 새 비밀번호가 같으면 안 됩니다."),
+    INVALID_NEW_EMAIL("현재 이메일과 같습니다."),
+    INVALID_NEW_NICKNAME("현재 닉네임과 같습니다."),
     INVALID_NICKNAME("닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하"),
     INVALID_EMAIL("이메일 형식이 맞지 않습니다."),
 

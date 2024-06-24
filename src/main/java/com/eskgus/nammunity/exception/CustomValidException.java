@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.exception;
 
+import com.eskgus.nammunity.domain.enums.ExceptionMessages;
+import com.eskgus.nammunity.domain.enums.Fields;
 import lombok.Getter;
 
 @Getter
@@ -8,9 +10,9 @@ public class CustomValidException extends RuntimeException {
     private final String rejectedValue;
     private final String defaultMessage;
 
-    public CustomValidException(String field, String rejectedValue, String defaultMessage) {
-        this.field = field;
+    public CustomValidException(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {
+        this.field = field.getKey();
         this.rejectedValue = rejectedValue;
-        this.defaultMessage = defaultMessage;
+        this.defaultMessage = exceptionMessage.getMessage();
     }
 }

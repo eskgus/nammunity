@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+import static com.eskgus.nammunity.domain.enums.Fields.*;
 
 @RequiredArgsConstructor
 @Service
@@ -40,16 +41,16 @@ public class RegistrationService {
     @Transactional(readOnly = true)
     private void validateRegistrationDto(RegistrationDto registrationDto) {
         if (userService.existsByUsername(registrationDto.getUsername())) {
-            throw new CustomValidException("username", registrationDto.getUsername(), "이미 사용 중인 ID입니다.");
+            throw new CustomValidException(USERNAME, registrationDto.getUsername(), EXISTENT_USERNAME);
         }
         if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
-            throw new CustomValidException("confirmPassword", registrationDto.getConfirmPassword(), "비밀번호가 일치하지 않습니다.");
+            throw new CustomValidException(CONFIRM_PASSWORD, registrationDto.getConfirmPassword(), MISMATCH_CONFIRM_PASSWORD);
         }
         if (userService.existsByNickname(registrationDto.getNickname())) {
-            throw new CustomValidException("nickname", registrationDto.getNickname(), "이미 사용 중인 닉네임입니다.");
+            throw new CustomValidException(NICKNAME, registrationDto.getNickname(), EXISTENT_NICKNAME);
         }
         if (userService.existsByEmail(registrationDto.getEmail())) {
-            throw new CustomValidException("email", registrationDto.getEmail(), "이미 사용 중인 이메일입니다.");
+            throw new CustomValidException(EMAIL, registrationDto.getEmail(), EXISTENT_EMAIL);
         }
     }
 
@@ -131,28 +132,28 @@ public class RegistrationService {
 
     private void checkUsername(String username) {
         if (username.isBlank()) {
-            throw new CustomValidException("username", username, "ID를 입력하세요.");
+            throw new CustomValidException(USERNAME, username, EMPTY_USERNAME);
         }
         if (userService.existsByUsername(username)) {
-            throw new CustomValidException("username", username, "이미 사용 중인 ID입니다.");
+            throw new CustomValidException(USERNAME, username, EXISTENT_USERNAME);
         }
     }
 
     private void checkNickname(String nickname) {
         if (nickname.isBlank()) {
-            throw new CustomValidException("nickname", nickname, "닉네임을 입력하세요.");
+            throw new CustomValidException(NICKNAME, nickname, EMPTY_NICKNAME);
         }
         if (userService.existsByNickname(nickname)) {
-            throw new CustomValidException("nickname", nickname, "이미 사용 중인 닉네임입니다.");
+            throw new CustomValidException(NICKNAME, nickname, EXISTENT_NICKNAME);
         }
     }
 
     private void checkEmail(String email) {
         if (email.isBlank()) {
-            throw new CustomValidException("email", email, "이메일을 입력하세요.");
+            throw new CustomValidException(EMAIL, email, EMPTY_EMAIL);
         }
         if (userService.existsByEmail(email)) {
-            throw new CustomValidException("email", email, "이미 사용 중인 이메일입니다.");
+            throw new CustomValidException(EMAIL, email, EXISTENT_EMAIL);
         }
     }
 

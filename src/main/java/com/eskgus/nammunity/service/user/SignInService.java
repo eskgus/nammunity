@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.BANNED_USER;
+
 @RequiredArgsConstructor
 @Service
 public class SignInService {
@@ -49,7 +51,7 @@ public class SignInService {
         User user = userService.findByUsername(username);
 
         if (!bannedUsersService.isAccountNonBanned(username)) {
-            throw new IllegalArgumentException("활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.");
+            throw new IllegalArgumentException(BANNED_USER.getMessage());
         }
 
         createAndUpdatePassword(user);

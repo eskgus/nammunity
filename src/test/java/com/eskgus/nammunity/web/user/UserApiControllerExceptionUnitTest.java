@@ -4,6 +4,7 @@ import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.exception.CustomValidException;
 import com.eskgus.nammunity.exception.SocialException;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
@@ -34,6 +35,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.security.Principal;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+import static com.eskgus.nammunity.domain.enums.Fields.*;
+import static com.eskgus.nammunity.domain.enums.Fields.EMAIL;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -54,16 +57,10 @@ public class UserApiControllerExceptionUnitTest {
     private UserUpdateService userUpdateService;
 
     private static final Long ID = 1L;
-    private static final String USERNAME = "username";
-    private static final String USERNAME_VALUE = USERNAME + ID;
-    private static final String OLD_PASSWORD = "oldPassword";
-    private static final String PASSWORD = "password";
-    private static final String CONFIRM_PASSWORD = "confirmPassword";
-    private static final String PASSWORD_VALUE = PASSWORD + ID;
-    private static final String NICKNAME = "nickname";
-    private static final String EMAIL = "email";
-    private static final String EMAIL_VALUE = EMAIL + "@naver.com";
-    private static final String SOCIAL = "social";
+    private static final String USERNAME_VALUE = USERNAME.getKey() + ID;
+    private static final String PASSWORD_VALUE = PASSWORD.getKey() + ID;
+    private static final String NICKNAME_VALUE = NICKNAME.getKey();
+    private static final String EMAIL_VALUE = EMAIL.getKey() + "@naver.com";
 
     private static final String REQUEST_MAPPING = "/api/users";
 
@@ -74,8 +71,7 @@ public class UserApiControllerExceptionUnitTest {
         RegistrationDto requestDto = createRegistrationDto(USERNAME, "");
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                USERNAME, EMPTY_USERNAME.getMessage(), requestDto.getUsername());
+        ResultMatcher[] resultMatchers = createResultMatchers(USERNAME, requestDto.getUsername(), EMPTY_USERNAME);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -83,11 +79,10 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void signUpWithInvalidUsername() throws Exception {
         // give
-        RegistrationDto requestDto = createRegistrationDto(USERNAME, USERNAME);
+        RegistrationDto requestDto = createRegistrationDto(USERNAME, USERNAME.getKey());
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                USERNAME, INVALID_USERNAME.getMessage(), requestDto.getUsername());
+        ResultMatcher[] resultMatchers = createResultMatchers(USERNAME, requestDto.getUsername(), INVALID_USERNAME);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -98,8 +93,7 @@ public class UserApiControllerExceptionUnitTest {
         RegistrationDto requestDto = createRegistrationDto(PASSWORD, "");
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                PASSWORD, EMPTY_PASSWORD.getMessage(), requestDto.getPassword());
+        ResultMatcher[] resultMatchers = createResultMatchers(PASSWORD, requestDto.getPassword(), EMPTY_PASSWORD);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -107,11 +101,10 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void signUpWithInvalidPassword() throws Exception {
         // give
-        RegistrationDto requestDto = createRegistrationDto(PASSWORD, PASSWORD);
+        RegistrationDto requestDto = createRegistrationDto(PASSWORD, PASSWORD.getKey());
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                PASSWORD, INVALID_PASSWORD.getMessage(), requestDto.getPassword());
+        ResultMatcher[] resultMatchers = createResultMatchers(PASSWORD, requestDto.getPassword(), INVALID_PASSWORD);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -123,7 +116,7 @@ public class UserApiControllerExceptionUnitTest {
 
         // when/then
         ResultMatcher[] resultMatchers = createResultMatchers(
-                CONFIRM_PASSWORD, EMPTY_CONFIRM_PASSWORD.getMessage(), requestDto.getConfirmPassword());
+                CONFIRM_PASSWORD, requestDto.getConfirmPassword(), EMPTY_CONFIRM_PASSWORD);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -134,8 +127,7 @@ public class UserApiControllerExceptionUnitTest {
         RegistrationDto requestDto = createRegistrationDto(NICKNAME, "");
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                NICKNAME, EMPTY_NICKNAME.getMessage(), requestDto.getNickname());
+        ResultMatcher[] resultMatchers = createResultMatchers(NICKNAME, requestDto.getNickname(), EMPTY_NICKNAME);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -143,11 +135,10 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void signUpWithInvalidNickname() throws Exception {
         // give
-        RegistrationDto requestDto = createRegistrationDto(NICKNAME, NICKNAME + "!");
+        RegistrationDto requestDto = createRegistrationDto(NICKNAME, NICKNAME_VALUE + "!");
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                NICKNAME, INVALID_NICKNAME.getMessage(), requestDto.getNickname());
+        ResultMatcher[] resultMatchers = createResultMatchers(NICKNAME, requestDto.getNickname(), INVALID_NICKNAME);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -158,7 +149,7 @@ public class UserApiControllerExceptionUnitTest {
         RegistrationDto requestDto = createRegistrationDto(EMAIL, "");
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, EMPTY_EMAIL.getMessage(), requestDto.getEmail());
+        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, requestDto.getEmail(), EMPTY_EMAIL);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -166,10 +157,10 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void signUpWithInvalidEmail() throws Exception {
         // give
-        RegistrationDto requestDto = createRegistrationDto(EMAIL, EMAIL);
+        RegistrationDto requestDto = createRegistrationDto(EMAIL, EMAIL.getKey());
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, INVALID_EMAIL.getMessage(), requestDto.getEmail());
+        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, requestDto.getEmail(), INVALID_EMAIL);
         testSignUpException(requestDto, never(), resultMatchers);
     }
 
@@ -180,12 +171,11 @@ public class UserApiControllerExceptionUnitTest {
         RegistrationDto requestDto = createRegistrationDto(null, null);
 
         when(registrationService.signUp(any(RegistrationDto.class)))
-                .thenThrow(new CustomValidException(
-                        USERNAME, requestDto.getUsername(), CUSTOM_VALID_EXCEPTION_TEST.getMessage()));
+                .thenThrow(new CustomValidException(USERNAME, requestDto.getUsername(), CUSTOM_VALID_EXCEPTION_TEST));
 
         // when/then
         ResultMatcher[] resultMatchers = createResultMatchers(
-                USERNAME, CUSTOM_VALID_EXCEPTION_TEST.getMessage(), requestDto.getUsername());
+                USERNAME, requestDto.getUsername(), CUSTOM_VALID_EXCEPTION_TEST);
         testSignUpException(requestDto, times(1), resultMatchers);
     }
 
@@ -199,7 +189,7 @@ public class UserApiControllerExceptionUnitTest {
                 .thenThrow(new IllegalArgumentException(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage()));
 
         // when/then
-        ResultMatcher resultMatcher = createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
+        ResultMatcher resultMatcher = createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
         testSignUpException(requestDto, times(1), resultMatcher);
     }
 
@@ -208,14 +198,12 @@ public class UserApiControllerExceptionUnitTest {
     public void checkThrowsCustomValidException() throws Exception {
         // given
         when(registrationService.check(anyString(), isNull(), isNull()))
-                .thenThrow(new CustomValidException(USERNAME, USERNAME_VALUE, CUSTOM_VALID_EXCEPTION_TEST.getMessage()));
+                .thenThrow(new CustomValidException(USERNAME, USERNAME_VALUE, CUSTOM_VALID_EXCEPTION_TEST));
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/validation");
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                USERNAME, CUSTOM_VALID_EXCEPTION_TEST.getMessage(), USERNAME_VALUE);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithParam(
-                requestBuilder, USERNAME, USERNAME_VALUE, resultMatchers);
+        ResultMatcher[] resultMatchers = createResultMatchers(USERNAME, USERNAME_VALUE, CUSTOM_VALID_EXCEPTION_TEST);
+        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, USERNAME, USERNAME_VALUE, resultMatchers);
 
         verify(registrationService).check(eq(USERNAME_VALUE), isNull(), isNull());
     }
@@ -228,7 +216,7 @@ public class UserApiControllerExceptionUnitTest {
 
         // when/then
         ResultMatcher[] resultMatchers = createResultMatchers(
-                OLD_PASSWORD, EMPTY_OLD_PASSWORD.getMessage(), requestDto.getOldPassword());
+                OLD_PASSWORD, requestDto.getOldPassword(), EMPTY_OLD_PASSWORD);
         testUpdatePasswordException(requestDto, never(), resultMatchers);
     }
 
@@ -239,8 +227,7 @@ public class UserApiControllerExceptionUnitTest {
         PasswordUpdateDto requestDto = createPasswordUpdateDto(PASSWORD, "");
 
         // when/then
-        ResultMatcher[] resultMatchers =
-                createResultMatchers(PASSWORD, EMPTY_NEW_PASSWORD.getMessage(), requestDto.getPassword());
+        ResultMatcher[] resultMatchers = createResultMatchers(PASSWORD, requestDto.getPassword(), EMPTY_NEW_PASSWORD);
         testUpdatePasswordException(requestDto, never(), resultMatchers);
     }
 
@@ -248,11 +235,10 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void updatePasswordWithInvalidPassword() throws Exception {
         // given
-        PasswordUpdateDto requestDto = createPasswordUpdateDto(PASSWORD, PASSWORD);
+        PasswordUpdateDto requestDto = createPasswordUpdateDto(PASSWORD, PASSWORD.getKey());
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                PASSWORD, INVALID_PASSWORD.getMessage(), requestDto.getPassword());
+        ResultMatcher[] resultMatchers = createResultMatchers(PASSWORD, requestDto.getPassword(), INVALID_PASSWORD);
         testUpdatePasswordException(requestDto, never(), resultMatchers);
     }
 
@@ -264,7 +250,7 @@ public class UserApiControllerExceptionUnitTest {
 
         // when/then
         ResultMatcher[] resultMatchers = createResultMatchers(
-                CONFIRM_PASSWORD, EMPTY_CONFIRM_PASSWORD.getMessage(), requestDto.getConfirmPassword());
+                CONFIRM_PASSWORD, requestDto.getConfirmPassword(), EMPTY_CONFIRM_PASSWORD);
         testUpdatePasswordException(requestDto, never(), resultMatchers);
     }
 
@@ -278,7 +264,7 @@ public class UserApiControllerExceptionUnitTest {
                 .thenThrow(new IllegalArgumentException(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage()));
 
         // when/then
-        ResultMatcher resultMatcher = createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
+        ResultMatcher resultMatcher = createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
         testUpdatePasswordException(requestDto, times(1), resultMatcher);
     }
 
@@ -290,11 +276,11 @@ public class UserApiControllerExceptionUnitTest {
 
         when(userUpdateService.updatePassword(any(PasswordUpdateDto.class), any(Principal.class)))
                 .thenThrow(new CustomValidException(
-                        OLD_PASSWORD, CUSTOM_VALID_EXCEPTION_TEST.getMessage(), requestDto.getOldPassword()));
+                        OLD_PASSWORD, requestDto.getOldPassword(), CUSTOM_VALID_EXCEPTION_TEST));
 
         // when/then
         ResultMatcher[] resultMatchers = createResultMatchers(
-                OLD_PASSWORD, requestDto.getOldPassword(), CUSTOM_VALID_EXCEPTION_TEST.getMessage());
+                OLD_PASSWORD, requestDto.getOldPassword(), CUSTOM_VALID_EXCEPTION_TEST);
         testUpdatePasswordException(requestDto, times(1), resultMatchers);
     }
 
@@ -305,8 +291,7 @@ public class UserApiControllerExceptionUnitTest {
         NicknameUpdateDto requestDto = createNicknameUpdateDto("");
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                NICKNAME, EMPTY_NICKNAME.getMessage(), requestDto.getNickname());
+        ResultMatcher[] resultMatchers = createResultMatchers(NICKNAME, requestDto.getNickname(), EMPTY_NICKNAME);
         testUpdateNicknameException(requestDto, never(), resultMatchers);
     }
 
@@ -314,11 +299,10 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void updateNicknameWithInvalidNickname() throws Exception {
         // given
-        NicknameUpdateDto requestDto = createNicknameUpdateDto(NICKNAME + "!");
+        NicknameUpdateDto requestDto = createNicknameUpdateDto(NICKNAME_VALUE + "!");
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                NICKNAME, INVALID_NICKNAME.getMessage(), requestDto.getNickname());
+        ResultMatcher[] resultMatchers = createResultMatchers(NICKNAME, requestDto.getNickname(), INVALID_NICKNAME);
         testUpdateNicknameException(requestDto, never(), resultMatchers);
     }
 
@@ -326,13 +310,13 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void updateNicknameThrowsIllegalArgumentException() throws Exception {
         // given
-        NicknameUpdateDto requestDto = createNicknameUpdateDto(NICKNAME);
+        NicknameUpdateDto requestDto = createNicknameUpdateDto(NICKNAME_VALUE);
 
         when(userUpdateService.updateNickname(any(NicknameUpdateDto.class), any(Principal.class)))
                 .thenThrow(new IllegalArgumentException(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage()));
 
         // when/then
-        ResultMatcher resultMatcher = createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
+        ResultMatcher resultMatcher = createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
         testUpdateNicknameException(requestDto, times(1), resultMatcher);
     }
 
@@ -340,15 +324,14 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void updateNicknameThrowsCustomValidException() throws Exception {
         // given
-        NicknameUpdateDto requestDto = createNicknameUpdateDto(NICKNAME);
+        NicknameUpdateDto requestDto = createNicknameUpdateDto(NICKNAME_VALUE);
 
         when(userUpdateService.updateNickname(any(NicknameUpdateDto.class), any(Principal.class)))
-                .thenThrow(new CustomValidException(
-                        NICKNAME, requestDto.getNickname(), CUSTOM_VALID_EXCEPTION_TEST.getMessage()));
+                .thenThrow(new CustomValidException(NICKNAME, requestDto.getNickname(), CUSTOM_VALID_EXCEPTION_TEST));
 
         // when/then
         ResultMatcher[] resultMatchers = createResultMatchers(
-                NICKNAME, CUSTOM_VALID_EXCEPTION_TEST.getMessage(), requestDto.getNickname());
+                NICKNAME, requestDto.getNickname(), CUSTOM_VALID_EXCEPTION_TEST);
         testUpdateNicknameException(requestDto, times(1), resultMatchers);
     }
 
@@ -359,7 +342,7 @@ public class UserApiControllerExceptionUnitTest {
         EmailUpdateDto requestDto = createEmailUpdateDto("");
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, EMPTY_EMAIL.getMessage(), requestDto.getEmail());
+        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, requestDto.getEmail(), EMPTY_EMAIL);
         testUpdateEmailException(requestDto, never(), resultMatchers);
     }
 
@@ -367,10 +350,10 @@ public class UserApiControllerExceptionUnitTest {
     @WithMockUser
     public void updateEmailWithInvalidEmail() throws Exception {
         // given
-        EmailUpdateDto requestDto = createEmailUpdateDto(EMAIL);
+        EmailUpdateDto requestDto = createEmailUpdateDto(EMAIL.getKey());
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, INVALID_EMAIL.getMessage(), requestDto.getEmail());
+        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, requestDto.getEmail(), INVALID_EMAIL);
         testUpdateEmailException(requestDto, never(), resultMatchers);
     }
 
@@ -384,7 +367,7 @@ public class UserApiControllerExceptionUnitTest {
                 .thenThrow(new IllegalArgumentException(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage()));
 
         // when/then
-        ResultMatcher resultMatcher = createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage());
+        ResultMatcher resultMatcher = createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
         testUpdateEmailException(requestDto, times(1), resultMatcher);
     }
 
@@ -395,12 +378,10 @@ public class UserApiControllerExceptionUnitTest {
         EmailUpdateDto requestDto = createEmailUpdateDto(EMAIL_VALUE);
 
         when(userUpdateService.updateEmail(any(EmailUpdateDto.class), any(Principal.class)))
-                .thenThrow(new CustomValidException(
-                        EMAIL, requestDto.getEmail(), CUSTOM_VALID_EXCEPTION_TEST.getMessage()));
+                .thenThrow(new CustomValidException(EMAIL, requestDto.getEmail(), CUSTOM_VALID_EXCEPTION_TEST));
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(
-                EMAIL, CUSTOM_VALID_EXCEPTION_TEST.getMessage(), requestDto.getEmail());
+        ResultMatcher[] resultMatchers = createResultMatchers(EMAIL, requestDto.getEmail(), CUSTOM_VALID_EXCEPTION_TEST);
         testUpdateEmailException(requestDto, times(1), resultMatchers);
     }
 
@@ -434,17 +415,84 @@ public class UserApiControllerExceptionUnitTest {
     public void unlinkSocialThrowsSocialException() throws Exception {
         // given
         when(userUpdateService.unlinkSocial(any(Principal.class), anyString(), anyString()))
-                .thenThrow(new SocialException(USERNAME, SOCIAL, SOCIAL));
+                .thenThrow(new SocialException(USERNAME_VALUE, SOCIAL.getKey(), SOCIAL.getKey()));
 
         // when/then
         testUnlinkSocialException(INTERNAL_SERVER_ERROR);
     }
 
-    private RegistrationDto createRegistrationDto(String field, String value) {
+    private void testSignUpException(RegistrationDto requestDto, VerificationMode mode,
+                                     ResultMatcher... resultMatchers) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
+
+        verify(registrationService, mode).signUp(any(RegistrationDto.class));
+    }
+
+    private void testUpdatePasswordException(PasswordUpdateDto requestDto, VerificationMode mode,
+                                             ResultMatcher... resultMatchers) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + PASSWORD.getKey());
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
+
+        verify(userUpdateService, mode).updatePassword(any(PasswordUpdateDto.class), any(Principal.class));
+    }
+
+    private void testUpdateNicknameException(NicknameUpdateDto requestDto, VerificationMode mode,
+                                             ResultMatcher... resultMatchers) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + NICKNAME.getKey());
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
+
+        verify(userUpdateService, mode).updateNickname(any(NicknameUpdateDto.class), any(Principal.class));
+    }
+
+    private void testUpdateEmailException(EmailUpdateDto requestDto, VerificationMode mode,
+                                          ResultMatcher... resultMatchers) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + EMAIL.getKey());
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
+
+        verify(userUpdateService, mode).updateEmail(any(EmailUpdateDto.class), any(Principal.class));
+    }
+
+    private void testUnlinkSocialException(ExceptionMessages exceptionMessage) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/unlink/{social}", SOCIAL.getKey());
+        String cookieValue = testDeleteUserOrUnlinkSocial(requestBuilder, exceptionMessage);
+
+        verify(userUpdateService).unlinkSocial(any(Principal.class), eq(SOCIAL.getKey()), eq(cookieValue));
+    }
+
+    private String testDeleteUserOrUnlinkSocial(MockHttpServletRequestBuilder requestBuilder,
+                                                ExceptionMessages exceptionMessage) throws Exception {
+        Cookie cookie = createCookie();
+
+        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
+        if (INTERNAL_SERVER_ERROR.equals(exceptionMessage)) {
+            mockMvcTestHelper.performAndExpectInternalServerError(requestBuilder, cookie, resultMatcher);
+        } else {
+            mockMvcTestHelper.performAndExpectBadRequestWithCookie(requestBuilder, cookie, resultMatcher);
+        }
+
+
+        return cookie.getValue();
+    }
+
+    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
+                                                ResultMatcher... resultMatchers) throws Exception {
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
+    }
+
+    private ResultMatcher[] createResultMatchers(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatchers(field, rejectedValue, exceptionMessage);
+    }
+
+    private ResultMatcher createResultMatcher(ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatcher(exceptionMessage);
+    }
+
+    private RegistrationDto createRegistrationDto(Fields field, String value) {
         String username = USERNAME_VALUE;
         String password = PASSWORD_VALUE;
         String confirmPassword = PASSWORD_VALUE;
-        String nickname = NICKNAME;
+        String nickname = NICKNAME_VALUE;
         String email = EMAIL_VALUE;
 
         if (field != null) {
@@ -462,7 +510,7 @@ public class UserApiControllerExceptionUnitTest {
                 .nickname(nickname).email(email).build();
     }
 
-    private PasswordUpdateDto createPasswordUpdateDto(String field, String value) {
+    private PasswordUpdateDto createPasswordUpdateDto(Fields field, String value) {
         String oldPassword = PASSWORD_VALUE;
         String password = PASSWORD_VALUE;
         String confirmPassword = PASSWORD_VALUE;
@@ -489,68 +537,5 @@ public class UserApiControllerExceptionUnitTest {
 
     private Cookie createCookie() {
         return new Cookie("access_token", "accessToken");
-    }
-
-    private ResultMatcher[] createResultMatchers(String expectedField, String expectedDefaultMessage,
-                                                 String expectedRejectedValue) {
-        return mockMvcTestHelper.createResultMatchers(expectedField, expectedDefaultMessage, expectedRejectedValue);
-    }
-
-    private ResultMatcher createResultMatcher(String exceptionMessage) {
-        return mockMvcTestHelper.createResultMatcher(exceptionMessage);
-    }
-
-    private void testSignUpException(RegistrationDto requestDto, VerificationMode mode,
-                                     ResultMatcher... resultMatchers) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
-
-        verify(registrationService, mode).signUp(any(RegistrationDto.class));
-    }
-
-    private void testUpdatePasswordException(PasswordUpdateDto requestDto, VerificationMode mode,
-                                             ResultMatcher... resultMatchers) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + PASSWORD);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
-
-        verify(userUpdateService, mode).updatePassword(any(PasswordUpdateDto.class), any(Principal.class));
-    }
-
-    private void testUpdateNicknameException(NicknameUpdateDto requestDto, VerificationMode mode,
-                                             ResultMatcher... resultMatchers) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + NICKNAME);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
-
-        verify(userUpdateService, mode).updateNickname(any(NicknameUpdateDto.class), any(Principal.class));
-    }
-
-    private void testUpdateEmailException(EmailUpdateDto requestDto, VerificationMode mode,
-                                          ResultMatcher... resultMatchers) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + EMAIL);
-        mockMvcTestHelper.requestAndAssertStatusIsBadRequest(requestBuilder, requestDto, resultMatchers);
-
-        verify(userUpdateService, mode).updateEmail(any(EmailUpdateDto.class), any(Principal.class));
-    }
-
-    private void testUnlinkSocialException(ExceptionMessages exceptionMessage) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/unlink/{social}", SOCIAL);
-        String cookieValue = testDeleteUserOrUnlinkSocial(requestBuilder, exceptionMessage);
-
-        verify(userUpdateService).unlinkSocial(any(Principal.class), eq(SOCIAL), eq(cookieValue));
-    }
-
-    private String testDeleteUserOrUnlinkSocial(MockHttpServletRequestBuilder requestBuilder,
-                                              ExceptionMessages exceptionMessage) throws Exception {
-        Cookie cookie = createCookie();
-
-        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage.getMessage());
-        if (INTERNAL_SERVER_ERROR.equals(exceptionMessage)) {
-            mockMvcTestHelper.requestAndAssertStatusIsInternalServerError(requestBuilder, cookie, resultMatcher);
-        } else {
-            mockMvcTestHelper.requestAndAssertStatusIsBadRequestWithCookie(requestBuilder, cookie, resultMatcher);
-        }
-
-
-        return cookie.getValue();
     }
 }
