@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -113,17 +114,17 @@ public class ReportSummaryServiceTest {
 
     @Test
     public void findByPostTypes() {
-        testFindByTypes(ContentType.POSTS);
+        testFindByTypes(POSTS);
     }
 
     @Test
     public void findByCommentTypes() {
-        testFindByTypes(ContentType.COMMENTS);
+        testFindByTypes(COMMENTS);
     }
 
     @Test
     public void findByUserTypes() {
-        testFindByTypes(ContentType.USERS);
+        testFindByTypes(USERS);
     }
 
     @Test
@@ -131,7 +132,7 @@ public class ReportSummaryServiceTest {
         // given
         when(typesService.findByContentType(any(ContentType.class))).thenThrow(IllegalArgumentException.class);
 
-        ContentType contentType = ContentType.POSTS;
+        ContentType contentType = POSTS;
         int page = 1;
 
         // when/then
@@ -188,7 +189,7 @@ public class ReportSummaryServiceTest {
                 = createDeleteDto(Collections.singletonList(postId), Collections.emptyList(), Collections.emptyList());
 
         // when/then
-        assertThrowsAndVerify(deleteDto, ContentType.POSTS);
+        assertThrowsAndVerify(deleteDto, POSTS);
         verify(postsService).findById(eq(postId));
     }
 
@@ -202,7 +203,7 @@ public class ReportSummaryServiceTest {
                 = createDeleteDto(Collections.emptyList(), Collections.singletonList(commentId), Collections.emptyList());
 
         // when/then
-        assertThrowsAndVerify(deleteDto, ContentType.COMMENTS);
+        assertThrowsAndVerify(deleteDto, COMMENTS);
         verify(commentsService).findById(eq(commentId));
     }
 
@@ -216,7 +217,7 @@ public class ReportSummaryServiceTest {
                 = createDeleteDto(Collections.emptyList(), Collections.emptyList(), Collections.singletonList(userId));
 
         // when/then
-        assertThrowsAndVerify(deleteDto, ContentType.USERS);
+        assertThrowsAndVerify(deleteDto, USERS);
         verify(userService).findById(eq(userId));
     }
 
@@ -239,12 +240,12 @@ public class ReportSummaryServiceTest {
     }
 
     private ContentReportSummarySaveDto createContentReportSummarySaveDto(Posts post, Comments comment, User user) {
-        ContentType contentType = Optional.ofNullable(post).map(p -> ContentType.POSTS)
-                .orElse(Optional.ofNullable(comment).map(c -> ContentType.COMMENTS)
-                        .orElse(ContentType.USERS));
+        ContentType contentType = Optional.ofNullable(post).map(p -> POSTS)
+                .orElse(Optional.ofNullable(comment).map(c -> COMMENTS)
+                        .orElse(USERS));
 
         Types type = mock(Types.class);
-        when(type.getDetail()).thenReturn(contentType.getDetailInKor());
+        when(type.getDetail()).thenReturn(contentType.getDetail());
 
         LocalDateTime reportedDate = LocalDateTime.now();
         User reporter = mock(User.class);
@@ -335,13 +336,13 @@ public class ReportSummaryServiceTest {
     }
 
     private void verifyDelete(ContentType contentType) {
-        if (!ContentType.POSTS.equals(contentType)) {
+        if (!POSTS.equals(contentType)) {
             verify(postsService, never()).findById(anyLong());
         }
-        if (!ContentType.COMMENTS.equals(contentType)) {
+        if (!COMMENTS.equals(contentType)) {
             verify(commentsService, never()).findById(anyLong());
         }
-        if (!ContentType.USERS.equals(contentType)) {
+        if (!USERS.equals(contentType)) {
             verify(userService, never()).findById(anyLong());
         }
         verify(contentReportSummaryRepository, never()).deleteByContents(any());

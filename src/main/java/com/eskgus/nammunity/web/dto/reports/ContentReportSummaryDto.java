@@ -14,6 +14,9 @@ import lombok.Getter;
 
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.*;
+import static com.eskgus.nammunity.domain.enums.Fields.OTHER;
+
 @Getter
 public class ContentReportSummaryDto {
     private Long id;
@@ -22,17 +25,17 @@ public class ContentReportSummaryDto {
     private String reportedDate;
     private String reason;
 
-    private PostsListDto postsListDto;
-    private CommentsListDto commentsListDto;
-    private UsersListDto usersListDto;
+    private final PostsListDto postsListDto;
+    private final CommentsListDto commentsListDto;
+    private final UsersListDto usersListDto;
 
     @Builder
     public ContentReportSummaryDto(ContentReportSummary reportSummary, Posts post, Comments comment, User user) {
         generateReportSummary(reportSummary);
 
-        this.postsListDto = generateListDtoByType(ContentType.POSTS, PostsListDto::new, post);
-        this.commentsListDto = generateListDtoByType(ContentType.COMMENTS, CommentsListDto::new, comment);
-        this.usersListDto = generateListDtoByType(ContentType.USERS, UsersListDto::new, user);
+        this.postsListDto = generateListDtoByType(POSTS, PostsListDto::new, post);
+        this.commentsListDto = generateListDtoByType(COMMENTS, CommentsListDto::new, comment);
+        this.usersListDto = generateListDtoByType(USERS, UsersListDto::new, user);
     }
 
     private void generateReportSummary(ContentReportSummary reportSummary) {
@@ -45,14 +48,14 @@ public class ContentReportSummaryDto {
 
     private String generateReason(ContentReportSummary reportSummary) {
         String reasonDetail = reportSummary.getReasons().getDetail();
-        if (reasonDetail.equals("기타")) {
+        if (OTHER.getKey().equals(reasonDetail)) {
             return reasonDetail + ": " + reportSummary.getOtherReasons();
         }
         return reasonDetail;
     }
 
     private <T, U> T generateListDtoByType(ContentType contentType, Function<U, T> constructor, U entity) {
-        if (type.equals(contentType.getDetailInKor())) {
+        if (contentType.getDetail().equals(type)) {
             return constructor.apply(entity);
         }
         return null;

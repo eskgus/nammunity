@@ -16,7 +16,7 @@ public class TypesService {
 
     @Transactional(readOnly = true)
     public Types findByContentType(ContentType contentType) {
-        return findByDetail(contentType.getDetailInKor());
+        return findByDetail(contentType.getDetail());
     }
 
     @Transactional(readOnly = true)

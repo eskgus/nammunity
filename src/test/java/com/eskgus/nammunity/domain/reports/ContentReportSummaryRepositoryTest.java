@@ -4,7 +4,6 @@ import com.eskgus.nammunity.config.TestSecurityConfig;
 import com.eskgus.nammunity.converter.ContentReportSummaryConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
-import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
@@ -30,6 +29,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.*;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -145,9 +145,10 @@ public class ContentReportSummaryRepositoryTest {
     }
 
     private Long getActualId(ContentReportSummary reportSummary) {
-        if (reportSummary.getTypes().getDetail().equals(ContentType.POSTS.getDetailInKor())) {
+        String type = reportSummary.getTypes().getDetail();
+        if (POSTS.getDetail().equals(type)) {
             return reportSummary.getPosts().getId();
-        } else if (reportSummary.getTypes().getDetail().equals(ContentType.COMMENTS.getDetailInKor())) {
+        } else if (COMMENTS.getDetail().equals(type)) {
             return reportSummary.getComments().getId();
         } else {
             return reportSummary.getUser().getId();
@@ -201,13 +202,13 @@ public class ContentReportSummaryRepositoryTest {
     public void findByTypes() {
         saveReportSummaries();
 
-        Types postType = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.POSTS.getDetailInKor());
+        Types postType = assertOptionalAndGetEntity(typesRepository::findByDetail, POSTS.getDetail());
         callAndAssertFindByTypes(postType);
 
-        Types commentType = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.COMMENTS.getDetailInKor());
+        Types commentType = assertOptionalAndGetEntity(typesRepository::findByDetail, COMMENTS.getDetail());
         callAndAssertFindByTypes(commentType);
 
-        Types userType = assertOptionalAndGetEntity(typesRepository::findByDetail, ContentType.USERS.getDetailInKor());
+        Types userType = assertOptionalAndGetEntity(typesRepository::findByDetail, USERS.getDetail());
         callAndAssertFindByTypes(userType);
     }
 

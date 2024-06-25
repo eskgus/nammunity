@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
@@ -71,7 +72,7 @@ public class UserViewServiceTest {
         long numberOfComments = 1;
         when(commentsService.countByUser(any(User.class))).thenReturn(numberOfComments);
 
-        ActivityHistoryDto result = testFindActivityHistory(ContentType.POSTS.getDetailInEng());
+        ActivityHistoryDto result = testFindActivityHistory(POSTS);
 
         assertEquals(postsPage, result.getPostsHistoryDto().getContentsPage().getContents());
         assertEquals(numberOfComments, result.getPostsHistoryDto().getNumberOfComments());
@@ -90,7 +91,7 @@ public class UserViewServiceTest {
         long numberOfPosts = 1;
         when(postsService.countByUser(any(User.class))).thenReturn(numberOfPosts);
 
-        ActivityHistoryDto result = testFindActivityHistory(ContentType.COMMENTS.getDetailInEng());
+        ActivityHistoryDto result = testFindActivityHistory(COMMENTS);
 
         assertEquals(commentsPage, result.getCommentsHistoryDto().getContentsPage().getContents());
         assertEquals(numberOfPosts, result.getCommentsHistoryDto().getNumberOfPosts());
@@ -107,7 +108,7 @@ public class UserViewServiceTest {
         when(userService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
 
         Long id = 1L;
-        String type = ContentType.POSTS.getDetailInEng();
+        String type = POSTS.getName();
         int page = 1;
 
         // when/then
@@ -165,7 +166,7 @@ public class UserViewServiceTest {
         verify(likesService, never()).findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt());
     }
 
-    private ActivityHistoryDto testFindActivityHistory(String type) {
+    private ActivityHistoryDto testFindActivityHistory(ContentType type) {
         // given
         LocalDateTime now = LocalDateTime.now();
 
@@ -182,7 +183,7 @@ public class UserViewServiceTest {
         int page = 1;
 
         // when
-        ActivityHistoryDto result = userViewService.findActivityHistory(user.getId(), type, page);
+        ActivityHistoryDto result = userViewService.findActivityHistory(user.getId(), type.getName(), page);
 
         // then
         assertEquals(bannedUser.getCount(), result.getBannedHistoryDto().getCount());
@@ -207,21 +208,21 @@ public class UserViewServiceTest {
 
     private Map<String, Long> createNumberOfReports() {
         long numberOfPostReports = 1L;
-        when(reportsService.countReportsByContentTypeAndUser(eq(ContentType.POSTS), any(User.class)))
+        when(reportsService.countReportsByContentTypeAndUser(eq(POSTS), any(User.class)))
                 .thenReturn(numberOfPostReports);
 
         long numberOfCommentReports = 2L;
-        when(reportsService.countReportsByContentTypeAndUser(eq(ContentType.COMMENTS), any(User.class)))
+        when(reportsService.countReportsByContentTypeAndUser(eq(COMMENTS), any(User.class)))
                 .thenReturn(numberOfCommentReports);
 
         long numberOfUserReports = 3L;
-        when(reportsService.countReportsByContentTypeAndUser(eq(ContentType.USERS), any(User.class)))
+        when(reportsService.countReportsByContentTypeAndUser(eq(USERS), any(User.class)))
                 .thenReturn(numberOfUserReports);
 
         return Map.of(
-                ContentType.POSTS.getDetailInKor(), numberOfPostReports,
-                ContentType.COMMENTS.getDetailInKor(), numberOfCommentReports,
-                ContentType.USERS.getDetailInKor(), numberOfUserReports
+                POSTS.getDetail(), numberOfPostReports,
+                COMMENTS.getDetail(), numberOfCommentReports,
+                USERS.getDetail(), numberOfUserReports
         );
     }
 }

@@ -21,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.COMMENTS;
+import static com.eskgus.nammunity.domain.enums.ContentType.POSTS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_USER_REPORT_SUMMARY;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
@@ -77,9 +79,10 @@ public class ReportSummaryService {
     }
 
     private <T> T getContents(ContentReportSummarySaveDto requestDto) {
-        if (requestDto.getTypes().getDetail().equals(ContentType.POSTS.getDetailInKor())) {
+        String type = requestDto.getTypes().getDetail();
+        if (POSTS.getDetail().equals(type)) {
             return (T) requestDto.getPosts();
-        } else if (requestDto.getTypes().getDetail().equals(ContentType.COMMENTS.getDetailInKor())) {
+        } else if (COMMENTS.getDetail().equals(type)) {
             return (T) requestDto.getComments();
         } else {
             return (T) requestDto.getUser();

@@ -61,6 +61,6 @@ public class TypesServiceTest {
         // then
         assertEquals(type, result);
 
-        verify(typesRepository).findByDetail(contentType.getDetailInKor());
+        verify(typesRepository).findByDetail(contentType.getDetail());
     }
 }

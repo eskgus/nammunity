@@ -25,6 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.COMMENTS;
+import static com.eskgus.nammunity.domain.enums.ContentType.POSTS;
+
 @RequiredArgsConstructor
 @Service
 public class UserViewService {
@@ -91,7 +94,7 @@ public class UserViewService {
     }
 
     private PostsHistoryDto getPostsHistoryDto(String type, User user, int page) {
-        if (!type.equals(ContentType.POSTS.getDetailInEng())) {
+        if (!POSTS.getName().equals(type)) {
             return null;
         }
 
@@ -104,7 +107,7 @@ public class UserViewService {
     }
 
     private CommentsHistoryDto getCommentsHistoryDto(String type, User user, int page) {
-        if (!type.equals(ContentType.COMMENTS.getDetailInEng())) {
+        if (!COMMENTS.getName().equals(type)) {
             return null;
         }
 
@@ -117,14 +120,14 @@ public class UserViewService {
     }
 
     private Set<Map.Entry<String, Long>> getNumberOfReports(User user) {
-        long numberOfPostReports = reportsService.countReportsByContentTypeAndUser(ContentType.POSTS, user);
+        long numberOfPostReports = reportsService.countReportsByContentTypeAndUser(POSTS, user);
         long numberOfCommentReports = reportsService.countReportsByContentTypeAndUser(ContentType.COMMENTS, user);
         long numberOfUserReports = reportsService.countReportsByContentTypeAndUser(ContentType.USERS, user);
 
         Map<String, Long> numberOfReports = new HashMap<>();
-        numberOfReports.put(ContentType.POSTS.getDetailInKor(), numberOfPostReports);
-        numberOfReports.put(ContentType.COMMENTS.getDetailInKor(), numberOfCommentReports);
-        numberOfReports.put(ContentType.USERS.getDetailInKor(), numberOfUserReports);
+        numberOfReports.put(POSTS.getDetail(), numberOfPostReports);
+        numberOfReports.put(ContentType.COMMENTS.getDetail(), numberOfCommentReports);
+        numberOfReports.put(ContentType.USERS.getDetail(), numberOfUserReports);
 
         return numberOfReports.entrySet();
     }

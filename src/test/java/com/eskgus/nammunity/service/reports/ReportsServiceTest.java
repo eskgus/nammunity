@@ -542,7 +542,7 @@ public class ReportsServiceTest {
                                                   T content) {
         // given
         Types type = mock(Types.class);
-        when(type.getDetail()).thenReturn(contentType.getDetailInKor());
+        when(type.getDetail()).thenReturn(contentType.getDetail());
         when(typesService.findByContentType(any(ContentType.class))).thenReturn(type);
 
         Page<ContentReportDetailListDto> contents = new PageImpl<>(Collections.emptyList());

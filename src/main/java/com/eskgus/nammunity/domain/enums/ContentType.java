@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ContentType {
-    POSTS("게시글", "posts"),
-    COMMENTS("댓글", "comments"),
-    USERS("사용자", "users");
+    POSTS("posts", "게시글"),
+    COMMENTS("comments", "댓글"),
+    USERS("users", "사용자");
 
-    private final String detailInKor;
-    private final String detailInEng;
+    private final String name;
+    private final String detail;
 }
