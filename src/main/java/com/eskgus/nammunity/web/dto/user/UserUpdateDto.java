@@ -1,7 +1,10 @@
 package com.eskgus.nammunity.web.dto.user;
 
+import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.user.User;
 import lombok.Getter;
+
+import static com.eskgus.nammunity.domain.enums.SocialType.NONE;
 
 @Getter
 public class UserUpdateDto {
@@ -22,12 +25,12 @@ public class UserUpdateDto {
         generateSocial(user.getSocial());
     }
 
-    private void generateSocial(String social) {
-        if (!social.equals("none")) {
-            switch (social) {
-                case "google" -> this.google = true;
-                case "naver" -> this.naver = true;
-                default -> this.kakao = true;
+    private void generateSocial(SocialType socialType) {
+        if (!NONE.equals(socialType)) {
+            switch (socialType) {
+                case GOOGLE -> this.google = true;
+                case NAVER -> this.naver = true;
+                case KAKAO -> this.kakao = true;
             }
             this.none = false;
         }

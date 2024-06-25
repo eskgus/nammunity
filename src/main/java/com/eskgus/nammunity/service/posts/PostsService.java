@@ -44,18 +44,24 @@ public class PostsService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        Posts posts = findById(id);
-        postsRepository.delete(posts);
-    }
-
-    @Transactional
     public void deleteSelectedPosts(List<Long> postIds) {
         if (postIds.isEmpty()) {
             throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
         }
 
         postIds.forEach(this::delete);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Posts posts = findById(id);
+        postsRepository.delete(posts);
+    }
+
+    @Transactional(readOnly = true)
+    public Posts findById(Long id) {
+        return postsRepository.findById(id).orElseThrow(() -> new
+                IllegalArgumentException(NON_EXISTENT_POST.getMessage()));
     }
 
     @Transactional
@@ -68,12 +74,6 @@ public class PostsService {
         Pageable pageable = createPageable(page, 20);
         Page<PostsListDto> contents = postsRepository.findAllDesc(pageable);
         return new ContentsPageDto<>(contents);
-    }
-
-    @Transactional(readOnly = true)
-    public Posts findById(Long id) {
-        return postsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_POST.getMessage()));
     }
 
     @Transactional(readOnly = true)

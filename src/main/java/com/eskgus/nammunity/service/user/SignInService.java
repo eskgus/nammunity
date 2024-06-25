@@ -39,13 +39,6 @@ public class SignInService {
         return "가입하신 ID는 " + encryptedUsername + "입니다.";
     }
 
-    private String encryptUsername(String username) {
-        if (username.charAt(1) == '_') {    // 소셜 회원가입 사용자
-            return username;
-        }
-        return username.substring(0, 3) + "****";
-    }
-
     @Transactional
     public void findPassword(String username) {
         User user = userService.findByUsername(username);
@@ -58,11 +51,24 @@ public class SignInService {
         updateUserLockedIfIsLocked(user);
     }
 
+    private String encryptUsername(String username) {
+        if (username.charAt(1) == '_') {    // 소셜 회원가입 사용자
+            return username;
+        }
+        return username.substring(0, 3) + "****";
+    }
+
     private void createAndUpdatePassword(User user) {
         String randomPassword = createRandomPassword();
         sendRandomPasswordEmail(user, randomPassword);
 
         userUpdateService.encryptAndUpdatePassword(user, randomPassword);
+    }
+
+    private void updateUserLockedIfIsLocked(User user) {
+        if (user.isLocked()) {
+            user.updateLocked();
+        }
     }
 
     private String createRandomPassword() {
@@ -88,11 +94,5 @@ public class SignInService {
         String email = user.getEmail();
         String text = emailService.setRandomPasswordEmailText(randomPassword);
         emailService.send(email, text);
-    }
-
-    private void updateUserLockedIfIsLocked(User user) {
-        if (user.isLocked()) {
-            user.updateLocked();
-        }
     }
 }

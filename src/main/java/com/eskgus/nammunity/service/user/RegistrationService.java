@@ -38,6 +38,66 @@ public class RegistrationService {
         return id;
     }
 
+    @Transactional
+    public void resendToken(Long id) {
+        User user = userService.findById(id);
+
+        checkTokenResendAvailability(user);
+
+        user.getTokens().forEach(tokens -> tokens.updateExpiredAt(LocalDateTime.now()));
+        sendToken(id, user.getEmail(), "registration");
+    }
+
+    @Transactional
+    public void sendToken(Long id, String email, String purpose) {
+        User user = userService.findById(id);
+
+        String token = createAndSaveToken(user);
+
+        sendConfirmEmail(purpose, user, token, email);
+    }
+
+    public String encryptPassword(String password) {
+        return encoder.encode(password);
+    }
+
+    @Transactional
+    public void confirmToken(String token) {
+        Tokens confirmationToken = tokensService.findByToken(token);
+
+        validateToken(confirmationToken);
+
+        updateTokenAndUser(confirmationToken);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean check(String username, String nickname, String email) {
+        if (username != null) {
+            checkUsername(username);
+        } else if (nickname != null) {
+            checkNickname(nickname);
+        } else if (email != null) {
+            checkEmail(email);
+        }
+        return true;
+    }
+
+    @Transactional(readOnly = true)
+    public String checkUserEnabled(Long id, String referer) {
+        User user = userService.findById(id);
+        boolean enabled = user.isEnabled();
+
+        if (!enabled) {
+            throw new IllegalArgumentException(NOT_CONFIRMED_EMAIL.getMessage());
+        } else {
+            if (referer.contains("/sign-up")) {
+                return "/users/sign-in";
+            } else {
+                return "/users/my-page/update/user-info";
+            }
+        }
+    }
+
     @Transactional(readOnly = true)
     private void validateRegistrationDto(RegistrationDto registrationDto) {
         if (userService.existsByUsername(registrationDto.getUsername())) {
@@ -63,17 +123,12 @@ public class RegistrationService {
                 .role(Role.USER).build();
     }
 
-    public String encryptPassword(String password) {
-        return encoder.encode(password);
-    }
-
-    @Transactional
-    public void sendToken(Long id, String email, String purpose) {
-        User user = userService.findById(id);
-
-        String token = createAndSaveToken(user);
-
-        sendConfirmEmail(purpose, user, token, email);
+    private void checkTokenResendAvailability(User user) {
+        if (user.isEnabled()) {
+            throw new IllegalArgumentException(CONFIRMED_EMAIL.getMessage());
+        } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
+            throw new IllegalArgumentException(RESEND_NOT_ALLOWED.getMessage());
+        }
     }
 
     @Transactional
@@ -94,15 +149,6 @@ public class RegistrationService {
         emailService.send(email, text);
     }
 
-    @Transactional
-    public void confirmToken(String token) {
-        Tokens confirmationToken = tokensService.findByToken(token);
-
-        validateToken(confirmationToken);
-
-        updateTokenAndUser(confirmationToken);
-    }
-
     private void validateToken(Tokens token) {
         if (token.getConfirmedAt() != null) {
             throw new IllegalArgumentException(CONFIRMED_EMAIL.getMessage());
@@ -116,18 +162,6 @@ public class RegistrationService {
     private void updateTokenAndUser(Tokens token) {
         token.updateConfirmedAt(LocalDateTime.now());
         token.getUser().updateEnabled();
-    }
-
-    @Transactional(readOnly = true)
-    public boolean check(String username, String nickname, String email) {
-        if (username != null) {
-            checkUsername(username);
-        } else if (nickname != null) {
-            checkNickname(nickname);
-        } else if (email != null) {
-            checkEmail(email);
-        }
-        return true;
     }
 
     private void checkUsername(String username) {
@@ -154,40 +188,6 @@ public class RegistrationService {
         }
         if (userService.existsByEmail(email)) {
             throw new CustomValidException(EMAIL, email, EXISTENT_EMAIL);
-        }
-    }
-
-    @Transactional
-    public void resendToken(Long id) {
-        User user = userService.findById(id);
-
-        checkTokenResendAvailability(user);
-
-        user.getTokens().forEach(tokens -> tokens.updateExpiredAt(LocalDateTime.now()));
-        sendToken(id, user.getEmail(), "registration");
-    }
-
-    private void checkTokenResendAvailability(User user) {
-        if (user.isEnabled()) {
-            throw new IllegalArgumentException(CONFIRMED_EMAIL.getMessage());
-        } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
-            throw new IllegalArgumentException(RESEND_NOT_ALLOWED.getMessage());
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public String checkUserEnabled(Long id, String referer) {
-        User user = userService.findById(id);
-        boolean enabled = user.isEnabled();
-
-        if (!enabled) {
-            throw new IllegalArgumentException(NOT_CONFIRMED_EMAIL.getMessage());
-        } else {
-            if (referer.contains("/sign-up")) {
-                return "/users/sign-in";
-            } else {
-                return "/users/my-page/update/user-info";
-            }
         }
     }
 }

@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.Optional;
 
+import static com.eskgus.nammunity.domain.enums.Fields.OTHER;
+
 @RequiredArgsConstructor
 @Service
 public class BannedUsersService {
@@ -22,11 +24,6 @@ public class BannedUsersService {
     private final UserService userService;
     private final EmailService emailService;
     private final ReportSummaryService reportSummaryService;
-
-    @Transactional(readOnly = true)
-    public Optional<BannedUsers> findByUser(User user) {
-        return bannedUsersRepository.findByUser(user);
-    }
 
     @Transactional
     public Long banUser(Long userId) {
@@ -36,6 +33,19 @@ public class BannedUsersService {
         sendBannedUserEmail(bannedUser, user);
 
         return bannedUser.getId();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isAccountNonBanned(String username) {
+        User user = userService.findByUsername(username);
+
+        return findByUser(user).map(bannedUser -> bannedUser.getExpiredDate().isBefore(LocalDateTime.now()))
+                .orElse(true);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<BannedUsers> findByUser(User user) {
+        return bannedUsersRepository.findByUser(user);
     }
 
     private BannedUsers saveOrUpdateBannedUser(User user) {
@@ -48,22 +58,19 @@ public class BannedUsersService {
                 .orElseGet(() -> saveBannedUser(user, startedDate, reasonDetail));
     }
 
+    private void sendBannedUserEmail(BannedUsers bannedUser, User user) {
+        BannedUsersEmailDto emailDto = BannedUsersEmailDto.builder().bannedUser(bannedUser).build();
+        String text = emailService.setBannedUserEmailText(emailDto);
+        emailService.send(user.getEmail(), text);
+    }
+
     private String createReasonDetail(User user) {
         ContentReportSummary reportSummary = reportSummaryService.findByUser(user);
         String reasonDetail = reportSummary.getReasons().getDetail();
-        if (reasonDetail.equals("기타")) {
+        if (OTHER.getKey().equals(reasonDetail)) {
             reasonDetail += ": " + reportSummary.getOtherReasons();
         }
         return reasonDetail;
-    }
-
-    private BannedUsers saveBannedUser(User user, LocalDateTime startedDate, String reasonDetail) {
-        Period period = Period.ofWeeks(1);
-        LocalDateTime expiredDate = startedDate.plus(period);
-        BannedUsers bannedUser = BannedUsers.builder()
-                .user(user).startedDate(startedDate).expiredDate(expiredDate).period(period).reason(reasonDetail)
-                .build();
-        return bannedUsersRepository.save(bannedUser);
     }
 
     private BannedUsers updateBannedUser(BannedUsers bannedUser, LocalDateTime startedDate, String reasonDetail) {
@@ -77,17 +84,12 @@ public class BannedUsersService {
         return bannedUser;
     }
 
-    private void sendBannedUserEmail(BannedUsers bannedUser, User user) {
-        BannedUsersEmailDto emailDto = BannedUsersEmailDto.builder().bannedUser(bannedUser).build();
-        String text = emailService.setBannedUserEmailText(emailDto);
-        emailService.send(user.getEmail(), text);
-    }
-
-    @Transactional(readOnly = true)
-    public boolean isAccountNonBanned(String username) {
-        User user = userService.findByUsername(username);
-
-        return findByUser(user).map(bannedUser -> bannedUser.getExpiredDate().isBefore(LocalDateTime.now()))
-                .orElse(true);
+    private BannedUsers saveBannedUser(User user, LocalDateTime startedDate, String reasonDetail) {
+        Period period = Period.ofWeeks(1);
+        LocalDateTime expiredDate = startedDate.plus(period);
+        BannedUsers bannedUser = BannedUsers.builder()
+                .user(user).startedDate(startedDate).expiredDate(expiredDate).period(period).reason(reasonDetail)
+                .build();
+        return bannedUsersRepository.save(bannedUser);
     }
 }

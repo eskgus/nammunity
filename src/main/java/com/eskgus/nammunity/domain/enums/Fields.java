@@ -19,7 +19,11 @@ public enum Fields {
     PASSWORD("password"),
     CONFIRM_PASSWORD("confirmPassword"),
     NICKNAME("nickname"),
-    SOCIAL("social");
+    SOCIAL("social"),
+    NAME("name"),
+    ACCESS_TOKEN("accessToken"),
+    REFRESH_TOKEN("refreshToken"),
+    OTHER("기타");
 
     private final String key;
 }

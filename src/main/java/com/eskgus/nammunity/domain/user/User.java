@@ -2,6 +2,7 @@ package com.eskgus.nammunity.domain.user;
 
 import com.eskgus.nammunity.domain.BaseTimeEntity;
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.reports.ContentReportSummary;
@@ -15,6 +16,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.eskgus.nammunity.domain.enums.SocialType.NONE;
 
 @Getter
 @NoArgsConstructor
@@ -50,8 +53,9 @@ public class User extends BaseTimeEntity {
     @Column(columnDefinition = "int default 0", nullable = false)
     private int attempt;
 
+    @Enumerated(EnumType.STRING)
     @Column
-    private String social = "none";
+    private SocialType social = NONE;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     private List<Posts> posts;
@@ -124,7 +128,7 @@ public class User extends BaseTimeEntity {
         this.nickname = nickname;
     }
 
-    public void updateSocial(String social) {
+    public void updateSocial(SocialType social) {
         this.social = social;
     }
 

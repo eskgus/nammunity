@@ -30,6 +30,13 @@ public class CommentsViewService {
         return comments;
     }
 
+    @Transactional(readOnly = true)
+    public ContentsPageDto<CommentsListDto> listComments(Principal principal, int page) {
+        User user = principalHelper.getUserFromPrincipal(principal, true);
+        Page<CommentsListDto> contents = commentsService.findByUser(user, page, 20);
+        return new ContentsPageDto<>(contents);
+    }
+
     private void setCommentsReadDto(List<CommentsReadDto> comments, User user) {
         comments.forEach(commentsReadDto -> {
             boolean doesUserWriteComment = user == null ? false : commentsReadDto.getAuthorId().equals(user.getId());
@@ -39,12 +46,5 @@ public class CommentsViewService {
             boolean doesUserLikeComment = likesService.existsByCommentsAndUser(comment, user);
             commentsReadDto.setDoesUserLikeComment(doesUserLikeComment);
         });
-    }
-
-    @Transactional(readOnly = true)
-    public ContentsPageDto<CommentsListDto> listComments(Principal principal, int page) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-        Page<CommentsListDto> contents = commentsService.findByUser(user, page, 20);
-        return new ContentsPageDto<>(contents);
     }
 }

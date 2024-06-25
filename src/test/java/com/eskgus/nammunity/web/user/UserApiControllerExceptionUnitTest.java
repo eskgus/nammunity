@@ -37,6 +37,7 @@ import java.security.Principal;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.domain.enums.Fields.*;
 import static com.eskgus.nammunity.domain.enums.Fields.EMAIL;
+import static com.eskgus.nammunity.domain.enums.SocialType.NAVER;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -415,7 +416,7 @@ public class UserApiControllerExceptionUnitTest {
     public void unlinkSocialThrowsSocialException() throws Exception {
         // given
         when(userUpdateService.unlinkSocial(any(Principal.class), anyString(), anyString()))
-                .thenThrow(new SocialException(USERNAME_VALUE, SOCIAL.getKey(), SOCIAL.getKey()));
+                .thenThrow(new SocialException(USERNAME_VALUE, SOCIAL, NAVER));
 
         // when/then
         testUnlinkSocialException(INTERNAL_SERVER_ERROR);

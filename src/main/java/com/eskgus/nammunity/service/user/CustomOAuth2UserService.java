@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.domain.enums.Fields;
+import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.tokens.OAuth2Tokens;
 import com.eskgus.nammunity.domain.user.CustomOAuth2User;
 import com.eskgus.nammunity.domain.user.Role;
@@ -31,6 +33,11 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+import static com.eskgus.nammunity.domain.enums.Fields.*;
+import static com.eskgus.nammunity.domain.enums.SocialType.*;
+import static com.eskgus.nammunity.domain.enums.SocialType.convertSocialType;
 
 @RequiredArgsConstructor
 @Service
@@ -71,29 +78,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         User user = handleUserAuthentication(customOAuth2User);
 
-        addAttributes(customOAuth2User, "username", user.getUsername());
+        addAttributes(customOAuth2User, USERNAME, user.getUsername());
 
         saveOrUpdateRefreshToken(customOAuth2User, user);
 
         Collection<SimpleGrantedAuthority> authorities =
                 Collections.singleton(new SimpleGrantedAuthority(user.getRole().getKey()));
-        return new DefaultOAuth2User(authorities, customOAuth2User.getAttributes(), "username");
-    }
-
-    private void addTokensToAttributes(OAuth2UserRequest userRequest, CustomOAuth2User customOAuth2User) {
-        addAccessTokenToAttributes(userRequest, customOAuth2User);
-        addRefreshTokenToAttributes(userRequest, customOAuth2User);
-    }
-
-    private void addAccessTokenToAttributes(OAuth2UserRequest userRequest, CustomOAuth2User customOAuth2User) {
-        Cookie accessToken = createAccessTokenCookieFromRequest(userRequest, customOAuth2User);
-        addAttributes(customOAuth2User, "accessToken", accessToken);
-    }
-
-    private Cookie createAccessTokenCookieFromRequest(OAuth2UserRequest userRequest, CustomOAuth2User customOAuth2User) {
-        String accessToken = userRequest.getAccessToken().getTokenValue();
-        int exp = (int) userRequest.getAdditionalParameters().get("expires_in");
-        return createCookie(accessToken, exp);
+        return new DefaultOAuth2User(authorities, customOAuth2User.getAttributes(), USERNAME.getKey());
     }
 
     public Cookie createCookie(String token, int exp) {
@@ -104,13 +95,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return cookie;
     }
 
-    private <T> void addAttributes(CustomOAuth2User customOAuth2User, String key, T value) {
-        customOAuth2User.getAttributes().put(key, value);
+    @Transactional
+    public Cookie unlinkSocial(SocialType socialType, String accessToken, User user) {
+        Cookie cookie = validateAccessTokenAndRequestSocialUnlink(socialType, accessToken, user);
+
+        updateSocial(user, NONE);
+
+        return cookie;
     }
 
-    private void addRefreshTokenToAttributes(OAuth2UserRequest userRequest, CustomOAuth2User customOAuth2User) {
-        String refreshToken = (String) userRequest.getAdditionalParameters().get("refresh_token");
-        addAttributes(customOAuth2User, "refreshToken", refreshToken);
+    // loadUser
+    private void addTokensToAttributes(OAuth2UserRequest userRequest, CustomOAuth2User customOAuth2User) {
+        addAccessTokenToAttributes(userRequest, customOAuth2User);
+        addRefreshTokenToAttributes(userRequest, customOAuth2User);
     }
 
     @Transactional
@@ -124,15 +121,75 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return user;
     }
 
+    @Transactional
+    private void saveOrUpdateRefreshToken(CustomOAuth2User customOAuth2User, User user) {
+        String refreshToken = (String) customOAuth2User.getAttributes().get(REFRESH_TOKEN.getKey());
+        if (refreshToken != null) {
+            OAuth2TokensDto oAuth2TokensDto = createOAuth2TokensDto(refreshToken, user);
+            OAuth2Tokens oAuth2Tokens = user.getOAuth2Tokens();
+            if (oAuth2Tokens != null) {
+                oAuth2TokensService.update(oAuth2TokensDto);
+            } else {
+                oAuth2TokensService.save(oAuth2TokensDto);
+            }
+        }
+    }
+
+    private void addAccessTokenToAttributes(OAuth2UserRequest userRequest, CustomOAuth2User customOAuth2User) {
+        Cookie accessToken = createAccessTokenCookieFromRequest(userRequest, customOAuth2User);
+        addAttributes(customOAuth2User, ACCESS_TOKEN, accessToken);
+    }
+
+    private void addRefreshTokenToAttributes(OAuth2UserRequest userRequest, CustomOAuth2User customOAuth2User) {
+        String refreshToken = (String) userRequest.getAdditionalParameters().get("refresh_token");
+        addAttributes(customOAuth2User, REFRESH_TOKEN, refreshToken);
+    }
+
     private User signInWithSocial(CustomOAuth2User customOAuth2User) {
         Optional<User> result = userRepository.findByEmail(customOAuth2User.getEmail());
         User user = result.orElseGet(() -> signUpWithSocial(customOAuth2User));
 
-        if (user.getSocial().equals("none")) {
-            user.updateSocial(customOAuth2User.getRegistrationId());
+        if (NONE.equals(user.getSocial())) {
+            updateSocial(user, customOAuth2User.getSocialType());
         }
 
         return user;
+    }
+
+    private User linkSocialAccount(CustomOAuth2User customOAuth2User, String username) {
+        User user = userService.findByUsername(username);
+
+        validateSocialEmail(customOAuth2User, user);
+
+        user.updateEmail(customOAuth2User.getEmail());
+        updateSocial(user, customOAuth2User.getSocialType());
+        return user;
+    }
+
+    private void authenticateOAuth2User(User user) throws OAuth2AuthenticationException {
+        if (!bannedUsersService.isAccountNonBanned(user.getUsername())) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), BANNED_USER.getMessage());
+        } else if (user.isLocked()) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), LOCKED_USER.getMessage());
+        }
+    }
+
+    private OAuth2TokensDto createOAuth2TokensDto(String refreshToken, User user) {
+        LocalDateTime exp = LocalDateTime.now().plusMonths(1);
+        return OAuth2TokensDto.builder()
+                .refreshToken(refreshToken).expiredAt(exp).user(user).build();
+    }
+
+    private Cookie createAccessTokenCookieFromRequest(OAuth2UserRequest userRequest, CustomOAuth2User customOAuth2User) {
+        String accessToken = userRequest.getAccessToken().getTokenValue();
+        int exp = (int) userRequest.getAdditionalParameters().get("expires_in");
+        return createCookie(accessToken, exp);
+    }
+
+    private <T> void addAttributes(CustomOAuth2User customOAuth2User, Fields field, T value) {
+        customOAuth2User.getAttributes().put(field.getKey(), value);
     }
 
     private User signUpWithSocial(CustomOAuth2User customOAuth2User) {
@@ -145,29 +202,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return user;
     }
 
-    private RegistrationDto createRegistrationDto(CustomOAuth2User customOAuth2User) {
-        String name = createName(customOAuth2User.getRegistrationId());
-        String password = registrationService.encryptPassword("00000000");
-        return RegistrationDto.builder()
-                .username(name).password(password).nickname(name).email(customOAuth2User.getEmail()).role(Role.USER)
-                .build();
-    }
-
-    private String createName(String registrationId) {
-        return Character.toUpperCase(registrationId.charAt(0)) + "_"
-                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmssSSS"));
-    }
-
-    private User linkSocialAccount(CustomOAuth2User customOAuth2User, String username) {
-        User user = userService.findByUsername(username);
-
-        validateSocialEmail(customOAuth2User, user);
-
-        user.updateEmail(customOAuth2User.getEmail());
-        user.updateSocial(customOAuth2User.getRegistrationId());
-        return user;
-    }
-
     private void validateSocialEmail(CustomOAuth2User customOAuth2User, User user) {
         String socialEmail = customOAuth2User.getEmail();
 
@@ -175,36 +209,45 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         result.ifPresent(existingUser -> {
             if (!user.getEmail().equals(socialEmail)) {
                 cancelSocialLink(existingUser, customOAuth2User, user);
-                throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED),
-                        "연동할 계정을 사용 중인 다른 사용자가 있습니다.");
+                throw new OAuth2AuthenticationException(
+                        new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), EXISTENT_SOCIAL_ACCOUNT.getMessage());
             }
         });
     }
 
+    private void updateSocial(User user, SocialType socialType) {
+        user.updateSocial(socialType);
+    }
+
+    private RegistrationDto createRegistrationDto(CustomOAuth2User customOAuth2User) {
+        String name = createName(customOAuth2User.getSocialType());
+        String password = registrationService.encryptPassword("00000000");
+        return RegistrationDto.builder()
+                .username(name).password(password).nickname(name).email(customOAuth2User.getEmail()).role(Role.USER)
+                .build();
+    }
+
     private void cancelSocialLink(User existingUser, CustomOAuth2User customOAuth2User, User user) {
-        if (existingUser.getSocial().equals("none")) {
-            String accessToken = ((Cookie) customOAuth2User.getAttributes().get("accessToken")).getValue();
-            unlinkSocial(customOAuth2User.getRegistrationId(), accessToken, user);
+        if (NONE.equals(existingUser.getSocial())) {
+            String accessToken = ((Cookie) customOAuth2User.getAttributes().get(ACCESS_TOKEN.getKey())).getValue();
+            unlinkSocial(customOAuth2User.getSocialType(), accessToken, user);
         }
     }
 
-    @Transactional
-    public Cookie unlinkSocial(String social, String accessToken, User user) {
-        Cookie cookie = validateAccessTokenAndRequestSocialUnlink(social, accessToken, user);
-
-        updateNonSocial(user);
-
-        return cookie;
+    private String createName(SocialType socialType) {
+        return Character.toUpperCase(socialType.getKey().charAt(0)) + "_"
+                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmssSSS"));
     }
 
-    private Cookie validateAccessTokenAndRequestSocialUnlink(String social, String accessToken, User user) {
+    // unlink social
+    private Cookie validateAccessTokenAndRequestSocialUnlink(SocialType socialType, String accessToken, User user) {
         Cookie cookie;
         try {
-            validateAccessToken(social, accessToken, user.getUsername());
+            validateAccessToken(socialType, accessToken, user.getUsername());
             cookie = createCookie(null, 0);
         } catch (HttpClientErrorException ex) {
             if (ex.getStatusCode().is4xxClientError()) {
-                cookie = refreshAccessToken(user, social);
+                cookie = refreshAccessToken(user, socialType);
                 cookie.setMaxAge(0);
                 accessToken = cookie.getValue();
             } else {
@@ -212,74 +255,54 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
         }
 
-        requestSocialUnlink(social, accessToken, user.getUsername());
+        requestSocialUnlink(socialType, accessToken, user.getUsername());
         return cookie;
     }
 
-    private void validateAccessToken(String social, String accessToken, String username) {
+    private void validateAccessToken(SocialType socialType, String accessToken, String username) {
         HttpHeaders headers = new HttpHeaders();
-        String url = buildValidateAccessTokenUrl(social, accessToken, headers, username);
+        String url = buildValidateAccessTokenUrl(socialType, accessToken, headers, username);
 
         HttpEntity<String> request = new HttpEntity<>(null, headers);
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.exchange(url, HttpMethod.GET, request, String.class);
     }
 
-    private String buildValidateAccessTokenUrl(String social, String accessToken, HttpHeaders headers, String username) {
-        switch (social) {
-            case "google":
-                return "https://oauth2.googleapis.com/tokeninfo?access_token=" + accessToken;
-            case "naver":
-                headers.set("Authorization", "Bearer " + accessToken);
-                return "https://openapi.naver.com/v1/nid/me";
-            case "kakao":
-                headers.set("Authorization", "Bearer " + accessToken);
-                return "https://kapi.kakao.com/v1/user/access_token_info";
-            default: throw new SocialException(username, "social", social);
-        }
-    }
-
-    private Cookie refreshAccessToken(User user, String social) {
-        ResponseEntity<Map> response = requestAccessTokenRefresh(user, social);
+    private Cookie refreshAccessToken(User user, SocialType socialType) {
+        ResponseEntity<Map> response = requestAccessTokenRefresh(user, socialType);
         return createAccessTokenCookieFromResponse(response);
     }
 
-    private ResponseEntity<Map> requestAccessTokenRefresh(User user, String social) {
+    private void requestSocialUnlink(SocialType socialType, String accessToken, String username) {
+        String url = buildSocialUnlinkUrl(socialType, accessToken, username).toString();
+        HttpHeaders headers = generateSocialUnlinkHeaders(socialType, accessToken);
+
+        HttpEntity<String> request = new HttpEntity<>(null, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+    }
+
+    private String buildValidateAccessTokenUrl(SocialType socialType, String accessToken,
+                                               HttpHeaders headers, String username) {
+        switch (socialType) {
+            case GOOGLE:
+                return "https://oauth2.googleapis.com/tokeninfo?access_token=" + accessToken;
+            case NAVER:
+                headers.set("Authorization", "Bearer " + accessToken);
+                return "https://openapi.naver.com/v1/nid/me";
+            case KAKAO:
+                headers.set("Authorization", "Bearer " + accessToken);
+                return "https://kapi.kakao.com/v1/user/access_token_info";
+            default: throw new SocialException(username, SOCIAL, socialType);
+        }
+    }
+
+    private ResponseEntity<Map> requestAccessTokenRefresh(User user, SocialType socialType) {
         String refreshToken = getRefreshToken(user);
-        String url = buildAccessTokenRefreshUrl(social, user.getUsername(), refreshToken);
+        String url = buildAccessTokenRefreshUrl(socialType, user.getUsername(), refreshToken);
 
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.exchange(url, HttpMethod.POST, null, Map.class);
-    }
-
-    private String getRefreshToken(User user) {
-        OAuth2Tokens oAuth2Tokens = user.getOAuth2Tokens();
-        if (oAuth2Tokens == null) {
-            throw new SocialException(user.getUsername(), "refreshToken", null);
-        }
-        return oAuth2Tokens.getRefreshToken();
-    }
-
-    private String buildAccessTokenRefreshUrl(String social, String username, String refreshToken) {
-        StringBuilder urlBuilder = buildBaseUrl(social, username);
-        return urlBuilder.append("&grant_type=refresh_token")
-                .append("&refresh_token=")
-                .append(refreshToken).toString();
-    }
-
-    private StringBuilder buildBaseUrl(String social, String username) {
-        return switch (social) {
-            case "google" -> new StringBuilder("https://oauth2.googleapis.com/token?")
-                    .append("client_id=").append(googleClientId)
-                    .append("&client_secret=").append(googleClientSecret);
-            case "naver" -> new StringBuilder("https://nid.naver.com/oauth2.0/token?")
-                    .append("client_id=").append(naverClientId)
-                    .append("&client_secret=").append(naverClientSecret);
-            case "kakao" -> new StringBuilder()
-                    .append("client_id=").append(kakaoClientId)
-                    .append("&client_secret=").append(kakaoClientSecret);
-            default -> throw new SocialException(username, "social", social);
-        };
     }
 
     private Cookie createAccessTokenCookieFromResponse(ResponseEntity<Map> response) {
@@ -288,70 +311,58 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return createCookie(newAccessToken, exp);
     }
 
-    private void requestSocialUnlink(String social, String accessToken, String username) {
-        String url = buildSocialUnlinkUrl(social, accessToken, username).toString();
-        HttpHeaders headers = generateSocialUnlinkHeaders(social, accessToken);
-
-        HttpEntity<String> request = new HttpEntity<>(null, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-    }
-    private StringBuilder buildSocialUnlinkUrl(String social, String accessToken, String username) {
-        return switch (social) {
-            case "google" -> new StringBuilder("https://oauth2.googleapis.com/revoke?")
+    private StringBuilder buildSocialUnlinkUrl(SocialType socialType, String accessToken, String username) {
+        return switch (socialType) {
+            case GOOGLE -> new StringBuilder("https://oauth2.googleapis.com/revoke?")
                     .append("client_id=").append(googleClientId)
                     .append("&client_secret=").append(googleClientSecret)
                     .append("&token=").append(accessToken);
-            case "naver" -> new StringBuilder("https://nid.naver.com/oauth2.0/token?")
+            case NAVER -> new StringBuilder("https://nid.naver.com/oauth2.0/token?")
                     .append("client_id=").append(naverClientId)
                     .append("&client_secret=").append(naverClientSecret)
                     .append("&access_token=").append(accessToken)
                     .append("&grant_type=delete")
                     .append("&service_provider=NAVER");
-            case "kakao" -> new StringBuilder("https://kapi.kakao.com/v1/user/unlink");
-            default -> throw new SocialException(username, "social", social);
+            case KAKAO -> new StringBuilder("https://kapi.kakao.com/v1/user/unlink");
+            default -> throw new SocialException(username, SOCIAL, socialType);
         };
     }
 
-    private HttpHeaders generateSocialUnlinkHeaders(String social, String accessToken) {
+    private HttpHeaders generateSocialUnlinkHeaders(SocialType socialType, String accessToken) {
         HttpHeaders headers = new HttpHeaders();
-        if (social.equals("kakao")) {
+        if (KAKAO.equals(socialType)) {
             headers.set("Authorization", "Bearer " + accessToken);
         }
         return headers;
     }
 
-    private void updateNonSocial(User user) {
-        user.updateSocial("none");
-    }
-
-    private void authenticateOAuth2User(User user) throws OAuth2AuthenticationException {
-        if (!bannedUsersService.isAccountNonBanned(user.getUsername())) {
-            throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED),
-                    "활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.");
-        } else if (user.isLocked()) {
-            throw new OAuth2AuthenticationException(new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED),
-                    "로그인에 5번 이상 실패했습니다. ID 또는 비밀번호 찾기를 하세요.");
+    private String getRefreshToken(User user) {
+        OAuth2Tokens oAuth2Tokens = user.getOAuth2Tokens();
+        if (oAuth2Tokens == null) {
+            throw new SocialException(user.getUsername(), REFRESH_TOKEN, null);
         }
+        return oAuth2Tokens.getRefreshToken();
     }
 
-    @Transactional
-    private void saveOrUpdateRefreshToken(CustomOAuth2User customOAuth2User, User user) {
-        String refreshToken = (String) customOAuth2User.getAttributes().get("refreshToken");
-        if (refreshToken != null) {
-            OAuth2TokensDto oAuth2TokensDto = createOAuth2TokensDto(refreshToken, user);
-            OAuth2Tokens oAuth2Tokens = user.getOAuth2Tokens();
-            if (oAuth2Tokens != null) {
-                oAuth2TokensService.update(oAuth2TokensDto);
-            } else {
-                oAuth2TokensService.save(oAuth2TokensDto);
-            }
-        }
+    private String buildAccessTokenRefreshUrl(SocialType socialType, String username, String refreshToken) {
+        StringBuilder urlBuilder = buildBaseUrl(socialType, username);
+        return urlBuilder.append("&grant_type=refresh_token")
+                .append("&refresh_token=")
+                .append(refreshToken).toString();
     }
 
-    private OAuth2TokensDto createOAuth2TokensDto(String refreshToken, User user) {
-        LocalDateTime exp = LocalDateTime.now().plusMonths(1);
-        return OAuth2TokensDto.builder()
-                .refreshToken(refreshToken).expiredAt(exp).user(user).build();
+    private StringBuilder buildBaseUrl(SocialType socialType, String username) {
+        return switch (socialType) {
+            case GOOGLE -> new StringBuilder("https://oauth2.googleapis.com/token?")
+                    .append("client_id=").append(googleClientId)
+                    .append("&client_secret=").append(googleClientSecret);
+            case NAVER -> new StringBuilder("https://nid.naver.com/oauth2.0/token?")
+                    .append("client_id=").append(naverClientId)
+                    .append("&client_secret=").append(naverClientSecret);
+            case KAKAO -> new StringBuilder()
+                    .append("client_id=").append(kakaoClientId)
+                    .append("&client_secret=").append(kakaoClientSecret);
+            default -> throw new SocialException(username, SOCIAL, socialType);
+        };
     }
 }

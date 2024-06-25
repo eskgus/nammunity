@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.exception.CustomValidException;
 import com.eskgus.nammunity.helper.PrincipalHelper;
@@ -19,6 +20,8 @@ import java.time.LocalDateTime;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.domain.enums.Fields.*;
+import static com.eskgus.nammunity.domain.enums.SocialType.NONE;
+import static com.eskgus.nammunity.domain.enums.SocialType.convertSocialType;
 
 @RequiredArgsConstructor
 @Service
@@ -40,27 +43,6 @@ public class UserUpdateService {
         return user.getId();
     }
 
-    private void validatePasswordUpdateDto(PasswordUpdateDto passwordUpdateDto, User user) {
-        String oldPassword = passwordUpdateDto.getOldPassword();
-        String currentPassword = user.getPassword();
-        String newPassword = passwordUpdateDto.getPassword();
-        String confirmPassword = passwordUpdateDto.getConfirmPassword();
-
-        if (!encoder.matches(oldPassword, currentPassword)) {
-            throw new CustomValidException(OLD_PASSWORD, oldPassword, MISMATCH_OLD_PASSWORD);
-        } else if (oldPassword.equals(newPassword)) {
-            throw new CustomValidException(PASSWORD, newPassword, INVALID_NEW_PASSWORD);
-        } else if (!newPassword.equals(confirmPassword)) {
-            throw new CustomValidException(CONFIRM_PASSWORD, confirmPassword, MISMATCH_CONFIRM_PASSWORD);
-        }
-    }
-
-    @Transactional
-    public void encryptAndUpdatePassword(User user, String password) {
-        String encryptedPassword = registrationService.encryptPassword(password);
-        user.updatePassword(encryptedPassword);
-    }
-
     @Transactional
     public Long updateEmail(EmailUpdateDto requestDto, Principal principal) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
@@ -79,6 +61,57 @@ public class UserUpdateService {
         return user.getId();
     }
 
+    @Transactional
+    public Long updateNickname(NicknameUpdateDto requestDto, Principal principal) {
+        User user = principalHelper.getUserFromPrincipal(principal, true);
+
+        validateNicknameUpdateDto(requestDto, user);
+
+        user.updateNickname(requestDto.getNickname());
+
+        return user.getId();
+    }
+
+    @Transactional
+    public HttpHeaders deleteUser(Principal principal, String accessToken) {
+        User user = principalHelper.getUserFromPrincipal(principal, true);
+        Cookie cookie = resetCookie(user, accessToken);
+        userService.delete(user.getId());
+
+        return createHeaders(cookie);
+    }
+
+    @Transactional
+    public HttpHeaders unlinkSocial(Principal principal, String social, String accessToken) {
+        User user = principalHelper.getUserFromPrincipal(principal, true);
+
+        SocialType socialType = convertSocialType(social);
+        Cookie cookie = customOAuth2UserService.unlinkSocial(socialType, accessToken, user);
+
+        return createHeaders(cookie);
+    }
+
+    @Transactional
+    public void encryptAndUpdatePassword(User user, String password) {
+        String encryptedPassword = registrationService.encryptPassword(password);
+        user.updatePassword(encryptedPassword);
+    }
+
+    private void validatePasswordUpdateDto(PasswordUpdateDto passwordUpdateDto, User user) {
+        String oldPassword = passwordUpdateDto.getOldPassword();
+        String currentPassword = user.getPassword();
+        String newPassword = passwordUpdateDto.getPassword();
+        String confirmPassword = passwordUpdateDto.getConfirmPassword();
+
+        if (!encoder.matches(oldPassword, currentPassword)) {
+            throw new CustomValidException(OLD_PASSWORD, oldPassword, MISMATCH_OLD_PASSWORD);
+        } else if (oldPassword.equals(newPassword)) {
+            throw new CustomValidException(PASSWORD, newPassword, INVALID_NEW_PASSWORD);
+        } else if (!newPassword.equals(confirmPassword)) {
+            throw new CustomValidException(CONFIRM_PASSWORD, confirmPassword, MISMATCH_CONFIRM_PASSWORD);
+        }
+    }
+
     private void validateEmailUpdateDto(String email, User user) {
         if (user.getEmail().equals(email)) {
             throw new CustomValidException(EMAIL, email, INVALID_NEW_EMAIL);
@@ -93,17 +126,6 @@ public class UserUpdateService {
         registrationService.sendToken(user.getId(), email, "update");
     }
 
-    @Transactional
-    public Long updateNickname(NicknameUpdateDto requestDto, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-
-        validateNicknameUpdateDto(requestDto, user);
-
-        user.updateNickname(requestDto.getNickname());
-
-        return user.getId();
-    }
-
     private void validateNicknameUpdateDto(NicknameUpdateDto nicknameUpdateDto, User user) {
         String newNickname = nicknameUpdateDto.getNickname();
 
@@ -115,17 +137,8 @@ public class UserUpdateService {
     }
 
     @Transactional
-    public HttpHeaders deleteUser(Principal principal, String accessToken) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-        Cookie cookie = resetCookie(user, accessToken);
-        userService.delete(user.getId());
-
-        return createHeaders(cookie);
-    }
-
-    @Transactional
     private Cookie resetCookie(User user, String accessToken) {
-        if (user.getSocial().equals("none")) {
+        if (NONE.equals(user.getSocial())) {
             return null;
         }
         return customOAuth2UserService.unlinkSocial(user.getSocial(), accessToken, user);
@@ -145,14 +158,5 @@ public class UserUpdateService {
         headers.add(HttpHeaders.SET_COOKIE, responseCookie.toString());
 
         return headers;
-    }
-
-    @Transactional
-    public HttpHeaders unlinkSocial(Principal principal, String social, String accessToken) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-
-        Cookie cookie = customOAuth2UserService.unlinkSocial(social, accessToken, user);
-
-        return createHeaders(cookie);
     }
 }

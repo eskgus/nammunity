@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.Principal;
 import java.util.List;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_COMMENT;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
@@ -47,30 +48,30 @@ public class CommentsService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        Comments comments = findById(id);
-        commentsRepository.delete(comments);
-    }
-
-    @Transactional
     public void deleteSelectedComments(List<Long> commentIds) {
         if (commentIds.isEmpty()) {
-            throw new IllegalArgumentException("삭제할 항목을 선택하세요.");
+            throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
         }
 
         commentIds.forEach(this::delete);
     }
 
-    @Transactional(readOnly = true)
-    public Page<CommentsReadDto> findByPosts(Posts post, int page) {
-        Pageable pageable = createPageable(page, 30);
-        return commentsRepository.findByPosts(post, pageable);
+    @Transactional
+    public void delete(Long id) {
+        Comments comments = findById(id);
+        commentsRepository.delete(comments);
     }
 
     @Transactional(readOnly = true)
     public Comments findById(Long id) {
         return commentsRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException(NON_EXISTENT_COMMENT.getMessage()));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CommentsReadDto> findByPosts(Posts post, int page) {
+        Pageable pageable = createPageable(page, 30);
+        return commentsRepository.findByPosts(post, pageable);
     }
 
     @Transactional(readOnly = true)

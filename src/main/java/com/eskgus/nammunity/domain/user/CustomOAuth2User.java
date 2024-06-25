@@ -1,30 +1,34 @@
 package com.eskgus.nammunity.domain.user;
 
+import com.eskgus.nammunity.domain.enums.SocialType;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.eskgus.nammunity.domain.enums.Fields.*;
+import static com.eskgus.nammunity.domain.enums.SocialType.*;
+
 @Getter
 public class CustomOAuth2User{
     private final Map<String, Object> attributes = new HashMap<>();
     private final String name;
     private final String email;
-    private final String registrationId;
+    private final SocialType socialType;
 
     @Builder
     public CustomOAuth2User(String registrationId, Map<String, Object> attributes, String name, String email) {
-        this.registrationId = registrationId;
+        this.socialType = convertSocialType(registrationId);
         this.attributes.putAll(attributes);
         this.name = name;
         this.email = email;
     }
 
     public static CustomOAuth2User of(String registrationId, Map<String, Object> attributes) {
-        if ("naver".equals(registrationId)) {
+        if (NAVER.getKey().equals(registrationId)) {
             return ofNaver(registrationId, attributes);
-        } else if ("kakao".equals(registrationId)) {
+        } else if (KAKAO.getKey().equals(registrationId)) {
             return ofKakao(registrationId, attributes);
         }
         return ofGoogle(registrationId, attributes);
@@ -34,8 +38,8 @@ public class CustomOAuth2User{
         return CustomOAuth2User.builder()
                 .registrationId(registrationId)
                 .attributes(attributes)
-                .name((String) attributes.get("name"))
-                .email((String) attributes.get("email"))
+                .name((String) attributes.get(NAME.getKey()))
+                .email((String) attributes.get(EMAIL.getKey()))
                 .build();
     }
 
@@ -45,8 +49,8 @@ public class CustomOAuth2User{
         return CustomOAuth2User.builder()
                 .registrationId(registrationId)
                 .attributes(response)
-                .name((String) response.get("name"))
-                .email((String) response.get("email"))
+                .name((String) response.get(NAME.getKey()))
+                .email((String) response.get(EMAIL.getKey()))
                 .build();
     }
 
@@ -57,8 +61,8 @@ public class CustomOAuth2User{
         return CustomOAuth2User.builder()
                 .registrationId(registrationId)
                 .attributes(attributes)
-                .name((String) properties.get("nickname"))
-                .email((String) kakaoAccount.get("email"))
+                .name((String) properties.get(NICKNAME.getKey()))
+                .email((String) kakaoAccount.get(EMAIL.getKey()))
                 .build();
     }
 }

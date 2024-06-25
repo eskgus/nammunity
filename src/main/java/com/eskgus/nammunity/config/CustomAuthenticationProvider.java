@@ -12,6 +12,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
     private final CustomUserDetailsService customUserDetailsService;
@@ -31,37 +33,37 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
         if (username.isBlank()) {
-            throw new AuthenticationServiceException("ID를 입력하세요.");
+            throw new AuthenticationServiceException(EMPTY_USERNAME.getMessage());
         }
 
         String password = authentication.getCredentials().toString();
         if (password.isBlank()) {
-            throw new AuthenticationServiceException("비밀번호를 입력하세요.");
+            throw new AuthenticationServiceException(EMPTY_PASSWORD.getMessage());
         }
 
         UserDetails user;
         try {
             user = customUserDetailsService.loadUserByUsername(username);
         } catch (UsernameNotFoundException ex) {
-            throw new UsernameNotFoundException("ID가 존재하지 않거나 비밀번호가 일치하지 않습니다.");
+            throw new UsernameNotFoundException(BAD_CREDENTIALS.getMessage());
         }
 
         if (!bannedUsersService.isAccountNonBanned(username)) {
-            throw new BannedException("활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요.");
+            throw new BannedException(BANNED_USER.getMessage());
         } else if (!user.isAccountNonLocked()) {
-            throw new LockedException("로그인에 5번 이상 실패했습니다. ID 또는 비밀번호 찾기를 하세요.");
+            throw new LockedException(LOCKED_USER.getMessage());
         } else if (!user.isEnabled()) {
-            throw new DisabledException("이메일 인증이 되지 않은 계정입니다. 이메일 인증을 완료하세요.");
+            throw new DisabledException(DISABLED.getMessage());
         } else if (!user.isAccountNonExpired()) {
-            throw new AccountExpiredException("만료된 계정입니다.");
+            throw new AccountExpiredException(ACCOUNT_EXPIRED.getMessage());
         }
 
         if (!this.encoder.matches(password, user.getPassword())) {
-            throw new BadCredentialsException("ID가 존재하지 않거나 비밀번호가 일치하지 않습니다.");
+            throw new BadCredentialsException(BAD_CREDENTIALS.getMessage());
         }
 
         if (!user.isCredentialsNonExpired()) {
-            throw new CredentialsExpiredException("만료된 비밀번호입니다.");
+            throw new CredentialsExpiredException(CREDENTIALS_EXPIRED.getMessage());
         }
 
         return new UsernamePasswordAuthenticationToken(username, password, user.getAuthorities());

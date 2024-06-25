@@ -37,6 +37,25 @@ public class PostsViewService {
         return PostWithReasonsDto.builder().post(post).reasons(reasons).build();
     }
 
+    @Transactional(readOnly = true)
+    public ContentsPageDto<CommentsReadDto> readComments(Long postId, Principal principal, int page) {
+        Page<CommentsReadDto> contents = createCommentsPage(postId, principal, page);
+        return new ContentsPageDto<>(contents);
+    }
+
+    @Transactional(readOnly = true)
+    public ContentsPageDto<PostsListDto> listPosts(Principal principal, int page) {
+        User user = principalHelper.getUserFromPrincipal(principal, true);
+        Page<PostsListDto> contents = postsService.findByUser(user, page, 20);
+        return new ContentsPageDto<>(contents);
+    }
+
+    @Transactional(readOnly = true)
+    public PostsUpdateDto updatePosts(Long id) {
+        Posts post = postsService.findById(id);
+        return PostsUpdateDto.builder().id(id).title(post.getTitle()).content(post.getContent()).build();
+    }
+
     private PostsReadDto createPostsReadDto(Long postId, Principal principal) {
         Posts post = postsService.findById(postId);
         Long postAuthorId = post.getUser().getId();
@@ -60,28 +79,9 @@ public class PostsViewService {
         return false;
     }
 
-    @Transactional(readOnly = true)
-    public ContentsPageDto<CommentsReadDto> readComments(Long postId, Principal principal, int page) {
-        Page<CommentsReadDto> contents = createCommentsPage(postId, principal, page);
-        return new ContentsPageDto<>(contents);
-    }
-
     private Page<CommentsReadDto> createCommentsPage(Long postId, Principal principal, int page) {
         Posts post = postsService.findById(postId);
         User user = principalHelper.getUserFromPrincipal(principal, false);
         return commentsViewService.findCommentsPageByPosts(post, user, page);
-    }
-
-    @Transactional(readOnly = true)
-    public ContentsPageDto<PostsListDto> listPosts(Principal principal, int page) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-        Page<PostsListDto> contents = postsService.findByUser(user, page, 20);
-        return new ContentsPageDto<>(contents);
-    }
-
-    @Transactional(readOnly = true)
-    public PostsUpdateDto updatePosts(Long id) {
-        Posts post = postsService.findById(id);
-        return PostsUpdateDto.builder().id(id).title(post.getTitle()).content(post.getContent()).build();
     }
 }

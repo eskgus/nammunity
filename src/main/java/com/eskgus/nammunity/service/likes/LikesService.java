@@ -41,14 +41,6 @@ public class LikesService {
         return likesRepository.save(likesSaveDto.toEntity()).getId();
     }
 
-    private LikesSaveDto createLikesSaveDto(Long postsId, Long commentsId, User user) {
-        Posts posts = postsId != null ? postsService.findById(postsId) : null;
-        Comments comments = commentsId != null ? commentsService.findById(commentsId) : null;
-
-        return LikesSaveDto.builder()
-                .posts(posts).comments(comments).user(user).build();
-    }
-
     @Transactional
     public void deleteByContentId(Long postsId, Long commentsId, Principal principal) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
@@ -60,16 +52,6 @@ public class LikesService {
         }
     }
 
-    private void deleteByPostId(Long postsId, User user) {
-        Posts posts = postsService.findById(postsId);
-        likesRepository.deleteByPosts(posts, user);
-    }
-
-    private void deleteByCommentId(Long commentsId, User user) {
-        Comments comments = commentsService.findById(commentsId);
-        likesRepository.deleteByComments(comments, user);
-    }
-
     @Transactional
     public void deleteSelectedLikes(List<Long> likeIds) {
         if (likeIds.isEmpty()) {
@@ -77,13 +59,6 @@ public class LikesService {
         }
 
         likeIds.forEach(this::delete);
-    }
-
-    @Transactional
-    private void delete(Long id) {
-        Likes like = likesRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_LIKE.getMessage()));
-        likesRepository.delete(like);
     }
 
     @Transactional(readOnly = true)
@@ -102,5 +77,30 @@ public class LikesService {
     @Transactional(readOnly = true)
     public boolean existsByCommentsAndUser(Comments comment, User user) {
         return likesRepository.existsByCommentsAndUser(comment, user);
+    }
+
+    private LikesSaveDto createLikesSaveDto(Long postsId, Long commentsId, User user) {
+        Posts posts = postsId != null ? postsService.findById(postsId) : null;
+        Comments comments = commentsId != null ? commentsService.findById(commentsId) : null;
+
+        return LikesSaveDto.builder()
+                .posts(posts).comments(comments).user(user).build();
+    }
+
+    private void deleteByPostId(Long postsId, User user) {
+        Posts posts = postsService.findById(postsId);
+        likesRepository.deleteByPosts(posts, user);
+    }
+
+    private void deleteByCommentId(Long commentsId, User user) {
+        Comments comments = commentsService.findById(commentsId);
+        likesRepository.deleteByComments(comments, user);
+    }
+
+    @Transactional
+    private void delete(Long id) {
+        Likes like = likesRepository.findById(id).orElseThrow(() -> new
+                IllegalArgumentException(NON_EXISTENT_LIKE.getMessage()));
+        likesRepository.delete(like);
     }
 }

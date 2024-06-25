@@ -23,12 +23,6 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public User findById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_USER_ID.getMessage()));
-    }
-
-    @Transactional(readOnly = true)
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new
                 IllegalArgumentException(NON_EXISTENT_USER.getMessage()));
@@ -44,6 +38,12 @@ public class UserService {
     public void delete(Long id) {
         User user = findById(id);
         userRepository.delete(user);
+    }
+
+    @Transactional(readOnly = true)
+    public User findById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new
+                IllegalArgumentException(NON_EXISTENT_USER_ID.getMessage()));
     }
 
     @Transactional(readOnly = true)

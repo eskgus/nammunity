@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_OTHER_REASONS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_TYPE;
+import static com.eskgus.nammunity.domain.enums.Fields.OTHER;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -54,11 +55,32 @@ public class ReportsService {
         return reportId;
     }
 
+    @Transactional(readOnly = true)
+    public ContentReportDetailDto listContentReportDetails(ContentReportDetailRequestDto requestDto) {
+        int page = requestDto.getPage();
+
+        if (requestDto.getPostId() != null) {
+            Posts post = postsService.findById(requestDto.getPostId());
+            return createContentReportDetailDto(post, new PostsListDto(post), ContentType.POSTS, page);
+        } else if (requestDto.getCommentId() != null) {
+            Comments comment = commentsService.findById(requestDto.getCommentId());
+            return createContentReportDetailDto(comment, new CommentsListDto(comment), ContentType.COMMENTS, page);
+        } else {
+            User user = userService.findById(requestDto.getUserId());
+            return createContentReportDetailDto(user, new UsersListDto(user), ContentType.USERS, page);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Long countReportsByContentTypeAndUser(ContentType contentType, User user) {
+        return contentReportsRepository.countReportsByContentTypeAndUser(contentType, user);
+    }
+
     private ContentReportsSaveDto createContentReportsSaveDto(ContentReportsSaveDto requestDto, Principal principal) {
         User reporter = principalHelper.getUserFromPrincipal(principal, true);
         Reasons reasons = reasonsService.findById(requestDto.getReasonsId());
         String otherReasons = requestDto.getOtherReasons();
-        if (reasons.getDetail().equals("기타") && (otherReasons == null)) {
+        if (OTHER.getKey().equals(reasons.getDetail()) && (otherReasons == null)) {
             throw new IllegalArgumentException(EMPTY_OTHER_REASONS.getMessage());
         }
 
@@ -98,15 +120,6 @@ public class ReportsService {
         return countByContents >= 10;
     }
 
-    private <T> T getContentsFromReportsSaveDto(ContentReportsSaveDto saveDto) {
-        if (saveDto.getPosts() != null) {
-            return (T) saveDto.getPosts();
-        } else if (saveDto.getComments() != null) {
-            return (T) saveDto.getComments();
-        }
-        return (T) saveDto.getUser();
-    }
-
     private void createAndSaveSummary(ContentReportsSaveDto saveDto) {
         ContentReportSummarySaveDto summarySaveDto = createSummarySaveDto(saveDto);
         reportSummaryService.saveOrUpdateContentReportSummary(summarySaveDto);
@@ -119,7 +132,7 @@ public class ReportsService {
         LocalDateTime reportedDate = contentReportsRepository.findReportedDateByContents(contents);
         User reporter = contentReportsRepository.findReporterByContents(contents);
         Reasons reason = contentReportsRepository.findReasonByContents(contents);
-        String otherReason = reason.getDetail().equals("기타") ?
+        String otherReason = OTHER.getKey().equals(reason.getDetail()) ?
                 contentReportsRepository.findOtherReasonByContents(contents, reason) : null;
 
         return ContentReportSummarySaveDto.builder()
@@ -128,24 +141,17 @@ public class ReportsService {
                 .reasons(reason).otherReasons(otherReason).build();
     }
 
-    @Transactional(readOnly = true)
-    public ContentReportDetailDto listContentReportDetails(ContentReportDetailRequestDto requestDto) {
-        int page = requestDto.getPage();
-
-        if (requestDto.getPostId() != null) {
-            Posts post = postsService.findById(requestDto.getPostId());
-            return createContentReportDetailDto(post, new PostsListDto(post), ContentType.POSTS, page);
-        } else if (requestDto.getCommentId() != null) {
-            Comments comment = commentsService.findById(requestDto.getCommentId());
-            return createContentReportDetailDto(comment, new CommentsListDto(comment), ContentType.COMMENTS, page);
-        } else {
-            User user = userService.findById(requestDto.getUserId());
-            return createContentReportDetailDto(user, new UsersListDto(user), ContentType.USERS, page);
+    private <T> T getContentsFromReportsSaveDto(ContentReportsSaveDto saveDto) {
+        if (saveDto.getPosts() != null) {
+            return (T) saveDto.getPosts();
+        } else if (saveDto.getComments() != null) {
+            return (T) saveDto.getComments();
         }
+        return (T) saveDto.getUser();
     }
 
     private <T, U> ContentReportDetailDto<U> createContentReportDetailDto(T content, U contentListDto,
-                                                                       ContentType contentType, int page) {
+                                                                          ContentType contentType, int page) {
         Types type = typesService.findByContentType(contentType);
         ContentsPageDto<ContentReportDetailListDto> contentsPage = createContentsPage(page, content);
         return ContentReportDetailDto.<U>builder()
@@ -156,10 +162,5 @@ public class ReportsService {
         Pageable pageable = createPageable(page, 10);
         Page<ContentReportDetailListDto> contents = contentReportsRepository.findByContents(content, pageable);
         return new ContentsPageDto<>(contents);
-    }
-
-    @Transactional(readOnly = true)
-    public Long countReportsByContentTypeAndUser(ContentType contentType, User user) {
-        return contentReportsRepository.countReportsByContentTypeAndUser(contentType, user);
     }
 }

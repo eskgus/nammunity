@@ -53,53 +53,6 @@ public class UserViewService {
                 .numberOfReports(numberOfReports).build();
     }
 
-    private BannedHistoryDto getBannedHistoryDto(User user) {
-        return bannedUsersService.findByUser(user).map(BannedHistoryDto::new).orElse(null);
-    }
-
-    private PostsHistoryDto getPostsHistoryDto(String type, User user, int page) {
-        if (!type.equals(ContentType.POSTS.getDetailInEng())) {
-            return null;
-        }
-
-        Page<PostsListDto> contents = postsService.findByUser(user, page, 10);
-        ContentsPageDto<PostsListDto> postsPage = createContentsPageDto(contents);
-        long numberOfComments = commentsService.countByUser(user);
-
-        return PostsHistoryDto.builder()
-                .contentsPage(postsPage).numberOfComments(numberOfComments).build();
-    }
-
-    private <T> ContentsPageDto<T> createContentsPageDto(Page<T> page) {
-        return new ContentsPageDto<>(page);
-    }
-
-    private CommentsHistoryDto getCommentsHistoryDto(String type, User user, int page) {
-        if (!type.equals(ContentType.COMMENTS.getDetailInEng())) {
-            return null;
-        }
-
-        Page<CommentsListDto> contents = commentsService.findByUser(user, page, 10);
-        ContentsPageDto<CommentsListDto> commentsPage = createContentsPageDto(contents);
-        long numberOfPosts = postsService.countByUser(user);
-
-        return CommentsHistoryDto.builder()
-                .contentsPage(commentsPage).numberOfPosts(numberOfPosts).build();
-    }
-
-    private Set<Map.Entry<String, Long>> getNumberOfReports(User user) {
-        long numberOfPostReports = reportsService.countReportsByContentTypeAndUser(ContentType.POSTS, user);
-        long numberOfCommentReports = reportsService.countReportsByContentTypeAndUser(ContentType.COMMENTS, user);
-        long numberOfUserReports = reportsService.countReportsByContentTypeAndUser(ContentType.USERS, user);
-
-        Map<String, Long> numberOfReports = new HashMap<>();
-        numberOfReports.put(ContentType.POSTS.getDetailInKor(), numberOfPostReports);
-        numberOfReports.put(ContentType.COMMENTS.getDetailInKor(), numberOfCommentReports);
-        numberOfReports.put(ContentType.USERS.getDetailInKor(), numberOfUserReports);
-
-        return numberOfReports.entrySet();
-    }
-
     @Transactional(readOnly = true)
     public ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> getMyPage(Principal principal) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
@@ -131,5 +84,52 @@ public class UserViewService {
     public UserUpdateDto updateUserInfo(Principal principal) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
         return new UserUpdateDto(user);
+    }
+
+    private BannedHistoryDto getBannedHistoryDto(User user) {
+        return bannedUsersService.findByUser(user).map(BannedHistoryDto::new).orElse(null);
+    }
+
+    private PostsHistoryDto getPostsHistoryDto(String type, User user, int page) {
+        if (!type.equals(ContentType.POSTS.getDetailInEng())) {
+            return null;
+        }
+
+        Page<PostsListDto> contents = postsService.findByUser(user, page, 10);
+        ContentsPageDto<PostsListDto> postsPage = createContentsPageDto(contents);
+        long numberOfComments = commentsService.countByUser(user);
+
+        return PostsHistoryDto.builder()
+                .contentsPage(postsPage).numberOfComments(numberOfComments).build();
+    }
+
+    private CommentsHistoryDto getCommentsHistoryDto(String type, User user, int page) {
+        if (!type.equals(ContentType.COMMENTS.getDetailInEng())) {
+            return null;
+        }
+
+        Page<CommentsListDto> contents = commentsService.findByUser(user, page, 10);
+        ContentsPageDto<CommentsListDto> commentsPage = createContentsPageDto(contents);
+        long numberOfPosts = postsService.countByUser(user);
+
+        return CommentsHistoryDto.builder()
+                .contentsPage(commentsPage).numberOfPosts(numberOfPosts).build();
+    }
+
+    private Set<Map.Entry<String, Long>> getNumberOfReports(User user) {
+        long numberOfPostReports = reportsService.countReportsByContentTypeAndUser(ContentType.POSTS, user);
+        long numberOfCommentReports = reportsService.countReportsByContentTypeAndUser(ContentType.COMMENTS, user);
+        long numberOfUserReports = reportsService.countReportsByContentTypeAndUser(ContentType.USERS, user);
+
+        Map<String, Long> numberOfReports = new HashMap<>();
+        numberOfReports.put(ContentType.POSTS.getDetailInKor(), numberOfPostReports);
+        numberOfReports.put(ContentType.COMMENTS.getDetailInKor(), numberOfCommentReports);
+        numberOfReports.put(ContentType.USERS.getDetailInKor(), numberOfUserReports);
+
+        return numberOfReports.entrySet();
+    }
+
+    private <T> ContentsPageDto<T> createContentsPageDto(Page<T> page) {
+        return new ContentsPageDto<>(page);
     }
 }

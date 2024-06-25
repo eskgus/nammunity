@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.exception.CustomValidException;
@@ -23,6 +24,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import static com.eskgus.nammunity.domain.enums.SocialType.NAVER;
+import static com.eskgus.nammunity.domain.enums.SocialType.NONE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -207,20 +210,20 @@ public class UserUpdateServiceTest {
     public void deleteRegularUser() {
         Cookie cookie = mock(Cookie.class);
 
-        testDeleteUser(cookie, "none", never());
+        testDeleteUser(cookie, NONE, never());
     }
 
     @Test
     public void deleteSocialUser() {
         Cookie cookie = createMockedCookie();
-        when(customOAuth2UserService.unlinkSocial(anyString(), anyString(), any(User.class))).thenReturn(cookie);
+        when(customOAuth2UserService.unlinkSocial(any(SocialType.class), anyString(), any(User.class))).thenReturn(cookie);
 
-        testDeleteUser(cookie, "naver", times(1));
+        testDeleteUser(cookie, NAVER, times(1));
     }
 
     @Test
     public void deleteUserWithoutPrincipal() {
-        User user = giveUser("none");
+        User user = giveUser(NONE);
 
         when(principalHelper.getUserFromPrincipal(null, true))
                 .thenThrow(IllegalArgumentException.class);
@@ -230,7 +233,7 @@ public class UserUpdateServiceTest {
 
     @Test
     public void deleteUserWithNonExistentUserId() {
-        User user = giveUser("none");
+        User user = giveUser(NONE);
 
         Principal principal = givePrincipal(user);
 
@@ -451,17 +454,17 @@ public class UserUpdateServiceTest {
         return cookie;
     }
 
-    private User giveUser(String social) {
+    private User giveUser(SocialType socialType) {
         User user = mock(User.class);
         when(user.getId()).thenReturn(1L);
-        when(user.getSocial()).thenReturn(social);
+        when(user.getSocial()).thenReturn(socialType);
 
         return user;
     }
 
-    private void testDeleteUser(Cookie cookie, String social, VerificationMode mode) {
+    private void testDeleteUser(Cookie cookie, SocialType socialType, VerificationMode mode) {
         // given
-        User user = giveUser(social);
+        User user = giveUser(socialType);
 
         Principal principal = givePrincipal(user);
 
@@ -471,7 +474,7 @@ public class UserUpdateServiceTest {
         HttpHeaders result = userUpdateService.deleteUser(principal, accessToken);
 
         // then
-        if (social.equals("none")) {
+        if (NONE.equals(socialType)) {
             assertNull(result);
         } else {
             assertNotNull(result);

@@ -54,6 +54,7 @@ public enum ExceptionMessages {
     EXISTENT_USERNAME("이미 사용 중인 ID입니다."),
     EXISTENT_NICKNAME("이미 사용 중인 닉네임입니다."),
     EXISTENT_EMAIL("이미 사용 중인 이메일입니다."),
+    EXISTENT_SOCIAL_ACCOUNT("연동할 계정을 사용 중인 다른 사용자가 있습니다."),
 
     CONFIRMED_EMAIL("이미 인증된 이메일입니다."),
     NOT_CONFIRMED_EMAIL("인증되지 않은 이메일입니다."),
@@ -63,6 +64,11 @@ public enum ExceptionMessages {
     UNAUTHORIZED("로그인하세요."),
     FORBIDDEN("권한이 없습니다."),
     BANNED_USER("활동 정지된 계정입니다. 자세한 내용은 메일을 확인하세요."),
+    LOCKED_USER("로그인에 5번 이상 실패했습니다. ID 또는 비밀번호 찾기를 하세요."),
+    BAD_CREDENTIALS("ID가 존재하지 않거나 비밀번호가 일치하지 않습니다."),
+    DISABLED("이메일 인증이 되지 않은 계정입니다. 이메일 인증을 완료하세요."),
+    ACCOUNT_EXPIRED("만료된 계정입니다."),
+    CREDENTIALS_EXPIRED("만료된 비밀번호입니다."),
 
     INTERNAL_SERVER_ERROR("서버 오류가 발생했습니다. 관리자에게 문의하세요."),
 

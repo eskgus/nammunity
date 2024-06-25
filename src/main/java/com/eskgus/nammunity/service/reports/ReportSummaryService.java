@@ -46,29 +46,6 @@ public class ReportSummaryService {
         return saveContentReportSummary(requestDto);
     }
 
-    private <T> T getContents(ContentReportSummarySaveDto requestDto) {
-        if (requestDto.getTypes().getDetail().equals(ContentType.POSTS.getDetailInKor())) {
-            return (T) requestDto.getPosts();
-        } else if (requestDto.getTypes().getDetail().equals(ContentType.COMMENTS.getDetailInKor())) {
-            return (T) requestDto.getComments();
-        } else {
-            return (T) requestDto.getUser();
-        }
-    }
-
-    @Transactional
-    private <T> Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, T contents) {
-        ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
-        reportSummary.update(requestDto.getReportedDate(), requestDto.getReporter(),
-                requestDto.getReasons(), requestDto.getOtherReasons());
-        return reportSummary.getId();
-    }
-
-    @Transactional
-    private Long saveContentReportSummary(ContentReportSummarySaveDto requestDto) {
-        return contentReportSummaryRepository.save(requestDto.toEntity()).getId();
-    }
-
     @Transactional(readOnly = true)
     public ContentsPageDto<ContentReportSummaryDto> findAllDesc(int page) {
         Pageable pageable = createPageable(page, 20);
@@ -97,6 +74,29 @@ public class ReportSummaryService {
         deleteByContents(deleteDto.getPostsId(), postsService::findById);
         deleteByContents(deleteDto.getCommentsId(), commentsService::findById);
         deleteByContents(deleteDto.getUserId(), userService::findById);
+    }
+
+    private <T> T getContents(ContentReportSummarySaveDto requestDto) {
+        if (requestDto.getTypes().getDetail().equals(ContentType.POSTS.getDetailInKor())) {
+            return (T) requestDto.getPosts();
+        } else if (requestDto.getTypes().getDetail().equals(ContentType.COMMENTS.getDetailInKor())) {
+            return (T) requestDto.getComments();
+        } else {
+            return (T) requestDto.getUser();
+        }
+    }
+
+    @Transactional
+    private <T> Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, T contents) {
+        ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
+        reportSummary.update(requestDto.getReportedDate(), requestDto.getReporter(),
+                requestDto.getReasons(), requestDto.getOtherReasons());
+        return reportSummary.getId();
+    }
+
+    @Transactional
+    private Long saveContentReportSummary(ContentReportSummarySaveDto requestDto) {
+        return contentReportSummaryRepository.save(requestDto.toEntity()).getId();
     }
 
     private void validateDeleteDto(ContentReportSummaryDeleteDto deleteDto) {

@@ -4,11 +4,9 @@ import com.eskgus.nammunity.domain.tokens.OAuth2Tokens;
 import com.eskgus.nammunity.domain.tokens.OAuth2TokensRepository;
 import com.eskgus.nammunity.web.dto.tokens.OAuth2TokensDto;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Log4j2
 @RequiredArgsConstructor
 @Service
 public class OAuth2TokensService {
