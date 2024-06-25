@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_REASONS_ID;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.REASON_ID_NOT_FOUND;
 
 @RequiredArgsConstructor
 @Service
@@ -20,7 +20,7 @@ public class ReasonsService {
     @Transactional(readOnly = true)
     public Reasons findById(Long id) {
         return reasonsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_REASONS_ID.getMessage()));
+                IllegalArgumentException(REASON_ID_NOT_FOUND.getMessage()));
     }
 
     @Transactional(readOnly = true)

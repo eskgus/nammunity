@@ -108,7 +108,7 @@ public class PostsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void savePostsWithNonExistentUsername() throws Exception {
-        ResultMatcher resultMatcher = createResultMatcher(NON_EXISTENT_USER);
+        ResultMatcher resultMatcher = createResultMatcher(USERNAME_NOT_FOUND);
         testSavePostsExpectBadRequest(null, null, resultMatcher);
     }
 
@@ -121,14 +121,14 @@ public class PostsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void updatePostsWithNonExistentUsername() throws Exception {
-        ResultMatcher resultMatcher = createResultMatcher(NON_EXISTENT_USER);
+        ResultMatcher resultMatcher = createResultMatcher(USERNAME_NOT_FOUND);
         testUpdatePostsExpectBadRequest(true, null, null, resultMatcher);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void updatePostsWithNonExistentPostId() throws Exception {
-        ResultMatcher resultMatcher = createResultMatcher(NON_EXISTENT_POST);
+        ResultMatcher resultMatcher = createResultMatcher(POST_NOT_FOUND);
         testUpdatePostsExpectBadRequest(false, null, null, resultMatcher);
     }
 
@@ -180,13 +180,13 @@ public class PostsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void deletePostsWithNonExistentUsername() throws Exception {
-        testDeletePostsExpectBadRequest(true, NON_EXISTENT_USER);
+        testDeletePostsExpectBadRequest(true, USERNAME_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deletePostsWithNonExistentPostId() throws Exception {
-        testDeletePostsExpectBadRequest(false, NON_EXISTENT_POST);
+        testDeletePostsExpectBadRequest(false, POST_NOT_FOUND);
     }
 
     @Test
@@ -224,7 +224,7 @@ public class PostsApiControllerExceptionIntegrationTest {
         List<Long> requestDto = createPostIds();
 
         // when/then
-        testDeleteSelectedPostsExpectBadRequest(requestDto, NON_EXISTENT_POST);
+        testDeleteSelectedPostsExpectBadRequest(requestDto, POST_NOT_FOUND);
     }
 
     private void testSavePostsExpectBadRequest(Fields field, String value, ResultMatcher... resultMatcher) throws Exception {

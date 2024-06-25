@@ -99,14 +99,14 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void saveCommentsWithNonExistentUsername() throws Exception {
-        ResultMatcher resultMatcher = createResultMatcher(NON_EXISTENT_USER);
+        ResultMatcher resultMatcher = createResultMatcher(USERNAME_NOT_FOUND);
         testSaveCommentsExpectBadRequest(true, TEN_CHAR_STRING, resultMatcher);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void saveCommentsWithNonExistentPostId() throws Exception {
-        ResultMatcher resultMatcher = createResultMatcher(NON_EXISTENT_POST);
+        ResultMatcher resultMatcher = createResultMatcher(POST_NOT_FOUND);
         testSaveCommentsExpectBadRequest(false, TEN_CHAR_STRING, resultMatcher);
     }
 
@@ -119,14 +119,14 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void updateCommentsWithNonExistentUsername() throws Exception {
-        ResultMatcher resultMatcher = createResultMatcher(NON_EXISTENT_USER);
+        ResultMatcher resultMatcher = createResultMatcher(USERNAME_NOT_FOUND);
         testUpdateCommentsExpectBadRequest(true, TEN_CHAR_STRING, resultMatcher);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void updateCommentsWithNonExistentCommentId() throws Exception {
-        ResultMatcher resultMatcher = createResultMatcher(NON_EXISTENT_COMMENT);
+        ResultMatcher resultMatcher = createResultMatcher(COMMENT_NOT_FOUND);
         testUpdateCommentsExpectBadRequest(false, TEN_CHAR_STRING, resultMatcher);
     }
 
@@ -162,13 +162,13 @@ public class CommentsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void deleteCommentsWithNonExistentUsername() throws Exception {
-        testDeleteCommentsExpectBadRequest(true, NON_EXISTENT_USER);
+        testDeleteCommentsExpectBadRequest(true, USERNAME_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deleteCommentsWithNonExistentCommentId() throws Exception {
-        testDeleteCommentsExpectBadRequest(false, NON_EXISTENT_COMMENT);
+        testDeleteCommentsExpectBadRequest(false, COMMENT_NOT_FOUND);
     }
 
     @Test
@@ -206,7 +206,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
         List<Long> requestDto = createCommentIds();
 
         // when/then
-        testDeleteSelectedCommentsExpectBadRequest(requestDto, NON_EXISTENT_COMMENT);
+        testDeleteSelectedCommentsExpectBadRequest(requestDto, COMMENT_NOT_FOUND);
     }
 
     private void testSaveCommentsExpectBadRequest(boolean doesPostExist, String content,

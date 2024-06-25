@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_USER;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.USERNAME_NOT_FOUND;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -27,7 +27,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new
-                UsernameNotFoundException(NON_EXISTENT_USER.getMessage()));
+                UsernameNotFoundException(USERNAME_NOT_FOUND.getMessage()));
 
         List<GrantedAuthority> authorities = createAuthorities(user);
 

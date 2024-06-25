@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.BANNED_USER;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.BANNED;
 
 @RequiredArgsConstructor
 @Service
@@ -44,7 +44,7 @@ public class SignInService {
         User user = userService.findByUsername(username);
 
         if (!bannedUsersService.isAccountNonBanned(username)) {
-            throw new IllegalArgumentException(BANNED_USER.getMessage());
+            throw new IllegalArgumentException(BANNED.getMessage());
         }
 
         createAndUpdatePassword(user);

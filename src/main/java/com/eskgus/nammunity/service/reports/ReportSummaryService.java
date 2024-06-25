@@ -24,7 +24,7 @@ import java.util.function.Function;
 import static com.eskgus.nammunity.domain.enums.ContentType.COMMENTS;
 import static com.eskgus.nammunity.domain.enums.ContentType.POSTS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_USER_REPORT_SUMMARY;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.USER_REPORT_SUMMARY_NOT_FOUND;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -66,7 +66,7 @@ public class ReportSummaryService {
     @Transactional(readOnly = true)
     public ContentReportSummary findByUser(User user) {
         return contentReportSummaryRepository.findByUser(user)
-                .orElseThrow(() -> new IllegalArgumentException(NON_EXISTENT_USER_REPORT_SUMMARY.getMessage()));
+                .orElseThrow(() -> new IllegalArgumentException(USER_REPORT_SUMMARY_NOT_FOUND.getMessage()));
     }
 
     @Transactional

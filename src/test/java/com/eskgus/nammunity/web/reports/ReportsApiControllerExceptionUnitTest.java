@@ -69,7 +69,7 @@ public class ReportsApiControllerExceptionUnitTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(null, null);
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASONS_ID);
+        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASON_ID);
         testSaveContentReportsException(requestDto, never(), resultMatchers);
     }
 
@@ -81,7 +81,7 @@ public class ReportsApiControllerExceptionUnitTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(ID, otherReasons);
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(OTHER_REASONS, otherReasons, INVALID_OTHER_REASONS);
+        ResultMatcher[] resultMatchers = createResultMatchers(OTHER_REASONS, otherReasons, INVALID_OTHER_REASON);
         testSaveContentReportsException(requestDto, never(), resultMatchers);
     }
 

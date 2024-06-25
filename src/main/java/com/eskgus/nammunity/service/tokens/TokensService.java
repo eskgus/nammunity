@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_TOKEN;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.TOKEN_NOT_FOUND;
 
 @RequiredArgsConstructor
 @Service
@@ -16,7 +16,7 @@ public class TokensService {
     @Transactional(readOnly = true)
     public Tokens findByToken(String token) {
         return tokensRepository.findByToken(token).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_TOKEN.getMessage()));
+                IllegalArgumentException(TOKEN_NOT_FOUND.getMessage()));
     }
 
     @Transactional

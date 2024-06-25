@@ -88,7 +88,7 @@ public class RegistrationService {
         boolean enabled = user.isEnabled();
 
         if (!enabled) {
-            throw new IllegalArgumentException(NOT_CONFIRMED_EMAIL.getMessage());
+            throw new IllegalArgumentException(EMAIL_NOT_CONFIRMED.getMessage());
         } else {
             if (referer.contains("/sign-up")) {
                 return "/users/sign-in";
@@ -101,16 +101,16 @@ public class RegistrationService {
     @Transactional(readOnly = true)
     private void validateRegistrationDto(RegistrationDto registrationDto) {
         if (userService.existsByUsername(registrationDto.getUsername())) {
-            throw new CustomValidException(USERNAME, registrationDto.getUsername(), EXISTENT_USERNAME);
+            throw new CustomValidException(USERNAME, registrationDto.getUsername(), USERNAME_EXISTS);
         }
         if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
-            throw new CustomValidException(CONFIRM_PASSWORD, registrationDto.getConfirmPassword(), MISMATCH_CONFIRM_PASSWORD);
+            throw new CustomValidException(CONFIRM_PASSWORD, registrationDto.getConfirmPassword(), CONFIRM_PASSWORD_MISMATCH);
         }
         if (userService.existsByNickname(registrationDto.getNickname())) {
-            throw new CustomValidException(NICKNAME, registrationDto.getNickname(), EXISTENT_NICKNAME);
+            throw new CustomValidException(NICKNAME, registrationDto.getNickname(), NICKNAME_EXISTS);
         }
         if (userService.existsByEmail(registrationDto.getEmail())) {
-            throw new CustomValidException(EMAIL, registrationDto.getEmail(), EXISTENT_EMAIL);
+            throw new CustomValidException(EMAIL, registrationDto.getEmail(), EMAIL_EXISTS);
         }
     }
 
@@ -125,7 +125,7 @@ public class RegistrationService {
 
     private void checkTokenResendAvailability(User user) {
         if (user.isEnabled()) {
-            throw new IllegalArgumentException(CONFIRMED_EMAIL.getMessage());
+            throw new IllegalArgumentException(EMAIL_CONFIRMED.getMessage());
         } else if (LocalDateTime.now().isAfter(user.getCreatedDate().plusMinutes(12))) {
             throw new IllegalArgumentException(RESEND_NOT_ALLOWED.getMessage());
         }
@@ -151,10 +151,10 @@ public class RegistrationService {
 
     private void validateToken(Tokens token) {
         if (token.getConfirmedAt() != null) {
-            throw new IllegalArgumentException(CONFIRMED_EMAIL.getMessage());
+            throw new IllegalArgumentException(EMAIL_CONFIRMED.getMessage());
         }
         if (token.getExpiredAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException(EXPIRED_TOKEN.getMessage());
+            throw new IllegalArgumentException(TOKEN_EXPIRED.getMessage());
         }
     }
 
@@ -169,7 +169,7 @@ public class RegistrationService {
             throw new CustomValidException(USERNAME, username, EMPTY_USERNAME);
         }
         if (userService.existsByUsername(username)) {
-            throw new CustomValidException(USERNAME, username, EXISTENT_USERNAME);
+            throw new CustomValidException(USERNAME, username, USERNAME_EXISTS);
         }
     }
 
@@ -178,7 +178,7 @@ public class RegistrationService {
             throw new CustomValidException(NICKNAME, nickname, EMPTY_NICKNAME);
         }
         if (userService.existsByNickname(nickname)) {
-            throw new CustomValidException(NICKNAME, nickname, EXISTENT_NICKNAME);
+            throw new CustomValidException(NICKNAME, nickname, NICKNAME_EXISTS);
         }
     }
 
@@ -187,7 +187,7 @@ public class RegistrationService {
             throw new CustomValidException(EMAIL, email, EMPTY_EMAIL);
         }
         if (userService.existsByEmail(email)) {
-            throw new CustomValidException(EMAIL, email, EXISTENT_EMAIL);
+            throw new CustomValidException(EMAIL, email, EMAIL_EXISTS);
         }
     }
 }

@@ -104,11 +104,11 @@ public class UserUpdateService {
         String confirmPassword = passwordUpdateDto.getConfirmPassword();
 
         if (!encoder.matches(oldPassword, currentPassword)) {
-            throw new CustomValidException(OLD_PASSWORD, oldPassword, MISMATCH_OLD_PASSWORD);
+            throw new CustomValidException(OLD_PASSWORD, oldPassword, OLD_PASSWORD_MISMATCH);
         } else if (oldPassword.equals(newPassword)) {
             throw new CustomValidException(PASSWORD, newPassword, INVALID_NEW_PASSWORD);
         } else if (!newPassword.equals(confirmPassword)) {
-            throw new CustomValidException(CONFIRM_PASSWORD, confirmPassword, MISMATCH_CONFIRM_PASSWORD);
+            throw new CustomValidException(CONFIRM_PASSWORD, confirmPassword, CONFIRM_PASSWORD_MISMATCH);
         }
     }
 
@@ -116,7 +116,7 @@ public class UserUpdateService {
         if (user.getEmail().equals(email)) {
             throw new CustomValidException(EMAIL, email, INVALID_NEW_EMAIL);
         } else if (userService.existsByEmail(email)) {
-            throw new CustomValidException(EMAIL, email, EXISTENT_EMAIL);
+            throw new CustomValidException(EMAIL, email, EMAIL_EXISTS);
         }
     }
 
@@ -132,7 +132,7 @@ public class UserUpdateService {
         if (user.getNickname().equals(newNickname)) {
             throw new CustomValidException(NICKNAME, newNickname, INVALID_NEW_NICKNAME);
         } else if (userService.existsByNickname(nicknameUpdateDto.getNickname())) {
-            throw new CustomValidException(NICKNAME, newNickname, EXISTENT_NICKNAME);
+            throw new CustomValidException(NICKNAME, newNickname, NICKNAME_EXISTS);
         }
     }
 

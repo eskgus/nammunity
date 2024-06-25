@@ -19,7 +19,7 @@ import java.security.Principal;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_COMMENT;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.COMMENT_NOT_FOUND;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -65,7 +65,7 @@ public class CommentsService {
     @Transactional(readOnly = true)
     public Comments findById(Long id) {
         return commentsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_COMMENT.getMessage()));
+                IllegalArgumentException(COMMENT_NOT_FOUND.getMessage()));
     }
 
     @Transactional(readOnly = true)

@@ -49,9 +49,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         }
 
         if (!bannedUsersService.isAccountNonBanned(username)) {
-            throw new BannedException(BANNED_USER.getMessage());
+            throw new BannedException(BANNED.getMessage());
         } else if (!user.isAccountNonLocked()) {
-            throw new LockedException(LOCKED_USER.getMessage());
+            throw new LockedException(LOCKED.getMessage());
         } else if (!user.isEnabled()) {
             throw new DisabledException(DISABLED.getMessage());
         } else if (!user.isAccountNonExpired()) {

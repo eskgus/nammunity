@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_LIKE;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.LIKE_NOT_FOUND;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -100,7 +100,7 @@ public class LikesService {
     @Transactional
     private void delete(Long id) {
         Likes like = likesRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_LIKE.getMessage()));
+                IllegalArgumentException(LIKE_NOT_FOUND.getMessage()));
         likesRepository.delete(like);
     }
 }

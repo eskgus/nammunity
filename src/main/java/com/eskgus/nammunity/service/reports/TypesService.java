@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_TYPE;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.TYPE_NOT_FOUND;
 
 @RequiredArgsConstructor
 @Service
@@ -22,6 +22,6 @@ public class TypesService {
     @Transactional(readOnly = true)
     private Types findByDetail(String detail) {
         return typesRepository.findByDetail(detail).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_TYPE.getMessage()));
+                IllegalArgumentException(TYPE_NOT_FOUND.getMessage()));
     }
 }

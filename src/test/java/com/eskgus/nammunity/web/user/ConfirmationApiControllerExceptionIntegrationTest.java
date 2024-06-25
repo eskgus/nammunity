@@ -67,7 +67,7 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
     public void confirmTokenWithNonExistentToken() throws Exception {
         // given
         // when/then
-        testConfirmTokenException(NON_EXISTENT_TOKEN, "token");
+        testConfirmTokenException(TOKEN_NOT_FOUND, "token");
     }
 
     @Test
@@ -77,7 +77,7 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
         updateTokenConfirmedAt();
 
         // when/then
-        testConfirmTokenException(CONFIRMED_EMAIL, token.getToken());
+        testConfirmTokenException(EMAIL_CONFIRMED, token.getToken());
     }
 
     @Test
@@ -87,19 +87,19 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
         updateTokenExpiredAt();
 
         // when/then
-        testConfirmTokenException(EXPIRED_TOKEN, token.getToken());
+        testConfirmTokenException(TOKEN_EXPIRED, token.getToken());
     }
 
     @Test
     @WithAnonymousUser
     public void checkUserEnabledWithNonExistentUserId() throws Exception {
-        testCheckUserEnabledException(user.getId() + 1, NON_EXISTENT_USER_ID);
+        testCheckUserEnabledException(user.getId() + 1, USER_NOT_FOUND);
     }
 
     @Test
     @WithAnonymousUser
     public void checkUserEnabledWithNotConfirmedEmail() throws Exception {
-        testCheckUserEnabledException(user.getId(), NOT_CONFIRMED_EMAIL);
+        testCheckUserEnabledException(user.getId(), EMAIL_NOT_CONFIRMED);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
     public void resendTokenWithNonExistentUserId() throws Exception {
         // given
         // when/then
-        testResendTokenException(NON_EXISTENT_USER_ID, user.getId() + 1);
+        testResendTokenException(USER_NOT_FOUND, user.getId() + 1);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
         updateUserEnabled();
 
         // when/then
-        testResendTokenException(CONFIRMED_EMAIL, user.getId());
+        testResendTokenException(EMAIL_CONFIRMED, user.getId());
     }
 
     @Test

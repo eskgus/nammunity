@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.Principal;
 import java.time.LocalDateTime;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_OTHER_REASONS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_OTHER_REASON;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_TYPE;
 import static com.eskgus.nammunity.domain.enums.Fields.OTHER;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
@@ -81,7 +81,7 @@ public class ReportsService {
         Reasons reasons = reasonsService.findById(requestDto.getReasonsId());
         String otherReasons = requestDto.getOtherReasons();
         if (OTHER.getKey().equals(reasons.getDetail()) && (otherReasons == null)) {
-            throw new IllegalArgumentException(EMPTY_OTHER_REASONS.getMessage());
+            throw new IllegalArgumentException(EMPTY_OTHER_REASON.getMessage());
         }
 
         Posts posts = null;

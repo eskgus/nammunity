@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.NON_EXISTENT_POST;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.POST_NOT_FOUND;
 import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
@@ -61,7 +61,7 @@ public class PostsService {
     @Transactional(readOnly = true)
     public Posts findById(Long id) {
         return postsRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_POST.getMessage()));
+                IllegalArgumentException(POST_NOT_FOUND.getMessage()));
     }
 
     @Transactional

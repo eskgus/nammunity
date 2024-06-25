@@ -37,7 +37,6 @@ import java.util.*;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.domain.enums.Fields.*;
 import static com.eskgus.nammunity.domain.enums.SocialType.*;
-import static com.eskgus.nammunity.domain.enums.SocialType.convertSocialType;
 
 @RequiredArgsConstructor
 @Service
@@ -169,10 +168,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private void authenticateOAuth2User(User user) throws OAuth2AuthenticationException {
         if (!bannedUsersService.isAccountNonBanned(user.getUsername())) {
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), BANNED_USER.getMessage());
+                    new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), BANNED.getMessage());
         } else if (user.isLocked()) {
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), LOCKED_USER.getMessage());
+                    new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), LOCKED.getMessage());
         }
     }
 
@@ -210,7 +209,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if (!user.getEmail().equals(socialEmail)) {
                 cancelSocialLink(existingUser, customOAuth2User, user);
                 throw new OAuth2AuthenticationException(
-                        new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), EXISTENT_SOCIAL_ACCOUNT.getMessage());
+                        new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), SOCIAL_ACCOUNT_EXISTS.getMessage());
             }
         });
     }

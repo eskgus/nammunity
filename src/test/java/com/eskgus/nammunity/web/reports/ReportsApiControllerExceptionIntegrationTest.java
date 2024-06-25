@@ -80,7 +80,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDtoWithPostId(null);
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASONS_ID);
+        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASON_ID);
         testSaveContentReportsThrowsMethodArgumentNotValidException(requestDto, resultMatchers);
     }
 
@@ -93,7 +93,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
 
         // when/then
         ResultMatcher[] resultMatchers = createResultMatchers(
-                OTHER_REASONS, requestDto.getOtherReasons(), INVALID_OTHER_REASONS);
+                OTHER_REASONS, requestDto.getOtherReasons(), INVALID_OTHER_REASON);
         testSaveContentReportsThrowsMethodArgumentNotValidException(requestDto, resultMatchers);
     }
 
@@ -104,7 +104,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDtoWithPostId(ID);
 
         // when/then
-        testSaveContentReportsThrowsIllegalArgumentException(requestDto, NON_EXISTENT_USER);
+        testSaveContentReportsThrowsIllegalArgumentException(requestDto, USERNAME_NOT_FOUND);
     }
 
     @Test
@@ -114,7 +114,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDtoWithPostId(reasonsRepository.count() + 1);
 
         // when/then
-        testSaveContentReportsThrowsIllegalArgumentException(requestDto, NON_EXISTENT_REASONS_ID);
+        testSaveContentReportsThrowsIllegalArgumentException(requestDto, REASON_ID_NOT_FOUND);
     }
 
     @Test
@@ -124,7 +124,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDtoWithPostId(reasonsRepository.count());
 
         // when/then
-        testSaveContentReportsThrowsIllegalArgumentException(requestDto, EMPTY_OTHER_REASONS);
+        testSaveContentReportsThrowsIllegalArgumentException(requestDto, EMPTY_OTHER_REASON);
     }
 
     @Test
@@ -134,7 +134,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDtoWithPostId(ID);
 
         // when/then
-        testSaveContentReportsThrowsIllegalArgumentException(requestDto, NON_EXISTENT_POST);
+        testSaveContentReportsThrowsIllegalArgumentException(requestDto, POST_NOT_FOUND);
     }
 
     @Test
@@ -145,7 +145,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         requestDto.setCommentsId(ID);
 
         // when/then
-        testSaveContentReportsThrowsIllegalArgumentException(requestDto, NON_EXISTENT_COMMENT);
+        testSaveContentReportsThrowsIllegalArgumentException(requestDto, COMMENT_NOT_FOUND);
     }
 
     @Test
@@ -156,7 +156,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         requestDto.setUserId(userRepository.count() + 1);
 
         // when/then
-        testSaveContentReportsThrowsIllegalArgumentException(requestDto, NON_EXISTENT_USER_ID);
+        testSaveContentReportsThrowsIllegalArgumentException(requestDto, USER_NOT_FOUND);
     }
 
     @Test
@@ -188,19 +188,19 @@ public class ReportsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void deleteSelectedPostReportsWithNonExistentPostId() throws Exception {
-        testDeleteSelectedContentReportsException(POSTS_ID, NON_EXISTENT_POST);
+        testDeleteSelectedContentReportsException(POSTS_ID, POST_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void deleteSelectedCommentReportsWithNonExistentCommentId() throws Exception {
-        testDeleteSelectedContentReportsException(COMMENTS_ID, NON_EXISTENT_COMMENT);
+        testDeleteSelectedContentReportsException(COMMENTS_ID, COMMENT_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void deleteSelectedUserReportsWithNonExistentUserId() throws Exception {
-        testDeleteSelectedContentReportsException(USER_ID, NON_EXISTENT_USER_ID);
+        testDeleteSelectedContentReportsException(USER_ID, USER_NOT_FOUND);
     }
 
     @Test
@@ -215,13 +215,13 @@ public class ReportsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void banUserWithNonExistentUserId() throws Exception {
-        testBanUserException(NON_EXISTENT_USER_ID, userRepository.count() + 1);
+        testBanUserException(USER_NOT_FOUND, userRepository.count() + 1);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void banUserWithNonExistentUserReportSummary() throws Exception {
-        testBanUserException(NON_EXISTENT_USER_REPORT_SUMMARY, ID);
+        testBanUserException(USER_REPORT_SUMMARY_NOT_FOUND, ID);
     }
 
     private void testSaveContentReportsThrowsMethodArgumentNotValidException(ContentReportsSaveDto requestDto,

@@ -67,19 +67,19 @@ public class LikesApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void saveLikesWithNonExistentUsername() throws Exception {
-        testSaveLikesExpectBadRequest(POSTS_ID, NON_EXISTENT_USER);
+        testSaveLikesExpectBadRequest(POSTS_ID, USERNAME_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void savePostLikesWithNonExistentPostId() throws Exception {
-        testSaveLikesExpectBadRequest(POSTS_ID, NON_EXISTENT_POST);
+        testSaveLikesExpectBadRequest(POSTS_ID, POST_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void saveCommentLikesWithNonExistentCommentId() throws Exception {
-        testSaveLikesExpectBadRequest(COMMENTS_ID, NON_EXISTENT_COMMENT);
+        testSaveLikesExpectBadRequest(COMMENTS_ID, COMMENT_NOT_FOUND);
     }
 
     @Test
@@ -92,19 +92,19 @@ public class LikesApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void deleteLikesWithNonExistentUsername() throws Exception {
-        testDeleteLikesExpectBadRequest(POSTS_ID, NON_EXISTENT_USER);
+        testDeleteLikesExpectBadRequest(POSTS_ID, USERNAME_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deletePostLikesWithNonExistentPostId() throws Exception {
-        testDeleteLikesExpectBadRequest(POSTS_ID, NON_EXISTENT_POST);
+        testDeleteLikesExpectBadRequest(POSTS_ID, POST_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username1")
     public void deleteCommentLikesWithNonExistentCommentId() throws Exception {
-        testDeleteLikesExpectBadRequest(COMMENTS_ID, NON_EXISTENT_COMMENT);
+        testDeleteLikesExpectBadRequest(COMMENTS_ID, COMMENT_NOT_FOUND);
     }
 
     @Test
@@ -135,7 +135,7 @@ public class LikesApiControllerExceptionIntegrationTest {
         List<Long> requestDto = createLikeIds();
 
         // when/then
-        testDeleteSelectedLikesExpectBadRequest(requestDto, NON_EXISTENT_LIKE);
+        testDeleteSelectedLikesExpectBadRequest(requestDto, LIKE_NOT_FOUND);
     }
 
     private List<Long> createLikeIds() {

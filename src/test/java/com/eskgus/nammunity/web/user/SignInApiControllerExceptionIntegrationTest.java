@@ -66,7 +66,7 @@ public class SignInApiControllerExceptionIntegrationTest {
     @Test
     @WithAnonymousUser
     public void findUsernameWithNonExistentEmail() throws Exception {
-        testFindUsernameException(NON_EXISTENT_USER_EMAIL, EMAIL.getKey() + "@naver.com");
+        testFindUsernameException(EMAIL_NOT_FOUND, EMAIL.getKey() + "@naver.com");
     }
 
     @Test
@@ -78,7 +78,7 @@ public class SignInApiControllerExceptionIntegrationTest {
     @Test
     @WithAnonymousUser
     public void findPasswordWithNonExistentUsername() throws Exception {
-        testFindPasswordException(NON_EXISTENT_USER, USERNAME.getKey());
+        testFindPasswordException(USERNAME_NOT_FOUND, USERNAME.getKey());
     }
 
     @Test
@@ -93,7 +93,7 @@ public class SignInApiControllerExceptionIntegrationTest {
         saveBannedUser(user);
 
         // when/then
-        testFindPasswordException(BANNED_USER, user.getUsername());
+        testFindPasswordException(BANNED, user.getUsername());
     }
 
     private Pair<User, User> saveUsers() {

@@ -25,13 +25,13 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_USER.getMessage()));
+                IllegalArgumentException(USERNAME_NOT_FOUND.getMessage()));
     }
 
     @Transactional(readOnly = true)
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_USER_EMAIL.getMessage()));
+                IllegalArgumentException(EMAIL_NOT_FOUND.getMessage()));
     }
 
     @Transactional
@@ -43,7 +43,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new
-                IllegalArgumentException(NON_EXISTENT_USER_ID.getMessage()));
+                IllegalArgumentException(USER_NOT_FOUND.getMessage()));
     }
 
     @Transactional(readOnly = true)

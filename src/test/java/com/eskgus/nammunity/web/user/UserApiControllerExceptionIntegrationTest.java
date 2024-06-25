@@ -115,25 +115,25 @@ public class UserApiControllerExceptionIntegrationTest {
     @Test
     @WithAnonymousUser
     public void signUpWithExistentUsername() throws Exception {
-        testSignUpException(USERNAME, user.getUsername(), EXISTENT_USERNAME);
+        testSignUpException(USERNAME, user.getUsername(), USERNAME_EXISTS);
     }
 
     @Test
     @WithAnonymousUser
     public void signUpWithMismatchConfirmPassword() throws Exception {
-        testSignUpException(CONFIRM_PASSWORD, PASSWORD_VALUE + user.getId(), MISMATCH_CONFIRM_PASSWORD);
+        testSignUpException(CONFIRM_PASSWORD, PASSWORD_VALUE + user.getId(), CONFIRM_PASSWORD_MISMATCH);
     }
 
     @Test
     @WithAnonymousUser
     public void signUpWithExistentNickname() throws Exception {
-        testSignUpException(NICKNAME, user.getNickname(), EXISTENT_NICKNAME);
+        testSignUpException(NICKNAME, user.getNickname(), NICKNAME_EXISTS);
     }
 
     @Test
     @WithAnonymousUser
     public void signUpWithExistentEmail() throws Exception {
-        testSignUpException(EMAIL, user.getEmail(), EXISTENT_EMAIL);
+        testSignUpException(EMAIL, user.getEmail(), EMAIL_EXISTS);
     }
 
     @Test
@@ -145,7 +145,7 @@ public class UserApiControllerExceptionIntegrationTest {
     @Test
     @WithAnonymousUser
     public void checkWithExistentUsername() throws Exception {
-        testCheckException(USERNAME, user.getUsername(), EXISTENT_USERNAME);
+        testCheckException(USERNAME, user.getUsername(), USERNAME_EXISTS);
     }
 
     @Test
@@ -157,7 +157,7 @@ public class UserApiControllerExceptionIntegrationTest {
     @Test
     @WithAnonymousUser
     public void checkWithExistentNickname() throws Exception {
-        testCheckException(NICKNAME, user.getNickname(), EXISTENT_NICKNAME);
+        testCheckException(NICKNAME, user.getNickname(), NICKNAME_EXISTS);
     }
 
     @Test
@@ -169,7 +169,7 @@ public class UserApiControllerExceptionIntegrationTest {
     @Test
     @WithAnonymousUser
     public void checkWithExistentEmail() throws Exception {
-        testCheckException(EMAIL, user.getEmail(), EXISTENT_EMAIL);
+        testCheckException(EMAIL, user.getEmail(), EMAIL_EXISTS);
     }
 
     @Test
@@ -219,7 +219,7 @@ public class UserApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username1")
     public void updatePasswordWithMismatchOldPassword() throws Exception {
-        updatePasswordThrowsValidException(OLD_PASSWORD, PASSWORD_VALUE, MISMATCH_OLD_PASSWORD);
+        updatePasswordThrowsValidException(OLD_PASSWORD, PASSWORD_VALUE, OLD_PASSWORD_MISMATCH);
     }
 
     @Test
@@ -231,7 +231,7 @@ public class UserApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username1")
     public void updatePasswordWithMismatchConfirmPassword() throws Exception {
-        updatePasswordThrowsValidException(CONFIRM_PASSWORD, PASSWORD_VALUE, MISMATCH_CONFIRM_PASSWORD);
+        updatePasswordThrowsValidException(CONFIRM_PASSWORD, PASSWORD_VALUE, CONFIRM_PASSWORD_MISMATCH);
     }
 
     @Test
@@ -277,7 +277,7 @@ public class UserApiControllerExceptionIntegrationTest {
     public void updateNicknameWithExistentNickname() throws Exception {
         User user2 = saveUser(user.getId() + 1);
 
-        updateNicknameThrowsValidException(user2.getNickname(), EXISTENT_NICKNAME);
+        updateNicknameThrowsValidException(user2.getNickname(), NICKNAME_EXISTS);
     }
 
     @Test
@@ -323,7 +323,7 @@ public class UserApiControllerExceptionIntegrationTest {
     public void updateEmailWithExistentEmail() throws Exception {
         User user2 = saveUser(user.getId() + 1);
 
-        updateEmailThrowsValidException(user2.getEmail(), EXISTENT_EMAIL);
+        updateEmailThrowsValidException(user2.getEmail(), EMAIL_EXISTS);
     }
 
     @Test
@@ -455,7 +455,7 @@ public class UserApiControllerExceptionIntegrationTest {
     }
 
     private ResultMatcher createResultMatcher() {
-        return mockMvcTestHelper.createResultMatcher(NON_EXISTENT_USER);
+        return mockMvcTestHelper.createResultMatcher(USERNAME_NOT_FOUND);
     }
 
     private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
