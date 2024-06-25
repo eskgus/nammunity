@@ -4,6 +4,7 @@ import com.eskgus.nammunity.config.WebConfig;
 import com.eskgus.nammunity.config.interceptor.CommentsAuthInterceptor;
 import com.eskgus.nammunity.config.interceptor.PostsAuthInterceptor;
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.handler.CustomControllerAdvice;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.service.user.SignInService;
@@ -85,15 +86,19 @@ public class SignInApiControllerExceptionUnitTest {
         // given
         // when/then
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/username");
-        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(exceptionMessage);
-        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, EMAIL, email, resultMatcher);
+        performAndExpectBadRequestWithParam(requestBuilder, EMAIL, email, exceptionMessage);
     }
 
     private void testFindPasswordException(String username, ExceptionMessages exceptionMessage) throws Exception {
         // given
         // when/then
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/password");
+        performAndExpectBadRequestWithParam(requestBuilder, USERNAME, username, exceptionMessage);
+    }
+
+    private void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder, Fields field,
+                                                     String value, ExceptionMessages exceptionMessage) throws Exception {
         ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(exceptionMessage);
-        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, USERNAME, username, resultMatcher);
+        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, field, value, resultMatcher);
     }
 }

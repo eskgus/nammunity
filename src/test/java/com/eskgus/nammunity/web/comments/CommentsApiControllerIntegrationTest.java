@@ -60,10 +60,6 @@ public class CommentsApiControllerIntegrationTest {
         this.postId = postId;
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
     @AfterEach
     public void cleanUp() {
         testDataHelper.cleanUp();
@@ -102,8 +98,8 @@ public class CommentsApiControllerIntegrationTest {
     @Test
     @WithMockUser(username = "username1")
     public void deleteSelectedComments() throws Exception {
-        List<Long> requestDto = createCommentIds();
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
+        List<Long> requestDto = createCommentIds();
 
         performAndExpectOk(requestBuilder, requestDto);
     }
@@ -137,5 +133,9 @@ public class CommentsApiControllerIntegrationTest {
 
     private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
         mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

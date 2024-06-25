@@ -82,7 +82,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void saveCommentsWithEmptyContent() throws Exception {
+    public void saveCommentsWithEmptyComment() throws Exception {
         String content = "";
         ResultMatcher[] resultMatchers = createResultMatchers(content, EMPTY_COMMENT);
         testSaveCommentsExpectBadRequest(true, content, resultMatchers);
@@ -90,7 +90,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void saveCommentsWithInvalidContentLength() throws Exception {
+    public void saveCommentsWithInvalidComment() throws Exception {
         String content = TEN_CHAR_STRING.repeat(150) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(content, INVALID_COMMENT);
         testSaveCommentsExpectBadRequest(true, content, resultMatchers);
@@ -105,7 +105,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void saveCommentsWithNonExistentPostId() throws Exception {
+    public void saveCommentsWithNonExistentPost() throws Exception {
         ResultMatcher resultMatcher = createResultMatcher(POST_NOT_FOUND);
         testSaveCommentsExpectBadRequest(false, TEN_CHAR_STRING, resultMatcher);
     }
@@ -125,7 +125,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void updateCommentsWithNonExistentCommentId() throws Exception {
+    public void updateCommentsWithNonExistentComment() throws Exception {
         ResultMatcher resultMatcher = createResultMatcher(COMMENT_NOT_FOUND);
         testUpdateCommentsExpectBadRequest(false, TEN_CHAR_STRING, resultMatcher);
     }
@@ -139,7 +139,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void updateCommentsWithEmptyContent() throws Exception {
+    public void updateCommentsWithEmptyComment() throws Exception {
         String content = "";
         ResultMatcher[] resultMatchers = createResultMatchers(content, EMPTY_COMMENT);
         testUpdateCommentsExpectBadRequest(true, content, resultMatchers);
@@ -147,7 +147,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void updateCommentsWithInvalidContentLength() throws Exception {
+    public void updateCommentsWithInvalidComment() throws Exception {
         String content = TEN_CHAR_STRING.repeat(150) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(content, INVALID_COMMENT);
         testUpdateCommentsExpectBadRequest(true, content, resultMatchers);
@@ -167,7 +167,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void deleteCommentsWithNonExistentCommentId() throws Exception {
+    public void deleteCommentsWithNonExistentComment() throws Exception {
         testDeleteCommentsExpectBadRequest(false, COMMENT_NOT_FOUND);
     }
 
@@ -201,12 +201,36 @@ public class CommentsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void deleteSelectedCommentsWithNonExistentCommentId() throws Exception {
+    public void deleteSelectedCommentsWithNonExistentComment() throws Exception {
         // given
         List<Long> requestDto = createCommentIds();
 
         // when/then
         testDeleteSelectedCommentsExpectBadRequest(requestDto, COMMENT_NOT_FOUND);
+    }
+
+    private CommentsSaveDto createCommentsSaveDto(boolean doesPostExist, String content) {
+        Long postId = doesPostExist ? this.postId : this.postId + 1;
+
+        return new CommentsSaveDto(content, postId);
+    }
+
+    private List<Long> createCommentIds() {
+        long count = commentsRepository.count();
+
+        return Arrays.asList(count + 1, count + 2, count + 3);
+    }
+
+    private void saveUser() {
+        Long userId = testDataHelper.signUp(user.getId() + 1, Role.USER);
+        assertOptionalAndGetEntity(userRepository::findById, userId);
+    }
+
+    private Long saveComment() {
+        Long commentId = testDataHelper.saveComments(postId, user);
+        assertOptionalAndGetEntity(commentsRepository::findById, commentId);
+
+        return commentId;
     }
 
     private void testSaveCommentsExpectBadRequest(boolean doesPostExist, String content,
@@ -231,22 +255,6 @@ public class CommentsApiControllerExceptionIntegrationTest {
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
-    private void testDeleteCommentsExpectBadRequest(boolean doesCommentExist, ExceptionMessages exceptionMessage) throws Exception {
-        // given
-        Long commentId = doesCommentExist ? saveComment() : commentsRepository.count() + 1;
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", commentId);
-        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
-        performAndExpectBadRequest(requestBuilder, null, resultMatcher);
-    }
-
-    private void testDeleteSelectedCommentsExpectBadRequest(List<Long> requestDto, ExceptionMessages exceptionMessage) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
-        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
-        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
-    }
-
     private void testUpdateCommentsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
         // given
         Long commentId = saveComment();
@@ -258,6 +266,16 @@ public class CommentsApiControllerExceptionIntegrationTest {
         performAndExpectNotBadRequest(requestBuilder, requestDto, exceptionMessage);
     }
 
+    private void testDeleteCommentsExpectBadRequest(boolean doesCommentExist, ExceptionMessages exceptionMessage) throws Exception {
+        // given
+        Long commentId = doesCommentExist ? saveComment() : commentsRepository.count() + 1;
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", commentId);
+        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
+        performAndExpectBadRequest(requestBuilder, null, resultMatcher);
+    }
+
     private void testDeleteCommentsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
         // given
         Long commentId = saveComment();
@@ -267,9 +285,19 @@ public class CommentsApiControllerExceptionIntegrationTest {
         performAndExpectNotBadRequest(requestBuilder, null, exceptionMessage);
     }
 
-    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                                ResultMatcher... resultMatchers) throws Exception {
-        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
+    private void testDeleteSelectedCommentsExpectBadRequest(List<Long> requestDto, ExceptionMessages exceptionMessage) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
+        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
+    }
+
+    private ResultMatcher[] createResultMatchers(String rejectedValue,
+                                                 ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatchers(CONTENT, rejectedValue, exceptionMessage);
+    }
+
+    private ResultMatcher createResultMatcher(ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatcher(exceptionMessage);
     }
 
     private <T> void performAndExpectNotBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
@@ -281,37 +309,9 @@ public class CommentsApiControllerExceptionIntegrationTest {
         }
     }
 
-    private void saveUser() {
-        Long userId = testDataHelper.signUp(user.getId() + 1, Role.USER);
-        assertOptionalAndGetEntity(userRepository::findById, userId);
-    }
-
-    private Long saveComment() {
-        Long commentId = testDataHelper.saveComments(postId, user);
-        assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-
-        return commentId;
-    }
-
-    private CommentsSaveDto createCommentsSaveDto(boolean doesPostExist, String content) {
-        Long postId = doesPostExist ? this.postId : this.postId + 1;
-
-        return new CommentsSaveDto(content, postId);
-    }
-
-    private List<Long> createCommentIds() {
-        long count = commentsRepository.count();
-
-        return Arrays.asList(count + 1, count + 2, count + 3);
-    }
-
-    private ResultMatcher[] createResultMatchers(String rejectedValue,
-                                                 ExceptionMessages exceptionMessage) {
-        return mockMvcTestHelper.createResultMatchers(CONTENT, rejectedValue, exceptionMessage);
-    }
-
-    private ResultMatcher createResultMatcher(ExceptionMessages exceptionMessage) {
-        return mockMvcTestHelper.createResultMatcher(exceptionMessage);
+    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
+                                                ResultMatcher... resultMatchers) throws Exception {
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {

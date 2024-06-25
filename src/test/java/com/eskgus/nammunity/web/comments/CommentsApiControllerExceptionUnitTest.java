@@ -60,7 +60,7 @@ public class CommentsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void saveCommentsWithEmptyContent() throws Exception {
+    public void saveCommentsWithEmptyComment() throws Exception {
         String content = "";
         ResultMatcher[] resultMatchers = createResultMatchers(content, EMPTY_COMMENT);
         testSaveCommentsException(content, never(), resultMatchers);
@@ -68,7 +68,7 @@ public class CommentsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void saveCommentsWithInvalidContentLength() throws Exception {
+    public void saveCommentsWithInvalidComment() throws Exception {
         String content = TEN_CHAR_STRING.repeat(150) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(content, INVALID_COMMENT);
         testSaveCommentsException(content, never(), resultMatchers);
@@ -86,7 +86,7 @@ public class CommentsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void updateCommentsWithEmptyContent() throws Exception {
+    public void updateCommentsWithEmptyComment() throws Exception {
         String content = "";
         ResultMatcher[] resultMatchers = createResultMatchers(content, EMPTY_COMMENT);
         testUpdateCommentsException(content, never(), resultMatchers);
@@ -94,7 +94,7 @@ public class CommentsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void updateCommentsWithInvalidContentLength() throws Exception {
+    public void updateCommentsWithInvalidComment() throws Exception {
         String content = TEN_CHAR_STRING.repeat(150) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(content, INVALID_COMMENT);
         testUpdateCommentsException(content, never(), resultMatchers);
@@ -142,14 +142,6 @@ public class CommentsApiControllerExceptionUnitTest {
         verify(commentsService).deleteSelectedComments(eq(requestDto));
     }
 
-    private ResultMatcher[] createResultMatchers(String rejectedValue, ExceptionMessages exceptionMessage) {
-        return mockMvcTestHelper.createResultMatchers(CONTENT, rejectedValue, exceptionMessage);
-    }
-
-    private ResultMatcher createResultMatcher() {
-        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
-    }
-
     private void testSaveCommentsException(String content, VerificationMode mode,
                                            ResultMatcher... resultMatchers) throws Exception {
         // given
@@ -172,6 +164,14 @@ public class CommentsApiControllerExceptionUnitTest {
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
 
         verify(commentsService, mode).update(eq(ID), eq(requestDto.getContent()));
+    }
+
+    private ResultMatcher[] createResultMatchers(String rejectedValue, ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatchers(CONTENT, rejectedValue, exceptionMessage);
+    }
+
+    private ResultMatcher createResultMatcher() {
+        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 
     private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,

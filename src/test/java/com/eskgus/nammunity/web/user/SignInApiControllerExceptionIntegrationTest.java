@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.user;
 
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.helper.TestDataHelper;
@@ -118,23 +119,23 @@ public class SignInApiControllerExceptionIntegrationTest {
         assertOptionalAndGetEntity(bannedUsersRepository::findById, bannedUserId);
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
     private void testFindUsernameException(ExceptionMessages exceptionMessage, String email) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/username");
-        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
-        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, EMAIL, email, resultMatcher);
+        performAndExpectBadRequestWithParam(requestBuilder, EMAIL, email, exceptionMessage);
     }
 
     private void testFindPasswordException(ExceptionMessages exceptionMessage, String username) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/password");
-        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
-        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, USERNAME, username, resultMatcher);
+        performAndExpectBadRequestWithParam(requestBuilder, USERNAME, username, exceptionMessage);
     }
 
-    private ResultMatcher createResultMatcher(ExceptionMessages exceptionMessage) {
-        return mockMvcTestHelper.createResultMatcher(exceptionMessage);
+    private void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder, Fields field,
+                                                     String value, ExceptionMessages exceptionMessage) throws Exception {
+        ResultMatcher resultMatcher = mockMvcTestHelper.createResultMatcher(exceptionMessage);
+        mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, field, value, resultMatcher);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

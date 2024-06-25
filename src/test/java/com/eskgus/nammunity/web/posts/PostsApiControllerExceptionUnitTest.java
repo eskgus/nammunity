@@ -63,7 +63,7 @@ public class PostsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void savePostsWithInvalidTitleLength() throws Exception {
+    public void savePostsWithInvalidTitle() throws Exception {
         String title = TEN_CHAR_STRING.repeat(10) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(TITLE, title, INVALID_TITLE);
         testSavePostsException(title, TEN_CHAR_STRING, never(), resultMatchers);
@@ -79,7 +79,7 @@ public class PostsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void savePostsWithInvalidContentLength() throws Exception {
+    public void savePostsWithInvalidContent() throws Exception {
         String content = TEN_CHAR_STRING.repeat(300) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, content, INVALID_CONTENT);
         testSavePostsException(TEN_CHAR_STRING, content, never(), resultMatchers);
@@ -105,7 +105,7 @@ public class PostsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void updatePostsWithInvalidTitleLength() throws Exception {
+    public void updatePostsWithInvalidTitle() throws Exception {
         String title = TEN_CHAR_STRING.repeat(100) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(TITLE, title, INVALID_TITLE);
         testUpdatePostsException(title, TEN_CHAR_STRING, never(), resultMatchers);
@@ -121,7 +121,7 @@ public class PostsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void updatePostsWithInvalidContentLength() throws Exception {
+    public void updatePostsWithInvalidContent() throws Exception {
         String content = TEN_CHAR_STRING.repeat(300) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, content, INVALID_CONTENT);
         testUpdatePostsException(TEN_CHAR_STRING, content, never(), resultMatchers);
@@ -169,14 +169,6 @@ public class PostsApiControllerExceptionUnitTest {
         verify(postsService).deleteSelectedPosts(eq(requestDto));
     }
 
-    private ResultMatcher[] createResultMatchers(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {
-        return mockMvcTestHelper.createResultMatchers(field, rejectedValue, exceptionMessage);
-    }
-
-    private ResultMatcher createResultMatcher() {
-        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
-    }
-
     private void testSavePostsException(String title, String content, VerificationMode mode,
                                         ResultMatcher... resultMatchers) throws Exception {
         // given
@@ -199,6 +191,14 @@ public class PostsApiControllerExceptionUnitTest {
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
 
         verify(postsService, mode).update(eq(ID), any(PostsUpdateDto.class));
+    }
+
+    private ResultMatcher[] createResultMatchers(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {
+        return mockMvcTestHelper.createResultMatchers(field, rejectedValue, exceptionMessage);
+    }
+
+    private ResultMatcher createResultMatcher() {
+        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 
     private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,

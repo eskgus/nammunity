@@ -205,6 +205,21 @@ public class UserApiControllerUnitTest {
         verify(userUpdateService).unlinkSocial(any(Principal.class), eq(social), eq(pair.getFirst().getValue()));
     }
 
+    private Pair<Cookie, ResponseCookie> createCookies() {
+        Cookie cookie = new Cookie("access_token", "accessToken");
+
+        ResponseCookie responseCookie = ResponseCookie.from(cookie.getName(), cookie.getValue()).build();
+
+        return Pair.of(cookie, responseCookie);
+    }
+
+    private HttpHeaders createHeaders(ResponseCookie responseCookie) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, responseCookie.toString());
+
+        return headers;
+    }
+
     private void testCheck(Fields field, String value) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = get(REQUEST_MAPPING + "/validation");
         mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, field, value);
@@ -232,20 +247,5 @@ public class UserApiControllerUnitTest {
 
     private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
         mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
-    }
-
-    private Pair<Cookie, ResponseCookie> createCookies() {
-        Cookie cookie = new Cookie("access_token", "accessToken");
-
-        ResponseCookie responseCookie = ResponseCookie.from(cookie.getName(), cookie.getValue()).build();
-
-        return Pair.of(cookie, responseCookie);
-    }
-
-    private HttpHeaders createHeaders(ResponseCookie responseCookie) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, responseCookie.toString());
-
-        return headers;
     }
 }

@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.web.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.MockMvcTestHelper;
 import com.eskgus.nammunity.helper.TestDataHelper;
@@ -24,6 +25,7 @@ import java.time.Period;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @ExtendWith(SpringExtension.class)
@@ -86,58 +88,58 @@ public class ReportsApiControllerIntegrationTest {
     @Test
     @WithMockUser(username = "username2")
     public void savePostReportsOnly() throws Exception {
-        tesSavePostReports();
+        testSaveContentReports(POSTS);
     }
 
     @Test
     @WithMockUser(username = "username2")
     public void saveCommentReportsOnly() throws Exception {
-        testSaveCommentReports();
+        testSaveContentReports(COMMENTS);
     }
 
     @Test
     @WithMockUser(username = "username2")
     public void saveUserReportsOnly() throws Exception {
-        testSaveUserReports();
+        testSaveContentReports(USERS);
     }
 
     @Test
     @WithMockUser(username = "username2")
     public void savePostReportAndSummary() throws Exception {
-        testSavePostReportAndSummary();
+        testSaveContentReportAndSummary(POSTS);
     }
 
     @Test
     @WithMockUser(username = "username2")
     public void saveCommentReportAndSummary() throws Exception {
-        testSaveCommentReportAndSummary();
+        testSaveContentReportAndSummary(COMMENTS);
     }
 
     @Test
     @WithMockUser(username = "username2")
     public void saveUserReportAndSummary() throws Exception {
-        testSaveUserReportAndSummary();
+        testSaveContentReportAndSummary(USERS);
     }
 
     @Test
     @WithMockUser(username = "username2")
     public void updatePostReportSummary() throws Exception {
-        savePostReportSummary();
-        testSavePostReportAndSummary();
+        saveReportSummary(POSTS);
+        testSaveContentReportAndSummary(POSTS);
     }
 
     @Test
     @WithMockUser(username = "username2")
     public void updateCommentReportSummary() throws Exception {
-        saveCommentReportSummary();
-        testSaveCommentReportAndSummary();
+        saveReportSummary(COMMENTS);
+        testSaveContentReportAndSummary(COMMENTS);
     }
 
     @Test
     @WithMockUser(username = "username2")
     public void updateUserReportSummary() throws Exception {
-        saveUserReportSummary();
-        testSaveUserReportAndSummary();
+        saveReportSummary(USERS);
+        testSaveContentReportAndSummary(USERS);
     }
 
     @Test
@@ -157,7 +159,7 @@ public class ReportsApiControllerIntegrationTest {
     @WithMockUser(username = "username3", roles = "ADMIN")
     public void saveBanUser() throws Exception {
         // given
-        saveUserReportSummary();
+        saveReportSummary(USERS);
 
         // when/then
         testBanUser();
@@ -173,125 +175,45 @@ public class ReportsApiControllerIntegrationTest {
         testBanUser();
     }
 
-    private void testSavePostReportAndSummary() throws Exception {
-        savePostReports();
-        tesSavePostReports();
-    }
-
-    private void testSaveCommentReportAndSummary() throws Exception {
-        saveCommentReports();
-        testSaveCommentReports();
-    }
-
-    private void testSaveUserReportAndSummary() throws Exception {
-        saveUserReports();
-        testSaveUserReports();
-    }
-
-    private void tesSavePostReports() throws Exception {
-        // given
-        ContentReportsSaveDto requestDto = createContentReportsSaveDtoWithPostId();
-
-        // when/then
-        testSaveContentReports(requestDto);
-    }
-
-    private void testSaveCommentReports() throws Exception {
-        // given
-        ContentReportsSaveDto requestDto = createContentReportsSaveDtoWithCommentId();
-
-        // when/then
-        testSaveContentReports(requestDto);
-    }
-
-    private void testSaveUserReports() throws Exception {
-        // given
-        ContentReportsSaveDto requestDto = createContentReportsSaveDtoWithUserId();
-
-        // when/then
-        testSaveContentReports(requestDto);
-    }
-
-    private void testSaveContentReports(ContentReportsSaveDto requestDto) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/content");
-        performAndExpectOk(requestBuilder, requestDto);
-    }
-
-    private void testBanUser() throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/process");
-        performAndExpectOk(requestBuilder, user.getId());
-    }
-
-    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
-        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
-    }
-
-    private void savePostReports() {
-        Long latestPostReportId = testDataHelper.savePostReports(post.getId(), reporter);
-        assertOptionalAndGetEntity(reportsRepository::findById, latestPostReportId);
-    }
-
-    private void saveCommentReports() {
-        Long latestCommentReportId = testDataHelper.saveCommentReports(comment.getId(), reporter);
-        assertOptionalAndGetEntity(reportsRepository::findById, latestCommentReportId);
-    }
-
-    private void saveUserReports() {
-        Long latestUserReportId = testDataHelper.saveUserReports(user, reporter);
-        assertOptionalAndGetEntity(reportsRepository::findById, latestUserReportId);
+    private void saveReports(ContentType contentType) {
+        Long latestReportId = switch (contentType) {
+            case POSTS -> testDataHelper.savePostReports(post.getId(), reporter);
+            case COMMENTS -> testDataHelper.saveCommentReports(comment.getId(), reporter);
+            default -> testDataHelper.saveUserReports(user, reporter);
+        };
+        assertOptionalAndGetEntity(reportsRepository::findById, latestReportId);
     }
 
     private void saveReportSummaries() {
-        savePostReportSummary();
-        saveCommentReportSummary();
-        saveUserReportSummary();
+        for (ContentType contentType : ContentType.values()) {
+            saveReportSummary(contentType);
+        }
     }
 
     private void saveBanedUser(Period period) {
-        saveUserReportSummary();
+        saveReportSummary(USERS);
         Long bannedUserId = testDataHelper.saveBannedUsers(user, period);
         assertOptionalAndGetEntity(bannedUsersRepository::findById, bannedUserId);
     }
 
-    private void savePostReportSummary() {
-        Long postReportSummaryId = testDataHelper.savePostReportSummary(post, reporter);
-        assertOptionalAndGetEntity(reportSummaryRepository::findById, postReportSummaryId);
+    private void saveReportSummary(ContentType contentType) {
+        Long reportSummaryId = switch (contentType) {
+            case POSTS -> testDataHelper.savePostReportSummary(post, reporter);
+            case COMMENTS -> testDataHelper.saveCommentReportSummary(comment, reporter);
+            default -> testDataHelper.saveUserReportSummary(user, reporter);
+        };
+        assertOptionalAndGetEntity(reportSummaryRepository::findById, reportSummaryId);
     }
 
-    private void saveCommentReportSummary() {
-        Long commentReportSummaryId = testDataHelper.saveCommentReportSummary(comment, reporter);
-        assertOptionalAndGetEntity(reportSummaryRepository::findById, commentReportSummaryId);
-    }
-
-    private void saveUserReportSummary() {
-        Long userReportSummaryId = testDataHelper.saveUserReportSummary(user, reporter);
-        assertOptionalAndGetEntity(reportSummaryRepository::findById, userReportSummaryId);
-    }
-
-    private ContentReportsSaveDto createContentReportsSaveDtoWithPostId() {
-        ContentReportsSaveDto requestDto = createContentReportsSaveDto();
-        requestDto.setPostsId(post.getId());
-
-        return requestDto;
-    }
-
-    private ContentReportsSaveDto createContentReportsSaveDtoWithCommentId() {
-        ContentReportsSaveDto requestDto = createContentReportsSaveDto();
-        requestDto.setCommentsId(comment.getId());
-
-        return requestDto;
-    }
-
-    private ContentReportsSaveDto createContentReportsSaveDtoWithUserId() {
-        ContentReportsSaveDto requestDto = createContentReportsSaveDto();
-        requestDto.setUserId(user.getId());
-
-        return requestDto;
-    }
-
-    private ContentReportsSaveDto createContentReportsSaveDto() {
+    private ContentReportsSaveDto createContentReportsSaveDto(ContentType contentType) {
         ContentReportsSaveDto requestDto = new ContentReportsSaveDto();
         requestDto.setReasonsId(1L);
+
+        switch (contentType) {
+            case POSTS -> requestDto.setPostsId(post.getId());
+            case COMMENTS -> requestDto.setCommentsId(comment.getId());
+            case USERS -> requestDto.setUserId(user.getId());
+        }
 
         return requestDto;
     }
@@ -303,6 +225,29 @@ public class ReportsApiControllerIntegrationTest {
 
         return ContentReportSummaryDeleteDto.builder()
                 .postsId(postsId).commentsId(commentsId).userId(userId).build();
+    }
+
+    private void testSaveContentReportAndSummary(ContentType contentType) throws Exception {
+        saveReports(contentType);
+        testSaveContentReports(contentType);
+    }
+
+    private void testSaveContentReports(ContentType contentType) throws Exception {
+        // given
+        ContentReportsSaveDto requestDto = createContentReportsSaveDto(contentType);
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/content");
+        performAndExpectOk(requestBuilder, requestDto);
+    }
+
+    private void testBanUser() throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING + "/process");
+        performAndExpectOk(requestBuilder, user.getId());
+    }
+
+    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+        mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 
     private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {

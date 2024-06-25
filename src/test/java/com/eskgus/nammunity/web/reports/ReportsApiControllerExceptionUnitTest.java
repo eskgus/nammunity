@@ -64,7 +64,7 @@ public class ReportsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void saveContentReportsWithEmptyReasonsId() throws Exception {
+    public void saveContentReportsWithEmptyReasonId() throws Exception {
         // given
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(null, null);
 
@@ -75,7 +75,7 @@ public class ReportsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void saveContentReportsWithInvalidOtherReasonsLength() throws Exception {
+    public void saveContentReportsWithInvalidOtherReason() throws Exception {
         // given
         String otherReasons = "10 letters".repeat(50) + "!";
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(ID, otherReasons);

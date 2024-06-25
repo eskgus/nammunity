@@ -93,7 +93,7 @@ public class ConfirmationApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void resendTokenThrowsResendNotAllowedIllegalArgumentException() throws Exception {
+    public void resendTokenThrowsResendNotAllowed() throws Exception {
         testResendTokenException(RESEND_NOT_ALLOWED, times(1));
     }
 

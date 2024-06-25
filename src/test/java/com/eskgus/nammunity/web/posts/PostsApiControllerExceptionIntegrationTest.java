@@ -83,7 +83,7 @@ public class PostsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void savePostsWithInvalidTitleLength() throws Exception {
+    public void savePostsWithInvalidTitle() throws Exception {
         String title = TEN_CHAR_STRING.repeat(10) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(TITLE, title, INVALID_TITLE);
         testSavePostsExpectBadRequest(TITLE, title, resultMatchers);
@@ -99,7 +99,7 @@ public class PostsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void savePostsWithInvalidContentLength() throws Exception {
+    public void savePostsWithInvalidContent() throws Exception {
         String content = TEN_CHAR_STRING.repeat(300) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, content, INVALID_CONTENT);
         testSavePostsExpectBadRequest(CONTENT, content, resultMatchers);
@@ -127,7 +127,7 @@ public class PostsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void updatePostsWithNonExistentPostId() throws Exception {
+    public void updatePostsWithNonExistentPost() throws Exception {
         ResultMatcher resultMatcher = createResultMatcher(POST_NOT_FOUND);
         testUpdatePostsExpectBadRequest(false, null, null, resultMatcher);
     }
@@ -149,7 +149,7 @@ public class PostsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void updatePostsWithInvalidTitleLength() throws Exception {
+    public void updatePostsWithInvalidTitle() throws Exception {
         String title = TEN_CHAR_STRING.repeat(10) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(TITLE, title, INVALID_TITLE);
         testUpdatePostsExpectBadRequest(true, TITLE, title, resultMatchers);
@@ -165,7 +165,7 @@ public class PostsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void updatePostsWithInvalidContentLength() throws Exception {
+    public void updatePostsWithInvalidContent() throws Exception {
         String content = TEN_CHAR_STRING.repeat(300) + "!";
         ResultMatcher[] resultMatchers = createResultMatchers(CONTENT, content, INVALID_CONTENT);
         testUpdatePostsExpectBadRequest(true, CONTENT, content, resultMatchers);
@@ -185,7 +185,7 @@ public class PostsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void deletePostsWithNonExistentPostId() throws Exception {
+    public void deletePostsWithNonExistentPost() throws Exception {
         testDeletePostsExpectBadRequest(false, POST_NOT_FOUND);
     }
 
@@ -219,69 +219,12 @@ public class PostsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void deleteSelectedPostsWithNonExistentPostId() throws Exception {
+    public void deleteSelectedPostsWithNonExistentPost() throws Exception {
         // given
         List<Long> requestDto = createPostIds();
 
         // when/then
         testDeleteSelectedPostsExpectBadRequest(requestDto, POST_NOT_FOUND);
-    }
-
-    private void testSavePostsExpectBadRequest(Fields field, String value, ResultMatcher... resultMatcher) throws Exception {
-        // given
-        PostsSaveDto requestDto = createPostsSaveDto(field, value);
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
-    }
-
-    private void testUpdatePostsExpectBadRequest(boolean doesPostExist, Fields field, String value,
-                                                 ResultMatcher... resultMatchers) throws Exception {
-        // given
-        Long postId = doesPostExist ? savePost() : postsRepository.count() + 1;
-
-        PostsUpdateDto requestDto = createPostsUpdateDto(field, value);
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", postId);
-        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
-    }
-
-    private void testDeletePostsExpectBadRequest(boolean doesPostExist, ExceptionMessages exceptionMessage) throws Exception {
-        // given
-        Long postId = doesPostExist ? savePost() : postsRepository.count() + 1;
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", postId);
-        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
-        performAndExpectBadRequest(requestBuilder, null, resultMatcher);
-    }
-
-    private void testDeleteSelectedPostsExpectBadRequest(List<Long> requestDto, ExceptionMessages exceptionMessage) throws Exception {
-        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
-        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
-        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
-    }
-
-    private void testUpdatePostsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
-        // given
-        Long postId = savePost();
-
-        PostsUpdateDto requestDto = createPostsUpdateDto(null, null);
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", postId);
-        performAndExpectNotBadRequest(requestBuilder, requestDto, exceptionMessage);
-    }
-
-    private void testDeletePostsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
-        // given
-        Long postId = savePost();
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", postId);
-        performAndExpectNotBadRequest(requestBuilder, null, exceptionMessage);
     }
 
     private void saveUser() {
@@ -325,6 +268,63 @@ public class PostsApiControllerExceptionIntegrationTest {
         }
 
         return Pair.of(title, content);
+    }
+
+    private void testSavePostsExpectBadRequest(Fields field, String value, ResultMatcher... resultMatcher) throws Exception {
+        // given
+        PostsSaveDto requestDto = createPostsSaveDto(field, value);
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
+    }
+
+    private void testUpdatePostsExpectBadRequest(boolean doesPostExist, Fields field, String value,
+                                                 ResultMatcher... resultMatchers) throws Exception {
+        // given
+        Long postId = doesPostExist ? savePost() : postsRepository.count() + 1;
+
+        PostsUpdateDto requestDto = createPostsUpdateDto(field, value);
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", postId);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
+    }
+
+    private void testUpdatePostsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
+        // given
+        Long postId = savePost();
+
+        PostsUpdateDto requestDto = createPostsUpdateDto(null, null);
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/{id}", postId);
+        performAndExpectNotBadRequest(requestBuilder, requestDto, exceptionMessage);
+    }
+
+    private void testDeletePostsExpectBadRequest(boolean doesPostExist, ExceptionMessages exceptionMessage) throws Exception {
+        // given
+        Long postId = doesPostExist ? savePost() : postsRepository.count() + 1;
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", postId);
+        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
+        performAndExpectBadRequest(requestBuilder, null, resultMatcher);
+    }
+
+    private void testDeletePostsExpectNotBadRequest(ExceptionMessages exceptionMessage) throws Exception {
+        // given
+        Long postId = savePost();
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/{id}", postId);
+        performAndExpectNotBadRequest(requestBuilder, null, exceptionMessage);
+    }
+
+    private void testDeleteSelectedPostsExpectBadRequest(List<Long> requestDto, ExceptionMessages exceptionMessage) throws Exception {
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/selected-delete");
+        ResultMatcher resultMatcher = createResultMatcher(exceptionMessage);
+        performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
     }
 
     private ResultMatcher[] createResultMatchers(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {

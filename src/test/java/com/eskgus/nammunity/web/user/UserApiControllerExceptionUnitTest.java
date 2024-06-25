@@ -422,6 +422,57 @@ public class UserApiControllerExceptionUnitTest {
         testUnlinkSocialException(INTERNAL_SERVER_ERROR);
     }
 
+    private RegistrationDto createRegistrationDto(Fields field, String value) {
+        String username = USERNAME_VALUE;
+        String password = PASSWORD_VALUE;
+        String confirmPassword = PASSWORD_VALUE;
+        String nickname = NICKNAME_VALUE;
+        String email = EMAIL_VALUE;
+
+        if (field != null) {
+            switch (field) {
+                case USERNAME -> username = value;
+                case PASSWORD -> password = value;
+                case CONFIRM_PASSWORD -> confirmPassword = value;
+                case NICKNAME -> nickname = value;
+                case EMAIL -> email = value;
+            }
+        }
+
+        return RegistrationDto.builder()
+                .username(username).password(password).confirmPassword(confirmPassword)
+                .nickname(nickname).email(email).build();
+    }
+
+    private PasswordUpdateDto createPasswordUpdateDto(Fields field, String value) {
+        String oldPassword = PASSWORD_VALUE;
+        String password = PASSWORD_VALUE;
+        String confirmPassword = PASSWORD_VALUE;
+
+        if (field != null) {
+            switch (field) {
+                case OLD_PASSWORD -> oldPassword = value;
+                case PASSWORD -> password = value;
+                case CONFIRM_PASSWORD -> confirmPassword = value;
+            }
+        }
+
+        return PasswordUpdateDto.builder()
+                .oldPassword(oldPassword).password(password).confirmPassword(confirmPassword).build();
+    }
+
+    private NicknameUpdateDto createNicknameUpdateDto(String nickname) {
+        return new NicknameUpdateDto(nickname);
+    }
+
+    private EmailUpdateDto createEmailUpdateDto(String email) {
+        return new EmailUpdateDto(email);
+    }
+
+    private Cookie createCookie() {
+        return new Cookie("access_token", ACCESS_TOKEN.getKey());
+    }
+
     private void testSignUpException(RegistrationDto requestDto, VerificationMode mode,
                                      ResultMatcher... resultMatchers) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
@@ -476,11 +527,6 @@ public class UserApiControllerExceptionUnitTest {
         return cookie.getValue();
     }
 
-    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                                ResultMatcher... resultMatchers) throws Exception {
-        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
-    }
-
     private ResultMatcher[] createResultMatchers(Fields field, String rejectedValue, ExceptionMessages exceptionMessage) {
         return mockMvcTestHelper.createResultMatchers(field, rejectedValue, exceptionMessage);
     }
@@ -489,54 +535,8 @@ public class UserApiControllerExceptionUnitTest {
         return mockMvcTestHelper.createResultMatcher(exceptionMessage);
     }
 
-    private RegistrationDto createRegistrationDto(Fields field, String value) {
-        String username = USERNAME_VALUE;
-        String password = PASSWORD_VALUE;
-        String confirmPassword = PASSWORD_VALUE;
-        String nickname = NICKNAME_VALUE;
-        String email = EMAIL_VALUE;
-
-        if (field != null) {
-            switch (field) {
-                case USERNAME -> username = value;
-                case PASSWORD -> password = value;
-                case CONFIRM_PASSWORD -> confirmPassword = value;
-                case NICKNAME -> nickname = value;
-                case EMAIL -> email = value;
-            }
-        }
-
-        return RegistrationDto.builder()
-                .username(username).password(password).confirmPassword(confirmPassword)
-                .nickname(nickname).email(email).build();
-    }
-
-    private PasswordUpdateDto createPasswordUpdateDto(Fields field, String value) {
-        String oldPassword = PASSWORD_VALUE;
-        String password = PASSWORD_VALUE;
-        String confirmPassword = PASSWORD_VALUE;
-
-        if (field != null) {
-            switch (field) {
-                case OLD_PASSWORD -> oldPassword = value;
-                case PASSWORD -> password = value;
-                case CONFIRM_PASSWORD -> confirmPassword = value;
-            }
-        }
-
-        return PasswordUpdateDto.builder()
-                .oldPassword(oldPassword).password(password).confirmPassword(confirmPassword).build();
-    }
-
-    private NicknameUpdateDto createNicknameUpdateDto(String nickname) {
-        return new NicknameUpdateDto(nickname);
-    }
-
-    private EmailUpdateDto createEmailUpdateDto(String email) {
-        return new EmailUpdateDto(email);
-    }
-
-    private Cookie createCookie() {
-        return new Cookie("access_token", "accessToken");
+    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
+                                                ResultMatcher... resultMatchers) throws Exception {
+        mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 }

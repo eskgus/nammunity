@@ -72,13 +72,13 @@ public class LikesApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void savePostLikesWithNonExistentPostId() throws Exception {
+    public void savePostLikesWithNonExistentPost() throws Exception {
         testSaveLikesExpectBadRequest(POSTS_ID, POST_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username1")
-    public void saveCommentLikesWithNonExistentCommentId() throws Exception {
+    public void saveCommentLikesWithNonExistentComment() throws Exception {
         testSaveLikesExpectBadRequest(COMMENTS_ID, COMMENT_NOT_FOUND);
     }
 
@@ -97,13 +97,13 @@ public class LikesApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void deletePostLikesWithNonExistentPostId() throws Exception {
+    public void deletePostLikesWithNonExistentPost() throws Exception {
         testDeleteLikesExpectBadRequest(POSTS_ID, POST_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username1")
-    public void deleteCommentLikesWithNonExistentCommentId() throws Exception {
+    public void deleteCommentLikesWithNonExistentComment() throws Exception {
         testDeleteLikesExpectBadRequest(COMMENTS_ID, COMMENT_NOT_FOUND);
     }
 
@@ -130,7 +130,7 @@ public class LikesApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void deleteSelectedLikesWithNonExistentLikeId() throws Exception {
+    public void deleteSelectedLikesWithNonExistentLike() throws Exception {
         // given
         List<Long> requestDto = createLikeIds();
 

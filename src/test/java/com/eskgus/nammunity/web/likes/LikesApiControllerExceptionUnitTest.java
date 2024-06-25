@@ -93,12 +93,12 @@ public class LikesApiControllerExceptionUnitTest {
         verify(likesService).deleteSelectedLikes(eq(requestDto));
     }
 
+    private ResultMatcher createResultMatcher() {
+        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
+    }
+
     private void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder) throws Exception {
         ResultMatcher resultMatcher = createResultMatcher();
         mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, POSTS_ID, ID, resultMatcher);
-    }
-
-    private ResultMatcher createResultMatcher() {
-        return mockMvcTestHelper.createResultMatcher(ILLEGAL_ARGUMENT_EXCEPTION_TEST);
     }
 }

@@ -107,22 +107,6 @@ public class LikesApiControllerIntegrationTest {
         mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 
-    private void testSaveLikes(Fields field, Long value) throws Exception {
-        // given
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
-        performAndExpectOkWithParam(requestBuilder, field, value);
-    }
-
-    private void testDeleteLikes(Fields field, Long value) throws Exception {
-        // given
-        saveLike(field);
-
-        // when/then
-        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING);
-        performAndExpectOkWithParam(requestBuilder, field, value);
-    }
-
     private List<Long> createLikeIds() {
         List<Long> requestDto = new ArrayList<>();
         requestDto.add(saveLike(POSTS_ID));
@@ -145,12 +129,28 @@ public class LikesApiControllerIntegrationTest {
         }
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
+    private void testSaveLikes(Fields field, Long value) throws Exception {
+        // given
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = post(REQUEST_MAPPING);
+        performAndExpectOkWithParam(requestBuilder, field, value);
+    }
+
+    private void testDeleteLikes(Fields field, Long value) throws Exception {
+        // given
+        saveLike(field);
+
+        // when/then
+        MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING);
+        performAndExpectOkWithParam(requestBuilder, field, value);
     }
 
     private void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder,
                                              Fields field, Long value) throws Exception {
         mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, field, value);
+    }
+
+    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

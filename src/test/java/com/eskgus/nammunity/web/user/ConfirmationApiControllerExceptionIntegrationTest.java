@@ -72,7 +72,7 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
 
     @Test
     @WithAnonymousUser
-    public void confirmTokenWithConfirmedToken() throws Exception {
+    public void confirmTokenWithConfirmedEmail() throws Exception {
         // given
         updateTokenConfirmedAt();
 
@@ -92,7 +92,7 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
 
     @Test
     @WithAnonymousUser
-    public void checkUserEnabledWithNonExistentUserId() throws Exception {
+    public void checkUserEnabledWithNonExistentUser() throws Exception {
         testCheckUserEnabledException(user.getId() + 1, USER_NOT_FOUND);
     }
 
@@ -104,7 +104,7 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
 
     @Test
     @WithAnonymousUser
-    public void resendTokenWithNonExistentUserId() throws Exception {
+    public void resendTokenWithNonExistentUser() throws Exception {
         // given
         // when/then
         testResendTokenException(USER_NOT_FOUND, user.getId() + 1);
@@ -122,7 +122,7 @@ public class ConfirmationApiControllerExceptionIntegrationTest {
 
     @Test
     @WithAnonymousUser
-    public void resendTokenThrowsResendNotAllowedIllegalArgumentException() throws Exception {
+    public void resendTokenThrowsResendNotAllowed() throws Exception {
         // given
         updateUserCreatedDate();
 
