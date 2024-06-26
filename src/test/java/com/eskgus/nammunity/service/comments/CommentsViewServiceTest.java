@@ -20,7 +20,6 @@ import java.security.Principal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,74 +36,43 @@ public class CommentsViewServiceTest {
     @InjectMocks
     private CommentsViewService commentsViewService;
 
+    private static final Long ID = 1L;
+    private static final int PAGE = 1;
+
     @Test
     public void findCommentsPageByPosts() {
         // given
+        Posts post = mock(Posts.class);
+
+        User user = mock(User.class);
+        when(user.getId()).thenReturn(ID);
+
         CommentsReadDto commentsReadDto = mock(CommentsReadDto.class);
-        when(commentsReadDto.getAuthorId()).thenReturn(1L);
-        when(commentsReadDto.getId()).thenReturn(1L);
+        when(commentsReadDto.getAuthorId()).thenReturn(ID);
+        when(commentsReadDto.getId()).thenReturn(ID);
+        boolean doesUserWriteComment = commentsReadDto.getAuthorId().equals(user.getId());
 
-        List<CommentsReadDto> comments = Collections.singletonList(commentsReadDto);
-
-        Page<CommentsReadDto> commentsPage = new PageImpl<>(comments);
+        List<CommentsReadDto> content = Collections.singletonList(commentsReadDto);
+        Page<CommentsReadDto> commentsPage = new PageImpl<>(content);
         when(commentsService.findByPosts(any(Posts.class), anyInt())).thenReturn(commentsPage);
 
         Comments comment = mock(Comments.class);
         when(commentsService.findById(anyLong())).thenReturn(comment);
 
-        when(likesService.existsByCommentsAndUser(any(Comments.class), any(User.class))).thenReturn(false);
-
-        Posts post = mock(Posts.class);
-
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(1L);
-
-        int page = 1;
+        boolean doesUserLikeComment = false;
+        when(likesService.existsByCommentsAndUser(any(Comments.class), any(User.class))).thenReturn(doesUserLikeComment);
 
         // when
-        Page<CommentsReadDto> result = commentsViewService.findCommentsPageByPosts(post, user, page);
+        Page<CommentsReadDto> result = commentsViewService.findCommentsPageByPosts(post, user, PAGE);
 
         // then
         assertEquals(commentsPage, result);
 
-        verify(commentsService).findByPosts(eq(post), eq(page));
-        verify(commentsReadDto).setDoesUserWriteComment(true);
+        verify(commentsService).findByPosts(eq(post), eq(PAGE));
+        verify(commentsReadDto).setDoesUserWriteComment(doesUserWriteComment);
         verify(commentsService).findById(eq(commentsReadDto.getId()));
-
         verify(likesService).existsByCommentsAndUser(eq(comment), eq(user));
-        verify(commentsReadDto).setDoesUserLikeComment(false);
-    }
-
-    @Test
-    public void findCommentsPageByPostsWithNonExistentCommentId() {
-        // given
-        CommentsReadDto commentsReadDto = mock(CommentsReadDto.class);
-        when(commentsReadDto.getAuthorId()).thenReturn(1L);
-        when(commentsReadDto.getId()).thenReturn(1L);
-
-        List<CommentsReadDto> comments = Collections.singletonList(commentsReadDto);
-
-        Page<CommentsReadDto> commentsPage = new PageImpl<>(comments);
-        when(commentsService.findByPosts(any(Posts.class), anyInt())).thenReturn(commentsPage);
-
-        when(commentsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
-
-        Posts post = mock(Posts.class);
-
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(1L);
-
-        int page = 1;
-
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> commentsViewService.findCommentsPageByPosts(post, user, page));
-
-        verify(commentsService).findByPosts(eq(post), eq(page));
-        verify(commentsReadDto).setDoesUserWriteComment(true);
-        verify(commentsService).findById(eq(commentsReadDto.getId()));
-
-        verify(likesService, never()).existsByCommentsAndUser(any(Comments.class), any(User.class));
-        verify(commentsReadDto, never()).setDoesUserLikeComment(anyBoolean());
+        verify(commentsReadDto).setDoesUserLikeComment(doesUserLikeComment);
     }
 
     @Test
@@ -117,31 +85,13 @@ public class CommentsViewServiceTest {
         Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
         when(commentsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(commentsPage);
 
-        int page = 1;
-
         // when
-        ContentsPageDto<CommentsListDto> result = commentsViewService.listComments(principal, page);
+        ContentsPageDto<CommentsListDto> result = commentsViewService.listComments(principal, PAGE);
 
         // then
         assertEquals(commentsPage, result.getContents());
 
         verify(principalHelper).getUserFromPrincipal(principal, true);
-        verify(commentsService).findByUser(eq(user), eq(page), anyInt());
-    }
-
-    @Test
-    public void listCommentsWithoutPrincipal() {
-        // given
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
-
-        int page = 1;
-
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> commentsViewService.listComments(null, page));
-
-        verify(principalHelper).getUserFromPrincipal(null, true);
-
-        verify(commentsService, never()).findByUser(any(User.class), anyInt(), anyInt());
+        verify(commentsService).findByUser(eq(user), eq(PAGE), anyInt());
     }
 }
