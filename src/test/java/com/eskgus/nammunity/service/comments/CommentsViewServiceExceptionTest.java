@@ -9,7 +9,6 @@ import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,8 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -95,11 +93,5 @@ public class CommentsViewServiceExceptionTest {
 
         verify(principalHelper).getUserFromPrincipal(principal, true);
         verify(commentsService, never()).findByUser(any(User.class), eq(PAGE), anyInt());
-    }
-
-    private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, executable);
-
-        assertEquals(exceptionMessage.getMessage(), exception.getMessage());
     }
 }

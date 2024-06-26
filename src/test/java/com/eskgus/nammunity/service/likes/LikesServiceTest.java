@@ -17,9 +17,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,166 +47,102 @@ public class LikesServiceTest {
     @InjectMocks
     private LikesService likesService;
 
+    private static final Long ID = 1L;
+
     @Test
     public void savePostLikes() {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(1L);
-        when(postsService.findById(anyLong())).thenReturn(post);
+        Posts post = givePost();
 
         testSaveLikes(post.getId(), null);
 
         verify(postsService).findById(eq(post.getId()));
-        verify(commentsService, never()).findById(anyLong());
     }
 
     @Test
     public void saveCommentLikes() {
-        Comments comment = mock(Comments.class);
-        when(comment.getId()).thenReturn(1L);
-        when(commentsService.findById(anyLong())).thenReturn(comment);
+        Comments comment = giveComment();
 
         testSaveLikes(null, comment.getId());
 
-        verify(postsService, never()).findById(anyLong());
         verify(commentsService).findById(eq(comment.getId()));
     }
 
     @Test
-    public void saveWithoutPrincipal() {
+    public void deleteLikesByPostId() {
         // given
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
+        Posts post = givePost();
+
+        doNothing().when(likesRepository).deleteByPosts(any(Posts.class), any(User.class));
 
         // when/then
-        assertThrows(IllegalArgumentException.class, () -> likesService.save(1L, null, null));
-
-        verify(principalHelper).getUserFromPrincipal(null, true);
-
-        verify(postsService, never()).findById(anyLong());
-        verify(commentsService, never()).findById(anyLong());
-        verify(likesRepository, never()).save(any(Likes.class));
-    }
-
-    @Test
-    public void savePostLikesWithNonExistentPostId() {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(1L);
-        when(postsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
-
-        testSaveLikesWithNonExistentContentId(post.getId(), null);
-
-        verify(postsService).findById(eq(post.getId()));
-
-        verify(commentsService, never()).findById(anyLong());
-    }
-
-    @Test
-    public void saveCommentLikesWithNonExistentPostId() {
-        Comments comment = mock(Comments.class);
-        when(comment.getId()).thenReturn(1L);
-        when(commentsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
-
-        testSaveLikesWithNonExistentContentId(null, comment.getId());
-
-        verify(commentsService).findById(eq(comment.getId()));
-
-        verify(postsService, never()).findById(anyLong());
-    }
-
-    @Test
-    public void deletePostLikes() {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(1L);
-        when(postsService.findById(anyLong())).thenReturn(post);
-
-        User user = testDeleteByContentId(post.getId(), null);
+        User user = testDeleteLikesByContentId(post.getId(), null);
 
         verify(postsService).findById(eq(post.getId()));
         verify(likesRepository).deleteByPosts(eq(post), eq(user));
     }
 
     @Test
-    public void deleteCommentLikes() {
-        Comments comment = mock(Comments.class);
-        when(comment.getId()).thenReturn(1L);
-        when(commentsService.findById(anyLong())).thenReturn(comment);
+    public void deleteLikesByCommentId() {
+        // given
+        Comments comment = giveComment();
 
-        User user = testDeleteByContentId(null, comment.getId());
+        doNothing().when(likesRepository).deleteByComments(any(Comments.class), any(User.class));
+
+        // when/then
+        User user = testDeleteLikesByContentId(null, comment.getId());
 
         verify(commentsService).findById(eq(comment.getId()));
         verify(likesRepository).deleteByComments(eq(comment), eq(user));
     }
 
     @Test
-    public void deleteWithoutPrincipal() {
+    public void deleteSelectedLikes() {
         // given
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
+        List<Likes> likes = giveLikes();
 
-        // when/then
-        assertThrows(IllegalArgumentException.class,
-                () -> likesService.deleteByContentId(1L, null, null));
+        List<Long> likeIds = likes.stream().map(Likes::getId).toList();
 
-        verify(principalHelper).getUserFromPrincipal(null, true);
+        when(likesRepository.findById(anyLong())).thenAnswer(invocation -> {
+            Long id = invocation.getArgument(0);
+            return likes.stream().filter(like -> id.equals(like.getId())).findFirst();
+        });
 
-        verify(postsService, never()).findById(anyLong());
-        verify(likesRepository, never()).deleteByPosts(any(Posts.class), any(User.class));
-        verify(commentsService, never()).findById(anyLong());
-        verify(likesRepository, never()).deleteByComments(any(Comments.class), any(User.class));
-    }
+        doNothing().when(likesRepository).delete(any(Likes.class));
 
-    @Test
-    public void deletePostLikesWithNonExistentPostId() {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(1L);
-        when(postsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
+        // when
+        likesService.deleteSelectedLikes(likeIds);
 
-        testDeleteByNonExistentContentId(post.getId(), null);
-
-        verify(postsService).findById(post.getId());
-
-        verify(commentsService, never()).findById(anyLong());
-    }
-
-    @Test
-    public void deleteCommentLikesWithNonExistentCommentId() {
-        Comments comment = mock(Comments.class);
-        when(comment.getId()).thenReturn(1L);
-        when(commentsService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
-
-        testDeleteByNonExistentContentId(null, comment.getId());
-
-        verify(commentsService).findById(eq(comment.getId()));
-
-        verify(postsService, never()).findById(anyLong());
+        // then
+        verify(likesRepository, times(likeIds.size())).findById(anyLong());
+        verify(likesRepository, times(likes.size())).delete(any(Likes.class));
     }
 
     @Test
     public void findLikesByUser() {
-        // given
-        User user = mock(User.class);
+        User user = testFindLikesByUser(likesRepository::findByUser);
 
-        BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
-
-        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
-        when(finder.apply(any(User.class), any(Pageable.class))).thenReturn(likesPage);
-
-        int page = 1;
-        int size = 4;
-
-        // when
-        Page<LikesListDto> result = likesService.findLikesByUser(user, finder, page, size);
-
-        // then
-        assertEquals(likesPage, result);
-
-        verify(finder).apply(eq(user), any(Pageable.class));
+        verify(likesRepository).findByUser(eq(user), any(Pageable.class));
     }
 
     @Test
-    public void existsByPostsAndUser() {
+    public void findPostLikesByUser() {
+        User user = testFindLikesByUser(likesRepository::findPostLikesByUser);
+
+        verify(likesRepository).findPostLikesByUser(eq(user), any(Pageable.class));
+    }
+
+    @Test
+    public void findCommentLikesByUser() {
+        User user = testFindLikesByUser(likesRepository::findCommentLikesByUser);
+
+        verify(likesRepository).findCommentLikesByUser(eq(user), any(Pageable.class));
+    }
+
+    @Test
+    public void existsLikesByPostsAndUser() {
         // given
         Posts post = mock(Posts.class);
+
         User user = mock(User.class);
 
         when(likesRepository.existsByPostsAndUser(any(Posts.class), any(User.class))).thenReturn(true);
@@ -218,9 +157,10 @@ public class LikesServiceTest {
     }
 
     @Test
-    public void existsByCommentsAndUser() {
+    public void existsLikesByCommentsAndUser() {
         // given
         Comments comment = mock(Comments.class);
+
         User user = mock(User.class);
 
         when(likesRepository.existsByCommentsAndUser(any(Comments.class), any(User.class))).thenReturn(true);
@@ -234,14 +174,52 @@ public class LikesServiceTest {
         verify(likesRepository).existsByCommentsAndUser(eq(comment), eq(user));
     }
 
-    private void testSaveLikes(Long postId, Long commentId) {
-        // given
+    private Posts givePost() {
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(ID);
+        when(postsService.findById(anyLong())).thenReturn(post);
+
+        return post;
+    }
+
+    private Comments giveComment() {
+        Comments comment = mock(Comments.class);
+        when(comment.getId()).thenReturn(ID);
+        when(commentsService.findById(anyLong())).thenReturn(comment);
+
+        return comment;
+    }
+
+    private Pair<Principal, User> givePrincipal() {
         Principal principal = mock(Principal.class);
         User user = mock(User.class);
         when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
+        return Pair.of(principal, user);
+    }
+
+    private List<Likes> giveLikes() {
+        List<Likes> likes = new ArrayList<>();
+        for (long i = 0; i < 3; i++) {
+            Likes like = giveLike(ID + i);
+            likes.add(like);
+        }
+
+        return likes;
+    }
+
+    private Likes giveLike(Long id) {
         Likes like = mock(Likes.class);
-        when(like.getId()).thenReturn(1L);
+        when(like.getId()).thenReturn(id);
+
+        return like;
+    }
+
+    private void testSaveLikes(Long postId, Long commentId) {
+        // given
+        Principal principal = givePrincipal().getFirst();
+
+        Likes like = giveLike(ID);
         when(likesRepository.save(any(Likes.class))).thenReturn(like);
 
         // when
@@ -254,25 +232,9 @@ public class LikesServiceTest {
         verify(likesRepository).save(any(Likes.class));
     }
 
-    private void testSaveLikesWithNonExistentContentId(Long postId, Long commentId) {
-        // given
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
-
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> likesService.save(postId, commentId, principal));
-
-        verify(principalHelper).getUserFromPrincipal(principal, true);
-
-        verify(likesRepository, never()).save(any(Likes.class));
-    }
-
-    private User testDeleteByContentId(Long postId, Long commentId) {
-        // given
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+    private User testDeleteLikesByContentId(Long postId, Long commentId) {
+        Pair<Principal, User> pair = givePrincipal();
+        Principal principal = pair.getFirst();
 
         // when
         likesService.deleteByContentId(postId, commentId, principal);
@@ -280,22 +242,25 @@ public class LikesServiceTest {
         // then
         verify(principalHelper).getUserFromPrincipal(principal, true);
 
-        return user;
+        return pair.getSecond();
     }
 
-    private void testDeleteByNonExistentContentId(Long postId, Long commentId) {
+    private User testFindLikesByUser(BiFunction<User, Pageable, Page<LikesListDto>> finder) {
         // given
-        Principal principal = mock(Principal.class);
         User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
-        // when/then
-        assertThrows(IllegalArgumentException.class,
-                () -> likesService.deleteByContentId(postId, commentId, principal));
+        int page = 1;
+        int size = 3;
 
-        verify(principalHelper).getUserFromPrincipal(principal, true);
+        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
+        when(finder.apply(any(User.class), any(Pageable.class))).thenReturn(likesPage);
 
-        verify(likesRepository, never()).deleteByPosts(any(Posts.class), any(User.class));
-        verify(likesRepository, never()).deleteByComments(any(Comments.class), any(User.class));
+        // when
+        Page<LikesListDto> result = likesService.findLikesByUser(user, finder, page, size);
+
+        // then
+        assertEquals(likesPage, result);
+
+        return user;
     }
 }

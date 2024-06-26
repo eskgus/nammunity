@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.function.BiFunction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
@@ -43,10 +42,11 @@ public class LikesViewServiceTest {
         User user = mock(User.class);
         when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
-        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
-        when(likesService.findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt())).thenReturn(likesPage);
-
         int page = 1;
+
+        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
+        when(likesService.findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt()))
+                .thenReturn(likesPage);
 
         // when
         ContentsPageDto<LikesListDto> result = likesViewService.listLikes(finder, principal, page);
@@ -56,23 +56,5 @@ public class LikesViewServiceTest {
 
         verify(principalHelper).getUserFromPrincipal(principal, true);
         verify(likesService).findLikesByUser(eq(user), eq(finder), eq(page), anyInt());
-    }
-
-    @Test
-    public void listLikesWithoutPrincipal() {
-        // given
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
-
-        BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
-
-        int page = 1;
-
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> likesViewService.listLikes(finder, null, page));
-
-        verify(principalHelper).getUserFromPrincipal(null, true);
-
-        verify(likesService, never()).findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt());
     }
 }

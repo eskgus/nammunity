@@ -11,7 +11,6 @@ import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,8 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -180,16 +178,10 @@ public class CommentsServiceExceptionTest {
     }
 
     private void testDeleteSelectedCommentsException(List<Long> commentIds,
-                                                       ExceptionMessages exceptionMessage, VerificationMode mode) {
+                                                     ExceptionMessages exceptionMessage, VerificationMode mode) {
         assertIllegalArgumentException(() -> commentsService.deleteSelectedComments(commentIds), exceptionMessage);
 
         verify(commentsRepository, mode).findById(anyLong());
         verify(commentsRepository, never()).delete(any(Comments.class));
-    }
-
-    private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, executable);
-
-        assertEquals(exceptionMessage.getMessage(), exception.getMessage());
     }
 }
