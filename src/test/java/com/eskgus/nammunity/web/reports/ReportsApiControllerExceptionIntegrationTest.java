@@ -111,12 +111,12 @@ public class ReportsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithMockUser(username = "username1")
-    public void saveContentReportsWithNonExistentReasonId() throws Exception {
+    public void saveContentReportsWithNonExistentReason() throws Exception {
         // given
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(reasonsRepository.count() + 1, POSTS);
 
         // when/then
-        testSaveContentReportsThrowsIllegalArgumentException(requestDto, REASON_ID_NOT_FOUND);
+        testSaveContentReportsThrowsIllegalArgumentException(requestDto, REASON_NOT_FOUND);
     }
 
     @Test

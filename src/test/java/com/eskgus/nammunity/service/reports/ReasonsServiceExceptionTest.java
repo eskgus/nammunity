@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.REASON_ID_NOT_FOUND;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.REASON_NOT_FOUND;
 import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -21,12 +21,12 @@ public class ReasonsServiceExceptionTest {
     private ReasonsService reasonsService;
 
     @Test
-    public void findReasonsByIdWithNonExistentReasonId() {
+    public void findReasonsByIdWithNonExistentReason() {
         // given
         Long id = 1L;
 
         // when/then
-        assertIllegalArgumentException(() -> reasonsService.findById(id), REASON_ID_NOT_FOUND);
+        assertIllegalArgumentException(() -> reasonsService.findById(id), REASON_NOT_FOUND);
 
         verify(reasonsRepository).findById(eq(id));
     }

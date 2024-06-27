@@ -77,7 +77,7 @@ public enum ExceptionMessages {
     EMPTY_CONTENT_IDS("삭제할 항목을 선택하세요."),
 
     // report
-    REASON_ID_NOT_FOUND("해당 신고 사유가 없습니다."),
+    REASON_NOT_FOUND("해당 신고 사유가 없습니다."),
     TYPE_NOT_FOUND("해당 분류가 없습니다."),
     USER_REPORT_SUMMARY_NOT_FOUND("신고 요약 내역이 존재하지 않는 회원입니다."),
 
