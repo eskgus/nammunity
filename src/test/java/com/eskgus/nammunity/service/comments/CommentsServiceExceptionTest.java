@@ -115,12 +115,12 @@ public class CommentsServiceExceptionTest {
         // given
         List<Long> commentIds = Arrays.asList(ID, ID + 1, ID + 2);
 
-        ExceptionMessages exceptionMessages = COMMENT_NOT_FOUND;
+        ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
         when(commentsRepository.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessages.getMessage()));
+                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
 
         // when/then
-        testDeleteSelectedCommentsException(commentIds, exceptionMessages, times(1));
+        testDeleteSelectedCommentsException(commentIds, exceptionMessage, times(1));
     }
 
     @Test

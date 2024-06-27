@@ -8,21 +8,24 @@ import com.eskgus.nammunity.helper.*;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
+import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.verification.VerificationMode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.security.Principal;
-import java.util.Collections;
+import java.util.*;
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
+import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -37,17 +40,20 @@ public class PostsServiceTest {
     @InjectMocks
     private PostsService postsService;
 
+    private static final Long ID = 1L;
+    private static final int PAGE = 1;
+    private static final int SIZE = 3;
+
     @Test
-    public void save() {
+    public void savePosts() {
         // given
-        PostsSaveDto requestDto = PostsSaveDto.builder().title("title").content("content").build();
+        PostsSaveDto requestDto = PostsSaveDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
         Principal principal = mock(Principal.class);
         User user = mock(User.class);
         when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
 
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(1L);
+        Posts post = givePost(ID);
         when(postsRepository.save(any(Posts.class))).thenReturn(post);
 
         // when
@@ -61,31 +67,99 @@ public class PostsServiceTest {
     }
 
     @Test
-    public void saveWithoutPrincipal() {
+    public void updatePosts() {
         // given
-        PostsSaveDto requestDto = PostsSaveDto.builder().title("title").content("content").build();
+        Posts post = givePost(ID);
 
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
+        PostsUpdateDto requestDto = PostsUpdateDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> postsService.save(requestDto, null));
+        when(postsRepository.findById(anyLong())).thenReturn(Optional.of(post));
 
-        verify(principalHelper).getUserFromPrincipal(null, true);
+        // when
+        Long result = postsService.update(post.getId(), requestDto);
 
-        verify(postsRepository, never()).save(any(Posts.class));
+        // then
+        assertEquals(post.getId(), result);
+
+        verify(postsRepository).findById(eq(post.getId()));
+        verify(post).update(eq(requestDto.getTitle()), eq(requestDto.getContent()));
     }
 
     @Test
-    public void findAllDesc() {
+    public void deleteSelectedPosts() {
+        // given
+        List<Posts> posts = givePosts();
+
+        List<Long> postIds = posts.stream().map(Posts::getId).toList();
+
+        when(postsRepository.findById(anyLong())).thenAnswer(invocation -> {
+            Long id = invocation.getArgument(0);
+            return posts.stream().filter(post -> id.equals(post.getId())).findFirst();
+        });
+
+        doNothing().when(postsRepository).delete(any(Posts.class));
+
+        // when
+        postsService.deleteSelectedPosts(postIds);
+
+        // then
+        verify(postsRepository, times(postIds.size())).findById(anyLong());
+        verify(postsRepository, times(posts.size())).delete(any(Posts.class));
+    }
+
+    @Test
+    public void deletePosts() {
+        // given
+        Posts post = givePost(ID);
+        when(postsRepository.findById(anyLong())).thenReturn(Optional.of(post));
+
+        doNothing().when(postsRepository).delete(any(Posts.class));
+
+        // when
+        postsService.delete(post.getId());
+
+        // then
+        verify(postsRepository).findById(eq(post.getId()));
+        verify(postsRepository).delete(eq(post));
+    }
+
+    @Test
+    public void findPostsById() {
+        // given
+        Posts post = givePost(ID);
+        when(postsRepository.findById(anyLong())).thenReturn(Optional.of(post));
+
+        // when
+        Posts result = postsService.findById(post.getId());
+
+        // then
+        assertEquals(post, result);
+
+        verify(postsRepository).findById(eq(post.getId()));
+    }
+
+    @Test
+    public void countView() {
+        // given
+        Posts post = mock(Posts.class);
+
+        doNothing().when(post).countView();
+
+        // when
+        postsService.countView(post);
+
+        // then
+        verify(post).countView();
+    }
+
+    @Test
+    public void findAllPostsDesc() {
         // given
         Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
         when(postsRepository.findAllDesc(any(Pageable.class))).thenReturn(postsPage);
 
-        int page = 1;
-
         // when
-        ContentsPageDto<PostsListDto> result = postsService.findAllDesc(page);
+        ContentsPageDto<PostsListDto> result = postsService.findAllDesc(PAGE);
 
         // then
         assertEquals(postsPage, result.getContents());
@@ -94,17 +168,15 @@ public class PostsServiceTest {
     }
 
     @Test
-    public void findByUser() {
+    public void findPostsByUser() {
         // given
+        User user = mock(User.class);
+
         Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
         when(postsRepository.findByUser(any(User.class), any(Pageable.class))).thenReturn(postsPage);
 
-        User user = mock(User.class);
-        int page= 1;
-        int size = 4;
-
         // when
-        Page<PostsListDto> result = postsService.findByUser(user, page, size);
+        Page<PostsListDto> result = postsService.findByUser(user, PAGE, SIZE);
 
         // then
         assertEquals(postsPage, result);
@@ -113,47 +185,83 @@ public class PostsServiceTest {
     }
 
     @Test
-    public void searchByTitle() {
-        String keywords = testSearch(postsRepository::searchByTitle, SearchType.TITLE.getKey());
-
-        verify(postsRepository).searchByTitle(eq(keywords), any(Pageable.class));
-        verify(postsRepository, never()).searchByContent(anyString(), any(Pageable.class));
-        verify(postsRepository, never()).searchByTitleAndContent(anyString(), any(Pageable.class));
-    }
-
-    @Test
-    public void searchByContent() {
-        String keywords = testSearch(postsRepository::searchByContent, SearchType.CONTENT.getKey());
-
-        verify(postsRepository, never()).searchByTitle(anyString(), any(Pageable.class));
-        verify(postsRepository).searchByContent(eq(keywords), any(Pageable.class));
-        verify(postsRepository, never()).searchByTitleAndContent(anyString(), any(Pageable.class));
-    }
-
-    @Test
-    public void searchByTitleAndContent() {
-        String keywords = testSearch(postsRepository::searchByTitleAndContent, SearchType.TITLE_AND_CONTENT.getKey());
-
-        verify(postsRepository, never()).searchByTitle(anyString(), any(Pageable.class));
-        verify(postsRepository, never()).searchByContent(anyString(), any(Pageable.class));
-        verify(postsRepository).searchByTitleAndContent(eq(keywords), any(Pageable.class));
-    }
-
-    private String testSearch(BiFunction<String, Pageable, Page<PostsListDto>> searcher, String searchBy) {
+    public void countPostsByUser() {
         // given
+        User user = mock(User.class);
+
+        long count = 10;
+        when(postsRepository.countByUser(any(User.class))).thenReturn(count);
+
+        // when
+        long result = postsService.countByUser(user);
+
+        // then
+        assertEquals(count, result);
+
+        verify(postsRepository).countByUser(eq(user));
+    }
+
+    @Test
+    public void searchPostsByTitle() {
+        testSearchPosts(SearchType.TITLE, postsRepository::searchByTitle);
+    }
+
+    @Test
+    public void searchPostsByContent() {
+        testSearchPosts(SearchType.CONTENT, postsRepository::searchByContent);
+    }
+
+    @Test
+    public void searchPostsByTitleAndContent() {
+        testSearchPosts(SearchType.TITLE_AND_CONTENT, postsRepository::searchByTitleAndContent);
+    }
+
+    private List<Posts> givePosts() {
+        List<Posts> posts = new ArrayList<>();
+        for (long i = 0; i < 3; i++) {
+            Posts post = givePost(ID + i);
+            posts.add(post);
+        }
+
+        return posts;
+    }
+
+    private Posts givePost(Long id) {
+        Posts post = mock(Posts.class);
+        when(post.getId()).thenReturn(id);
+
+        return post;
+    }
+
+    private void testSearchPosts(SearchType searchType, BiFunction<String, Pageable, Page<PostsListDto>> searcher) {
+        // given
+        String keywords = "keyword";
+
         Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
         when(searcher.apply(anyString(), any(Pageable.class))).thenReturn(postsPage);
 
-        String keywords = "keyword";
-        int page = 1;
-        int size = 4;
+        List<VerificationMode> modes = setModes(searchType);
 
         // when
-        Page<PostsListDto> result = postsService.search(keywords, searchBy, page, size);
+        Page<PostsListDto> result = postsService.search(keywords, searchType.getKey(), PAGE, SIZE);
 
         // then
         assertEquals(postsPage, result);
 
-        return keywords;
+        verify(postsRepository, modes.get(0)).searchByTitle(eq(keywords), any(Pageable.class));
+        verify(postsRepository, modes.get(1)).searchByContent(eq(keywords), any(Pageable.class));
+        verify(postsRepository, modes.get(2)).searchByTitleAndContent(eq(keywords), any(Pageable.class));
+    }
+
+    private List<VerificationMode> setModes(SearchType searchType) {
+        List<VerificationMode> modes = new ArrayList<>(Collections.nCopies(3, never()));
+
+        switch (searchType) {
+            case TITLE -> modes.set(0, times(1));
+            case CONTENT -> modes.set(1, times(1));
+            case TITLE_AND_CONTENT -> modes.set(2, times(1));
+        }
+
+        return modes;
     }
 }

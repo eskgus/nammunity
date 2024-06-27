@@ -10,20 +10,20 @@ import static com.eskgus.nammunity.util.DateTimeUtil.formatModifiedDate;
 
 @Getter
 public class PostsReadDto {
-    private Long id;
+    private final Long id;
     private String author;
     private Long authorId;
-    private String title;
-    private String content;
-    private String createdDate;
-    private String modifiedDate;
-    private int view;
-    private boolean doesUserWritePost;
-    private int likes;
-    private boolean doesUserLikePost;
+    private final String title;
+    private final String content;
+    private final String createdDate;
+    private final String modifiedDate;
+    private final int view;
+    private final boolean postedByUser;
+    private final int likes;
+    private final boolean likedByUser;
 
     @Builder
-    public PostsReadDto(Posts post, boolean doesUserWritePost, boolean doesUserLikePost) {
+    public PostsReadDto(Posts post, boolean postedByUser, boolean likedByUser) {
         this.id = post.getId();
         generateAuthor(post.getUser());
         this.title = post.getTitle();
@@ -31,9 +31,9 @@ public class PostsReadDto {
         this.createdDate = formatDateTime(post.getCreatedDate());
         this.modifiedDate = formatModifiedDate(post.getCreatedDate(), post.getModifiedDate());
         this.view = post.getView();
-        this.doesUserWritePost = doesUserWritePost;
+        this.postedByUser = postedByUser;
         this.likes = post.getLikes().size();
-        this.doesUserLikePost = doesUserLikePost;
+        this.likedByUser = likedByUser;
     }
 
     private void generateAuthor(User user) {

@@ -19,8 +19,8 @@
                     <div class="btm-area">
                         <div class="author dropdown" id="author" data-toggle="dropdown">{{author}}
                             <ul class="dropdown-menu">
-                                <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first{{#admin}} last{{/admin}}{{^admin}}{{#doesUserWritePost}} last{{/doesUserWritePost}}{{/admin}}" name="btn-history">활동 내역</a></li>
-                                {{^admin}}{{^doesUserWritePost}}<li><a role="button" class="last" name="btn-report">신고</a></li>{{/doesUserWritePost}}{{/admin}}
+                                <li><a href="/users/activity-history/posts/{{authorId}}" role="button" class="first{{#admin}} last{{/admin}}{{^admin}}{{#postedByUser}} last{{/postedByUser}}{{/admin}}" name="btn-history">활동 내역</a></li>
+                                {{^admin}}{{^postedByUser}}<li><a role="button" class="last" name="btn-report">신고</a></li>{{/postedByUser}}{{/admin}}
                             </ul>
                         </div>
                         <div class="view">
@@ -38,7 +38,7 @@
                 <div class="btn-area">
                     <a role="button" class="btn" style="float: left;" href="/">목록</a>
                     <button id="btn-posts-like" type="button" class="img-btn">
-                        <img class="like_d {{#doesUserLikePost}}like_s_d{{/doesUserLikePost}}" alt="좋아요">
+                        <img class="like_d {{#likedByUser}}like_s_d{{/likedByUser}}" alt="좋아요">
                     </button>
                     <span class="sum">{{likes}}</span>
                     <ul class="hidden-btn">
@@ -46,13 +46,13 @@
                             <a class="btn dropdown-toggle" data-toggle="dropdown">∙∙∙</a>
                             <ul class="dropdown-menu">
                                 {{^admin}}
-                                    {{#doesUserWritePost}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
-                                    <li><a role="button" class="last" id="btn-delete">삭제</a></li>{{/doesUserWritePost}}
-                                    {{^doesUserWritePost}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/doesUserWritePost}}
+                                    {{#postedByUser}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>
+                                    <li><a role="button" class="last" id="btn-delete">삭제</a></li>{{/postedByUser}}
+                                    {{^postedByUser}}<li><a role="button" class="first last" name="btn-report">신고</a></li>{{/postedByUser}}
                                 {{/admin}}
                                 {{#admin}}
-                                    {{#doesUserWritePost}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>{{/doesUserWritePost}}
-                                    <li><a role="button" class="{{^doesUserWritePost}}first {{/doesUserWritePost}}last" id="btn-delete">삭제</a></li>
+                                    {{#likedByUser}}<li><a role="button" class="first" href="/posts/update/{{id}}">수정</a></li>{{/likedByUser}}
+                                    <li><a role="button" class="{{^postedByUser}}first {{/postedByUser}}last" id="btn-delete">삭제</a></li>
                                 {{/admin}}
                             </ul>
                         </li>

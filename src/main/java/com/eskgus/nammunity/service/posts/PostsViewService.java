@@ -69,7 +69,7 @@ public class PostsViewService {
         boolean doesUserLikePost = likesService.existsByPostsAndUser(post, user);
 
         return PostsReadDto.builder()
-                .post(post).doesUserWritePost(doesUserWritePost).doesUserLikePost(doesUserLikePost).build();
+                .post(post).postedByUser(doesUserWritePost).likedByUser(doesUserLikePost).build();
     }
 
     private boolean doesUserWritePost(User user, Long postAuthorId) {
