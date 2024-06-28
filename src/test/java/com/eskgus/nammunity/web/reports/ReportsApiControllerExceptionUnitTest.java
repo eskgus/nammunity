@@ -158,8 +158,8 @@ public class ReportsApiControllerExceptionUnitTest {
         verify(reportsService, mode).saveContentReports(any(ContentReportsSaveDto.class), any(Principal.class));
     }
 
-    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                                ResultMatcher... resultMatchers) throws Exception {
+    private <Dto> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, Dto requestDto,
+                                                  ResultMatcher... resultMatchers) throws Exception {
         mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 }

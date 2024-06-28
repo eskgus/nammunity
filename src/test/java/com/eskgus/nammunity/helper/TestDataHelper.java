@@ -292,8 +292,8 @@ public class TestDataHelper {
         return bannedUsersRepository.save(bannedUser).getId();
     }
 
-    public <T, U> T assertOptionalAndGetEntity(Function<U, Optional<T>> finder, U content) {
-        Optional<T> optional = finder.apply(content);
+    public <Entity, Param> Entity assertOptionalAndGetEntity(Function<Param, Optional<Entity>> finder, Param content) {
+        Optional<Entity> optional = finder.apply(content);
         assertThat(optional).isPresent();
         return optional.get();
     }

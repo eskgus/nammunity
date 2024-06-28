@@ -1,8 +1,8 @@
 package com.eskgus.nammunity.converter;
 
-public interface EntityConverterForTest<T, U> { // U: entity, T: listDto
-    Long extractEntityId(U entity);
-    Long extractUserId(U entity);
-    Long extractDtoId(T dto);
-    T generateDto(U entity);
+public interface EntityConverterForTest<Dto, Entity> {
+    Long extractEntityId(Entity entity);
+    Long extractUserId(Entity entity);
+    Long extractDtoId(Dto dto);
+    Dto generateDto(Entity entity);
 }

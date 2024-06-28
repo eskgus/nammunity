@@ -150,7 +150,7 @@ public class LikesApiControllerIntegrationTest {
         mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, field, value);
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+    private <Entity> Entity assertOptionalAndGetEntity(Function<Long, Optional<Entity>> finder, Long contentId) {
         return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

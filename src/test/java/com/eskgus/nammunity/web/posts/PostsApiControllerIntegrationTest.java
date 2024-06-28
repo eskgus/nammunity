@@ -121,11 +121,11 @@ public class PostsApiControllerIntegrationTest {
         return postId;
     }
 
-    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+    private <Dto> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, Dto requestDto) throws Exception {
         mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+    private <Entity> Entity assertOptionalAndGetEntity(Function<Long, Optional<Entity>> finder, Long contentId) {
         return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

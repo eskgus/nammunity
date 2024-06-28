@@ -155,7 +155,8 @@ public class CommentsServiceExceptionTest {
         return new CommentsSaveDto(CONTENT, postId);
     }
 
-    private <T> void throwIllegalArgumentException(Function<Long, T> finder, ExceptionMessages exceptionMessage) {
+    private <Entity> void throwIllegalArgumentException(Function<Long, Entity> finder,
+                                                        ExceptionMessages exceptionMessage) {
         ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 

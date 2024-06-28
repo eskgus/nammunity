@@ -246,7 +246,8 @@ public class ReportsServiceExceptionTest {
         return ServiceTestUtil.givePost(postsService::findById);
     }
 
-    private <T, U> void throwIllegalArgumentException(Function<U, T> finder, ExceptionMessages exceptionMessage) {
+    private <Entity, ReturnType> void throwIllegalArgumentException(Function<ReturnType, Entity> finder,
+                                                                    ExceptionMessages exceptionMessage) {
         ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 
@@ -277,9 +278,9 @@ public class ReportsServiceExceptionTest {
         verifyFindContents(null, contentIds, never());
     }
 
-    private <T> void testSaveReportsThrowsContentNotFoundException(Function<Long, T> finder,
-                                                                   Pair<ExceptionMessages, ContentType> pair,
-                                                                   ContentReportsSaveDto requestDto) {
+    private <Entity> void testSaveReportsThrowsContentNotFoundException(Function<Long, Entity> finder,
+                                                                        Pair<ExceptionMessages, ContentType> pair,
+                                                                        ContentReportsSaveDto requestDto) {
         // given
         Principal principal = givePrincipal();
 
@@ -313,9 +314,9 @@ public class ReportsServiceExceptionTest {
         return Arrays.asList(requestDto.getPostsId(), requestDto.getCommentsId(), requestDto.getUserId());
     }
 
-    private <T> void testListReportDetailsThrowsNotFoundContentException(Function<Long, T> finder,
-                                                                         ContentType contentType,
-                                                                         ExceptionMessages exceptionMessage) {
+    private <Entity> void testListReportDetailsThrowsNotFoundContentException(Function<Long, Entity> finder,
+                                                                              ContentType contentType,
+                                                                              ExceptionMessages exceptionMessage) {
         // given
         ContentReportDetailRequestDto requestDto = createReportDetailRequestDto(contentType);
 

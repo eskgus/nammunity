@@ -180,7 +180,7 @@ public class ReportSummaryServiceTest {
         verifyDeleteByContents(posts.size(), comments.size(), users.size());
     }
 
-    private <T> ContentReportSummarySaveDto createSummarySaveDto(ContentType contentType, T content) {
+    private <Entity> ContentReportSummarySaveDto createSummarySaveDto(ContentType contentType, Entity content) {
         Posts post = null;
         Comments comment = null;
         User user = null;
@@ -245,11 +245,12 @@ public class ReportSummaryServiceTest {
         return Pair.of(users, userIds);
     }
 
-    private <U> List<Long> createContentIds(List<U> contents, EntityConverterForTest<?, U> entityConverter) {
+    private <Entity> List<Long> createContentIds(List<Entity> contents,
+                                                 EntityConverterForTest<?, Entity> entityConverter) {
         return ServiceTestUtil.createContentIds(contents, entityConverter);
     }
 
-    private <T> void testSaveContentReportSummary(ContentType contentType, T content) {
+    private <Entity> void testSaveContentReportSummary(ContentType contentType, Entity content) {
         // given
         ContentReportSummary summary = giveSummary();
         when(contentReportSummaryRepository.save(any(ContentReportSummary.class))).thenReturn(summary);
@@ -265,7 +266,7 @@ public class ReportSummaryServiceTest {
         verifySaveOrUpdateContentReportSummary(modePair, content, summaryPair);
     }
 
-    private <T> void testUpdateContentReportSummary(ContentType contentType, T content) {
+    private <Entity> void testUpdateContentReportSummary(ContentType contentType, Entity content) {
         // given
         ContentReportSummary summary = giveSummary();
         when(contentReportSummaryRepository.findByContents(any())).thenReturn(summary);
@@ -281,8 +282,10 @@ public class ReportSummaryServiceTest {
         verifySaveOrUpdateContentReportSummary(modePair, content, summaryPair);
     }
 
-    private <T> ContentReportSummarySaveDto testSaveOrUpdateContentReportSummary(ContentType contentType, T content,
-                                                                                 boolean doesSummaryExist, Long summaryId) {
+    private <Entity> ContentReportSummarySaveDto testSaveOrUpdateContentReportSummary(ContentType contentType,
+                                                                                      Entity content,
+                                                                                      boolean doesSummaryExist,
+                                                                                      Long summaryId) {
         // given
         ContentReportSummarySaveDto requestDto = createSummarySaveDto(contentType, content);
 
@@ -299,9 +302,9 @@ public class ReportSummaryServiceTest {
         return requestDto;
     }
 
-    private <T> void verifySaveOrUpdateContentReportSummary(Pair<VerificationMode, VerificationMode> modePair,
-                                                            T content,
-                                                            Pair<ContentReportSummary, ContentReportSummarySaveDto> summaryPair) {
+    private <Entity> void verifySaveOrUpdateContentReportSummary(Pair<VerificationMode, VerificationMode> modePair,
+                                                                 Entity content,
+                                                                 Pair<ContentReportSummary, ContentReportSummarySaveDto> summaryPair) {
         VerificationMode saveMode = modePair.getFirst();
         VerificationMode updateMode = modePair.getSecond();
 

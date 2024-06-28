@@ -140,12 +140,12 @@ public class UserApiControllerIntegrationTest {
         mockMvcTestHelper.performAndExpectOkWithParam(requestBuilder, field, value);
     }
 
-    private <T> void testUpdate(Fields endpoint, T requestDto) throws Exception {
+    private <Dto> void testUpdate(Fields endpoint, Dto requestDto) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + endpoint.getKey());
         performAndExpectOk(requestBuilder, requestDto);
     }
 
-    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+    private <Dto> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, Dto requestDto) throws Exception {
         mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 }

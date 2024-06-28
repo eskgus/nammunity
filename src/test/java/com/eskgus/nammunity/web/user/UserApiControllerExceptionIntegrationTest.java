@@ -413,7 +413,7 @@ public class UserApiControllerExceptionIntegrationTest {
         mockMvcTestHelper.performAndExpectBadRequestWithParam(requestBuilder, field, value, resultMatchers);
     }
 
-    private <T> void testUpdateThrowsUnauthorized(Fields endpoint, T requestDto) throws Exception {
+    private <Dto> void testUpdateThrowsUnauthorized(Fields endpoint, Dto requestDto) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + endpoint.getKey());
         performAndExpectUnauthorized(requestBuilder, requestDto);
     }
@@ -445,12 +445,12 @@ public class UserApiControllerExceptionIntegrationTest {
         testUpdateException(EMAIL_VALUE, requestDto, resultMatchers);
     }
 
-    private <T> void testUpdateThrowsIllegalArgumentException(T requestDto, String endpoint) throws Exception {
+    private <Dto> void testUpdateThrowsIllegalArgumentException(Dto requestDto, String endpoint) throws Exception {
         ResultMatcher resultMatcher = createResultMatcher();
         testUpdateException(endpoint, requestDto, resultMatcher);
     }
 
-    private <T> void testUpdateException(String endpoint, T requestDto, ResultMatcher... resultMatchers) throws Exception {
+    private <Dto> void testUpdateException(String endpoint, Dto requestDto, ResultMatcher... resultMatchers) throws Exception {
         MockHttpServletRequestBuilder requestBuilder = put(REQUEST_MAPPING + "/" + endpoint);
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
@@ -463,12 +463,12 @@ public class UserApiControllerExceptionIntegrationTest {
         return mockMvcTestHelper.createResultMatcher(USERNAME_NOT_FOUND);
     }
 
-    private <T> void performAndExpectUnauthorized(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+    private <Dto> void performAndExpectUnauthorized(MockHttpServletRequestBuilder requestBuilder, Dto requestDto) throws Exception {
         mockMvcTestHelper.performAndExpectUnauthorized(requestBuilder, requestDto);
     }
 
-    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                                ResultMatcher... resultMatchers) throws Exception {
+    private <Dto> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, Dto requestDto,
+                                                  ResultMatcher... resultMatchers) throws Exception {
         mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 }

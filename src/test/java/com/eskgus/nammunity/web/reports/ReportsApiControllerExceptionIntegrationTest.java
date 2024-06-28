@@ -295,12 +295,12 @@ public class ReportsApiControllerExceptionIntegrationTest {
         return mockMvcTestHelper.createResultMatcher(exceptionMessage);
     }
 
-    private <T> void performAndExpectNotBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+    private <Dto> void performAndExpectNotBadRequest(MockHttpServletRequestBuilder requestBuilder, Dto requestDto) throws Exception {
         mockMvcTestHelper.performAndExpectUnauthorized(requestBuilder, requestDto);
     }
 
-    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                                ResultMatcher... resultMatchers) throws Exception {
+    private <Dto> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, Dto requestDto,
+                                                  ResultMatcher... resultMatchers) throws Exception {
         mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 

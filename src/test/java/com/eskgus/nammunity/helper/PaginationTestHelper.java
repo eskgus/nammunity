@@ -11,42 +11,42 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PaginationTestHelper<T, U> {   // T: dto, U: entity
-    private ContentsPageDto<T> actualContentsPage;
-    private ContentsPageDto<T> expectedContentsPage;
+public class PaginationTestHelper<Dto, Entity> {
+    private ContentsPageDto<Dto> actualContentsPage;
+    private ContentsPageDto<Dto> expectedContentsPage;
 
-    private ContentsPageMoreDto<T> actualContentsPageMore;
-    private ContentsPageMoreDto<T> expectedContentsPageMore;
+    private ContentsPageMoreDto<Dto> actualContentsPageMore;
+    private ContentsPageMoreDto<Dto> expectedContentsPageMore;
 
-    private Page<T> actualContents;
-    private Page<T> expectedContents;
-    private EntityConverterForTest<T, U> entityConverter;
+    private Page<Dto> actualContents;
+    private Page<Dto> expectedContents;
+    private EntityConverterForTest<Dto, Entity> entityConverter;
 
-    public PaginationTestHelper(ContentsPageDto<T> actualContentsPage,
-                                ContentsPageDto<T> expectedContentsPage,
-                                EntityConverterForTest<T, U> entityConverter) {
+    public PaginationTestHelper(ContentsPageDto<Dto> actualContentsPage,
+                                ContentsPageDto<Dto> expectedContentsPage,
+                                EntityConverterForTest<Dto, Entity> entityConverter) {
         this.actualContentsPage = actualContentsPage;
         this.expectedContentsPage = expectedContentsPage;
         generateContentsAndConverter(actualContentsPage.getContents(), expectedContentsPage.getContents(),
                 entityConverter);
     }
 
-    public PaginationTestHelper(Page<T> actualContents, Page<T> expectedContents,
-                                EntityConverterForTest<T, U> entityConverter) {
+    public PaginationTestHelper(Page<Dto> actualContents, Page<Dto> expectedContents,
+                                EntityConverterForTest<Dto, Entity> entityConverter) {
         generateContentsAndConverter(actualContents, expectedContents, entityConverter);
     }
 
-    public PaginationTestHelper(ContentsPageMoreDto<T> actualContentsPageMore,
-                                ContentsPageMoreDto<T> expectedContentsPageMore,
-                                EntityConverterForTest<T, U> entityConverter) {
+    public PaginationTestHelper(ContentsPageMoreDto<Dto> actualContentsPageMore,
+                                ContentsPageMoreDto<Dto> expectedContentsPageMore,
+                                EntityConverterForTest<Dto, Entity> entityConverter) {
         this.actualContentsPageMore = actualContentsPageMore;
         this.expectedContentsPageMore = expectedContentsPageMore;
         generateContentsAndConverter(actualContentsPageMore.getContents(), expectedContentsPageMore.getContents(),
                 entityConverter);
     }
 
-    private void generateContentsAndConverter(Page<T> actualContents, Page<T> expectedContents,
-                                              EntityConverterForTest<T, U> entityConverter) {
+    private void generateContentsAndConverter(Page<Dto> actualContents, Page<Dto> expectedContents,
+                                              EntityConverterForTest<Dto, Entity> entityConverter) {
         this.actualContents = actualContents;
         this.expectedContents = expectedContents;
         this.entityConverter = entityConverter;
@@ -68,24 +68,24 @@ public class PaginationTestHelper<T, U> {   // T: dto, U: entity
         assertThat(actualContents.getNumberOfElements()).isEqualTo(expectedContents.getNumberOfElements());
     }
 
-    private void assertContent(List<T> actualContent, List<T> expectedContent) {
+    private void assertContent(List<Dto> actualContent, List<Dto> expectedContent) {
         assertThat(actualContent.size()).isEqualTo(expectedContent.size());
 
         for (int i = 0; i < actualContent.size(); i++) {
-            T actualDto = actualContent.get(i);
-            T expectedDto = expectedContent.get(i);
+            Dto actualDto = actualContent.get(i);
+            Dto expectedDto = expectedContent.get(i);
             assertThat(entityConverter.extractDtoId(actualDto)).isEqualTo(entityConverter.extractDtoId(expectedDto));
         }
     }
 
     private void assertPages() {
-        PaginationDto<T> actualPages = actualContentsPage.getPages();
-        PaginationDto<T> expectedPages = expectedContentsPage.getPages();
+        PaginationDto<Dto> actualPages = actualContentsPage.getPages();
+        PaginationDto<Dto> expectedPages = expectedContentsPage.getPages();
         assertPaginationDto(actualPages, expectedPages);
         assertDisplayPages(actualPages.getDisplayPages(), expectedPages.getDisplayPages());
     }
 
-    private void assertPaginationDto(PaginationDto<T> actualPages, PaginationDto<T> expectedPages) {
+    private void assertPaginationDto(PaginationDto<Dto> actualPages, PaginationDto<Dto> expectedPages) {
         assertThat(actualPages.getLastPage()).isEqualTo(expectedPages.getLastPage());
         assertThat(actualPages.getNextPage()).isEqualTo(expectedPages.getNextPage());
         assertThat(actualPages.getPreviousPage()).isEqualTo(expectedPages.getPreviousPage());

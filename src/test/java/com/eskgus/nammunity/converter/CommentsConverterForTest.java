@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommentsConverterForTest<T> implements EntityConverterForTest<T, Comments> {
-    private Class<T> classOfDto;
+public class CommentsConverterForTest<Dto> implements EntityConverterForTest<Dto, Comments> {
+    private Class<Dto> dtoType;
 
     @Override
     public Long extractEntityId(Comments entity) {
@@ -22,7 +22,7 @@ public class CommentsConverterForTest<T> implements EntityConverterForTest<T, Co
     }
 
     @Override
-    public Long extractDtoId(T dto) {
+    public Long extractDtoId(Dto dto) {
         if (dto instanceof CommentsListDto) {
             return ((CommentsListDto) dto).getCommentsId();
         } else {
@@ -35,11 +35,11 @@ public class CommentsConverterForTest<T> implements EntityConverterForTest<T, Co
     }
 
     @Override
-    public T generateDto(Comments entity) {
-        if (classOfDto.equals(CommentsListDto.class)) {
-            return (T) new CommentsListDto(entity);
+    public Dto generateDto(Comments entity) {
+        if (dtoType.equals(CommentsListDto.class)) {
+            return (Dto) new CommentsListDto(entity);
         } else {
-            return (T) new CommentsReadDto(entity);
+            return (Dto) new CommentsReadDto(entity);
         }
     }
 }

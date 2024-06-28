@@ -119,12 +119,14 @@ public class ReportSummaryServiceExceptionTest {
                 .postsId(postIds).commentsId(commentIds).userId(userIds).build();
     }
 
-    private <T, U> void throwIllegalArgumentException(Function<U, T> finder, ExceptionMessages exceptionMessage) {
+    private <Entity, ReturnType> void throwIllegalArgumentException(Function<ReturnType, Entity> finder,
+                                                                    ExceptionMessages exceptionMessage) {
         ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 
-    private <T> void testDeleteSelectedSummariesNotFoundContentException(ContentType contentType,
-                                                                         Function<Long, T> finder, ExceptionMessages exceptionMessage) {
+    private <Entity> void testDeleteSelectedSummariesNotFoundContentException(ContentType contentType,
+                                                                              Function<Long, Entity> finder,
+                                                                              ExceptionMessages exceptionMessage) {
         // given
         ContentReportSummaryDeleteDto requestDto = createSummaryDeleteDto(contentType);
 

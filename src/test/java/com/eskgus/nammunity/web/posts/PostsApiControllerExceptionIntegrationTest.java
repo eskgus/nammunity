@@ -335,8 +335,8 @@ public class PostsApiControllerExceptionIntegrationTest {
         return mockMvcTestHelper.createResultMatcher(exceptionMessage);
     }
 
-    private <T> void performAndExpectNotBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                                   ExceptionMessages exceptionMessage) throws Exception {
+    private <Dto> void performAndExpectNotBadRequest(MockHttpServletRequestBuilder requestBuilder, Dto requestDto,
+                                                     ExceptionMessages exceptionMessage) throws Exception {
         if (UNAUTHORIZED.equals(exceptionMessage)) {
             mockMvcTestHelper.performAndExpectUnauthorized(requestBuilder, requestDto);
         } else if (FORBIDDEN.equals(exceptionMessage)) {
@@ -344,12 +344,12 @@ public class PostsApiControllerExceptionIntegrationTest {
         }
     }
 
-    private <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                                ResultMatcher... resultMatchers) throws Exception {
+    private <Dto> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, Dto requestDto,
+                                                  ResultMatcher... resultMatchers) throws Exception {
         mockMvcTestHelper.performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
+    private <Entity> Entity assertOptionalAndGetEntity(Function<Long, Optional<Entity>> finder, Long contentId) {
         return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

@@ -238,7 +238,7 @@ public class ReportsServiceTest {
         when(contentReportsRepository.findReasonByContents(any())).thenReturn(reason);
     }
 
-    private <T> void testSaveContentReports(ContentType contentType, T content, long count) {
+    private <Entity> void testSaveContentReports(ContentType contentType, Entity content, long count) {
         // given
         ContentReportsSaveDto requestDto = createReportsSaveDto(contentType);
 
@@ -280,7 +280,8 @@ public class ReportsServiceTest {
         verifyAfterCountByContents(mode, content);
     }
 
-    private <T, U> ContentReportDetailDto<U> testListContentReportDetails(ContentType contentType, T content) {
+    private <Entity, Dto> ContentReportDetailDto<Dto> testListContentReportDetails(ContentType contentType,
+                                                                                   Entity content) {
         // given
         ContentReportDetailRequestDto requestDto = createReportDetailRequestDto(contentType);
 
@@ -294,7 +295,7 @@ public class ReportsServiceTest {
                 requestDto.getPostId(), requestDto.getCommentId(), requestDto.getUserId());
 
         // when
-        ContentReportDetailDto<U> result = reportsService.listContentReportDetails(requestDto);
+        ContentReportDetailDto<Dto> result = reportsService.listContentReportDetails(requestDto);
 
         // then
         assertEquals(reportDetailsPage, result.getContentsPage().getContents());
@@ -315,7 +316,7 @@ public class ReportsServiceTest {
         verify(userService, modes.get(2)).findById(eq(contentIds.get(2)));
     }
 
-    private <T> void verifyAfterCountByContents(VerificationMode mode, T content) {
+    private <Entity> void verifyAfterCountByContents(VerificationMode mode, Entity content) {
         verify(contentReportsRepository, mode).findReportedDateByContents(eq(content));
         verify(contentReportsRepository, mode).findReporterByContents(eq(content));
         verify(contentReportsRepository, mode).findReasonByContents(eq(content));

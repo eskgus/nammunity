@@ -45,7 +45,7 @@ public class MockMvcTestHelper {
         };
     }
 
-    public <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+    public <Dto> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, Dto requestDto) throws Exception {
         mockMvc.perform(requestBuilder
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto))
@@ -54,8 +54,8 @@ public class MockMvcTestHelper {
                 .andExpect(status().isOk());
     }
 
-    public <T> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, T requestDto,
-                                               ResultMatcher... resultMatchers) throws Exception {
+    public <Dto> void performAndExpectBadRequest(MockHttpServletRequestBuilder requestBuilder, Dto requestDto,
+                                                 ResultMatcher... resultMatchers) throws Exception {
         mockMvc.perform(requestBuilder
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto))
@@ -69,7 +69,7 @@ public class MockMvcTestHelper {
                 });
     }
 
-    public <T> void performAndExpectUnauthorized(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+    public <Dto> void performAndExpectUnauthorized(MockHttpServletRequestBuilder requestBuilder, Dto requestDto) throws Exception {
         ResultMatcher resultMatcher = createResultMatcher(ExceptionMessages.UNAUTHORIZED);
 
         mockMvc.perform(requestBuilder
@@ -81,7 +81,7 @@ public class MockMvcTestHelper {
                 .andExpect(resultMatcher);
     }
 
-    public <T> void performAndExpectForbidden(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+    public <Dto> void performAndExpectForbidden(MockHttpServletRequestBuilder requestBuilder, Dto requestDto) throws Exception {
         ResultMatcher resultMatcher = createResultMatcher(ExceptionMessages.FORBIDDEN);
 
         mockMvc.perform(requestBuilder
@@ -93,8 +93,8 @@ public class MockMvcTestHelper {
                 .andExpect(resultMatcher);
     }
 
-    public <T> void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder,
-                                                Fields field, T value) throws Exception {
+    public <Value> void performAndExpectOkWithParam(MockHttpServletRequestBuilder requestBuilder,
+                                                    Fields field, Value value) throws Exception {
         mockMvc.perform(requestBuilder
                         .param(field.getKey(), value.toString())
                         .with(csrf()))
@@ -102,8 +102,8 @@ public class MockMvcTestHelper {
                 .andExpect(status().isOk());
     }
 
-    public <T> void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder,
-                                                        Fields field, T value, ResultMatcher... resultMatchers) throws Exception {
+    public <Value> void performAndExpectBadRequestWithParam(MockHttpServletRequestBuilder requestBuilder,
+                                                            Fields field, Value value, ResultMatcher... resultMatchers) throws Exception {
         mockMvc.perform(requestBuilder
                         .param(field.getKey(), value.toString())
                         .with(csrf()))
@@ -116,8 +116,8 @@ public class MockMvcTestHelper {
                 });
     }
 
-    public <T> void performAndExpectUnauthorizedWithParam(MockHttpServletRequestBuilder requestBuilder,
-                                                          Fields field, T value) throws Exception {
+    public <Value> void performAndExpectUnauthorizedWithParam(MockHttpServletRequestBuilder requestBuilder,
+                                                              Fields field, Value value) throws Exception {
         ResultMatcher resultMatcher = createResultMatcher(ExceptionMessages.UNAUTHORIZED);
 
         mockMvc.perform(requestBuilder

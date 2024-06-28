@@ -107,7 +107,7 @@ public class CommentsApiControllerUnitTest {
         verify(commentsService).deleteSelectedComments(eq(requestDto));
     }
 
-    private <T> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, T requestDto) throws Exception {
+    private <Dto> void performAndExpectOk(MockHttpServletRequestBuilder requestBuilder, Dto requestDto) throws Exception {
         mockMvcTestHelper.performAndExpectOk(requestBuilder, requestDto);
     }
 }

@@ -93,11 +93,13 @@ public class ServiceTestUtil {
         return Pair.of(principal, user);
     }
 
-    public static <U> List<Long> createContentIds(List<U> contents, EntityConverterForTest<?, U> entityConverter) {
+    public static <Entity> List<Long> createContentIds(List<Entity> contents,
+                                                       EntityConverterForTest<?, Entity> entityConverter) {
         return contents.stream().map(entityConverter::extractEntityId).toList();
     }
 
-    public static <T, U> void throwIllegalArgumentException(Function<U, T> finder, ExceptionMessages exceptionMessage) {
+    public static <Entity, ReturnType> void throwIllegalArgumentException(Function<ReturnType, Entity> finder,
+                                                                          ExceptionMessages exceptionMessage) {
         when(finder.apply(any())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
     }
 
@@ -129,7 +131,7 @@ public class ServiceTestUtil {
         return modes;
     }
 
-    private static <T> void giveContentFinder(Function<Long, T> finder, T content) {
+    private static <Entity> void giveContentFinder(Function<Long, Entity> finder, Entity content) {
         when(finder.apply(anyLong())).thenReturn(content);
     }
 }
