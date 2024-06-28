@@ -69,11 +69,9 @@ public class PostsServiceTest {
     @Test
     public void updatePosts() {
         // given
-        Posts post = givePost(ID);
+        Posts post = givePostFinder();
 
         PostsUpdateDto requestDto = PostsUpdateDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
-
-        when(postsRepository.findById(anyLong())).thenReturn(Optional.of(post));
 
         // when
         Long result = postsService.update(post.getId(), requestDto);
@@ -110,8 +108,7 @@ public class PostsServiceTest {
     @Test
     public void deletePosts() {
         // given
-        Posts post = givePost(ID);
-        when(postsRepository.findById(anyLong())).thenReturn(Optional.of(post));
+        Posts post = givePostFinder();
 
         doNothing().when(postsRepository).delete(any(Posts.class));
 
@@ -126,8 +123,7 @@ public class PostsServiceTest {
     @Test
     public void findPostsById() {
         // given
-        Posts post = givePost(ID);
-        when(postsRepository.findById(anyLong())).thenReturn(Optional.of(post));
+        Posts post = givePostFinder();
 
         // when
         Posts result = postsService.findById(post.getId());
@@ -222,6 +218,13 @@ public class PostsServiceTest {
         }
 
         return posts;
+    }
+
+    private Posts givePostFinder() {
+        Posts post = givePost(ID);
+        giveContentFinder(postsRepository::findById, Long.class, post);
+
+        return post;
     }
 
     private Posts givePost(Long id) {

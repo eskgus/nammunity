@@ -20,7 +20,7 @@ public class TokensService {
     }
 
     @Transactional
-    public void save(Tokens tokens) {
-        tokensRepository.save(tokens);
+    public Long save(Tokens tokens) {
+        return tokensRepository.save(tokens).getId();
     }
 }

@@ -74,8 +74,7 @@ public class CommentsServiceTest {
     @Test
     public void updateComments() {
         // given
-        Comments comment = giveComment(ID);
-        when(commentsRepository.findById(anyLong())).thenReturn(Optional.of(comment));
+        Comments comment = giveCommentFinder();
 
         // when
         Long result = commentsService.update(comment.getId(), CONTENT);
@@ -112,8 +111,7 @@ public class CommentsServiceTest {
     @Test
     public void deleteComments() {
         // given
-        Comments comment = giveComment(ID);
-        when(commentsRepository.findById(anyLong())).thenReturn(Optional.of(comment));
+        Comments comment = giveCommentFinder();
 
         doNothing().when(commentsRepository).delete(any(Comments.class));
 
@@ -128,8 +126,7 @@ public class CommentsServiceTest {
     @Test
     public void findCommentsById() {
         // given
-        Comments comment = giveComment(ID);
-        when(commentsRepository.findById(anyLong())).thenReturn(Optional.of(comment));
+        Comments comment = giveCommentFinder();
 
         // when
         Comments result = commentsService.findById(comment.getId());
@@ -230,6 +227,13 @@ public class CommentsServiceTest {
         }
 
         return comments;
+    }
+
+    private Comments giveCommentFinder() {
+        Comments comment = giveComment(ID);
+        giveContentFinder(commentsRepository::findById, Long.class, comment);
+
+        return comment;
     }
 
     private Comments giveComment(Long id) {

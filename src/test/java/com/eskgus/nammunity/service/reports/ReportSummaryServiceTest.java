@@ -139,7 +139,7 @@ public class ReportSummaryServiceTest {
         User user = mock(User.class);
 
         ContentReportSummary summary = mock(ContentReportSummary.class);
-        when(contentReportSummaryRepository.findByUser(any(User.class))).thenReturn(Optional.of(summary));
+        giveContentFinder(contentReportSummaryRepository::findByUser, User.class, summary);
 
         // when
         ContentReportSummary result = reportSummaryService.findByUser(user);

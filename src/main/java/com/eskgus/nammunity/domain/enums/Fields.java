@@ -23,6 +23,7 @@ public enum Fields {
     NAME("name"),
     ACCESS_TOKEN("accessToken"),
     REFRESH_TOKEN("refreshToken"),
+    TOKEN("token"),
     OTHER("기타");
 
     private final String key;

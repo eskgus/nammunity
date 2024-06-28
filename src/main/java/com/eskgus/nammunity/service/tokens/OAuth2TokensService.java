@@ -13,13 +13,15 @@ public class OAuth2TokensService {
     private final OAuth2TokensRepository oAuth2TokensRepository;
 
     @Transactional
-    public void save(OAuth2TokensDto oAuth2TokensDto) {
-        oAuth2TokensRepository.save(oAuth2TokensDto.toEntity());
+    public Long save(OAuth2TokensDto oAuth2TokensDto) {
+        return oAuth2TokensRepository.save(oAuth2TokensDto.toEntity()).getId();
     }
 
     @Transactional
-    public void update(OAuth2TokensDto oAuth2TokensDto) {
+    public Long update(OAuth2TokensDto oAuth2TokensDto) {
         OAuth2Tokens oAuth2Tokens = oAuth2TokensDto.getUser().getOAuth2Tokens();
         oAuth2Tokens.update(oAuth2TokensDto.getRefreshToken(), oAuth2TokensDto.getExpiredAt());
+
+        return oAuth2Tokens.getId();
     }
 }

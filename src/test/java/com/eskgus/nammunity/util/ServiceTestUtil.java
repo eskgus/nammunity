@@ -19,6 +19,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -127,6 +128,11 @@ public class ServiceTestUtil {
         when(finder.apply(any(paramType), anyInt(), anyInt())).thenReturn(contentsPage);
 
         return contentsPage;
+    }
+
+    public static <Entity, ParamType> void giveContentFinder(Function<ParamType, Optional<Entity>> finder,
+                                                             Class<ParamType> paramType, Entity content) {
+        when(finder.apply(any(paramType))).thenReturn(Optional.of(content));
     }
 
     public static <Entity> List<Long> createContentIds(List<Entity> contents,

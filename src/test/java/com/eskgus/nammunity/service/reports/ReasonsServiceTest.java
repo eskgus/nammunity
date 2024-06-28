@@ -11,10 +11,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentFinder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,8 +27,7 @@ public class ReasonsServiceTest {
     @Test
     public void findReasonsById() {
         // given
-        Reasons reason = giveReason(1L);
-        when(reasonsRepository.findById(anyLong())).thenReturn(Optional.of(reason));
+        Reasons reason = giveReasonFinder();
 
         // when
         Reasons result = reasonsService.findById(reason.getId());
@@ -72,6 +70,13 @@ public class ReasonsServiceTest {
         }
 
         return reasons;
+    }
+
+    private Reasons giveReasonFinder() {
+        Reasons reason = giveReason(1L);
+        giveContentFinder(reasonsRepository::findById, Long.class, reason);
+
+        return reason;
     }
 
     private Reasons giveReason(Long id) {

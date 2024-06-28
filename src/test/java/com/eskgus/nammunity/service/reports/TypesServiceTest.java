@@ -9,11 +9,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
+import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentFinder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +41,7 @@ public class TypesServiceTest {
     private void testFindTypesByContentType(ContentType contentType) {
         // given
         Types type = mock(Types.class);
-        when(typesRepository.findByDetail(anyString())).thenReturn(Optional.of(type));
+        giveContentFinder(typesRepository::findByDetail, String.class, type);
 
         // when
         Types result = typesService.findByContentType(contentType);
