@@ -3,13 +3,13 @@ package com.eskgus.nammunity.converter;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
+@AllArgsConstructor
 public class CommentsConverterForTest<T> implements EntityConverterForTest<T, Comments> {
-    private final Class<T> classOfDto;
-
-    public CommentsConverterForTest(Class<T> classOfDto) {
-        this.classOfDto = classOfDto;
-    }
+    private Class<T> classOfDto;
 
     @Override
     public Long extractEntityId(Comments entity) {

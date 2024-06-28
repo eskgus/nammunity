@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.likes;
 
+import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
@@ -26,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.util.ServiceTestUtil.createContentIds;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -101,7 +103,7 @@ public class LikesServiceTest {
         // given
         List<Likes> likes = giveLikes();
 
-        List<Long> likeIds = likes.stream().map(Likes::getId).toList();
+        List<Long> likeIds = createContentIds(likes, new LikesConverterForTest());
 
         when(likesRepository.findById(anyLong())).thenAnswer(invocation -> {
             Long id = invocation.getArgument(0);

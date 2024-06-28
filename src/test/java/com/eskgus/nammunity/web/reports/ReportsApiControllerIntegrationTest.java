@@ -144,7 +144,7 @@ public class ReportsApiControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "username3", roles = "ADMIN")
-    public void deleteSelectedContentReports() throws Exception {
+    public void deleteSelectedReportSummaries() throws Exception {
         // given
         saveReportSummaries();
 

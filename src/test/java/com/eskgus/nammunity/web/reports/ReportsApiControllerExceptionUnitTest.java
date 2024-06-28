@@ -101,7 +101,7 @@ public class ReportsApiControllerExceptionUnitTest {
 
     @Test
     @WithMockUser
-    public void deleteSelectedContentReportsThrowsIllegalArgumentException() throws Exception {
+    public void deleteSelectedReportSummariesThrowsIllegalArgumentException() throws Exception {
         // given
         ContentReportSummaryDeleteDto requestDto = ContentReportSummaryDeleteDto.builder()
                 .postsId(Arrays.asList(ID, ID + 1, ID + 2))
@@ -109,14 +109,14 @@ public class ReportsApiControllerExceptionUnitTest {
                 .userId(Collections.emptyList()).build();
 
         doThrow(new IllegalArgumentException(ILLEGAL_ARGUMENT_EXCEPTION_TEST.getMessage()))
-                .when(reportSummaryService).deleteSelectedReportSummary(any(ContentReportSummaryDeleteDto.class));
+                .when(reportSummaryService).deleteSelectedReportSummaries(any(ContentReportSummaryDeleteDto.class));
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/content/selected-delete");
         ResultMatcher resultMatcher = createResultMatcher();
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatcher);
 
-        verify(reportSummaryService).deleteSelectedReportSummary(any(ContentReportSummaryDeleteDto.class));
+        verify(reportSummaryService).deleteSelectedReportSummaries(any(ContentReportSummaryDeleteDto.class));
     }
 
     @Test

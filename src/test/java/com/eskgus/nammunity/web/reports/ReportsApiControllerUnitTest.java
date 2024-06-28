@@ -73,20 +73,20 @@ public class ReportsApiControllerUnitTest {
 
     @Test
     @WithMockUser
-    public void deleteSelectedContentReports() throws Exception {
+    public void deleteSelectedReportSummaries() throws Exception {
         // given
         ContentReportSummaryDeleteDto requestDto = ContentReportSummaryDeleteDto.builder()
                 .postsId(Arrays.asList(ID, ID + 1, ID + 2))
                 .commentsId(Collections.singletonList(ID))
                 .userId(Collections.emptyList()).build();
 
-        doNothing().when(reportSummaryService).deleteSelectedReportSummary(any(ContentReportSummaryDeleteDto.class));
+        doNothing().when(reportSummaryService).deleteSelectedReportSummaries(any(ContentReportSummaryDeleteDto.class));
 
         // when/then
         MockHttpServletRequestBuilder requestBuilder = delete(REQUEST_MAPPING + "/content/selected-delete");
         performAndExpectOk(requestBuilder, requestDto);
 
-        verify(reportSummaryService).deleteSelectedReportSummary(any(ContentReportSummaryDeleteDto.class));
+        verify(reportSummaryService).deleteSelectedReportSummaries(any(ContentReportSummaryDeleteDto.class));
     }
 
     @Test

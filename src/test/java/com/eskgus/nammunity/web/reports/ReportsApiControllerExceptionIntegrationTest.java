@@ -171,7 +171,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
 
     @Test
     @WithAnonymousUser
-    public void deleteSelectedContentReportsWithAnonymousUser() throws Exception {
+    public void deleteSelectedReportSummariesWithAnonymousUser() throws Exception {
         // given
         ContentReportSummaryDeleteDto requestDto = createContentReportSummaryDeleteDto(null);
 
@@ -181,26 +181,26 @@ public class ReportsApiControllerExceptionIntegrationTest {
     }
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
-    public void deleteSelectedContentReportsWithEmptyReportIds() throws Exception {
-        testDeleteSelectedContentReportsException(null, EMPTY_CONTENT_IDS);
+    public void deleteSelectedReportSummariesWithEmptyReportIds() throws Exception {
+        testDeleteSelectedReportSummariesException(null, EMPTY_CONTENT_IDS);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
-    public void deleteSelectedPostReportsWithNonExistentPost() throws Exception {
-        testDeleteSelectedContentReportsException(POSTS_ID, POST_NOT_FOUND);
+    public void deleteSelectedPostReportsSummariesWithNonExistentPost() throws Exception {
+        testDeleteSelectedReportSummariesException(POSTS_ID, POST_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
-    public void deleteSelectedCommentReportsWithNonExistentComment() throws Exception {
-        testDeleteSelectedContentReportsException(COMMENTS_ID, COMMENT_NOT_FOUND);
+    public void deleteSelectedCommentReportSummariesWithNonExistentComment() throws Exception {
+        testDeleteSelectedReportSummariesException(COMMENTS_ID, COMMENT_NOT_FOUND);
     }
 
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
-    public void deleteSelectedUserReportsWithNonExistentUser() throws Exception {
-        testDeleteSelectedContentReportsException(USER_ID, USER_NOT_FOUND);
+    public void deleteSelectedUserReportSummariesWithNonExistentUser() throws Exception {
+        testDeleteSelectedReportSummariesException(USER_ID, USER_NOT_FOUND);
     }
 
     @Test
@@ -269,7 +269,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         performAndExpectBadRequest(requestBuilder, requestDto, resultMatchers);
     }
 
-    private void testDeleteSelectedContentReportsException(Fields field, ExceptionMessages exceptionMessage) throws Exception {
+    private void testDeleteSelectedReportSummariesException(Fields field, ExceptionMessages exceptionMessage) throws Exception {
         // given
         ContentReportSummaryDeleteDto requestDto = createContentReportSummaryDeleteDto(field);
 

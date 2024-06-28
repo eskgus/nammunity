@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.posts;
 
+import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.domain.enums.SearchType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
@@ -26,6 +27,7 @@ import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
+import static com.eskgus.nammunity.util.ServiceTestUtil.createContentIds;
 import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,7 +92,7 @@ public class PostsServiceTest {
         // given
         List<Posts> posts = givePosts();
 
-        List<Long> postIds = posts.stream().map(Posts::getId).toList();
+        List<Long> postIds = createContentIds(posts, new PostsConverterForTest());
 
         when(postsRepository.findById(anyLong())).thenAnswer(invocation -> {
             Long id = invocation.getArgument(0);

@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.comments;
 
+import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.enums.Fields;
@@ -23,8 +24,7 @@ import org.springframework.data.domain.Pageable;
 import java.security.Principal;
 import java.util.*;
 
-import static com.eskgus.nammunity.util.ServiceTestUtil.givePost;
-import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
+import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -92,7 +92,7 @@ public class CommentsServiceTest {
         // given
         List<Comments> comments = giveComments();
 
-        List<Long> commentIds = comments.stream().map(Comments::getId).toList();
+        List<Long> commentIds = createContentIds(comments, new CommentsConverterForTest<>());
 
         when(commentsRepository.findById(anyLong())).thenAnswer(invocation -> {
             Long id = invocation.getArgument(0);

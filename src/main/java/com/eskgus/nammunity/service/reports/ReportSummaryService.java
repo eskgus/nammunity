@@ -40,9 +40,9 @@ public class ReportSummaryService {
     public <T> Long saveOrUpdateContentReportSummary(ContentReportSummarySaveDto requestDto) {
         // contentReportSummary 테이블에 컨텐츠 (posts, comments, user) 없으면 저장, 있으면 수정
         T contents = getContents(requestDto);
-        boolean doContentsExist = contentReportSummaryRepository.existsByContents(contents);
+        boolean doesSummaryExist = contentReportSummaryRepository.existsByContents(contents);
 
-        if (doContentsExist) {
+        if (doesSummaryExist) {
             return updateContentReportSummary(requestDto, contents);
         }
         return saveContentReportSummary(requestDto);
@@ -70,7 +70,7 @@ public class ReportSummaryService {
     }
 
     @Transactional
-    public void deleteSelectedReportSummary(ContentReportSummaryDeleteDto deleteDto) {
+    public void deleteSelectedReportSummaries(ContentReportSummaryDeleteDto deleteDto) {
         validateDeleteDto(deleteDto);
 
         deleteByContents(deleteDto.getPostsId(), postsService::findById);

@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.util;
 
+import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
@@ -90,6 +91,10 @@ public class ServiceTestUtil {
         when(principalHelper.apply(principal, true)).thenReturn(user);
 
         return Pair.of(principal, user);
+    }
+
+    public static <U> List<Long> createContentIds(List<U> contents, EntityConverterForTest<?, U> entityConverter) {
+        return contents.stream().map(entityConverter::extractEntityId).toList();
     }
 
     public static <T, U> void throwIllegalArgumentException(Function<U, T> finder, ExceptionMessages exceptionMessage) {

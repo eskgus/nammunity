@@ -29,8 +29,8 @@ public class ReportsApiController {
     }
 
     @DeleteMapping("/content/selected-delete")
-    public ResponseEntity<Void> deleteSelectedContentReports(@RequestBody ContentReportSummaryDeleteDto requestDto) {
-        reportSummaryService.deleteSelectedReportSummary(requestDto);
+    public ResponseEntity<Void> deleteSelectedReportSummaries(@RequestBody ContentReportSummaryDeleteDto requestDto) {
+        reportSummaryService.deleteSelectedReportSummaries(requestDto);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
