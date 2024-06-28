@@ -21,17 +21,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.verification.VerificationMode;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
+import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentsPage;
 import static com.eskgus.nammunity.util.ServiceTestUtil.setModes;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -288,8 +287,8 @@ public class ReportsServiceTest {
         Types type = giveType();
         when(type.getDetail()).thenReturn(contentType.getDetail());
 
-        Page<ContentReportDetailListDto> reportDetailsPage = new PageImpl<>(Collections.emptyList());
-        when(contentReportsRepository.findByContents(any(), any(Pageable.class))).thenReturn(reportDetailsPage);
+        Page<ContentReportDetailListDto> reportDetailsPage = giveContentsPage(
+                contentReportsRepository::findByContents, content.getClass());
 
         List<Long> contentIds = Arrays.asList(
                 requestDto.getPostId(), requestDto.getCommentId(), requestDto.getUserId());

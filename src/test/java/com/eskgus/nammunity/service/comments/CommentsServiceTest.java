@@ -18,11 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.security.Principal;
 import java.util.*;
+import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -145,8 +145,7 @@ public class CommentsServiceTest {
         // given
         Posts post = mock(Posts.class);
 
-        Page<CommentsReadDto> commentsPage = new PageImpl<>(Collections.emptyList());
-        when(commentsRepository.findByPosts(any(Posts.class), any(Pageable.class))).thenReturn(commentsPage);
+        Page<CommentsReadDto> commentsPage = giveCommentsPage(commentsRepository::findByPosts, Posts.class);
 
         // when
         Page<CommentsReadDto> result = commentsService.findByPosts(post, PAGE);
@@ -162,8 +161,7 @@ public class CommentsServiceTest {
         // given
         User user = mock(User.class);
 
-        Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
-        when(commentsRepository.findByUser(any(User.class), any(Pageable.class))).thenReturn(commentsPage);
+        Page<CommentsListDto> commentsPage = giveCommentsPage(commentsRepository::findByUser, User.class);
 
         // when
         Page<CommentsListDto> result = commentsService.findByUser(user, PAGE, SIZE);
@@ -195,8 +193,7 @@ public class CommentsServiceTest {
         // given
         String keywords = "keyword";
 
-        Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
-        when(commentsRepository.searchByContent(any(String.class), any(Pageable.class))).thenReturn(commentsPage);
+        Page<CommentsListDto> commentsPage = giveCommentsPage(commentsRepository::searchByContent, String.class);
 
         // when
         Page<CommentsListDto> result = commentsService.searchByContent(keywords, PAGE, SIZE);
@@ -237,5 +234,10 @@ public class CommentsServiceTest {
 
     private Comments giveComment(Long id) {
         return ServiceTestUtil.giveComment(id);
+    }
+
+    private <Entity, ParamType> Page<Entity> giveCommentsPage(BiFunction<ParamType, Pageable, Page<Entity>> finder,
+                                                              Class<ParamType> paramType) {
+        return ServiceTestUtil.giveContentsPage(finder, paramType);
     }
 }

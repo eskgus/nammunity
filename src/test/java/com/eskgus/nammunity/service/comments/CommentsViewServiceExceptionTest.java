@@ -12,12 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import java.security.Principal;
-import java.util.Collections;
-import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.util.ServiceTestUtil.*;
@@ -52,9 +48,7 @@ public class CommentsViewServiceExceptionTest {
         when(commentsReadDto.getAuthorId()).thenReturn(ID);
         when(commentsReadDto.getId()).thenReturn(ID);
 
-        List<CommentsReadDto> content = Collections.singletonList(commentsReadDto);
-        Page<CommentsReadDto> commentsPage = new PageImpl<>(content);
-        when(commentsService.findByPosts(any(Posts.class), anyInt())).thenReturn(commentsPage);
+        giveContentsPage(commentsService::findByPosts, commentsReadDto);
 
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
         throwIllegalArgumentException(commentsService::findById, exceptionMessage);

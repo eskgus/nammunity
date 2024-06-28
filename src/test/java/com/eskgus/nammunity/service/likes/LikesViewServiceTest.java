@@ -10,14 +10,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 
 import java.security.Principal;
-import java.util.Collections;
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.util.ServiceTestUtil.createContentsPage;
 import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,7 +45,7 @@ public class LikesViewServiceTest {
 
         int page = 1;
 
-        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
+        Page<LikesListDto> likesPage = createContentsPage();
         when(likesService.findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt()))
                 .thenReturn(likesPage);
 

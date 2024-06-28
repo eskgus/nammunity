@@ -6,8 +6,13 @@ import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
+import org.assertj.core.util.TriFunction;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.verification.VerificationMode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 
 import java.security.Principal;
@@ -93,9 +98,44 @@ public class ServiceTestUtil {
         return Pair.of(principal, user);
     }
 
+    public static <Dto, ParamType> Page<Dto> giveContentsPage(BiFunction<ParamType, Pageable, Page<Dto>> finder,
+                                                              Class<ParamType> paramType) {
+        Page<Dto> contentsPage = createContentsPage();
+        when(finder.apply(any(paramType), any(Pageable.class))).thenReturn(contentsPage);
+
+        return contentsPage;
+    }
+
+    public static <Dto> Page<Dto> giveContentsPage(Function<Pageable, Page<Dto>> finder) {
+        Page<Dto> contentsPage = createContentsPage();
+        when(finder.apply(any(Pageable.class))).thenReturn(contentsPage);
+
+        return contentsPage;
+    }
+
+    public static Page<CommentsReadDto> giveContentsPage(BiFunction<Posts, Integer, Page<CommentsReadDto>> finder,
+                                                         CommentsReadDto commentsReadDto) {
+        Page<CommentsReadDto> commentsPage = createContentsPage(commentsReadDto);
+        when(finder.apply(any(Posts.class), anyInt())).thenReturn(commentsPage);
+
+        return commentsPage;
+    }
+
+    public static <Dto, ParamType> Page<Dto> giveContentsPage(TriFunction<ParamType, Integer, Integer, Page<Dto>> finder,
+                                                              Class<ParamType> paramType) {
+        Page<Dto> contentsPage = createContentsPage();
+        when(finder.apply(any(paramType), anyInt(), anyInt())).thenReturn(contentsPage);
+
+        return contentsPage;
+    }
+
     public static <Entity> List<Long> createContentIds(List<Entity> contents,
                                                        EntityConverterForTest<?, Entity> entityConverter) {
         return contents.stream().map(entityConverter::extractEntityId).toList();
+    }
+
+    public static <Dto> Page<Dto> createContentsPage() {
+        return new PageImpl<>(Collections.emptyList());
     }
 
     public static <Entity, ReturnType> void throwIllegalArgumentException(Function<ReturnType, Entity> finder,
@@ -133,5 +173,11 @@ public class ServiceTestUtil {
 
     private static <Entity> void giveContentFinder(Function<Long, Entity> finder, Entity content) {
         when(finder.apply(anyLong())).thenReturn(content);
+    }
+
+    private static Page<CommentsReadDto> createContentsPage(CommentsReadDto commentsReadDto) {
+        List<CommentsReadDto> content = Collections.singletonList(commentsReadDto);
+
+        return new PageImpl<>(content);
     }
 }

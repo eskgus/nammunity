@@ -14,11 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.util.Pair;
 
 import java.security.Principal;
-import java.util.*;
 
 import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,9 +51,7 @@ public class CommentsViewServiceTest {
         when(commentsReadDto.getId()).thenReturn(ID);
         boolean doesUserWriteComment = commentsReadDto.getAuthorId().equals(user.getId());
 
-        List<CommentsReadDto> content = Collections.singletonList(commentsReadDto);
-        Page<CommentsReadDto> commentsPage = new PageImpl<>(content);
-        when(commentsService.findByPosts(any(Posts.class), anyInt())).thenReturn(commentsPage);
+        Page<CommentsReadDto> commentsPage = giveContentsPage(commentsService::findByPosts, commentsReadDto);
 
         Comments comment = giveComment(commentsService::findById);
 
@@ -82,8 +78,7 @@ public class CommentsViewServiceTest {
         Principal principal = pair.getFirst();
         User user = pair.getSecond();
 
-        Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
-        when(commentsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(commentsPage);
+        Page<CommentsListDto> commentsPage = giveContentsPage(commentsService::findByUser, User.class);
 
         // when
         ContentsPageDto<CommentsListDto> result = commentsViewService.listComments(principal, PAGE);

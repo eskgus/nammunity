@@ -17,17 +17,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.util.ServiceTestUtil.createContentIds;
+import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentsPage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -243,8 +242,7 @@ public class LikesServiceTest {
         int page = 1;
         int size = 3;
 
-        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
-        when(finder.apply(any(User.class), any(Pageable.class))).thenReturn(likesPage);
+        Page<LikesListDto> likesPage = giveContentsPage(finder, User.class);
 
         // when
         Page<LikesListDto> result = likesService.findLikesByUser(user, finder, page, size);

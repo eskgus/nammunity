@@ -20,7 +20,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.verification.VerificationMode;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.util.Pair;
 
 import java.security.Principal;
@@ -30,7 +29,7 @@ import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
-import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
+import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -86,8 +85,7 @@ public class PostsViewServiceTest {
         Principal principal = pair.getFirst();
         User user = pair.getSecond();
 
-        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
-        when(postsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(postsPage);
+        Page<PostsListDto> postsPage = giveContentsPage(postsService::findByUser, User.class);
 
         // when
         ContentsPageDto<PostsListDto> result = postsViewService.listPosts(principal, PAGE);
@@ -176,7 +174,7 @@ public class PostsViewServiceTest {
         Principal principal = mock(Principal.class);
         when(principalHelper.getUserFromPrincipal(principal, false)).thenReturn(user);
 
-        Page<CommentsReadDto> commentsPage = new PageImpl<>(Collections.emptyList());
+        Page<CommentsReadDto> commentsPage = createContentsPage();
         when(commentsViewService.findCommentsPageByPosts(any(Posts.class), eq(user), anyInt()))
                 .thenReturn(commentsPage);
 

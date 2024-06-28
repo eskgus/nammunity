@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.verification.VerificationMode;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.Pair;
 
@@ -101,8 +100,7 @@ public class ReportSummaryServiceTest {
         // given
         int page = 1;
 
-        Page<ContentReportSummaryDto> summariesPage = new PageImpl<>(Collections.emptyList());
-        when(contentReportSummaryRepository.findAllDesc(any(Pageable.class))).thenReturn(summariesPage);
+        Page<ContentReportSummaryDto> summariesPage = giveContentsPage(contentReportSummaryRepository::findAllDesc);
 
         // when
         ContentsPageDto<ContentReportSummaryDto> result = reportSummaryService.findAllDesc(page);
@@ -122,8 +120,8 @@ public class ReportSummaryServiceTest {
         Types type = mock(Types.class);
         when(typesService.findByContentType(any(ContentType.class))).thenReturn(type);
 
-        Page<ContentReportSummaryDto> summariesPage = new PageImpl<>(Collections.emptyList());
-        when(contentReportSummaryRepository.findByTypes(any(Types.class), any(Pageable.class))).thenReturn(summariesPage);
+        Page<ContentReportSummaryDto> summariesPage = giveContentsPage(
+                contentReportSummaryRepository::findByTypes, Types.class);
 
         // when
         ContentsPageDto<ContentReportSummaryDto> result = reportSummaryService.findByTypes(contentType, page);

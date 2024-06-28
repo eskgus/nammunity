@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.verification.VerificationMode;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.security.Principal;
@@ -27,8 +26,7 @@ import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
-import static com.eskgus.nammunity.util.ServiceTestUtil.createContentIds;
-import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
+import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -157,8 +155,7 @@ public class PostsServiceTest {
     @Test
     public void findAllPostsDesc() {
         // given
-        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
-        when(postsRepository.findAllDesc(any(Pageable.class))).thenReturn(postsPage);
+        Page<PostsListDto> postsPage = giveContentsPage(postsRepository::findAllDesc);
 
         // when
         ContentsPageDto<PostsListDto> result = postsService.findAllDesc(PAGE);
@@ -174,8 +171,7 @@ public class PostsServiceTest {
         // given
         User user = mock(User.class);
 
-        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
-        when(postsRepository.findByUser(any(User.class), any(Pageable.class))).thenReturn(postsPage);
+        Page<PostsListDto> postsPage = givePostsPage(postsRepository::findByUser, User.class);
 
         // when
         Page<PostsListDto> result = postsService.findByUser(user, PAGE, SIZE);
@@ -232,12 +228,16 @@ public class PostsServiceTest {
         return ServiceTestUtil.givePost(id);
     }
 
+    private <ParamType> Page<PostsListDto> givePostsPage(BiFunction<ParamType, Pageable, Page<PostsListDto>> finder,
+                                                 Class<ParamType> paramType) {
+        return giveContentsPage(finder, paramType);
+    }
+
     private void testSearchPosts(SearchType searchType, BiFunction<String, Pageable, Page<PostsListDto>> searcher) {
         // given
         String keywords = "keyword";
 
-        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
-        when(searcher.apply(anyString(), any(Pageable.class))).thenReturn(postsPage);
+        Page<PostsListDto> postsPage = givePostsPage(searcher, String.class);
 
         List<VerificationMode> modes = setModes(searchType);
 
