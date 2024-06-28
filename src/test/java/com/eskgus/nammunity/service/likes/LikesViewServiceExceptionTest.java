@@ -17,7 +17,8 @@ import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.UNAUTHORIZED;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.USERNAME_NOT_FOUND;
-import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.throwIllegalArgumentException;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,8 +49,7 @@ public class LikesViewServiceExceptionTest {
         // given
         BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
 
-        when(principalHelper.getUserFromPrincipal(principal, true))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(() -> likesViewService.listLikes(finder, principal, PAGE), exceptionMessage);

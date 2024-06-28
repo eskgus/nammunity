@@ -12,11 +12,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 import java.util.Collections;
 import java.util.function.BiFunction;
 
+import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -38,9 +40,9 @@ public class LikesViewServiceTest {
         // given
         BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
 
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+        Pair<Principal, User> pair = givePrincipal(principalHelper::getUserFromPrincipal);
+        Principal principal = pair.getFirst();
+        User user = pair.getSecond();
 
         int page = 1;
 

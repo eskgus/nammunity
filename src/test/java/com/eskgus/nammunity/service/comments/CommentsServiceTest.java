@@ -7,6 +7,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
@@ -22,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import java.security.Principal;
 import java.util.*;
 
+import static com.eskgus.nammunity.util.ServiceTestUtil.givePost;
+import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -48,16 +51,11 @@ public class CommentsServiceTest {
     @Test
     public void saveComments() {
         // given
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(ID);
+        Posts post = givePost(ID, postsService::findById);
 
         CommentsSaveDto requestDto = new CommentsSaveDto(CONTENT, post.getId());
 
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
-
-        when(postsService.findById(anyLong())).thenReturn(post);
+        Principal principal = givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
 
         Comments comment = giveComment(ID);
         when(commentsRepository.save(any(Comments.class))).thenReturn(comment);
@@ -238,9 +236,6 @@ public class CommentsServiceTest {
     }
 
     private Comments giveComment(Long id) {
-        Comments comment = mock(Comments.class);
-        when(comment.getId()).thenReturn(id);
-
-        return comment;
+        return ServiceTestUtil.giveComment(id);
     }
 }

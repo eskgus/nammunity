@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.*;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
@@ -25,6 +26,7 @@ import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
+import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -49,9 +51,7 @@ public class PostsServiceTest {
         // given
         PostsSaveDto requestDto = PostsSaveDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+        Principal principal = givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
 
         Posts post = givePost(ID);
         when(postsRepository.save(any(Posts.class))).thenReturn(post);
@@ -227,10 +227,7 @@ public class PostsServiceTest {
     }
 
     private Posts givePost(Long id) {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(id);
-
-        return post;
+        return ServiceTestUtil.givePost(id);
     }
 
     private void testSearchPosts(SearchType searchType, BiFunction<String, Pageable, Page<PostsListDto>> searcher) {

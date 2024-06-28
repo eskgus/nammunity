@@ -5,9 +5,9 @@ import com.eskgus.nammunity.domain.comments.CommentsRepository;
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
 import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.domain.posts.Posts;
-import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,9 +20,10 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -72,13 +73,10 @@ public class CommentsServiceExceptionTest {
         // given
         CommentsSaveDto requestDto = createCommentsSaveDto(ID);
 
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+        Principal principal = givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
 
         ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsService.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(postsService::findById, exceptionMessage);
 
         // when/then
         testSaveCommentsException(requestDto, principal, exceptionMessage, times(1));
@@ -87,12 +85,10 @@ public class CommentsServiceExceptionTest {
     @Test
     public void updateCommentsWithNonExistentComment() {
         // given
-        Comments comment = mock(Comments.class);
-        when(comment.getId()).thenReturn(ID);
+        Comments comment = giveComment(ID);
 
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
-        when(commentsRepository.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(commentsRepository::findById, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(() -> commentsService.update(comment.getId(), CONTENT), exceptionMessage);
@@ -116,8 +112,7 @@ public class CommentsServiceExceptionTest {
         List<Long> commentIds = Arrays.asList(ID, ID + 1, ID + 2);
 
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
-        when(commentsRepository.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(commentsRepository::findById, exceptionMessage);
 
         // when/then
         testDeleteSelectedCommentsException(commentIds, exceptionMessage, times(1));
@@ -127,8 +122,7 @@ public class CommentsServiceExceptionTest {
     public void deleteCommentsWithNonExistentComment() {
         // given
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
-        when(commentsRepository.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(commentsRepository::findById, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(() -> commentsService.delete(ID), exceptionMessage);
@@ -147,25 +141,22 @@ public class CommentsServiceExceptionTest {
     }
 
     private CommentsSaveDto givePrincipalHelperThrowException(Principal principal, ExceptionMessages exceptionMessage) {
-        Posts post = givePost();
+        Posts post = givePost(ID);
 
         CommentsSaveDto requestDto = createCommentsSaveDto(post.getId());
 
-        when(principalHelper.getUserFromPrincipal(principal, true))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ServiceTestUtil.throwIllegalArgumentException(
+                principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
 
         return requestDto;
     }
 
-    private Posts givePost() {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(ID);
-
-        return post;
-    }
-
     private CommentsSaveDto createCommentsSaveDto(Long postId) {
         return new CommentsSaveDto(CONTENT, postId);
+    }
+
+    private <T> void throwIllegalArgumentException(Function<Long, T> finder, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 
     private void testSaveCommentsException(CommentsSaveDto requestDto, Principal principal,

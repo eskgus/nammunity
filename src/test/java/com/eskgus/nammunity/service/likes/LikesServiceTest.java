@@ -8,6 +8,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -175,27 +176,15 @@ public class LikesServiceTest {
     }
 
     private Posts givePost() {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(ID);
-        when(postsService.findById(anyLong())).thenReturn(post);
-
-        return post;
+        return ServiceTestUtil.givePost(ID, postsService::findById);
     }
 
     private Comments giveComment() {
-        Comments comment = mock(Comments.class);
-        when(comment.getId()).thenReturn(ID);
-        when(commentsService.findById(anyLong())).thenReturn(comment);
-
-        return comment;
+        return ServiceTestUtil.giveComment(ID, commentsService::findById);
     }
 
     private Pair<Principal, User> givePrincipal() {
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
-
-        return Pair.of(principal, user);
+        return ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal);
     }
 
     private List<Likes> giveLikes() {

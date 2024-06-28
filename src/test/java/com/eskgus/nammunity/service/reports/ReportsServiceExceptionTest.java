@@ -11,6 +11,7 @@ import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailRequestDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummarySaveDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportsSaveDto;
@@ -24,16 +25,15 @@ import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.domain.enums.Fields.OTHER;
-import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.setModes;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,7 +81,7 @@ public class ReportsServiceExceptionTest {
     @Test
     public void saveReportsWithNonExistentReason() {
         ExceptionMessages exceptionMessage = REASON_NOT_FOUND;
-        when(reasonsService.findById(anyLong())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(reasonsService::findById, exceptionMessage);
 
         testSaveReportsThrowsReasonException(exceptionMessage);
     }
@@ -155,8 +155,7 @@ public class ReportsServiceExceptionTest {
         givePost();
 
         ExceptionMessages exceptionMessage = TYPE_NOT_FOUND;
-        when(typesService.findByContentType(any(ContentType.class)))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(typesService::findByContentType, exceptionMessage);
 
         // when/then
         List<Long> contentIds = testSaveReportsException(requestDto, principal, exceptionMessage);
@@ -190,8 +189,7 @@ public class ReportsServiceExceptionTest {
         when(post.getModifiedDate()).thenReturn(LocalDateTime.now());
 
         ExceptionMessages exceptionMessage = TYPE_NOT_FOUND;
-        when(typesService.findByContentType(any(ContentType.class)))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(typesService::findByContentType, exceptionMessage);
 
         List<Long> contentIds = Arrays.asList(
                 requestDto.getPostId(), requestDto.getCommentId(), requestDto.getUserId());
@@ -234,11 +232,7 @@ public class ReportsServiceExceptionTest {
     }
 
     private Principal givePrincipal() {
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
-
-        return principal;
+        return ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
     }
 
     private Reasons giveReason() {
@@ -249,18 +243,19 @@ public class ReportsServiceExceptionTest {
     }
 
     private Posts givePost() {
-        Posts post = mock(Posts.class);
-        when(postsService.findById(anyLong())).thenReturn(post);
+        return ServiceTestUtil.givePost(postsService::findById);
+    }
 
-        return post;
+    private <T, U> void throwIllegalArgumentException(Function<U, T> finder, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 
     private void testSaveReportsThrowsPrincipalException(Principal principal, ExceptionMessages exceptionMessage) {
         // given
         ContentReportsSaveDto requestDto = mock(ContentReportsSaveDto.class);
 
-        when(principalHelper.getUserFromPrincipal(principal, true))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ServiceTestUtil.throwIllegalArgumentException(
+                principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
 
         // when/then
         List<Long> contentIds = testSaveReportsException(requestDto, principal, exceptionMessage);
@@ -293,7 +288,7 @@ public class ReportsServiceExceptionTest {
         ExceptionMessages exceptionMessage = pair.getFirst();
         ContentType contentType = pair.getSecond();
 
-        when(finder.apply(anyLong())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(finder, exceptionMessage);
 
         // when/then
         List<Long> contentIds = testSaveReportsException(requestDto, principal, exceptionMessage);
@@ -324,7 +319,7 @@ public class ReportsServiceExceptionTest {
         // given
         ContentReportDetailRequestDto requestDto = createReportDetailRequestDto(contentType);
 
-        when(finder.apply(anyLong())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(finder, exceptionMessage);
 
         List<Long> contentIds = Arrays.asList(
                 requestDto.getPostId(), requestDto.getCommentId(), requestDto.getUserId());
@@ -342,19 +337,5 @@ public class ReportsServiceExceptionTest {
         verify(commentsService, modes.get(1)).findById(eq(contentIds.get(1)));
         verify(userService, modes.get(2)).findById(eq(contentIds.get(2)));
         verify(typesService, typeMode).findByContentType(eq(contentType));
-    }
-
-    private List<VerificationMode> setModes(ContentType contentType) {
-        List<VerificationMode> modes = new ArrayList<>(Collections.nCopies(3, never()));
-
-        if (contentType != null) {
-            switch (contentType) {
-                case POSTS -> modes.set(0, times(1));
-                case COMMENTS -> modes.set(1, times(1));
-                case USERS -> modes.set(2, times(1));
-            }
-        }
-
-        return modes;
     }
 }

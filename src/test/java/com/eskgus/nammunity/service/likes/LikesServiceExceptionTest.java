@@ -9,6 +9,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,9 +21,10 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,8 +60,7 @@ public class LikesServiceExceptionTest {
     @Test
     public void savePostLikesWithNonExistentPost() {
         ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsService.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(postsService::findById, exceptionMessage);
 
         testSaveLikesThrowsNotFoundException(ID, null, exceptionMessage);
 
@@ -69,8 +70,7 @@ public class LikesServiceExceptionTest {
     @Test
     public void saveCommentLikesWithNonExistentComment() {
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
-        when(commentsService.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(commentsService::findById, exceptionMessage);
 
         testSaveLikesThrowsNotFoundException(null, ID, exceptionMessage);
 
@@ -91,8 +91,7 @@ public class LikesServiceExceptionTest {
     @Test
     public void deleteLikesByPostIdWithNonExistentPost() {
         ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsService.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(postsService::findById, exceptionMessage);
 
         testDeleteLikesByContentIdThrowsNotFoundException(ID, null, exceptionMessage);
 
@@ -102,8 +101,7 @@ public class LikesServiceExceptionTest {
     @Test
     public void deleteLikesByCommentIdWithNonExistentComment() {
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
-        when(commentsService.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(commentsService::findById, exceptionMessage);
 
         testDeleteLikesByContentIdThrowsNotFoundException(null, ID, exceptionMessage);
 
@@ -129,19 +127,19 @@ public class LikesServiceExceptionTest {
     }
 
     private Principal givePrincipal() {
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
-
-        return principal;
+        return ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
     }
 
     private ExceptionMessages givePrincipalHelperThrowException(Principal principal) {
         ExceptionMessages exceptionMessage = principal == null ? UNAUTHORIZED : USERNAME_NOT_FOUND;
-        when(principalHelper.getUserFromPrincipal(principal, true))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ServiceTestUtil.throwIllegalArgumentException(
+                principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
 
         return exceptionMessage;
+    }
+
+    private <T> void throwIllegalArgumentException(Function<Long, T> finder, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 
     private void testSaveLikesThrowsPrincipalException(Principal principal) {

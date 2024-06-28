@@ -9,6 +9,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.reports.*;
@@ -26,12 +27,12 @@ import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
+import static com.eskgus.nammunity.util.ServiceTestUtil.setModes;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -193,11 +194,7 @@ public class ReportsServiceTest {
     }
 
     private Pair<Principal, User> givePrincipal() {
-        Principal principal = mock(Principal.class);
-        User reporter = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(reporter);
-
-        return Pair.of(principal, reporter);
+        return ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal);
     }
 
     private Reasons giveReason() {
@@ -216,24 +213,15 @@ public class ReportsServiceTest {
     }
 
     private Posts givePost() {
-        Posts post = mock(Posts.class);
-        when(postsService.findById(anyLong())).thenReturn(post);
-
-        return post;
+        return ServiceTestUtil.givePost(postsService::findById);
     }
 
     private Comments giveComment() {
-        Comments comment = mock(Comments.class);
-        when(commentsService.findById(anyLong())).thenReturn(comment);
-
-        return comment;
+        return ServiceTestUtil.giveComment(commentsService::findById);
     }
 
     private User giveUser() {
-        User user = mock(User.class);
-        when(userService.findById(anyLong())).thenReturn(user);
-
-        return user;
+        return ServiceTestUtil.giveUser(userService::findById);
     }
 
     private ContentReports giveReport() {
@@ -333,19 +321,5 @@ public class ReportsServiceTest {
         verify(contentReportsRepository, mode).findReasonByContents(eq(content));
         verify(contentReportsRepository, never()).findOtherReasonByContents(eq(content), any(Reasons.class));
         verify(reportSummaryService, mode).saveOrUpdateContentReportSummary(any(ContentReportSummarySaveDto.class));
-    }
-
-    private List<VerificationMode> setModes(ContentType contentType) {
-        List<VerificationMode> modes = new ArrayList<>(Collections.nCopies(3, never()));
-
-        if (contentType != null) {
-            switch (contentType) {
-                case POSTS -> modes.set(0, times(1));
-                case COMMENTS -> modes.set(1, times(1));
-                case USERS -> modes.set(2, times(1));
-            }
-        }
-
-        return modes;
     }
 }

@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.REASON_NOT_FOUND;
-import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 

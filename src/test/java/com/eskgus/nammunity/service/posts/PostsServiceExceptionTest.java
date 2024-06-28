@@ -4,6 +4,7 @@ import com.eskgus.nammunity.domain.enums.ExceptionMessages;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.helper.PrincipalHelper;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,8 @@ import java.util.List;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
-import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.givePost;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,14 +53,11 @@ public class PostsServiceExceptionTest {
     @Test
     public void updatePostsWithNonExistentPost() {
         // given
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(ID);
+        Posts post = givePost(ID);
 
         PostsUpdateDto requestDto = PostsUpdateDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
-        ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsRepository.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ExceptionMessages exceptionMessage = throwIllegalArgumentException();
 
         // when/then
         assertIllegalArgumentException(() -> postsService.update(post.getId(), requestDto), exceptionMessage);
@@ -81,9 +80,7 @@ public class PostsServiceExceptionTest {
         // given
         List<Long> postIds = Arrays.asList(ID, ID + 1, ID + 2);
 
-        ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsRepository.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ExceptionMessages exceptionMessage = throwIllegalArgumentException();
 
         // when/then
         testDeleteSelectedPostsException(postIds, exceptionMessage, times(1));
@@ -92,9 +89,7 @@ public class PostsServiceExceptionTest {
     @Test
     public void deletePostsWithNonExistentPost() {
         // given
-        ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsRepository.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ExceptionMessages exceptionMessage = throwIllegalArgumentException();
 
         // when/then
         assertIllegalArgumentException(() -> postsService.delete(ID), exceptionMessage);
@@ -116,12 +111,19 @@ public class PostsServiceExceptionTest {
         return PostsSaveDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
     }
 
+    private ExceptionMessages throwIllegalArgumentException() {
+        ExceptionMessages exceptionMessage = POST_NOT_FOUND;
+        ServiceTestUtil.throwIllegalArgumentException(postsRepository::findById, exceptionMessage);
+
+        return exceptionMessage;
+    }
+
     private void testSavePostsException(Principal principal, ExceptionMessages exceptionMessage) {
         // given
         PostsSaveDto requestDto = createPostsSaveDto();
 
-        when(principalHelper.getUserFromPrincipal(principal, true))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ServiceTestUtil.throwIllegalArgumentException(
+                principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(() -> postsService.save(requestDto, principal), exceptionMessage);

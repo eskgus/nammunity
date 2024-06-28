@@ -15,10 +15,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 import java.util.*;
 
+import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -44,8 +46,7 @@ public class CommentsViewServiceTest {
         // given
         Posts post = mock(Posts.class);
 
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(ID);
+        User user = giveUser(ID);
 
         CommentsReadDto commentsReadDto = mock(CommentsReadDto.class);
         when(commentsReadDto.getAuthorId()).thenReturn(ID);
@@ -56,8 +57,7 @@ public class CommentsViewServiceTest {
         Page<CommentsReadDto> commentsPage = new PageImpl<>(content);
         when(commentsService.findByPosts(any(Posts.class), anyInt())).thenReturn(commentsPage);
 
-        Comments comment = mock(Comments.class);
-        when(commentsService.findById(anyLong())).thenReturn(comment);
+        Comments comment = giveComment(commentsService::findById);
 
         boolean doesUserLikeComment = false;
         when(likesService.existsByCommentsAndUser(any(Comments.class), any(User.class))).thenReturn(doesUserLikeComment);
@@ -78,9 +78,9 @@ public class CommentsViewServiceTest {
     @Test
     public void listComments() {
         // given
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+        Pair<Principal, User> pair = givePrincipal(principalHelper::getUserFromPrincipal);
+        Principal principal = pair.getFirst();
+        User user = pair.getSecond();
 
         Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
         when(commentsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(commentsPage);

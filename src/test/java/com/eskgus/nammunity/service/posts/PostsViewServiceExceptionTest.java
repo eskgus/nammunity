@@ -7,6 +7,7 @@ import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsViewService;
 import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.reports.ReasonsService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,8 +18,8 @@ import org.mockito.verification.VerificationMode;
 import java.security.Principal;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.giveUser;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,12 +48,11 @@ public class PostsViewServiceExceptionTest {
     @Test
     public void readPostsWithNonExistentPost() {
         // given
-        Posts post = givePost();
+        Posts post = givePost(false);
 
         Principal principal = mock(Principal.class);
 
-        ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsService.findById(anyLong())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ExceptionMessages exceptionMessage = throwIllegalArgumentException();
 
         // when/then
         testReadPostsException(post.getId(), principal, exceptionMessage, never());
@@ -61,19 +61,15 @@ public class PostsViewServiceExceptionTest {
     @Test
     public void readPostsWithNonExistentUsername() {
         // given
-        Posts post = givePost();
+        Posts post = givePost(true);
 
         Principal principal = mock(Principal.class);
 
-        when(postsService.findById(anyLong())).thenReturn(post);
-
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(ID);
+        User user = giveUser(ID);
         when(post.getUser()).thenReturn(user);
 
         ExceptionMessages exceptionMessage = USERNAME_NOT_FOUND;
-        when(principalHelper.getUserFromPrincipal(principal, false))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(principal, false, exceptionMessage);
 
         // when/then
         testReadPostsException(post.getId(), principal, exceptionMessage, times(1));
@@ -82,12 +78,11 @@ public class PostsViewServiceExceptionTest {
     @Test
     public void readCommentsWithNonExistentPost() {
         // given
-        Posts post = givePost();
+        Posts post = givePost(false);
 
         Principal principal = mock(Principal.class);
 
-        ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsService.findById(anyLong())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ExceptionMessages exceptionMessage = throwIllegalArgumentException();
 
         // when/then
         testReadCommentsThrowsNotFoundPostOrUsernameException(post, principal, exceptionMessage, never());
@@ -96,15 +91,12 @@ public class PostsViewServiceExceptionTest {
     @Test
     public void readCommentsWithNonExistentUsername() {
         // given
-        Posts post = givePost();
+        Posts post = givePost(true);
 
         Principal principal = mock(Principal.class);
 
-        when(postsService.findById(anyLong())).thenReturn(post);
-
         ExceptionMessages exceptionMessage = USERNAME_NOT_FOUND;
-        when(principalHelper.getUserFromPrincipal(principal, false))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(principal, false, exceptionMessage);
 
         // when/then
         testReadCommentsThrowsNotFoundPostOrUsernameException(
@@ -114,11 +106,9 @@ public class PostsViewServiceExceptionTest {
     @Test
     public void readCommentsWithNonExistentComment() {
         // given
-        Posts post = givePost();
+        Posts post = givePost(true);
 
         Principal principal = mock(Principal.class);
-
-        when(postsService.findById(anyLong())).thenReturn(post);
 
         when(principalHelper.getUserFromPrincipal(principal, false)).thenReturn(null);
 
@@ -146,8 +136,7 @@ public class PostsViewServiceExceptionTest {
     @Test
     public void updatePostsWithNonExistentPost() {
         // given
-        ExceptionMessages exceptionMessage = POST_NOT_FOUND;
-        when(postsService.findById(anyLong())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        ExceptionMessages exceptionMessage = throwIllegalArgumentException();
 
         // when/then
         assertIllegalArgumentException(() -> postsViewService.updatePosts(ID), exceptionMessage);
@@ -155,11 +144,24 @@ public class PostsViewServiceExceptionTest {
         verify(postsService).findById(eq(ID));
     }
 
-    private Posts givePost() {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(ID);
+    private Posts givePost(boolean findPosts) {
+        if (findPosts) {
+            return ServiceTestUtil.givePost(ID, postsService::findById);
+        }
+        return ServiceTestUtil.givePost(ID);
+    }
 
-        return post;
+    private ExceptionMessages throwIllegalArgumentException() {
+        ExceptionMessages exceptionMessage = POST_NOT_FOUND;
+        ServiceTestUtil.throwIllegalArgumentException(postsService::findById, exceptionMessage);
+
+        return exceptionMessage;
+    }
+
+    private void throwIllegalArgumentException(Principal principal, boolean throwExceptionOnMissingPrincipal,
+                                               ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.throwIllegalArgumentException(
+                principalHelper::getUserFromPrincipal, principal, throwExceptionOnMissingPrincipal, exceptionMessage);
     }
 
     private void testReadPostsException(Long postId, Principal principal, ExceptionMessages exceptionMessage,
@@ -192,8 +194,7 @@ public class PostsViewServiceExceptionTest {
 
     private void testListPostsException(Principal principal, ExceptionMessages exceptionMessage) {
         // given
-        when(principalHelper.getUserFromPrincipal(principal, true))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(principal, true, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(() -> postsViewService.listPosts(principal, PAGE), exceptionMessage);

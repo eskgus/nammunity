@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceExceptionTestUtil.assertIllegalArgumentException;
+import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -46,8 +46,7 @@ public class CommentsViewServiceExceptionTest {
         // given
         Posts post = mock(Posts.class);
 
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(ID);
+        User user = giveUser(ID);
 
         CommentsReadDto commentsReadDto = mock(CommentsReadDto.class);
         when(commentsReadDto.getAuthorId()).thenReturn(ID);
@@ -58,8 +57,7 @@ public class CommentsViewServiceExceptionTest {
         when(commentsService.findByPosts(any(Posts.class), anyInt())).thenReturn(commentsPage);
 
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
-        when(commentsService.findById(anyLong()))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(commentsService::findById, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(
@@ -85,8 +83,7 @@ public class CommentsViewServiceExceptionTest {
 
     private void testListCommentsException(Principal principal, ExceptionMessages exceptionMessage) {
         // given
-        when(principalHelper.getUserFromPrincipal(principal, true))
-                .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+        throwIllegalArgumentException(principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(() -> commentsViewService.listComments(principal, PAGE), exceptionMessage);

@@ -6,6 +6,7 @@ import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsViewService;
 import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.reports.ReasonsService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostWithReasonsDto;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.verification.VerificationMode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
+import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -79,9 +82,9 @@ public class PostsViewServiceTest {
     @Test
     public void listPosts() {
         // given
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+        Pair<Principal, User> pair = givePrincipal(principalHelper::getUserFromPrincipal);
+        Principal principal = pair.getFirst();
+        User user = pair.getSecond();
 
         Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
         when(postsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(postsPage);
@@ -114,23 +117,22 @@ public class PostsViewServiceTest {
         verify(postsService).findById(eq(post.getId()));
     }
 
-    private Posts givePost() {
-        Posts post = mock(Posts.class);
-        when(post.getId()).thenReturn(ID);
-        when(postsService.findById(anyLong())).thenReturn(post);
+    private Posts givePostDates() {
+        Posts post = givePost();
+
+        LocalDateTime now = LocalDateTime.now();
+        when(post.getCreatedDate()).thenReturn(now);
+        when(post.getModifiedDate()).thenReturn(now);
 
         return post;
     }
 
-    private void givePostDates(Posts post) {
-        LocalDateTime now = LocalDateTime.now();
-        when(post.getCreatedDate()).thenReturn(now);
-        when(post.getModifiedDate()).thenReturn(now);
+    private Posts givePost() {
+        return ServiceTestUtil.givePost(ID, postsService::findById);
     }
 
     private User giveUser(Posts post) {
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(ID);
+        User user = ServiceTestUtil.giveUser(ID);
         when(post.getUser()).thenReturn(user);
 
         return user;
@@ -138,8 +140,7 @@ public class PostsViewServiceTest {
 
     private void testReadPosts(Principal principal, boolean userWritesOrLikesPost, VerificationMode mode) {
         // given
-        Posts post = givePost();
-        givePostDates(post);
+        Posts post = givePostDates();
 
         User author = giveUser(post);
 
