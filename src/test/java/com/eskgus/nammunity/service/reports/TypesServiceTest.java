@@ -11,8 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -25,32 +25,21 @@ public class TypesServiceTest {
     private TypesService typesService;
 
     @Test
-    public void findByPostType() {
-        testFindByContentType(ContentType.POSTS);
+    public void findTypesByPostType() {
+        testFindTypesByContentType(POSTS);
     }
 
     @Test
-    public void findByCommentType() {
-        testFindByContentType(ContentType.COMMENTS);
+    public void findTypesByCommentType() {
+        testFindTypesByContentType(COMMENTS);
     }
 
     @Test
-    public void findByUserType() {
-        testFindByContentType(ContentType.USERS);
+    public void findTypesByUserType() {
+        testFindTypesByContentType(USERS);
     }
 
-    @Test
-    public void findByTypesWithNonExistentContentType() {
-        // given
-        when(typesRepository.findByDetail(anyString())).thenThrow(IllegalArgumentException.class);
-
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> typesService.findByContentType(ContentType.POSTS));
-
-        verify(typesRepository).findByDetail(anyString());
-    }
-
-    private void testFindByContentType(ContentType contentType) {
+    private void testFindTypesByContentType(ContentType contentType) {
         // given
         Types type = mock(Types.class);
         when(typesRepository.findByDetail(anyString())).thenReturn(Optional.of(type));
@@ -61,6 +50,6 @@ public class TypesServiceTest {
         // then
         assertEquals(type, result);
 
-        verify(typesRepository).findByDetail(contentType.getDetail());
+        verify(typesRepository).findByDetail(eq(contentType.getDetail()));
     }
 }
