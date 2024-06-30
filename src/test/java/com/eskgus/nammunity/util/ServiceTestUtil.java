@@ -132,7 +132,8 @@ public class ServiceTestUtil {
 
     public static <Entity, ParamType> void giveContentFinder(Function<ParamType, Optional<Entity>> finder,
                                                              Class<ParamType> paramType, Entity content) {
-        when(finder.apply(any(paramType))).thenReturn(Optional.of(content));
+        Optional<Entity> optional = content != null ? Optional.of(content) : Optional.empty();
+        when(finder.apply(any(paramType))).thenReturn(optional);
     }
 
     public static <Entity> List<Long> createContentIds(List<Entity> contents,
