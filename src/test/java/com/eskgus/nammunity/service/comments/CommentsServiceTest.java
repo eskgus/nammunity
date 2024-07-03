@@ -24,7 +24,6 @@ import java.security.Principal;
 import java.util.*;
 import java.util.function.BiFunction;
 
-import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -51,11 +50,11 @@ public class CommentsServiceTest {
     @Test
     public void saveComments() {
         // given
-        Posts post = givePost(ID, postsService::findById);
+        Posts post = ServiceTestUtil.givePost(ID, postsService::findById);
 
         CommentsSaveDto requestDto = new CommentsSaveDto(CONTENT, post.getId());
 
-        Principal principal = givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
+        Principal principal = ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
 
         Comments comment = giveComment(ID);
         when(commentsRepository.save(any(Comments.class))).thenReturn(comment);
@@ -91,7 +90,7 @@ public class CommentsServiceTest {
         // given
         List<Comments> comments = giveComments();
 
-        List<Long> commentIds = createContentIds(comments, new CommentsConverterForTest<>());
+        List<Long> commentIds = ServiceTestUtil.createContentIds(comments, new CommentsConverterForTest<>());
 
         when(commentsRepository.findById(anyLong())).thenAnswer(invocation -> {
             Long id = invocation.getArgument(0);
@@ -231,7 +230,7 @@ public class CommentsServiceTest {
 
     private Comments giveCommentFinder() {
         Comments comment = giveComment(ID);
-        giveContentFinder(commentsRepository::findById, Long.class, comment);
+        ServiceTestUtil.giveContentFinder(commentsRepository::findById, Long.class, comment);
 
         return comment;
     }

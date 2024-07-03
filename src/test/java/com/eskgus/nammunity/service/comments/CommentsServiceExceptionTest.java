@@ -11,6 +11,7 @@ import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -73,7 +73,7 @@ public class CommentsServiceExceptionTest {
         // given
         CommentsSaveDto requestDto = createCommentsSaveDto(ID);
 
-        Principal principal = givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
+        Principal principal = ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
 
         ExceptionMessages exceptionMessage = POST_NOT_FOUND;
         throwIllegalArgumentException(postsService::findById, exceptionMessage);
@@ -85,7 +85,7 @@ public class CommentsServiceExceptionTest {
     @Test
     public void updateCommentsWithNonExistentComment() {
         // given
-        Comments comment = giveComment(ID);
+        Comments comment = ServiceTestUtil.giveComment(ID);
 
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
         throwIllegalArgumentException(commentsRepository::findById, exceptionMessage);
@@ -141,7 +141,7 @@ public class CommentsServiceExceptionTest {
     }
 
     private CommentsSaveDto givePrincipalHelperThrowException(Principal principal, ExceptionMessages exceptionMessage) {
-        Posts post = givePost(ID);
+        Posts post = ServiceTestUtil.givePost(ID);
 
         CommentsSaveDto requestDto = createCommentsSaveDto(post.getId());
 
@@ -175,5 +175,9 @@ public class CommentsServiceExceptionTest {
 
         verify(commentsRepository, mode).findById(anyLong());
         verify(commentsRepository, never()).delete(any(Comments.class));
+    }
+
+    private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.assertIllegalArgumentException(executable, exceptionMessage);
     }
 }

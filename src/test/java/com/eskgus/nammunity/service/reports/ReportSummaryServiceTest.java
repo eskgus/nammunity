@@ -32,7 +32,6 @@ import java.util.*;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
 import static com.eskgus.nammunity.domain.enums.Fields.OTHER;
-import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -100,7 +99,8 @@ public class ReportSummaryServiceTest {
         // given
         int page = 1;
 
-        Page<ContentReportSummaryDto> summariesPage = giveContentsPage(contentReportSummaryRepository::findAllDesc);
+        Page<ContentReportSummaryDto> summariesPage = ServiceTestUtil.giveContentsPage(
+                contentReportSummaryRepository::findAllDesc);
 
         // when
         ContentsPageDto<ContentReportSummaryDto> result = reportSummaryService.findAllDesc(page);
@@ -120,7 +120,7 @@ public class ReportSummaryServiceTest {
         Types type = mock(Types.class);
         when(typesService.findByContentType(any(ContentType.class))).thenReturn(type);
 
-        Page<ContentReportSummaryDto> summariesPage = giveContentsPage(
+        Page<ContentReportSummaryDto> summariesPage = ServiceTestUtil.giveContentsPage(
                 contentReportSummaryRepository::findByTypes, Types.class);
 
         // when
@@ -139,7 +139,7 @@ public class ReportSummaryServiceTest {
         User user = mock(User.class);
 
         ContentReportSummary summary = mock(ContentReportSummary.class);
-        giveContentFinder(contentReportSummaryRepository::findByUser, User.class, summary);
+        ServiceTestUtil.giveContentFinder(contentReportSummaryRepository::findByUser, User.class, summary);
 
         // when
         ContentReportSummary result = reportSummaryService.findByUser(user);
@@ -213,7 +213,7 @@ public class ReportSummaryServiceTest {
     private Pair<List<Posts>, List<Long>> givePosts() {
         List<Posts> posts = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            Posts post = givePost(ID + i, postsService::findById);
+            Posts post = ServiceTestUtil.givePost(ID + i, postsService::findById);
             posts.add(post);
         }
 
@@ -224,7 +224,7 @@ public class ReportSummaryServiceTest {
     private Pair<List<Comments>, List<Long>> giveComments() {
         List<Comments> comments = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            Comments comment = giveComment(ID + i, commentsService::findById);
+            Comments comment = ServiceTestUtil.giveComment(ID + i, commentsService::findById);
             comments.add(comment);
         }
 
@@ -235,7 +235,7 @@ public class ReportSummaryServiceTest {
     private Pair<List<User>, List<Long>> giveUsers() {
         List<User> users = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            User user = giveUser(ID + i, userService::findById);
+            User user = ServiceTestUtil.giveUserId(ID + i, userService::findById);
             users.add(user);
         }
 

@@ -46,6 +46,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private final UserService userService;
     private final BannedUsersService bannedUsersService;
     private final RegistrationService registrationService;
+    private final RestTemplate restTemplate;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
@@ -68,7 +69,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Transactional
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oAuth2User = super.loadUser(userRequest);
+        OAuth2User oAuth2User = superLoadUser(userRequest);
 
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         CustomOAuth2User customOAuth2User = CustomOAuth2User.of(registrationId, oAuth2User.getAttributes());
@@ -101,6 +102,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         updateSocial(user, NONE);
 
         return cookie;
+    }
+
+    protected OAuth2User superLoadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        return super.loadUser(userRequest);
     }
 
     // loadUser
@@ -158,9 +163,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private User linkSocialAccount(CustomOAuth2User customOAuth2User, String username) {
         User user = userService.findByUsername(username);
 
-        validateSocialEmail(customOAuth2User, user);
+        boolean shouldUpdateEmail = validateSocialEmail(customOAuth2User, user);
+        if (shouldUpdateEmail) {
+            user.updateEmail(customOAuth2User.getEmail());
+        }
 
-        user.updateEmail(customOAuth2User.getEmail());
         updateSocial(user, customOAuth2User.getSocialType());
         return user;
     }
@@ -201,17 +208,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return user;
     }
 
-    private void validateSocialEmail(CustomOAuth2User customOAuth2User, User user) {
+    private boolean validateSocialEmail(CustomOAuth2User customOAuth2User, User user) {
         String socialEmail = customOAuth2User.getEmail();
 
         Optional<User> result = userRepository.findByEmail(socialEmail);
-        result.ifPresent(existingUser -> {
+        return result.map(existingUser -> {
             if (!user.getEmail().equals(socialEmail)) {
                 cancelSocialLink(existingUser, customOAuth2User, user);
                 throw new OAuth2AuthenticationException(
                         new OAuth2Error(OAuth2ErrorCodes.ACCESS_DENIED), SOCIAL_ACCOUNT_EXISTS.getMessage());
             }
-        });
+            return false;
+        }).orElse(true);
     }
 
     private void updateSocial(User user, SocialType socialType) {
@@ -263,7 +271,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String url = buildValidateAccessTokenUrl(socialType, accessToken, headers, username);
 
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        RestTemplate restTemplate = new RestTemplate();
         restTemplate.exchange(url, HttpMethod.GET, request, String.class);
     }
 
@@ -277,7 +284,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         HttpHeaders headers = generateSocialUnlinkHeaders(socialType, accessToken);
 
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        RestTemplate restTemplate = new RestTemplate();
         restTemplate.exchange(url, HttpMethod.POST, request, String.class);
     }
 
@@ -300,7 +306,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String refreshToken = getRefreshToken(user);
         String url = buildAccessTokenRefreshUrl(socialType, user.getUsername(), refreshToken);
 
-        RestTemplate restTemplate = new RestTemplate();
         return restTemplate.exchange(url, HttpMethod.POST, null, Map.class);
     }
 

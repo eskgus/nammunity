@@ -18,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 
 import static com.eskgus.nammunity.domain.enums.SearchType.TITLE_AND_CONTENT;
-import static com.eskgus.nammunity.util.ServiceTestUtil.createContentsPage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
@@ -108,7 +107,7 @@ public class SearchServiceTest {
     }
 
     private Page<PostsListDto> givePostsPage() {
-        Page<PostsListDto> postsPage = createContentsPage();
+        Page<PostsListDto> postsPage = ServiceTestUtil.createContentsPage();
         when(postsService.search(anyString(), anyString(), anyInt(), anyInt())).thenReturn(postsPage);
 
         return postsPage;

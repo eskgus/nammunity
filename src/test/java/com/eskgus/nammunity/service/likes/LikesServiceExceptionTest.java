@@ -12,6 +12,7 @@ import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.util.ServiceTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -203,6 +203,10 @@ public class LikesServiceExceptionTest {
 
         verify(likesRepository, mode).findById(anyLong());
         verify(likesRepository, never()).delete(any(Likes.class));
+    }
+
+    private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.assertIllegalArgumentException(executable, exceptionMessage);
     }
 
     private void verifyFindMethods(Long postId, Long commentId, VerificationMode postMode, VerificationMode commentMode) {

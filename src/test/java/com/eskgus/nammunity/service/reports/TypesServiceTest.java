@@ -3,6 +3,7 @@ package com.eskgus.nammunity.service.reports;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.reports.TypesRepository;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
-import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentFinder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -41,7 +41,7 @@ public class TypesServiceTest {
     private void testFindTypesByContentType(ContentType contentType) {
         // given
         Types type = mock(Types.class);
-        giveContentFinder(typesRepository::findByDetail, String.class, type);
+        ServiceTestUtil.giveContentFinder(typesRepository::findByDetail, String.class, type);
 
         // when
         Types result = typesService.findByContentType(contentType);

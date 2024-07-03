@@ -26,7 +26,6 @@ import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
-import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -51,7 +50,7 @@ public class PostsServiceTest {
         // given
         PostsSaveDto requestDto = PostsSaveDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
-        Principal principal = givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
+        Principal principal = ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal).getFirst();
 
         Posts post = givePost(ID);
         when(postsRepository.save(any(Posts.class))).thenReturn(post);
@@ -88,7 +87,7 @@ public class PostsServiceTest {
         // given
         List<Posts> posts = givePosts();
 
-        List<Long> postIds = createContentIds(posts, new PostsConverterForTest());
+        List<Long> postIds = ServiceTestUtil.createContentIds(posts, new PostsConverterForTest());
 
         when(postsRepository.findById(anyLong())).thenAnswer(invocation -> {
             Long id = invocation.getArgument(0);
@@ -151,7 +150,7 @@ public class PostsServiceTest {
     @Test
     public void findAllPostsDesc() {
         // given
-        Page<PostsListDto> postsPage = giveContentsPage(postsRepository::findAllDesc);
+        Page<PostsListDto> postsPage = ServiceTestUtil.giveContentsPage(postsRepository::findAllDesc);
 
         // when
         ContentsPageDto<PostsListDto> result = postsService.findAllDesc(PAGE);
@@ -222,7 +221,7 @@ public class PostsServiceTest {
 
     private Posts givePostFinder() {
         Posts post = givePost(ID);
-        giveContentFinder(postsRepository::findById, Long.class, post);
+        ServiceTestUtil.giveContentFinder(postsRepository::findById, Long.class, post);
 
         return post;
     }
@@ -233,7 +232,7 @@ public class PostsServiceTest {
 
     private <ParamType> Page<PostsListDto> givePostsPage(BiFunction<ParamType, Pageable, Page<PostsListDto>> finder,
                                                  Class<ParamType> paramType) {
-        return giveContentsPage(finder, paramType);
+        return ServiceTestUtil.giveContentsPage(finder, paramType);
     }
 
     private void testSearchPosts(SearchType searchType, BiFunction<String, Pageable, Page<PostsListDto>> searcher) {

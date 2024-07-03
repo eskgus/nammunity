@@ -12,6 +12,7 @@ import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,8 +25,6 @@ import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
-import static com.eskgus.nammunity.util.ServiceTestUtil.setModes;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -119,8 +118,8 @@ public class ReportSummaryServiceExceptionTest {
                 .postsId(postIds).commentsId(commentIds).userId(userIds).build();
     }
 
-    private <Entity, ReturnType> void throwIllegalArgumentException(Function<ReturnType, Entity> finder,
-                                                                    ExceptionMessages exceptionMessage) {
+    private <Entity, ParamType> void throwIllegalArgumentException(Function<ParamType, Entity> finder,
+                                                                   ExceptionMessages exceptionMessage) {
         ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 
@@ -138,7 +137,7 @@ public class ReportSummaryServiceExceptionTest {
 
     private void testDeleteSelectedSummariesException(ContentType contentType, ContentReportSummaryDeleteDto requestDto,
                                                       ExceptionMessages exceptionMessage) {
-        List<VerificationMode> modes = setModes(contentType);
+        List<VerificationMode> modes = ServiceTestUtil.setModes(contentType);
 
         assertIllegalArgumentException(
                 () -> reportSummaryService.deleteSelectedReportSummaries(requestDto), exceptionMessage);
@@ -147,5 +146,9 @@ public class ReportSummaryServiceExceptionTest {
         verify(commentsService, modes.get(1)).findById(anyLong());
         verify(userService, modes.get(2)).findById(anyLong());
         verify(contentReportSummaryRepository, never()).deleteByContents(any());
+    }
+
+    private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.assertIllegalArgumentException(executable, exceptionMessage);
     }
 }

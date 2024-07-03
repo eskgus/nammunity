@@ -6,9 +6,11 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.likes.LikesService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.security.Principal;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -42,16 +43,16 @@ public class CommentsViewServiceExceptionTest {
         // given
         Posts post = mock(Posts.class);
 
-        User user = giveUser(ID);
+        User user = ServiceTestUtil.giveUserId(ID);
 
         CommentsReadDto commentsReadDto = mock(CommentsReadDto.class);
         when(commentsReadDto.getAuthorId()).thenReturn(ID);
         when(commentsReadDto.getId()).thenReturn(ID);
 
-        giveContentsPage(commentsService::findByPosts, commentsReadDto);
+        ServiceTestUtil.giveContentsPage(commentsService::findByPosts, commentsReadDto);
 
         ExceptionMessages exceptionMessage = COMMENT_NOT_FOUND;
-        throwIllegalArgumentException(commentsService::findById, exceptionMessage);
+        ServiceTestUtil.throwIllegalArgumentException(commentsService::findById, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(
@@ -77,12 +78,17 @@ public class CommentsViewServiceExceptionTest {
 
     private void testListCommentsException(Principal principal, ExceptionMessages exceptionMessage) {
         // given
-        throwIllegalArgumentException(principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
+        ServiceTestUtil.throwIllegalArgumentException(
+                principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
 
         // when/then
         assertIllegalArgumentException(() -> commentsViewService.listComments(principal, PAGE), exceptionMessage);
 
         verify(principalHelper).getUserFromPrincipal(principal, true);
         verify(commentsService, never()).findByUser(any(User.class), eq(PAGE), anyInt());
+    }
+
+    private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.assertIllegalArgumentException(executable, exceptionMessage);
     }
 }

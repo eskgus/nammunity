@@ -37,14 +37,14 @@ public class ServiceTestUtil {
 
     public static Posts givePost(Function<Long, Posts> finder) {
         Posts post = mock(Posts.class);
-        giveContentFinder(finder, post);
+        giveContentFinder(finder, post, Long.class);
 
         return post;
     }
 
     public static Posts givePost(Long id, Function<Long, Posts> finder) {
         Posts post = givePost(id);
-        giveContentFinder(finder, post);
+        giveContentFinder(finder, post, Long.class);
 
         return post;
     }
@@ -58,35 +58,39 @@ public class ServiceTestUtil {
 
     public static Comments giveComment(Function<Long, Comments> finder) {
         Comments comment = mock(Comments.class);
-        giveContentFinder(finder, comment);
+        giveContentFinder(finder, comment, Long.class);
 
         return comment;
     }
 
     public static Comments giveComment(Long id, Function<Long, Comments> finder) {
         Comments comment = giveComment(id);
-        giveContentFinder(finder, comment);
+        giveContentFinder(finder, comment, Long.class);
 
         return comment;
     }
 
-    public static User giveUser(Long id) {
+    public static User giveUserId(Long id) {
         User user = mock(User.class);
         when(user.getId()).thenReturn(id);
 
         return user;
     }
 
-    public static User giveUser(Function<Long, User> finder) {
+    public static void giveUsername(User user, String username) {
+        when(user.getUsername()).thenReturn(username);
+    }
+
+    public static <ParamType> User giveUser(Function<ParamType, User> finder, Class<ParamType> paramType) {
         User user = mock(User.class);
-        giveContentFinder(finder, user);
+        giveContentFinder(finder, user, paramType);
 
         return user;
     }
 
-    public static User giveUser(Long id, Function<Long, User> finder) {
-        User user = giveUser(id);
-        giveContentFinder(finder, user);
+    public static User giveUserId(Long id, Function<Long, User> finder) {
+        User user = giveUserId(id);
+        giveContentFinder(finder, user, Long.class);
 
         return user;
     }
@@ -145,8 +149,8 @@ public class ServiceTestUtil {
         return new PageImpl<>(Collections.emptyList());
     }
 
-    public static <Entity, ReturnType> void throwIllegalArgumentException(Function<ReturnType, Entity> finder,
-                                                                          ExceptionMessages exceptionMessage) {
+    public static <Entity, ParamType> void throwIllegalArgumentException(Function<ParamType, Entity> finder,
+                                                                         ExceptionMessages exceptionMessage) {
         when(finder.apply(any())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
     }
 
@@ -178,8 +182,9 @@ public class ServiceTestUtil {
         return modes;
     }
 
-    private static <Entity> void giveContentFinder(Function<Long, Entity> finder, Entity content) {
-        when(finder.apply(anyLong())).thenReturn(content);
+    private static <Entity, ParamType> void giveContentFinder(Function<ParamType, Entity> finder, Entity content,
+                                                              Class<ParamType> paramType) {
+        when(finder.apply(any(paramType))).thenReturn(content);
     }
 
     private static Page<CommentsReadDto> createContentsPage(CommentsReadDto commentsReadDto) {

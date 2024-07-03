@@ -3,6 +3,7 @@ package com.eskgus.nammunity.service.likes;
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,8 +18,6 @@ import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.UNAUTHORIZED;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.USERNAME_NOT_FOUND;
-import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
-import static com.eskgus.nammunity.util.ServiceTestUtil.throwIllegalArgumentException;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,10 +48,11 @@ public class LikesViewServiceExceptionTest {
         // given
         BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
 
-        throwIllegalArgumentException(principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
+        ServiceTestUtil.throwIllegalArgumentException(principalHelper::getUserFromPrincipal, principal, true, exceptionMessage);
 
         // when/then
-        assertIllegalArgumentException(() -> likesViewService.listLikes(finder, principal, PAGE), exceptionMessage);
+        ServiceTestUtil.assertIllegalArgumentException(
+                () -> likesViewService.listLikes(finder, principal, PAGE), exceptionMessage);
 
         verify(principalHelper).getUserFromPrincipal(principal, true);
         verify(likesService, never()).findLikesByUser(any(User.class), eq(finder), eq(PAGE), anyInt());

@@ -10,6 +10,7 @@ import com.eskgus.nammunity.service.reports.ReasonsService;
 import com.eskgus.nammunity.util.ServiceTestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,8 +19,6 @@ import org.mockito.verification.VerificationMode;
 import java.security.Principal;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
-import static com.eskgus.nammunity.util.ServiceTestUtil.giveUser;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,7 +64,7 @@ public class PostsViewServiceExceptionTest {
 
         Principal principal = mock(Principal.class);
 
-        User user = giveUser(ID);
+        User user = ServiceTestUtil.giveUserId(ID);
         when(post.getUser()).thenReturn(user);
 
         ExceptionMessages exceptionMessage = USERNAME_NOT_FOUND;
@@ -201,5 +200,9 @@ public class PostsViewServiceExceptionTest {
 
         verify(principalHelper).getUserFromPrincipal(principal, true);
         verify(postsService, never()).findByUser(any(User.class), eq(PAGE), anyInt());
+    }
+
+    private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.assertIllegalArgumentException(executable, exceptionMessage);
     }
 }

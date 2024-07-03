@@ -2,6 +2,7 @@ package com.eskgus.nammunity.service.likes;
 
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import org.junit.jupiter.api.Test;
@@ -16,8 +17,6 @@ import org.springframework.data.util.Pair;
 import java.security.Principal;
 import java.util.function.BiFunction;
 
-import static com.eskgus.nammunity.util.ServiceTestUtil.createContentsPage;
-import static com.eskgus.nammunity.util.ServiceTestUtil.givePrincipal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -39,13 +38,13 @@ public class LikesViewServiceTest {
         // given
         BiFunction<User, Pageable, Page<LikesListDto>> finder = mock(BiFunction.class);
 
-        Pair<Principal, User> pair = givePrincipal(principalHelper::getUserFromPrincipal);
+        Pair<Principal, User> pair = ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal);
         Principal principal = pair.getFirst();
         User user = pair.getSecond();
 
         int page = 1;
 
-        Page<LikesListDto> likesPage = createContentsPage();
+        Page<LikesListDto> likesPage = ServiceTestUtil.createContentsPage();
         when(likesService.findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt()))
                 .thenReturn(likesPage);
 

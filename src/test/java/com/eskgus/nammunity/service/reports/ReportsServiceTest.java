@@ -30,8 +30,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
-import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentsPage;
-import static com.eskgus.nammunity.util.ServiceTestUtil.setModes;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -220,7 +218,7 @@ public class ReportsServiceTest {
     }
 
     private User giveUser() {
-        return ServiceTestUtil.giveUser(userService::findById);
+        return ServiceTestUtil.giveUser(userService::findById, Long.class);
     }
 
     private ContentReports giveReport() {
@@ -287,7 +285,7 @@ public class ReportsServiceTest {
         Types type = giveType();
         when(type.getDetail()).thenReturn(contentType.getDetail());
 
-        Page<ContentReportDetailListDto> reportDetailsPage = giveContentsPage(
+        Page<ContentReportDetailListDto> reportDetailsPage = ServiceTestUtil.giveContentsPage(
                 contentReportsRepository::findByContents, content.getClass());
 
         List<Long> contentIds = Arrays.asList(
@@ -308,7 +306,7 @@ public class ReportsServiceTest {
     }
 
     private void verifyFindContentById(ContentType contentType, List<Long> contentIds) {
-        List<VerificationMode> modes  = setModes(contentType);
+        List<VerificationMode> modes  = ServiceTestUtil.setModes(contentType);
 
         verify(postsService, modes.get(0)).findById(eq(contentIds.get(0)));
         verify(commentsService, modes.get(1)).findById(eq(contentIds.get(1)));

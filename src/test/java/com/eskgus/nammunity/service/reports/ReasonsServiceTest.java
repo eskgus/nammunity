@@ -2,6 +2,7 @@ package com.eskgus.nammunity.service.reports;
 
 import com.eskgus.nammunity.domain.reports.Reasons;
 import com.eskgus.nammunity.domain.reports.ReasonsRepository;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.reports.ReasonsListDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentFinder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -74,7 +74,7 @@ public class ReasonsServiceTest {
 
     private Reasons giveReasonFinder() {
         Reasons reason = giveReason(1L);
-        giveContentFinder(reasonsRepository::findById, Long.class, reason);
+        ServiceTestUtil.giveContentFinder(reasonsRepository::findById, Long.class, reason);
 
         return reason;
     }

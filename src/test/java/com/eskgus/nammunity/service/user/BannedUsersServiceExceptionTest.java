@@ -20,7 +20,6 @@ import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.domain.enums.Fields.USERNAME;
-import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -46,7 +45,7 @@ public class BannedUsersServiceExceptionTest {
     @Test
     public void banUserWithNonExistentUser() {
         // given
-        User user = giveUser(ID);
+        User user = ServiceTestUtil.giveUserId(ID);
 
         // when/then
         testBanUserException(userService::findById, USER_NOT_FOUND, user);
@@ -55,10 +54,10 @@ public class BannedUsersServiceExceptionTest {
     @Test
     public void banUserWithNonExistentUserReportSummary() {
         // given
-        User user = giveUser(ID, userService::findById);
+        User user = ServiceTestUtil.giveUserId(ID, userService::findById);
 
         BannedUsers bannedUser = mock(BannedUsers.class);
-        giveContentFinder(bannedUsersRepository::findByUser, User.class, bannedUser);
+        ServiceTestUtil.giveContentFinder(bannedUsersRepository::findByUser, User.class, bannedUser);
 
         // when/then
         testBanUserException(reportSummaryService::findByUser, USER_REPORT_SUMMARY_NOT_FOUND, user);
@@ -79,8 +78,8 @@ public class BannedUsersServiceExceptionTest {
         verify(bannedUsersRepository, never()).findByUser(any(User.class));
     }
 
-    private <Entity, ReturnType> void testBanUserException(Function<ReturnType, Entity> finder,
-                                                           ExceptionMessages exceptionMessage, User user) {
+    private <Entity, ParamType> void testBanUserException(Function<ParamType, Entity> finder,
+                                                          ExceptionMessages exceptionMessage, User user) {
         throwIllegalArgumentException(finder, exceptionMessage);
 
         VerificationMode mode = USER_NOT_FOUND.equals(exceptionMessage) ? never() : times(1);
@@ -95,8 +94,8 @@ public class BannedUsersServiceExceptionTest {
         verify(emailService, never()).send(anyString(), anyString());
     }
 
-    private <Entity, ReturnType> void throwIllegalArgumentException(Function<ReturnType, Entity> finder,
-                                                                    ExceptionMessages exceptionMessage) {
+    private <Entity, ParamType> void throwIllegalArgumentException(Function<ParamType, Entity> finder,
+                                                                   ExceptionMessages exceptionMessage) {
         ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 

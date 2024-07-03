@@ -29,7 +29,6 @@ import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
-import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -81,11 +80,11 @@ public class PostsViewServiceTest {
     @Test
     public void listPosts() {
         // given
-        Pair<Principal, User> pair = givePrincipal(principalHelper::getUserFromPrincipal);
+        Pair<Principal, User> pair = ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal);
         Principal principal = pair.getFirst();
         User user = pair.getSecond();
 
-        Page<PostsListDto> postsPage = giveContentsPage(postsService::findByUser, User.class);
+        Page<PostsListDto> postsPage = ServiceTestUtil.giveContentsPage(postsService::findByUser, User.class);
 
         // when
         ContentsPageDto<PostsListDto> result = postsViewService.listPosts(principal, PAGE);
@@ -130,7 +129,7 @@ public class PostsViewServiceTest {
     }
 
     private User giveUser(Posts post) {
-        User user = ServiceTestUtil.giveUser(ID);
+        User user = ServiceTestUtil.giveUserId(ID);
         when(post.getUser()).thenReturn(user);
 
         return user;
@@ -174,7 +173,7 @@ public class PostsViewServiceTest {
         Principal principal = mock(Principal.class);
         when(principalHelper.getUserFromPrincipal(principal, false)).thenReturn(user);
 
-        Page<CommentsReadDto> commentsPage = createContentsPage();
+        Page<CommentsReadDto> commentsPage = ServiceTestUtil.createContentsPage();
         when(commentsViewService.findCommentsPageByPosts(any(Posts.class), eq(user), anyInt()))
                 .thenReturn(commentsPage);
 

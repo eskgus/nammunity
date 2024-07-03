@@ -9,6 +9,7 @@ import com.eskgus.nammunity.web.dto.posts.PostsSaveDto;
 import com.eskgus.nammunity.web.dto.posts.PostsUpdateDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,8 +23,6 @@ import java.util.List;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
 import static com.eskgus.nammunity.domain.enums.Fields.CONTENT;
 import static com.eskgus.nammunity.domain.enums.Fields.TITLE;
-import static com.eskgus.nammunity.util.ServiceTestUtil.assertIllegalArgumentException;
-import static com.eskgus.nammunity.util.ServiceTestUtil.givePost;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,7 +52,7 @@ public class PostsServiceExceptionTest {
     @Test
     public void updatePostsWithNonExistentPost() {
         // given
-        Posts post = givePost(ID);
+        Posts post = ServiceTestUtil.givePost(ID);
 
         PostsUpdateDto requestDto = PostsUpdateDto.builder().title(TITLE.getKey()).content(CONTENT.getKey()).build();
 
@@ -138,5 +137,9 @@ public class PostsServiceExceptionTest {
 
         verify(postsRepository, mode).findById(anyLong());
         verify(postsRepository, never()).delete(any(Posts.class));
+    }
+
+    private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.assertIllegalArgumentException(executable, exceptionMessage);
     }
 }

@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import static com.eskgus.nammunity.util.ServiceTestUtil.createContentIds;
-import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentsPage;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -102,7 +100,7 @@ public class LikesServiceTest {
         // given
         List<Likes> likes = giveLikes();
 
-        List<Long> likeIds = createContentIds(likes, new LikesConverterForTest());
+        List<Long> likeIds = ServiceTestUtil.createContentIds(likes, new LikesConverterForTest());
 
         when(likesRepository.findById(anyLong())).thenAnswer(invocation -> {
             Long id = invocation.getArgument(0);
@@ -242,7 +240,7 @@ public class LikesServiceTest {
         int page = 1;
         int size = 3;
 
-        Page<LikesListDto> likesPage = giveContentsPage(finder, User.class);
+        Page<LikesListDto> likesPage = ServiceTestUtil.giveContentsPage(finder, User.class);
 
         // when
         Page<LikesListDto> result = likesService.findLikesByUser(user, finder, page, size);

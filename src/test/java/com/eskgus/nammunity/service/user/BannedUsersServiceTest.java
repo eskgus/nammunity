@@ -18,7 +18,6 @@ import java.time.Period;
 import java.util.Optional;
 
 import static com.eskgus.nammunity.domain.enums.Fields.*;
-import static com.eskgus.nammunity.util.ServiceTestUtil.giveContentFinder;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -103,10 +102,6 @@ public class BannedUsersServiceTest {
         testFindBannedUsersByUser(null, Optional.empty());
     }
 
-    private User giveUser() {
-        return ServiceTestUtil.giveUser(ID, userService::findById);
-    }
-
     private BannedUsers giveBannedUser() {
         BannedUsers bannedUser = mock(BannedUsers.class);
         when(bannedUser.getId()).thenReturn(ID);
@@ -139,7 +134,7 @@ public class BannedUsersServiceTest {
     }
 
     private void giveBannedUserFinder(BannedUsers bannedUser) {
-        giveContentFinder(bannedUsersRepository::findByUser, User.class, bannedUser);
+        ServiceTestUtil.giveContentFinder(bannedUsersRepository::findByUser, User.class, bannedUser);
     }
 
     private void testUpdateBannedUser(int count, Period period) {
@@ -156,7 +151,7 @@ public class BannedUsersServiceTest {
 
     private void testBanUser(BannedUsers bannedUser) {
         // given
-        User user = giveUser();
+        User user = ServiceTestUtil.giveUserId(ID, userService::findById);
 
         ContentReportSummary summary = giveSummary();
 
@@ -186,9 +181,8 @@ public class BannedUsersServiceTest {
 
     private void testIsAccountNonBanned(BannedUsers bannedUser, boolean isAccountNonBanned) {
         // given
-        User user = mock(User.class);
-        when(user.getUsername()).thenReturn(USERNAME.getKey());
-        when(userService.findByUsername(anyString())).thenReturn(user);
+        User user = ServiceTestUtil.giveUser(userService::findByUsername, String.class);
+        ServiceTestUtil.giveUsername(user, USERNAME.getKey());
 
         giveBannedUserFinder(bannedUser);
 

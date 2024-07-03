@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.likes.LikesService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
@@ -18,7 +19,6 @@ import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 
-import static com.eskgus.nammunity.util.ServiceTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -44,16 +44,17 @@ public class CommentsViewServiceTest {
         // given
         Posts post = mock(Posts.class);
 
-        User user = giveUser(ID);
+        User user = ServiceTestUtil.giveUserId(ID);
 
         CommentsReadDto commentsReadDto = mock(CommentsReadDto.class);
         when(commentsReadDto.getAuthorId()).thenReturn(ID);
         when(commentsReadDto.getId()).thenReturn(ID);
         boolean doesUserWriteComment = commentsReadDto.getAuthorId().equals(user.getId());
 
-        Page<CommentsReadDto> commentsPage = giveContentsPage(commentsService::findByPosts, commentsReadDto);
+        Page<CommentsReadDto> commentsPage = ServiceTestUtil.giveContentsPage(
+                commentsService::findByPosts, commentsReadDto);
 
-        Comments comment = giveComment(commentsService::findById);
+        Comments comment = ServiceTestUtil.giveComment(commentsService::findById);
 
         boolean doesUserLikeComment = false;
         when(likesService.existsByCommentsAndUser(any(Comments.class), any(User.class))).thenReturn(doesUserLikeComment);
@@ -74,11 +75,11 @@ public class CommentsViewServiceTest {
     @Test
     public void listComments() {
         // given
-        Pair<Principal, User> pair = givePrincipal(principalHelper::getUserFromPrincipal);
+        Pair<Principal, User> pair = ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal);
         Principal principal = pair.getFirst();
         User user = pair.getSecond();
 
-        Page<CommentsListDto> commentsPage = giveContentsPage(commentsService::findByUser, User.class);
+        Page<CommentsListDto> commentsPage = ServiceTestUtil.giveContentsPage(commentsService::findByUser, User.class);
 
         // when
         ContentsPageDto<CommentsListDto> result = commentsViewService.listComments(principal, PAGE);
