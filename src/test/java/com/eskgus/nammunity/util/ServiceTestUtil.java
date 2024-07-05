@@ -4,8 +4,10 @@ import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.exception.CustomValidException;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import org.assertj.core.util.TriFunction;
 import org.junit.jupiter.api.function.Executable;
@@ -81,6 +83,10 @@ public class ServiceTestUtil {
         when(user.getUsername()).thenReturn(username);
     }
 
+    public static void giveEmail(User user, String email) {
+        when(user.getEmail()).thenReturn(email);
+    }
+
     public static <ParamType> User giveUser(Function<ParamType, User> finder, Class<ParamType> paramType) {
         User user = mock(User.class);
         giveContentFinder(finder, user, paramType);
@@ -149,6 +155,11 @@ public class ServiceTestUtil {
         return new PageImpl<>(Collections.emptyList());
     }
 
+    public static CustomValidException createCustomValidException(Fields field, String rejectedValue,
+                                                                  ExceptionMessages exceptionMessage) {
+        return new CustomValidException(field, rejectedValue, exceptionMessage);
+    }
+
     public static <Entity, ParamType> void throwIllegalArgumentException(Function<ParamType, Entity> finder,
                                                                          ExceptionMessages exceptionMessage) {
         when(finder.apply(any())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
@@ -166,6 +177,14 @@ public class ServiceTestUtil {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, executable);
 
         assertEquals(exceptionMessage.getMessage(), exception.getMessage());
+    }
+
+    public static void assertCustomValidException(Executable executable, CustomValidException customValidException) {
+        CustomValidException exception = assertThrows(CustomValidException.class, executable);
+
+        assertEquals(customValidException.getField(), exception.getField());
+        assertEquals(customValidException.getRejectedValue(), exception.getRejectedValue());
+        assertEquals(customValidException.getDefaultMessage(), exception.getDefaultMessage());
     }
 
     public static List<VerificationMode> setModes(ContentType contentType) {

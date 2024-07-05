@@ -199,7 +199,7 @@ public class CustomOAuth2UserServiceExceptionTest {
 
     private void giveUser() {
         giveUsername();
-        when(user.getEmail()).thenReturn(EMAIL + EMAIL_VALUE);
+        ServiceTestUtil.giveEmail(user, EMAIL + EMAIL_VALUE);
     }
 
     private void giveExistingUser(SocialType socialType) {
@@ -363,9 +363,9 @@ public class CustomOAuth2UserServiceExceptionTest {
     private void assertSocialException(Executable executable, SocialException socialException) {
         SocialException exception = assertThrows(SocialException.class, executable);
 
-        assertEquals(exception.getUsername(), socialException.getUsername());
-        assertEquals(exception.getField(), socialException.getField());
-        assertEquals(exception.getRejectedValue(), socialException.getRejectedValue());
+        assertEquals(socialException.getUsername(), exception.getUsername());
+        assertEquals(socialException.getField(), exception.getField());
+        assertEquals(socialException.getRejectedValue(), exception.getRejectedValue());
     }
 
     private void assertOAuth2AuthenticationException(ExceptionMessages exceptionMessage) {

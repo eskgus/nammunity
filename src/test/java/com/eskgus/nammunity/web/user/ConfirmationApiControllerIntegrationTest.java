@@ -74,7 +74,6 @@ public class ConfirmationApiControllerIntegrationTest {
     public void checkUserEnabledInSignUp() throws Exception {
         String signUp = "/users/sign-up";
         String signIn = "/users/sign-in";
-
         testCheckUserEnabled(signUp, signIn);
     }
 

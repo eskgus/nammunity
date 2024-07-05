@@ -163,7 +163,7 @@ public class BannedUsersServiceTest {
         String text = "text";
         when(emailService.setBannedUserEmailText(any(BannedUsersEmailDto.class))).thenReturn(text);
 
-        when(user.getEmail()).thenReturn(EMAIL.getKey() + "@naver.com");
+        ServiceTestUtil.giveEmail(user, EMAIL.getKey() + "@naver.com");
         doNothing().when(emailService).send(anyString(), anyString());
 
         // when

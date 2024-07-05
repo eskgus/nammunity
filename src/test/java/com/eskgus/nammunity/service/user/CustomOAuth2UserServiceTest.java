@@ -256,7 +256,7 @@ public class CustomOAuth2UserServiceTest {
         this.oAuth2Token = null;
 
         if (doesEmailExist) {
-            when(user.getEmail()).thenReturn(EMAIL_VALUE);
+            ServiceTestUtil.giveEmail(user, EMAIL_VALUE);
         }
 
         // when/then
