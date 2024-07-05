@@ -252,7 +252,7 @@ public class RegistrationServiceTest {
     }
 
     private void giveChecker(Function<String, Boolean> checker) {
-        when(checker.apply(anyString())).thenReturn(false);
+        ServiceTestUtil.giveChecker(checker, false);
     }
 
     private User giveSendToken(boolean isRegistration) {

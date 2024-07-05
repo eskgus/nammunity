@@ -146,6 +146,10 @@ public class ServiceTestUtil {
         when(finder.apply(any(paramType))).thenReturn(optional);
     }
 
+    public static void giveChecker(Function<String, Boolean> checker, boolean exists) {
+        when(checker.apply(anyString())).thenReturn(exists);
+    }
+
     public static <Entity> List<Long> createContentIds(List<Entity> contents,
                                                        EntityConverterForTest<?, Entity> entityConverter) {
         return contents.stream().map(entityConverter::extractEntityId).toList();

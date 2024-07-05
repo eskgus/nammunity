@@ -291,7 +291,7 @@ public class RegistrationServiceExceptionTest {
     }
 
     private void giveChecker(Function<String, Boolean> checker, boolean exists) {
-        when(checker.apply(anyString())).thenReturn(exists);
+        ServiceTestUtil.giveChecker(checker, exists);
     }
 
     private RegistrationDto createRegistrationDto(boolean isPasswordConfirmed) {
