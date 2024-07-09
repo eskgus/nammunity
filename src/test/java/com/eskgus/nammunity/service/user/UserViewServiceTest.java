@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.enums.ContentType;
+import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.likes.LikesRepository;
 import com.eskgus.nammunity.domain.user.*;
 import com.eskgus.nammunity.helper.PrincipalHelper;
@@ -8,31 +9,34 @@ import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.likes.LikesService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.reports.ReportsService;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageMoreDtos;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.eskgus.nammunity.web.dto.user.ActivityHistoryDto;
+import com.eskgus.nammunity.web.dto.user.UserUpdateDto;
+import org.assertj.core.util.TriFunction;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.verification.VerificationMode;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+import org.springframework.data.util.Pair;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
+import static com.eskgus.nammunity.domain.enums.SocialType.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,80 +68,39 @@ public class UserViewServiceTest {
     @InjectMocks
     private UserViewService userViewService;
 
+    private static final int PAGE = 1;
+
     @Test
     public void findPostsActivityHistory() {
-        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
-        when(postsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(postsPage);
+        User user = testFindActivityHistory(POSTS, postsService::findByUser, commentsService::countByUser);
 
-        long numberOfComments = 1;
-        when(commentsService.countByUser(any(User.class))).thenReturn(numberOfComments);
-
-        ActivityHistoryDto result = testFindActivityHistory(POSTS);
-
-        assertEquals(postsPage, result.getPostsHistoryDto().getContentsPage().getContents());
-        assertEquals(numberOfComments, result.getPostsHistoryDto().getNumberOfComments());
-
-        verify(postsService).findByUser(any(User.class), anyInt(), anyInt());
-        verify(commentsService, never()).findByUser(any(User.class), anyInt(), anyInt());
-        verify(commentsService).countByUser(any(User.class));
-        verify(postsService, never()).countByUser(any(User.class));
+        verifyFindActivityHistory(times(1), never(), user);
     }
 
     @Test
     public void findCommentsActivityHistory() {
-        Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
-        when(commentsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(commentsPage);
+        User user = testFindActivityHistory(COMMENTS, commentsService::findByUser, postsService::countByUser);
 
-        long numberOfPosts = 1;
-        when(postsService.countByUser(any(User.class))).thenReturn(numberOfPosts);
-
-        ActivityHistoryDto result = testFindActivityHistory(COMMENTS);
-
-        assertEquals(commentsPage, result.getCommentsHistoryDto().getContentsPage().getContents());
-        assertEquals(numberOfPosts, result.getCommentsHistoryDto().getNumberOfPosts());
-
-        verify(postsService, never()).findByUser(any(User.class), anyInt(), anyInt());
-        verify(commentsService).findByUser(any(User.class), anyInt(), anyInt());
-        verify(commentsService, never()).countByUser(any(User.class));
-        verify(postsService).countByUser(any(User.class));
-    }
-
-    @Test
-    public void findActivityHistoryWithNonExistentUserId() {
-        // given
-        when(userService.findById(anyLong())).thenThrow(IllegalArgumentException.class);
-
-        Long id = 1L;
-        String type = POSTS.getName();
-        int page = 1;
-
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> userViewService.findActivityHistory(id, type, page));
-
-        verify(userService).findById(eq(id));
-
-        verify(bannedUsersService, never()).findByUser(any(User.class));
+        verifyFindActivityHistory(never(), times(1), user);
     }
 
     @Test
     public void getMyPage() {
         // given
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
+        Pair<Principal, User> pair = givePrincipal();
+        Principal principal = pair.getFirst();
+        User user = pair.getSecond();
 
-        Page<PostsListDto> postsPage = new PageImpl<>(Collections.emptyList());
-        when(postsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(postsPage);
+        Page<PostsListDto> postsPage = giveContentsPage(postsService::findByUser);
 
-        Page<CommentsListDto> commentsPage = new PageImpl<>(Collections.emptyList());
-        when(commentsService.findByUser(any(User.class), anyInt(), anyInt())).thenReturn(commentsPage);
+        Page<CommentsListDto> commentsPage = giveContentsPage(commentsService::findByUser);
 
-        Page<LikesListDto> likesPage = new PageImpl<>(Collections.emptyList());
-        when(likesService.findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt())).thenReturn(likesPage);
+        Page<LikesListDto> likesPage = ServiceTestUtil.createContentsPage();
+        when(likesService.findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt()))
+                .thenReturn(likesPage);
 
         // when
-        ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> result
-                = userViewService.getMyPage(principal);
+        ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> result = userViewService.getMyPage(principal);
 
         // then
         assertEquals(postsPage, result.getContentsPageMore1().getContents());
@@ -151,52 +114,104 @@ public class UserViewServiceTest {
     }
 
     @Test
-    public void getMyPageWithoutPrincipal() {
+    public void afterSignUp() {
         // given
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
+        User user = giveUserId();
 
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> userViewService.getMyPage(null));
-
-        verify(principalHelper).getUserFromPrincipal(null, true);
-
-        verify(postsService, never()).findByUser(any(User.class), anyInt(), anyInt());
-        verify(commentsService, never()).findByUser(any(User.class), anyInt(), anyInt());
-        verify(likesService, never()).findLikesByUser(any(User.class), any(BiFunction.class), anyInt(), anyInt());
-    }
-
-    private ActivityHistoryDto testFindActivityHistory(ContentType type) {
-        // given
-        LocalDateTime now = LocalDateTime.now();
-
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(1L);
-        when(user.getCreatedDate()).thenReturn(now);
-        when(userService.findById(user.getId())).thenReturn(user);
-
-        BannedUsers bannedUser = createMockedBannedUser(now);
-        when(bannedUsersService.findByUser(any(User.class))).thenReturn(Optional.of(bannedUser));
-
-        Map<String, Long> numberOfReports = createNumberOfReports();
-
-        int page = 1;
+        giveSocial(user, NONE);
 
         // when
-        ActivityHistoryDto result = userViewService.findActivityHistory(user.getId(), type.getName(), page);
+        UserUpdateDto result = userViewService.afterSignUp(user.getId());
 
         // then
-        assertEquals(bannedUser.getCount(), result.getBannedHistoryDto().getCount());
-        result.getNumberOfReports().forEach(entry -> {
-            String key = entry.getKey();
-            Long value = entry.getValue();
-            assertEquals(numberOfReports.get(key), value);
-        });
+        assertEquals(user.getId(), result.getId());
 
-        return result;
+        verify(userService).findById(eq(user.getId()));
     }
 
-    private BannedUsers createMockedBannedUser(LocalDateTime now) {
+    @Test
+    public void updateUserInfoWithRegularUser() {
+        testUpdateUserInfo(NONE);
+    }
+
+    @Test
+    public void updateUserInfoWithGoogleUser() {
+        testUpdateUserInfo(GOOGLE);
+    }
+
+    @Test
+    public void updateUserInfoWithNaverUser() {
+        testUpdateUserInfo(NAVER);
+    }
+
+    @Test
+    public void updateUserInfoWithKakaoUser() {
+        testUpdateUserInfo(KAKAO);
+    }
+
+    private <Dto> User testFindActivityHistory(ContentType contentType,
+                                               TriFunction<User, Integer, Integer, Page<Dto>> finder,
+                                               Function<User, Long> counter) {
+        // given
+        User user = giveUserId();
+
+        String type = contentType.getName();
+
+        when(user.getCreatedDate()).thenReturn(LocalDateTime.now());
+
+        BannedUsers bannedUser = giveBannedUser();
+        ServiceTestUtil.giveContentFinder(bannedUsersService::findByUser, User.class, bannedUser);
+
+        Page<Dto> contentsPage = giveContentsPage(finder);
+
+        long numberOfContents = giveCountContents(counter);
+
+        long numberOfReports = giveCountReports();
+
+        // when
+        ActivityHistoryDto result = userViewService.findActivityHistory(user.getId(), type, PAGE);
+
+        // then
+        assertEquals(user.getId(), result.getUsersListDto().getId());
+        assertEquals(bannedUser.getCount(), result.getBannedHistoryDto().getCount());
+        assertNumberOfReports(numberOfReports, result.getNumberOfReports());
+        assertContentsPage(contentType, result, contentsPage);
+        assertNumberOfContents(contentType, result, numberOfContents);
+
+        verify(userService).findById(eq(user.getId()));
+        verify(bannedUsersService).findByUser(eq(user));
+        verifyCountReportsByContentTypeAndUser(user);
+
+        return user;
+    }
+
+    private void testUpdateUserInfo(SocialType socialType) {
+        // given
+        Pair<Principal, User> pair = givePrincipal();
+        Principal principal = pair.getFirst();
+        User user = pair.getSecond();
+
+        giveSocial(user, socialType);
+
+        // when
+        UserUpdateDto result = userViewService.updateUserInfo(principal);
+
+        // then
+        assertEquals(NONE.equals(socialType), result.isNone());
+        assertEquals(GOOGLE.equals(socialType), result.isGoogle());
+        assertEquals(NAVER.equals(socialType), result.isNaver());
+        assertEquals(KAKAO.equals(socialType), result.isKakao());
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+    }
+
+    private User giveUserId() {
+        return ServiceTestUtil.giveUserId(1L, userService::findById);
+    }
+
+    private BannedUsers giveBannedUser() {
+        LocalDateTime now = LocalDateTime.now();
+
         BannedUsers bannedUser = mock(BannedUsers.class);
         when(bannedUser.getCount()).thenReturn(1);
         when(bannedUser.getPeriod()).thenReturn(Period.ofWeeks(1));
@@ -206,23 +221,68 @@ public class UserViewServiceTest {
         return bannedUser;
     }
 
-    private Map<String, Long> createNumberOfReports() {
-        long numberOfPostReports = 1L;
-        when(reportsService.countReportsByContentTypeAndUser(eq(POSTS), any(User.class)))
-                .thenReturn(numberOfPostReports);
+    private <Dto> Page<Dto> giveContentsPage(TriFunction<User, Integer, Integer, Page<Dto>> finder) {
+        return ServiceTestUtil.giveContentsPage(finder, User.class);
+    }
 
-        long numberOfCommentReports = 2L;
-        when(reportsService.countReportsByContentTypeAndUser(eq(COMMENTS), any(User.class)))
-                .thenReturn(numberOfCommentReports);
+    private long giveCountContents(Function<User, Long> counter) {
+        long numberOfContents = 1L;
+        when(counter.apply(any(User.class))).thenReturn(numberOfContents);
 
-        long numberOfUserReports = 3L;
-        when(reportsService.countReportsByContentTypeAndUser(eq(USERS), any(User.class)))
-                .thenReturn(numberOfUserReports);
+        return numberOfContents;
+    }
 
-        return Map.of(
-                POSTS.getDetail(), numberOfPostReports,
-                COMMENTS.getDetail(), numberOfCommentReports,
-                USERS.getDetail(), numberOfUserReports
-        );
+    private long giveCountReports() {
+        long numberOfReports = 10L;
+        when(reportsService.countReportsByContentTypeAndUser(any(ContentType.class), any(User.class)))
+                .thenReturn(numberOfReports);
+
+        return numberOfReports;
+    }
+
+    private Pair<Principal, User> givePrincipal() {
+        return ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal);
+    }
+
+    private void giveSocial(User user, SocialType socialType) {
+        when(user.getSocial()).thenReturn(socialType);
+    }
+
+    private void assertNumberOfReports(long numberOfReports, Set<Map.Entry<String, Long>> result) {
+        result.forEach(entry -> {
+            Long value = entry.getValue();
+
+            assertEquals(numberOfReports, value);
+        });
+    }
+
+    private <Dto> void assertContentsPage(ContentType contentType, ActivityHistoryDto result,
+                                          Page<Dto> contentsPage) {
+        Page<?> actualContentsPage = POSTS.equals(contentType)
+                ? result.getPostsHistoryDto().getContentsPage().getContents()
+                : result.getCommentsHistoryDto().getContentsPage().getContents();
+
+        assertEquals(contentsPage, actualContentsPage);
+    }
+
+    private void assertNumberOfContents(ContentType contentType, ActivityHistoryDto result, long numberOfContents) {
+        long actualNumberOfContents = POSTS.equals(contentType)
+                ? result.getPostsHistoryDto().getNumberOfComments()
+                : result.getCommentsHistoryDto().getNumberOfPosts();
+
+        assertEquals(numberOfContents, actualNumberOfContents);
+    }
+
+    private void verifyCountReportsByContentTypeAndUser(User user) {
+        for (ContentType contentType : ContentType.values()) {
+            verify(reportsService).countReportsByContentTypeAndUser(eq(contentType), eq(user));
+        }
+    }
+
+    private void verifyFindActivityHistory(VerificationMode postMode, VerificationMode commentMode, User user) {
+        verify(postsService, postMode).findByUser(eq(user), eq(PAGE), anyInt());
+        verify(commentsService, postMode).countByUser(eq(user));
+        verify(commentsService, commentMode).findByUser(eq(user), eq(PAGE), anyInt());
+        verify(postsService, commentMode).countByUser(eq(user));
     }
 }
