@@ -5,9 +5,11 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.enums.ExceptionMessages;
 import com.eskgus.nammunity.domain.enums.Fields;
+import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.exception.CustomValidException;
+import com.eskgus.nammunity.exception.SocialException;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import org.assertj.core.util.TriFunction;
 import org.junit.jupiter.api.function.Executable;
@@ -25,6 +27,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static com.eskgus.nammunity.domain.enums.Fields.SOCIAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -159,11 +162,6 @@ public class ServiceTestUtil {
         return new PageImpl<>(Collections.emptyList());
     }
 
-    public static CustomValidException createCustomValidException(Fields field, String rejectedValue,
-                                                                  ExceptionMessages exceptionMessage) {
-        return new CustomValidException(field, rejectedValue, exceptionMessage);
-    }
-
     public static <Entity, ParamType> void throwIllegalArgumentException(Function<ParamType, Entity> finder,
                                                                          ExceptionMessages exceptionMessage) {
         when(finder.apply(any())).thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
@@ -175,6 +173,17 @@ public class ServiceTestUtil {
                                                      ExceptionMessages exceptionMessage) {
         when(principalHelper.apply(principal, throwExceptionOnMissingPrincipal))
                 .thenThrow(new IllegalArgumentException(exceptionMessage.getMessage()));
+    }
+
+    public static CustomValidException createCustomValidException(Fields field, String rejectedValue,
+                                                                  ExceptionMessages exceptionMessage) {
+        return new CustomValidException(field, rejectedValue, exceptionMessage);
+    }
+
+    public static SocialException createSocialException(String username, Fields field, SocialType registrationId) {
+        SocialType socialType = SOCIAL.equals(field) ? registrationId : null;
+
+        return new SocialException(username, field, socialType);
     }
 
     public static void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
@@ -189,6 +198,14 @@ public class ServiceTestUtil {
         assertEquals(customValidException.getField(), exception.getField());
         assertEquals(customValidException.getRejectedValue(), exception.getRejectedValue());
         assertEquals(customValidException.getDefaultMessage(), exception.getDefaultMessage());
+    }
+
+    public static void assertSocialException(Executable executable, SocialException socialException) {
+        SocialException exception = assertThrows(SocialException.class, executable);
+
+        assertEquals(socialException.getUsername(), exception.getUsername());
+        assertEquals(socialException.getField(), exception.getField());
+        assertEquals(socialException.getRejectedValue(), exception.getRejectedValue());
     }
 
     public static List<VerificationMode> setModes(ContentType contentType) {

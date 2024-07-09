@@ -1,10 +1,11 @@
 package com.eskgus.nammunity.service.user;
 
+import com.eskgus.nammunity.domain.enums.Fields;
 import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.tokens.Tokens;
 import com.eskgus.nammunity.domain.user.User;
-import com.eskgus.nammunity.exception.CustomValidException;
 import com.eskgus.nammunity.helper.PrincipalHelper;
+import com.eskgus.nammunity.util.ServiceTestUtil;
 import com.eskgus.nammunity.web.dto.user.EmailUpdateDto;
 import com.eskgus.nammunity.web.dto.user.NicknameUpdateDto;
 import com.eskgus.nammunity.web.dto.user.PasswordUpdateDto;
@@ -21,11 +22,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
-import static com.eskgus.nammunity.domain.enums.SocialType.NAVER;
-import static com.eskgus.nammunity.domain.enums.SocialType.NONE;
+import static com.eskgus.nammunity.domain.enums.Fields.*;
+import static com.eskgus.nammunity.domain.enums.SocialType.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -50,19 +52,29 @@ public class UserUpdateServiceTest {
     @InjectMocks
     private UserUpdateService userUpdateService;
 
+    private static final Long ID = 1L;
+    private static final String PASSWORD_VALUE = PASSWORD.getKey() + ID;
+    private static final String ACCESS_TOKEN = Fields.ACCESS_TOKEN.getKey();
+
     @Test
     public void updatePassword() {
         // given
-        PasswordUpdateDto requestDto = createPasswordUpdateDto(true, true);
+        PasswordUpdateDto requestDto = createPasswordUpdateDto();
 
-        Pair<Principal, User> pair = givePrincipal("password", requestDto.getOldPassword());
+        Pair<Principal, User> pair = givePrincipal();
         Principal principal = pair.getFirst();
         User user = pair.getSecond();
-        when(user.getId()).thenReturn(1L);
+
+        String currentPassword = requestDto.getOldPassword();
+        when(user.getPassword()).thenReturn(currentPassword);
 
         when(encoder.matches(anyString(), anyString())).thenReturn(true);
 
-        when(registrationService.encryptPassword(anyString())).thenReturn("encryptedPassword");
+        String encryptedPassword = giveEncryptPassword(requestDto.getPassword());
+
+        doNothing().when(user).updatePassword(anyString());
+
+        giveUserId(user);
 
         // when
         Long result = userUpdateService.updatePassword(requestDto, principal);
@@ -70,293 +82,57 @@ public class UserUpdateServiceTest {
         // then
         assertEquals(user.getId(), result);
 
-        verifyPrincipalAndMatches(principal, times(1), requestDto.getOldPassword());
-        verifyAfterMatches(times(1), requestDto.getPassword(), user);
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(encoder).matches(eq(requestDto.getOldPassword()), eq(currentPassword));
+        verify(registrationService).encryptPassword(eq(requestDto.getPassword()));
+        verify(user).updatePassword(eq(encryptedPassword));
     }
 
     @Test
-    public void updatePasswordWithoutPrincipal() {
+    public void updateEmailWithEnabledUser() {
+        testUpdateEmail(true);
+    }
+
+    @Test
+    public void updateEmailWithDisabledUser() {
+        testUpdateEmail(false);
+    }
+
+    private void testUpdateEmail(boolean isEnabled) {
         // given
-        PasswordUpdateDto requestDto = createPasswordUpdateDto(true, true);
+        String emailPrefix = EMAIL.getKey() + ID;
+        String emailSuffix = "@naver.com";
+        String newEmail = emailPrefix + ID + emailSuffix;
+        EmailUpdateDto requestDto = new EmailUpdateDto(newEmail);
 
-        User user = mock(User.class);
-
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
-
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> userUpdateService.updatePassword(requestDto, null));
-
-        verifyPrincipalAndMatches(null, never(), "dummyOldPassword");
-        verifyAfterMatches(never(), "dummyPassword", user);
-    }
-
-    @Test
-    public void updatePasswordWithNonMatchingOldPassword() {
-        assertThrowsAndVerifyUpdatePassword(true, true, false);
-    }
-
-    @Test
-    public void updatePasswordWithSameOldAndNewPassword() {
-        assertThrowsAndVerifyUpdatePassword(false, true, true);
-    }
-
-    @Test
-    public void updatePasswordWithNonMatchingConfirmPassword() {
-        assertThrowsAndVerifyUpdatePassword(true, false, true);
-    }
-
-    @Test
-    public void updateNickname() {
-        // given
-        NicknameUpdateDto requestDto = createNicknameUpdateDto(true);
-
-        Pair<Principal, User> pair = givePrincipal("nickname", "nickname");
+        Pair<Principal, User> pair = givePrincipal();
         Principal principal = pair.getFirst();
         User user = pair.getSecond();
 
-        when(user.getId()).thenReturn(1L);
+        when(user.getEmail()).thenReturn(emailPrefix + emailSuffix);
 
-        when(userService.existsByNickname(anyString())).thenReturn(false);
+        giveChecker(userService::existsByEmail);
 
-        // when
-        Long result = userUpdateService.updateNickname(requestDto, principal);
+        when(user.isEnabled()).thenReturn(isEnabled);
 
-        // then
-        assertEquals(user.getId(), result);
-
-        verifyUpdateNickname(principal, Pair.of(requestDto, user),
-                times(1), times(1));
-    }
-
-    @Test
-    public void updateNicknameWithoutPrincipal() {
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
-
-        assertThrowsAndVerifyUpdateNickname(true, null, mock(User.class), never());
-    }
-
-    @Test
-    public void updateNicknameWithSameOldAndNewNickname() {
-        Pair<Principal, User> pair = givePrincipal("nickname", "nickname");
-
-        assertThrowsAndVerifyUpdateNickname(false, pair.getFirst(), pair.getSecond(), never());
-    }
-
-    @Test
-    public void updateNicknameWithExistentNickname() {
-        Pair<Principal, User> pair = givePrincipal("nickname", "nickname");
-
-        when(userService.existsByNickname(anyString())).thenReturn(true);
-
-        assertThrowsAndVerifyUpdateNickname(true, pair.getFirst(), pair.getSecond(), times(1));
-    }
-
-    @Test
-    public void updateEmailWhenUserIsNotEnabled() {
-        User user = createMockedUser(false);
-
-        testUpdateEmail(user, never());
-    }
-
-    @Test
-    public void updateEmailWhenUserIsEnabled() {
-        User user = giveUser(false);
-
-        testUpdateEmail(user, times(1));
-    }
-
-    @Test
-    public void updateEmailWithoutPrincipal() {
-        User user = createMockedUser(null);
-
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
-
-        Tokens token = mock(Tokens.class);
-
-        assertThrowsAndVerifyUpdateEmail(user, null, token, never());
-    }
-
-    @Test
-    public void updateEmailWithSameOldAndNewEmail() {
-        User user = createMockedUser(true);
-
-        assertThrowsAndVerifyUpdateEmail(false, user, never());
-    }
-
-    @Test
-    public void updateEmailWithExistentEmail() {
-        User user = giveUser(true);
-
-        assertThrowsAndVerifyUpdateEmail(true, user, times(1));
-    }
-
-    @Test
-    public void updateEmailWithNonExistentUserId() {
-        User user = giveUser(false);
-
-        Principal principal = givePrincipal(user);
-
-        Tokens token = giveToken(user);
-
-        doThrow(IllegalArgumentException.class).when(registrationService).sendToken(anyLong(), anyString(), anyString());
-
-        assertThrowsAndVerifyUpdateEmail(user, principal, token, times(1));
-    }
-
-    @Test
-    public void deleteRegularUser() {
-        Cookie cookie = mock(Cookie.class);
-
-        testDeleteUser(cookie, NONE, never());
-    }
-
-    @Test
-    public void deleteSocialUser() {
-        Cookie cookie = createMockedCookie();
-        when(customOAuth2UserService.unlinkSocial(any(SocialType.class), anyString(), any(User.class))).thenReturn(cookie);
-
-        testDeleteUser(cookie, NAVER, times(1));
-    }
-
-    @Test
-    public void deleteUserWithoutPrincipal() {
-        User user = giveUser(NONE);
-
-        when(principalHelper.getUserFromPrincipal(null, true))
-                .thenThrow(IllegalArgumentException.class);
-
-        assertThrowsAndVerifyDeleteUser(null, user, never());
-    }
-
-    @Test
-    public void deleteUserWithNonExistentUserId() {
-        User user = giveUser(NONE);
-
-        Principal principal = givePrincipal(user);
-
-        doThrow(IllegalArgumentException.class).when(userService).delete(anyLong());
-
-        assertThrowsAndVerifyDeleteUser(principal, user, times(1));
-    }
-
-    private void assertThrowsAndVerifyUpdatePassword(boolean isPasswordValid, boolean isPasswordConfirmed,
-                                                     boolean matches) {
-        // given
-        PasswordUpdateDto requestDto = createPasswordUpdateDto(isPasswordValid, isPasswordConfirmed);
-
-        Pair<Principal, User> pair = givePrincipal("password", requestDto.getOldPassword());
-        Principal principal = pair.getFirst();
-        User user = pair.getSecond();
-
-        when(encoder.matches(anyString(), anyString())).thenReturn(matches);
-
-        // when/then
-        assertThrows(CustomValidException.class, () -> userUpdateService.updatePassword(requestDto, principal));
-
-        verifyCommon(principal, requestDto.getOldPassword(), user);
-    }
-
-    private PasswordUpdateDto createPasswordUpdateDto(boolean isPasswordValid, boolean isPasswordConfirmed) {
-        String password = "password";
-        String oldPassword = isPasswordValid ? "old" + password : password;
-        String confirmPassword = isPasswordConfirmed ? password : "confirm" + password;
-
-        return PasswordUpdateDto.builder()
-                .oldPassword(oldPassword).password(password).confirmPassword(confirmPassword).build();
-    }
-
-    private Pair<Principal, User> givePrincipal(String field, String value) {
-        Principal principal = mock(Principal.class);
-        User user = mock(User.class);
-        if (field.equals("password")) {
-            when(user.getPassword()).thenReturn(value);
-        } else if (field.equals("nickname")) {
-            when(user.getNickname()).thenReturn(value);
-        }
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
-
-        return Pair.of(principal, user);
-    }
-
-    private void verifyCommon(Principal principal, String oldPassword, User user) {
-        verifyPrincipalAndMatches(principal, times(1), oldPassword);
-        verifyAfterMatches(never(), "dummyPassword", user);
-    }
-
-    private void verifyPrincipalAndMatches(Principal principal, VerificationMode mode, String oldPassword) {
-        verify(principalHelper).getUserFromPrincipal(principal, true);
-        verify(encoder, mode).matches(eq(oldPassword), anyString());
-    }
-
-    private void verifyAfterMatches(VerificationMode mode, String password, User user) {
-        verify(registrationService, mode).encryptPassword(eq(password));
-        verify(user, mode).updatePassword(anyString());
-    }
-
-    private void assertThrowsAndVerifyUpdateNickname(boolean isNicknameValid, Principal principal,
-                                                     User user, VerificationMode existsMode) {
-        // given
-        NicknameUpdateDto requestDto = createNicknameUpdateDto(isNicknameValid);
-
-        Class<? extends Throwable> exceptedType
-                = principal != null? CustomValidException.class : IllegalArgumentException.class;
-
-        // when/then
-        assertThrows(exceptedType, () -> userUpdateService.updateNickname(requestDto, principal));
-
-        verifyUpdateNickname(principal, Pair.of(requestDto, user), existsMode, never());
-    }
-
-    private NicknameUpdateDto createNicknameUpdateDto(boolean isNicknameValid) {
-        String nickname = "nickname";
-        String newNickname = isNicknameValid ? "new" + nickname : nickname;
-
-        return new NicknameUpdateDto(newNickname);
-    }
-
-    private void verifyUpdateNickname(Principal principal, Pair<NicknameUpdateDto, User> pair,
-                                      VerificationMode existsMode, VerificationMode updateMode) {
-        NicknameUpdateDto requestDto = pair.getFirst();
-
-        verifyBeforeUpdateNickname(principal, existsMode, requestDto);
-        verify(pair.getSecond(), updateMode).updateNickname(eq(requestDto.getNickname()));
-    }
-
-    private void verifyBeforeUpdateNickname(Principal principal,
-                                            VerificationMode existsMode, NicknameUpdateDto requestDto) {
-        verify(principalHelper).getUserFromPrincipal(principal, true);
-        verify(userService, existsMode).existsByNickname(eq(requestDto.getNickname()));
-    }
-
-    private User giveUser(boolean exists) {
-        User user = createMockedUser(true);
-        when(userService.existsByEmail(anyString())).thenReturn(exists);
-
-        return user;
-    }
-
-    private User createMockedUser(Boolean isEnabled) {
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(1L);
-        when(user.getEmail()).thenReturn("email@naver.com");
-        if (isEnabled != null) {
-            when(user.isEnabled()).thenReturn(isEnabled);
+        if (isEnabled) {
+            doNothing().when(user).updateEnabled();
         }
 
-        return user;
-    }
+        List<Tokens> tokens = giveTokens();
+        when(user.getTokens()).thenReturn(tokens);
 
-    private void testUpdateEmail(User user, VerificationMode mode) {
-        // given
-        EmailUpdateDto requestDto = createEmailUpdateDto(true, user.getEmail());
-        Pair<EmailUpdateDto, User> pair = Pair.of(requestDto, user);
+        for (Tokens token : tokens) {
+            doNothing().when(token).updateExpiredAt(any(LocalDateTime.class));
+        }
 
-        Principal principal = givePrincipal(user);
+        doNothing().when(registrationService).sendToken(anyLong(), anyString(), anyString());
 
-        Tokens token = giveToken(user);
+        doNothing().when(user).updateEmail(anyString());
+
+        giveUserId(user);
+
+        VerificationMode updateEnabledMode = isEnabled ? times(1) : never();
 
         // when
         Long result = userUpdateService.updateEmail(requestDto, principal);
@@ -365,142 +141,173 @@ public class UserUpdateServiceTest {
         assertEquals(user.getId(), result);
 
         verify(principalHelper).getUserFromPrincipal(principal, true);
-
-        VerificationMode times = times(1);
-        verifyUser(pair, times, mode, mode);
-        verifyAfterUser(token, pair, times, times);
+        verify(user).getEmail();
+        verify(userService).existsByEmail(eq(newEmail));
+        verify(user).isEnabled();
+        verify(user, updateEnabledMode).updateEnabled();
+        verify(user).getTokens();
+        tokens.forEach(token -> verify(token).updateExpiredAt(any(LocalDateTime.class)));
+        verify(registrationService).sendToken(eq(user.getId()), eq(newEmail), eq("update"));
+        verify(user).updateEmail(newEmail);
     }
 
-    private void assertThrowsAndVerifyUpdateEmail(User user, Principal principal, Tokens token, VerificationMode mode) {
+    @Test
+    public void updateNickname() {
         // given
-        EmailUpdateDto requestDto = createEmailUpdateDto(true, user.getEmail());
-        Pair<EmailUpdateDto, User> pair = Pair.of(requestDto, user);
+        String nicknameValue = NICKNAME.getKey() + ID;
+        String newNickname = nicknameValue + ID;
+        NicknameUpdateDto requestDto = new NicknameUpdateDto(newNickname);
 
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> userUpdateService.updateEmail(requestDto, principal));
-
-        verify(principalHelper).getUserFromPrincipal(principal, true);
-        verifyUser(pair, mode, mode, mode);
-        verifyAfterUser(token, pair, mode, never());
-    }
-
-    private void assertThrowsAndVerifyUpdateEmail(boolean isEmailValid, User user, VerificationMode mode) {
-        // given
-        EmailUpdateDto requestDto = createEmailUpdateDto(isEmailValid, user.getEmail());
-        Pair<EmailUpdateDto, User> pair = Pair.of(requestDto, user);
-
-        Principal principal = givePrincipal(user);
-
-        Tokens token = mock(Tokens.class);
-
-        // when/then
-        assertThrows(CustomValidException.class, () -> userUpdateService.updateEmail(requestDto, principal));
-
-        verify(principalHelper).getUserFromPrincipal(principal, true);
-        verifyUser(pair, times(1), mode, never());
-        verifyAfterUser(token, pair, never(), never());
-    }
-
-    private EmailUpdateDto createEmailUpdateDto(boolean isEmailValid, String email) {
-        String newEmail = isEmailValid ? "new" + email : email;
-
-        return new EmailUpdateDto(newEmail);
-    }
-
-    private Principal givePrincipal(User user) {
-        Principal principal = mock(Principal.class);
-        when(principalHelper.getUserFromPrincipal(principal, true)).thenReturn(user);
-
-        return principal;
-    }
-
-    private Tokens giveToken(User user) {
-        Tokens token = mock(Tokens.class);
-        List<Tokens> tokens = Collections.singletonList(token);
-        when(user.getTokens()).thenReturn(tokens);
-
-        return token;
-    }
-
-    private void verifyUser(Pair<EmailUpdateDto, User> pair, VerificationMode enabledMode,
-                            VerificationMode existsMode, VerificationMode updateEnabledMode) {
+        Pair<Principal, User> pair = givePrincipal();
+        Principal principal = pair.getFirst();
         User user = pair.getSecond();
 
-        verify(user, enabledMode).isEnabled();
-        verify(userService, existsMode).existsByEmail(eq(pair.getFirst().getEmail()));
-        verify(user, updateEnabledMode).updateEnabled();
-    }
+        when(user.getNickname()).thenReturn(nicknameValue);
 
-    private void verifyAfterUser(Tokens token, Pair<EmailUpdateDto, User> pair,
-                                 VerificationMode tokenMode, VerificationMode updateEmailMode) {
-        verifyToken(token, pair, tokenMode);
-        verify(pair.getSecond(), updateEmailMode).updateEmail(eq(pair.getFirst().getEmail()));
-    }
+        giveChecker(userService::existsByNickname);
 
-    private void verifyToken(Tokens token, Pair<EmailUpdateDto, User> pair, VerificationMode tokenMode) {
-        verify(token, tokenMode).updateExpiredAt(any(LocalDateTime.class));
-        verify(registrationService, tokenMode)
-                .sendToken(eq(pair.getSecond().getId()), eq(pair.getFirst().getEmail()), eq("update"));
-    }
+        doNothing().when(user).updateNickname(anyString());
 
-    private Cookie createMockedCookie() {
-        Cookie cookie = mock(Cookie.class);
-        when(cookie.getName()).thenReturn("access_token");
-        when(cookie.getValue()).thenReturn(null);
-        when(cookie.getPath()).thenReturn("/");
-        when(cookie.isHttpOnly()).thenReturn(true);
-        when(cookie.getMaxAge()).thenReturn(0);
-
-        return cookie;
-    }
-
-    private User giveUser(SocialType socialType) {
-        User user = mock(User.class);
-        when(user.getId()).thenReturn(1L);
-        when(user.getSocial()).thenReturn(socialType);
-
-        return user;
-    }
-
-    private void testDeleteUser(Cookie cookie, SocialType socialType, VerificationMode mode) {
-        // given
-        User user = giveUser(socialType);
-
-        Principal principal = givePrincipal(user);
-
-        String accessToken = "accessToken";
+        giveUserId(user);
 
         // when
-        HttpHeaders result = userUpdateService.deleteUser(principal, accessToken);
+        Long result = userUpdateService.updateNickname(requestDto, principal);
 
         // then
-        if (NONE.equals(socialType)) {
-            assertNull(result);
-        } else {
-            assertNotNull(result);
+        assertEquals(user.getId(), result);
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(user).getNickname();
+        verify(userService).existsByNickname(eq(newNickname));
+        verify(user).updateNickname(eq(newNickname));
+    }
+
+    @Test
+    public void deleteRegularUser() {
+        HttpHeaders result = testDeleteUser(NONE, times(1), never());
+
+        assertNull(result);
+    }
+
+    @Test
+    public void deleteSocialUser() {
+        giveUnlinkSocial();
+
+        HttpHeaders result = testDeleteUser(GOOGLE, times(2), times(1));
+
+        assertNotNull(result);
+    }
+
+    @Test
+    public void unlinkSocial() {
+        // given
+        Pair<Principal, User> pair = givePrincipal();
+        Principal principal = pair.getFirst();
+        User user = pair.getSecond();
+
+        SocialType socialType = GOOGLE;
+
+        giveUnlinkSocial();
+
+        // when
+        HttpHeaders result = userUpdateService.unlinkSocial(principal, socialType.getKey(), ACCESS_TOKEN);
+
+        // then
+        assertNotNull(result);
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(customOAuth2UserService).unlinkSocial(eq(socialType), eq(ACCESS_TOKEN), eq(user));
+    }
+
+    @Test
+    public void encryptAndUpdatePassword() {
+        // given
+        User user = mock(User.class);
+
+        String encryptedPassword = giveEncryptPassword(PASSWORD_VALUE);
+
+        doNothing().when(user).updatePassword(anyString());
+
+        // when
+        userUpdateService.encryptAndUpdatePassword(user, PASSWORD_VALUE);
+
+        // then
+        verify(registrationService).encryptPassword(eq(PASSWORD_VALUE));
+        verify(user).updatePassword(eq(encryptedPassword));
+    }
+
+    private HttpHeaders testDeleteUser(SocialType socialType,
+                                       VerificationMode getSocialMode, VerificationMode unlinkSocialMode) {
+        // given
+        Pair<Principal, User> pair = givePrincipal();
+        Principal principal = pair.getFirst();
+        User user = pair.getSecond();
+
+        giveSocial(user, socialType);
+
+        doNothing().when(userService).delete(anyLong());
+
+        // when
+        HttpHeaders result = userUpdateService.deleteUser(principal, ACCESS_TOKEN);
+
+        // then
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(user, getSocialMode).getSocial();
+        verify(customOAuth2UserService, unlinkSocialMode).unlinkSocial(eq(socialType), eq(ACCESS_TOKEN), eq(user));
+        verify(userService).delete(eq(user.getId()));
+
+        return result;
+    }
+
+    private PasswordUpdateDto createPasswordUpdateDto() {
+        String oldPassword = PASSWORD_VALUE;
+        String password = oldPassword + ID;
+
+        return PasswordUpdateDto.builder()
+                .oldPassword(oldPassword).password(password).confirmPassword(password).build();
+    }
+
+    private Pair<Principal, User> givePrincipal() {
+        return ServiceTestUtil.givePrincipal(principalHelper::getUserFromPrincipal);
+    }
+
+    private List<Tokens> giveTokens() {
+        List<Tokens> tokens = new ArrayList<>();
+
+        for (int i = 0; i < 3; i++) {
+            Tokens token = mock(Tokens.class);
+            tokens.add(token);
         }
 
-        verify(principalHelper).getUserFromPrincipal(principal, true);
-        verifySocial(user, cookie, mode);
-        verify(userService).delete(eq(user.getId()));
+        return tokens;
     }
 
-    private void assertThrowsAndVerifyDeleteUser(Principal principal, User user, VerificationMode mode) {
-        // given
-        Cookie cookie = mock(Cookie.class);
-
-        String accessToken = "accessToken";
-
-        // when/then
-        assertThrows(IllegalArgumentException.class, () -> userUpdateService.deleteUser(principal, accessToken));
-
-        verify(principalHelper).getUserFromPrincipal(principal, true);
-        verifySocial(user, cookie, never());
-        verify(userService, mode).delete(eq(user.getId()));
+    private void giveUserId(User user) {
+        when(user.getId()).thenReturn(ID);
     }
 
-    private void verifySocial(User user, Cookie cookie, VerificationMode mode) {
-        verify(customOAuth2UserService, mode).unlinkSocial(eq(user.getSocial()), anyString(), eq(user));
-        verify(cookie, mode).getName();
+    private void giveChecker(Function<String, Boolean> checker) {
+        ServiceTestUtil.giveChecker(checker, false);
+    }
+
+    private void giveSocial(User user, SocialType socialType) {
+        when(user.getSocial()).thenReturn(socialType);
+    }
+
+    private void giveUnlinkSocial() {
+        Cookie cookie = createCookie();
+        when(customOAuth2UserService.unlinkSocial(any(SocialType.class), anyString(), any(User.class)))
+                .thenReturn(cookie);
+    }
+
+    private String giveEncryptPassword(String password) {
+        String encryptedPassword = "encrypted" + password;
+        when(registrationService.encryptPassword(anyString())).thenReturn(encryptedPassword);
+
+        return encryptedPassword;
+    }
+
+    private Cookie createCookie() {
+        return new Cookie("access_token", ACCESS_TOKEN);
     }
 }

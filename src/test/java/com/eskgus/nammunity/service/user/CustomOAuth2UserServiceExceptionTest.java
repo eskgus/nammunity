@@ -98,14 +98,14 @@ public class CustomOAuth2UserServiceExceptionTest {
         when(userService.save(any(RegistrationDto.class))).thenReturn(ID);
 
         // when/then
-        testLoadUserThrowIllegalArgumentException(userService::findById, USER_NOT_FOUND);
+        testLoadUserThrowsIllegalArgumentException(userService::findById, USER_NOT_FOUND);
 
         verifyBeforeLinkSocialAccount(times(1), never(), never());
     }
 
     @Test
     public void signInWithSocialWithBannedUser() {
-        testSignInWithSocialThrowOAuth2AuthenticationException(BANNED);
+        testSignInWithSocialThrowsOAuth2AuthenticationException(BANNED);
 
         // then
         verifyBeforeLinkSocialAccount(never(), times(1), never());
@@ -113,7 +113,7 @@ public class CustomOAuth2UserServiceExceptionTest {
 
     @Test
     public void signInWithSocialWithLockedUser() {
-        testSignInWithSocialThrowOAuth2AuthenticationException(LOCKED);
+        testSignInWithSocialThrowsOAuth2AuthenticationException(LOCKED);
 
         // then
         verifyBeforeLinkSocialAccount(never(), times(1), times(1));
@@ -127,23 +127,23 @@ public class CustomOAuth2UserServiceExceptionTest {
         this.user = mock(User.class);
 
         // when/then
-        testLoadUserThrowIllegalArgumentException(userService::findByUsername, USERNAME_NOT_FOUND);
+        testLoadUserThrowsIllegalArgumentException(userService::findByUsername, USERNAME_NOT_FOUND);
 
         verifyAfterSignInWithSocial(never(), never());
     }
 
     @Test
-    public void linkSocialAccountThrowBuildValidateAccessTokenUrlException() {
-        testLoadUserThrowSocialException(SOCIAL, NONE);
+    public void linkSocialAccountThrowsBuildValidateAccessTokenUrlException() {
+        testLoadUserThrowsSocialException(SOCIAL, NONE);
 
         verifyAfterSignInWithSocial(NONE, never());
     }
 
     @Test
-    public void linkSocialAccountThrowGetRefreshTokenException() {
+    public void linkSocialAccountThrowsGetRefreshTokenException() {
         throwHttpClientErrorException();
 
-        testLoadUserThrowSocialException(Fields.REFRESH_TOKEN, GOOGLE);
+        testLoadUserThrowsSocialException(Fields.REFRESH_TOKEN, GOOGLE);
 
         verifyAfterSignInWithSocial(GOOGLE, times(1));
     }
@@ -166,25 +166,25 @@ public class CustomOAuth2UserServiceExceptionTest {
 
     @Test
     public void linkSocialAccountWithBannedUser() {
-        testLinkSocialAccountThrowOAuth2AuthenticationException(BANNED);
+        testLinkSocialAccountThrowsOAuth2AuthenticationException(BANNED);
 
         verifyAfterSignInWithSocial(times(1), never());
     }
 
     @Test
     public void linkSocialAccountWithLockedUser() {
-        testLinkSocialAccountThrowOAuth2AuthenticationException(LOCKED);
+        testLinkSocialAccountThrowsOAuth2AuthenticationException(LOCKED);
 
         verifyAfterSignInWithSocial(times(1), times(1));
     }
 
     @Test
-    public void unlinkSocialThrowBuildValidateAccessTokenUrlException() {
+    public void unlinkSocialThrowsBuildValidateAccessTokenUrlException() {
         testUnlinkSocialException(NONE, SOCIAL);
     }
 
     @Test
-    public void unlinkSocialThrowGetRefreshTokenException() {
+    public void unlinkSocialThrowsGetRefreshTokenException() {
         throwHttpClientErrorException();
 
         testUnlinkSocialException(GOOGLE, Fields.REFRESH_TOKEN);
@@ -223,7 +223,7 @@ public class CustomOAuth2UserServiceExceptionTest {
         ServiceTestUtil.giveContentFinder(userRepository::findByEmail, String.class, existingUser);
     }
 
-    private <ParamType> void testLoadUserThrowIllegalArgumentException(Function<ParamType, User> finder,
+    private <ParamType> void testLoadUserThrowsIllegalArgumentException(Function<ParamType, User> finder,
                                                                        ExceptionMessages exceptionMessage) {
         setUp();
 
@@ -233,7 +233,7 @@ public class CustomOAuth2UserServiceExceptionTest {
         assertIllegalArgumentException(exceptionMessage);
     }
 
-    private void testLoadUserThrowSocialException(Fields field, SocialType registrationId) {
+    private void testLoadUserThrowsSocialException(Fields field, SocialType registrationId) {
         // given
         setUp();
 
@@ -253,7 +253,7 @@ public class CustomOAuth2UserServiceExceptionTest {
         assertSocialException(() -> spy.loadUser(oAuth2UserRequest), socialException);
     }
 
-    private void testSignInWithSocialThrowOAuth2AuthenticationException(ExceptionMessages exceptionMessage) {
+    private void testSignInWithSocialThrowsOAuth2AuthenticationException(ExceptionMessages exceptionMessage) {
         giveSecurityContext(null);
 
         giveEmailFinder(true);
@@ -262,20 +262,20 @@ public class CustomOAuth2UserServiceExceptionTest {
 
         when(user.getSocial()).thenReturn(NONE);
 
-        testLoadUserThrowOAuth2AuthenticationException(exceptionMessage);
+        testLoadUserThrowsOAuth2AuthenticationException(exceptionMessage);
     }
 
-    private void testLinkSocialAccountThrowOAuth2AuthenticationException(ExceptionMessages exceptionMessage) {
+    private void testLinkSocialAccountThrowsOAuth2AuthenticationException(ExceptionMessages exceptionMessage) {
         giveAuthentication();
 
         giveUsername();
 
         giveEmailFinder(false);
 
-        testLoadUserThrowOAuth2AuthenticationException(exceptionMessage);
+        testLoadUserThrowsOAuth2AuthenticationException(exceptionMessage);
     }
 
-    private void testLoadUserThrowOAuth2AuthenticationException(ExceptionMessages exceptionMessage) {
+    private void testLoadUserThrowsOAuth2AuthenticationException(ExceptionMessages exceptionMessage) {
         // given
         setUp();
 
@@ -346,9 +346,7 @@ public class CustomOAuth2UserServiceExceptionTest {
     }
 
     private SocialException createSocialException(String username, Fields field, SocialType registrationId) {
-        SocialType socialType = SOCIAL.equals(field) ? registrationId : null;
-
-        return new SocialException(username, field, socialType);
+        return ServiceTestUtil.createSocialException(username, field, registrationId);
     }
 
     private void throwHttpClientErrorException() {
@@ -361,11 +359,7 @@ public class CustomOAuth2UserServiceExceptionTest {
     }
 
     private void assertSocialException(Executable executable, SocialException socialException) {
-        SocialException exception = assertThrows(SocialException.class, executable);
-
-        assertEquals(socialException.getUsername(), exception.getUsername());
-        assertEquals(socialException.getField(), exception.getField());
-        assertEquals(socialException.getRejectedValue(), exception.getRejectedValue());
+        ServiceTestUtil.assertSocialException(executable, socialException);
     }
 
     private void assertOAuth2AuthenticationException(ExceptionMessages exceptionMessage) {
