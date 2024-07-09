@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.domain.reports;
 
-import com.eskgus.nammunity.config.TestSecurityConfig;
+import com.eskgus.nammunity.config.TestConfig;
 import com.eskgus.nammunity.converter.ContentReportSummaryConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.CommentsRepository;
@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @DataJpaTest
-@Import({ TestDataHelper.class, TestSecurityConfig.class })
+@Import({ TestDataHelper.class, TestConfig.class })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class ContentReportSummaryRepositoryTest {
     @Autowired

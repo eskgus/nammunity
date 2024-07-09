@@ -6,24 +6,24 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class SearchTestHelper<U> {  // U: entity
-    private final List<U> totalContents;
-    private final Function<U, String>[] fieldExtractors;
+public class SearchTestHelper<Entity> {
+    private final List<Entity> totalContents;
+    private final Function<Entity, String>[] fieldExtractors;
     private final KeywordHelper keywordHelper;
 
     @Builder
-    public SearchTestHelper(List<U> totalContents, String keywords, Function<U, String>[] fieldExtractors) {
+    public SearchTestHelper(List<Entity> totalContents, String keywords, Function<Entity, String>[] fieldExtractors) {
         this.totalContents = totalContents;
         this.fieldExtractors = fieldExtractors;
         this.keywordHelper = new KeywordHelper().extractKeywords(keywords);
     }
 
-    public Stream<U> getKeywordsFilter() {
-        Stream<U> includeKeywordsFilter = filterIncludeKeywords();
+    public Stream<Entity> getKeywordsFilter() {
+        Stream<Entity> includeKeywordsFilter = filterIncludeKeywords();
         return filterExcludeKeywords(includeKeywordsFilter);
     }
 
-    private Stream<U> filterIncludeKeywords() {
+    private Stream<Entity> filterIncludeKeywords() {
         return totalContents.stream().filter(content -> {
             boolean result1 = containsAny(fieldExtractors[0].apply(content));
             if (fieldExtractors.length > 1) {
@@ -38,7 +38,7 @@ public class SearchTestHelper<U> {  // U: entity
         return keywordHelper.getIncludeKeywordList().stream().anyMatch(field::contains);
     }
 
-    private Stream<U> filterExcludeKeywords(Stream<U> includeKeywordsFilter) {
+    private Stream<Entity> filterExcludeKeywords(Stream<Entity> includeKeywordsFilter) {
         if (keywordHelper.getExcludeKeywordList() == null) {
             return includeKeywordsFilter;
         }
