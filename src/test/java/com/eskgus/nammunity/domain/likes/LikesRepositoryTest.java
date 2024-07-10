@@ -3,7 +3,6 @@ package com.eskgus.nammunity.domain.likes;
 import com.eskgus.nammunity.config.TestConfig;
 import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
-import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.helper.TestDataHelper;
@@ -12,6 +11,8 @@ import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
+import com.eskgus.nammunity.util.PaginationTestUtil;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,9 +33,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
-import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @ExtendWith(SpringExtension.class)
 @DataJpaTest
@@ -59,8 +59,8 @@ public class LikesRepositoryTest {
     private User[] users;
     private Posts post1;
     private Comments comment1;
-    private final int page = 1;
-    private final LikesConverterForTest entityConverter = new LikesConverterForTest();
+    private static final int PAGE = 1;
+    private static final LikesConverterForTest LIKES_CONVERTER = new LikesConverterForTest();
 
     @BeforeEach
     public void setUp() {
@@ -77,22 +77,6 @@ public class LikesRepositoryTest {
 
         Long comment1Id = testDataHelper.saveComments(post1Id, user1);
         this.comment1 = assertOptionalAndGetEntity(commentsRepository::findById, comment1Id);
-
-        saveLikes();
-    }
-
-    private void saveLikes() {
-        for (User user : users) {
-            Long postLikeId = testDataHelper.savePostLikes(post1.getId(), user);
-            assertOptionalAndGetEntity(likesRepository::findById, postLikeId);
-
-            Long commentLikeId = testDataHelper.saveCommentLikes(comment1.getId(), user);
-            assertOptionalAndGetEntity(likesRepository::findById, commentLikeId);
-        }
-    }
-
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 
     @AfterEach
@@ -101,156 +85,162 @@ public class LikesRepositoryTest {
     }
 
     @Test
-    public void findByUser() {
-        callAndAssertFindLikesByUser();
+    public void existsLikesByPostsAndUserWithoutLikes() {
+        testExistsLikesByPostsAndUser(false);
     }
 
-    private void callAndAssertFindLikesByUser() {
-        int size = 3;
-        User user = users[0];
+    @Test
+    public void existsLikesByPostsAndUserWithLikes() {
+        savePostLikes(users[0]);
 
-        Pageable pageable = createPageable(page, size);
-
-        Page<LikesListDto> actualContents = likesRepository.findByUser(user, pageable);
-        Page<LikesListDto> expectedContents = createExpectedContentsByUser(user, pageable);
-
-        assertContents(actualContents, expectedContents);
+        testExistsLikesByPostsAndUser(true);
     }
 
-    private Page<LikesListDto> createExpectedContentsByUser(User user, Pageable pageable) {
-        Predicate<Likes> filter = createFilterByUser(user);
-        return createExpectedContents(filter, pageable);
+    @Test
+    public void existsLikesByCommentsAndUserWithoutLikes() {
+        testExistsLikesByCommentsAndUser(false);
     }
 
-    private Predicate<Likes> createFilterByUser(User user) {
-        return likes -> entityConverter.extractUserId(likes).equals(user.getId());
+    @Test
+    public void existsLikesByCommentsAndUserWithLikes() {
+        saveCommentLikes(users[0]);
+
+        testExistsLikesByCommentsAndUser(true);
     }
 
-    private Page<LikesListDto> createExpectedContents(Predicate<Likes> filter, Pageable pageable) {
-        Stream<Likes> filteredLikesStream = likesRepository.findAll().stream().filter(filter);
-        return createPageWithContent(filteredLikesStream, entityConverter, pageable);
-    }
-
-    private void assertContents(Page<LikesListDto> actualContents, Page<LikesListDto> expectedContents) {
-        PaginationTestHelper<LikesListDto, Likes> paginationHelper
-                = new PaginationTestHelper<>(actualContents, expectedContents, entityConverter);
-        paginationHelper.assertContents();
+    @Test
+    public void findLikesByUser() {
+        testFindContentLikesByUser(null, likesRepository::findByUser);
     }
 
     @Test
     public void findPostLikesByUser() {
-        callAndAssertFindLikesByUser(likesRepository::findPostLikesByUser, ContentType.POSTS);
-    }
-
-    private void callAndAssertFindLikesByUser(BiFunction<User, Pageable, Page<LikesListDto>> finder,
-                                              ContentType contentType) {
-        int size = 3;
-        User user = users[0];
-
-        Pageable pageable = createPageable(page, size);
-
-        Page<LikesListDto> actualContents = finder.apply(user, pageable);
-        Page<LikesListDto> expectedContents = createExpectedContentsByUser(user, pageable, contentType);
-
-        assertContents(actualContents, expectedContents);
-    }
-
-    private Page<LikesListDto> createExpectedContentsByUser(User user, Pageable pageable, ContentType contentType) {
-        Predicate<Likes> filter;
-        if (contentType.equals(ContentType.POSTS)) {
-            filter = likes -> entityConverter.getPosts(likes) != null;
-        } else {
-            filter = likes -> entityConverter.getComments(likes) != null;
-        }
-
-        Predicate<Likes> userFilter = createFilterByUser(user);
-        filter = filter.and(userFilter);
-        return createExpectedContents(filter, pageable);
+        testFindContentLikesByUser(post1, likesRepository::findPostLikesByUser);
     }
 
     @Test
     public void findCommentLikesByUser() {
-        callAndAssertFindLikesByUser(likesRepository::findCommentLikesByUser, ContentType.COMMENTS);
+        testFindContentLikesByUser(comment1, likesRepository::findCommentLikesByUser);
     }
 
     @Test
-    public void deleteByPosts() {
-        Posts post2 = savePost();
-
-        callAndAssertDeleteByContent(testDataHelper::savePostLikes, likesRepository::deleteByPosts, post2);
+    public void deleteLikesByPosts() {
+        testDeleteLikesByContent(this::savePostLikes, likesRepository::deleteByPosts, post1);
     }
 
-    private Posts savePost() {
-        Long postId = testDataHelper.savePosts(users[0]);
-        return assertOptionalAndGetEntity(postsRepository::findById, postId);
+    @Test
+    public void deleteLikesByComments() {
+        testDeleteLikesByContent(this::saveCommentLikes, likesRepository::deleteByComments, comment1);
     }
 
-    private <T> void callAndAssertDeleteByContent(BiFunction<Long, User, Long> likesSaver,
-                                                  BiConsumer<T, User> likesDeleter,
-                                                  T content) {
-        Long contentId = getContentId(content);
-
-        Long likeId = likesSaver.apply(contentId, users[0]);
-        assertOptionalAndGetEntity(likesRepository::findById, likeId);
-
-        likesDeleter.accept(content, users[0]);
-        assertDeleteByContent(likeId);
+    private void testExistsLikesByPostsAndUser(boolean exists) {
+        testExistsLikesByContentAndUser(likesRepository::existsByPostsAndUser, post1, exists);
     }
 
-    private <T> Long getContentId(T content) {
-        if (content instanceof Posts) {
-            return ((Posts) content).getId();
-        } else {
-            return  ((Comments) content).getId();
-        }
+    private void testExistsLikesByCommentsAndUser(boolean exists) {
+        testExistsLikesByContentAndUser(likesRepository::existsByCommentsAndUser, comment1, exists);
     }
 
-    private void assertDeleteByContent(Long likeId) {
+    private <Content> void testExistsLikesByContentAndUser(BiFunction<Content, User, Boolean> checker, Content content,
+                                                           boolean exists) {
+        // given
+        User user = users[0];
+
+        // when
+        boolean result = checker.apply(content, user);
+
+        // then
+        assertEquals(exists, result);
+    }
+
+    private <Content> void testFindContentLikesByUser(Content content,
+                                                      BiFunction<User, Pageable, Page<LikesListDto>> finder) {
+        // given
+        saveLikes();
+
+        User user = users[0];
+
+        Pageable pageable = createPageable();
+
+        Predicate<Likes> filter = content != null ? createFilter(content, user) : createFilter(user);
+        Page<LikesListDto> likesPage = createLikesPage(filter, pageable);
+
+        // when
+        Page<LikesListDto> result = finder.apply(user, pageable);
+
+        // then
+        assertLikesPage(result, likesPage);
+    }
+
+    private <Content> void testDeleteLikesByContent(Function<User, Long> saver,
+                                                    BiConsumer<Content, User> deleter, Content content) {
+        // given
+        User user = users[0];
+
+        Long likeId = saver.apply(user);
+
+        // when
+        deleter.accept(content, user);
+
+        // then
         boolean result = likesRepository.existsById(likeId);
-        assertThat(result).isFalse();
+        assertFalse(result);
     }
 
-    @Test
-    public void deleteByComments() {
-        Comments comment2 = saveComment();
-
-        callAndAssertDeleteByContent(testDataHelper::saveCommentLikes, likesRepository::deleteByComments, comment2);
-    }
-
-    private Comments saveComment() {
-        Long commentId = testDataHelper.saveComments(post1.getId(), users[0]);
-        return assertOptionalAndGetEntity(commentsRepository::findById, commentId);
-    }
-
-    @Test
-    public void existsByPostsAndUser() {
-        // 1. user1이 post1 좋아요 후 호출
-        callAndAssertExistsByContentsAndUser(post1, users[0], true);
-
-        // 2. user2가 post2 좋아요 x 후 호출
-        Posts post2 = savePost();
-        callAndAssertExistsByContentsAndUser(post2, users[1], false);
-    }
-
-    private <T> void callAndAssertExistsByContentsAndUser(T content, User user, boolean expectedDoesUserLikeContent) {
-        boolean actualDoesUserLikeContent = callExistsByContentsAndUser(content, user);
-        assertThat(actualDoesUserLikeContent).isEqualTo(expectedDoesUserLikeContent);
-    }
-
-    private <T> boolean callExistsByContentsAndUser(T content, User user) {
-        if (content instanceof Posts) {
-            return likesRepository.existsByPostsAndUser((Posts) content, user);
+    private void saveLikes() {
+        for (User user : users) {
+            savePostLikes(user);
+            saveCommentLikes(user);
         }
-        return likesRepository.existsByCommentsAndUser((Comments) content, user);
     }
 
-    @Test
-    public void existsByCommentsAndUser() {
-        // 1. user1이 comment1 좋아요 후 호출
-        callAndAssertExistsByContentsAndUser(comment1, users[0], true);
+    private Long savePostLikes(User user) {
+        Long postLikeId = testDataHelper.savePostLikes(post1.getId(), user);
+        assertOptionalAndGetEntity(likesRepository::findById, postLikeId);
 
-        // 2. user2가 comment2 좋아요 x 후 호출
-        Comments comment2 = saveComment();
-        callAndAssertExistsByContentsAndUser(comment2, users[1], false);
+        return postLikeId;
+    }
+
+    private Long saveCommentLikes(User user) {
+        Long commentLikeId = testDataHelper.saveCommentLikes(comment1.getId(), user);
+        assertOptionalAndGetEntity(likesRepository::findById, commentLikeId);
+
+        return commentLikeId;
+    }
+
+    private Pageable createPageable() {
+        return PaginationRepoUtil.createPageable(PAGE, 3);
+    }
+
+    private <Content> Predicate<Likes> createFilter(Content content, User user) {
+        Predicate<Likes> filter = content instanceof Posts
+                ? like -> LIKES_CONVERTER.getPosts(like) != null
+                : like -> LIKES_CONVERTER.getComments(like) != null;
+
+        return filter.and(createFilter(user));
+    }
+
+    private Predicate<Likes> createFilter(User user) {
+        return like -> LIKES_CONVERTER.extractUserId(like).equals(user.getId());
+    }
+
+    private Page<LikesListDto> createLikesPage(Predicate<Likes> filter, Pageable pageable) {
+        Stream<Likes> filteredLikesStream = likesRepository.findAll().stream().filter(filter);
+
+        return createPageWithContent(filteredLikesStream, pageable);
+    }
+
+    private Page<LikesListDto> createPageWithContent(Stream<Likes> filteredLikesStream, Pageable pageable) {
+        return PaginationTestUtil.createPageWithContent(filteredLikesStream, LIKES_CONVERTER, pageable);
+    }
+
+    private void assertLikesPage(Page<LikesListDto> result, Page<LikesListDto> likesPage) {
+        PaginationTestHelper<LikesListDto, Likes> paginationHelper
+                = new PaginationTestHelper<>(result, likesPage, LIKES_CONVERTER);
+        paginationHelper.assertContents();
+    }
+
+    private <Dto> Dto assertOptionalAndGetEntity(Function<Long, Optional<Dto>> finder, Long contentId) {
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

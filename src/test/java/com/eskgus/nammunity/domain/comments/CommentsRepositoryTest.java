@@ -250,8 +250,8 @@ public class CommentsRepositoryTest {
     }
 
     private <Dto> Page<Dto> createPageWithContent(Stream<Comments> filteredCommentsStream,
-                                                        CommentsConverterForTest<Dto> commentsConverter,
-                                                        Pageable pageable) {
+                                                  CommentsConverterForTest<Dto> commentsConverter,
+                                                  Pageable pageable) {
         return PaginationTestUtil.createPageWithContent(filteredCommentsStream, commentsConverter, pageable);
     }
 
