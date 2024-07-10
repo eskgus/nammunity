@@ -2,6 +2,7 @@ package com.eskgus.nammunity.service.user;
 
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
 @Service
@@ -63,7 +63,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Page<UsersListDto> searchByNickname(String keywords, int page, int size) {
-        Pageable pageable = createPageable(page, size);
+        Pageable pageable = PaginationRepoUtil.createPageable(page, size);
         return userRepository.searchByNickname(keywords, pageable);
     }
 }

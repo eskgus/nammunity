@@ -39,27 +39,27 @@ public class PostsViewService {
 
     @Transactional(readOnly = true)
     public ContentsPageDto<CommentsReadDto> readComments(Long postId, Principal principal, int page) {
-        Page<CommentsReadDto> contents = createCommentsPage(postId, principal, page);
-        return new ContentsPageDto<>(contents);
+        Page<CommentsReadDto> commentsPage = createCommentsPage(postId, principal, page);
+        return createContentsPageDto(commentsPage);
     }
 
     @Transactional(readOnly = true)
     public ContentsPageDto<PostsListDto> listPosts(Principal principal, int page) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-        Page<PostsListDto> contents = postsService.findByUser(user, page, 20);
-        return new ContentsPageDto<>(contents);
+        User user = getUserFromPrincipal(principal, true);
+        Page<PostsListDto> postsPage = postsService.findByUser(user, page, 20);
+        return createContentsPageDto(postsPage);
     }
 
     @Transactional(readOnly = true)
     public PostsUpdateDto updatePosts(Long id) {
-        Posts post = postsService.findById(id);
+        Posts post = findPostsById(id);
         return PostsUpdateDto.builder().id(id).title(post.getTitle()).content(post.getContent()).build();
     }
 
     private PostsReadDto createPostsReadDto(Long postId, Principal principal) {
-        Posts post = postsService.findById(postId);
+        Posts post = findPostsById(postId);
         Long postAuthorId = post.getUser().getId();
-        User user = principalHelper.getUserFromPrincipal(principal, false);
+        User user = getUserFromPrincipal(principal, false);
         boolean doesUserWritePost = doesUserWritePost(user, postAuthorId);
 
         if (!doesUserWritePost) {
@@ -80,8 +80,20 @@ public class PostsViewService {
     }
 
     private Page<CommentsReadDto> createCommentsPage(Long postId, Principal principal, int page) {
-        Posts post = postsService.findById(postId);
-        User user = principalHelper.getUserFromPrincipal(principal, false);
+        Posts post = findPostsById(postId);
+        User user = getUserFromPrincipal(principal, false);
         return commentsViewService.findCommentsPageByPosts(post, user, page);
+    }
+
+    private Posts findPostsById(Long postId) {
+        return postsService.findById(postId);
+    }
+
+    private User getUserFromPrincipal(Principal principal, boolean throwExceptionOnMissingPrincipal) {
+        return principalHelper.getUserFromPrincipal(principal, throwExceptionOnMissingPrincipal);
+    }
+
+    private <Dto> ContentsPageDto<Dto> createContentsPageDto(Page<Dto> contentsPage) {
+        return new ContentsPageDto<>(contentsPage);
     }
 }

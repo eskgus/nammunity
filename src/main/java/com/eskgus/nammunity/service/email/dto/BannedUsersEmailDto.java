@@ -5,20 +5,26 @@ import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class BannedUsersEmailDto {
-    private String username;
-    private String period;
-    private String startedDate;
-    private String expiredDate;
-    private String reason;
+    private final String username;
+    private final String period;
+    private final String startedDate;
+    private final String expiredDate;
+    private final String reason;
 
     @Builder
     public BannedUsersEmailDto(BannedUsers bannedUser) {
         this.username = bannedUser.getUser().getUsername();
         this.period = DateTimeUtil.convertPeriodToString(bannedUser.getPeriod());
-        this.startedDate = DateTimeUtil.formatDateTime(bannedUser.getStartedDate());
-        this.expiredDate = DateTimeUtil.formatDateTime(bannedUser.getExpiredDate());
+        this.startedDate = formatDateTime(bannedUser.getStartedDate());
+        this.expiredDate = formatDateTime(bannedUser.getExpiredDate());
         this.reason = bannedUser.getReason();
+    }
+
+    private String formatDateTime(LocalDateTime dateTime) {
+        return DateTimeUtil.formatDateTime(dateTime);
     }
 }

@@ -8,6 +8,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDeleteDto;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
@@ -25,7 +26,6 @@ import static com.eskgus.nammunity.domain.enums.ContentType.COMMENTS;
 import static com.eskgus.nammunity.domain.enums.ContentType.POSTS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.USER_REPORT_SUMMARY_NOT_FOUND;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
 @Service
@@ -37,9 +37,9 @@ public class ReportSummaryService {
     private final UserService userService;
 
     @Transactional
-    public <T> Long saveOrUpdateContentReportSummary(ContentReportSummarySaveDto requestDto) {
+    public <Contents> Long saveOrUpdateContentReportSummary(ContentReportSummarySaveDto requestDto) {
         // contentReportSummary 테이블에 컨텐츠 (posts, comments, user) 없으면 저장, 있으면 수정
-        T contents = getContents(requestDto);
+        Contents contents = getContents(requestDto);
         boolean doesSummaryExist = contentReportSummaryRepository.existsByContents(contents);
 
         if (doesSummaryExist) {
@@ -50,17 +50,17 @@ public class ReportSummaryService {
 
     @Transactional(readOnly = true)
     public ContentsPageDto<ContentReportSummaryDto> findAllDesc(int page) {
-        Pageable pageable = createPageable(page, 20);
-        Page<ContentReportSummaryDto> contents = contentReportSummaryRepository.findAllDesc(pageable);
-        return new ContentsPageDto<>(contents);
+        Pageable pageable = createPageable(page);
+        Page<ContentReportSummaryDto> summariesPage = contentReportSummaryRepository.findAllDesc(pageable);
+        return createContentsPageDto(summariesPage);
     }
 
     @Transactional(readOnly = true)
     public ContentsPageDto<ContentReportSummaryDto> findByTypes(ContentType contentType, int page) {
-        Pageable pageable = createPageable(page, 20);
+        Pageable pageable = createPageable(page);
         Types type = typesService.findByContentType(contentType);
-        Page<ContentReportSummaryDto> contents = contentReportSummaryRepository.findByTypes(type, pageable);
-        return new ContentsPageDto<>(contents);
+        Page<ContentReportSummaryDto> summariesPage = contentReportSummaryRepository.findByTypes(type, pageable);
+        return createContentsPageDto(summariesPage);
     }
 
     @Transactional(readOnly = true)
@@ -78,19 +78,19 @@ public class ReportSummaryService {
         deleteByContents(deleteDto.getUserId(), userService::findById);
     }
 
-    private <T> T getContents(ContentReportSummarySaveDto requestDto) {
+    private <Contents> Contents getContents(ContentReportSummarySaveDto requestDto) {
         String type = requestDto.getTypes().getDetail();
         if (POSTS.getDetail().equals(type)) {
-            return (T) requestDto.getPosts();
+            return (Contents) requestDto.getPosts();
         } else if (COMMENTS.getDetail().equals(type)) {
-            return (T) requestDto.getComments();
+            return (Contents) requestDto.getComments();
         } else {
-            return (T) requestDto.getUser();
+            return (Contents) requestDto.getUser();
         }
     }
 
     @Transactional
-    private <T> Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, T contents) {
+    private <Contents> Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, Contents contents) {
         ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
         reportSummary.update(requestDto.getReportedDate(), requestDto.getReporter(),
                 requestDto.getReasons(), requestDto.getOtherReasons());
@@ -102,6 +102,14 @@ public class ReportSummaryService {
         return contentReportSummaryRepository.save(requestDto.toEntity()).getId();
     }
 
+    private Pageable createPageable(int page) {
+        return PaginationRepoUtil.createPageable(page, 20);
+    }
+
+    private ContentsPageDto<ContentReportSummaryDto> createContentsPageDto(Page<ContentReportSummaryDto> summariesPage) {
+        return new ContentsPageDto<>(summariesPage);
+    }
+
     private void validateDeleteDto(ContentReportSummaryDeleteDto deleteDto) {
         if (deleteDto.getPostsId().isEmpty()
                 && deleteDto.getCommentsId().isEmpty()
@@ -111,10 +119,10 @@ public class ReportSummaryService {
     }
 
     @Transactional
-    private <T> void deleteByContents(List<Long> contentIds, Function<Long, T> finder) {
+    private <Contents> void deleteByContents(List<Long> contentIds, Function<Long, Contents> finder) {
         contentIds.forEach(id -> {
-            T content = finder.apply(id);
-            contentReportSummaryRepository.deleteByContents(content);
+            Contents contents = finder.apply(id);
+            contentReportSummaryRepository.deleteByContents(contents);
         });
     }
 }

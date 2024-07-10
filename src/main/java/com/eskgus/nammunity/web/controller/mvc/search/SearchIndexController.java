@@ -30,12 +30,6 @@ public class SearchIndexController {
         return "search/search";
     }
 
-    private <T> void addAttributes(Map<String, Object> attr, T contentsPages, String keywords, Model model) {
-        attr.put("contentsPage", contentsPages);
-        attr.put("keywords", keywords);
-        model.addAllAttributes(attr);
-    }
-
     @GetMapping("/posts")
     public String searchPosts(@RequestParam(name = "keywords") String keywords,
                               @RequestParam(name = "searchBy") String searchBy,
@@ -63,5 +57,12 @@ public class SearchIndexController {
         ContentsPageDto<UsersListDto> contentsPage = searchService.searchUsers(keywords, page);
         addAttributes(new HashMap<>(), contentsPage, keywords, model);
         return "search/search-users";
+    }
+
+    private <ContentsPages> void addAttributes(Map<String, Object> attr, ContentsPages contentsPages,
+                                               String keywords, Model model) {
+        attr.put("contentsPage", contentsPages);
+        attr.put("keywords", keywords);
+        model.addAllAttributes(attr);
     }
 }

@@ -3,6 +3,7 @@ package com.eskgus.nammunity.handler;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.user.SignInService;
+import com.eskgus.nammunity.util.ResponseUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,8 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-
-import static com.eskgus.nammunity.util.ResponseUtil.sendRedirect;
 
 @Component
 public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
@@ -34,7 +33,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
             throws IOException, ServletException {
         resetAttempt(authentication);
 
-        sendRedirect(request, response);
+        ResponseUtil.sendRedirect(request, response);
     }
 
     private void resetAttempt(Authentication authentication) {

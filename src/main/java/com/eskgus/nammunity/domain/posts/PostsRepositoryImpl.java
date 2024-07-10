@@ -6,6 +6,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.FindQueries;
 import com.eskgus.nammunity.helper.SearchQueries;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.*;
@@ -17,8 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 
 import java.util.List;
-
-import static com.eskgus.nammunity.util.PaginationRepoUtil.*;
 
 public class PostsRepositoryImpl extends QuerydslRepositorySupport implements CustomPostsRepository {
     @Autowired
@@ -48,7 +47,7 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
 
         return EssentialQuery.<PostsListDto, Posts>builder()
                 .entityManager(entityManager).queryType(qPosts)
-                .classOfListDto(PostsListDto.class).constructorParams(constructorParams).build();
+                .dtoType(PostsListDto.class).constructorParams(constructorParams).build();
     }
 
     private JPAQuery<PostsListDto> createQueryForSearchPosts(Pageable pageable,
@@ -65,7 +64,7 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
                                                Pageable pageable) {
         List<PostsListDto> posts = createLeftJoinClauseForPosts(query).fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
-        return createPage(posts, pageable, totalQuery);
+        return PaginationRepoUtil.createPage(posts, pageable, totalQuery);
     }
 
     private JPAQuery<PostsListDto> createLeftJoinClauseForPosts(JPAQuery<PostsListDto> query) {
@@ -101,6 +100,10 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
         JPAQuery<PostsListDto> query = findQueries.createQueryForFindContents();
 
         return addPageToQuery(query, pageable);
+    }
+
+    private JPAQuery<PostsListDto> addPageToQuery(JPAQuery<PostsListDto> query, Pageable pageable) {
+        return PaginationRepoUtil.addPageToQuery(query, pageable);
     }
 
     @Override

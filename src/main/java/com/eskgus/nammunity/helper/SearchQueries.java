@@ -9,20 +9,20 @@ import lombok.Builder;
 
 import java.util.List;
 
-public class SearchQueries<T, U> {    // T: listDto, U: entity
-    private EssentialQuery<T, U> essentialQuery;
-    private String keywords;
-    private StringPath[] fields;
+public class SearchQueries<Dto, Entity> {    // T: listDto, U: entity
+    private final EssentialQuery<Dto, Entity> essentialQuery;
+    private final String keywords;
+    private final StringPath[] fields;
 
     @Builder
-    public SearchQueries(EssentialQuery<T, U> essentialQuery,
+    public SearchQueries(EssentialQuery<Dto, Entity> essentialQuery,
                          String keywords, StringPath... fields) {
         this.essentialQuery = essentialQuery;
         this.keywords = keywords;
         this.fields = fields;
     }
 
-    public JPAQuery<T> createQueryForSearchContents() {
+    public JPAQuery<Dto> createQueryForSearchContents() {
         KeywordHelper keywordHelper = new KeywordHelper().extractKeywords(keywords);
         List<String> includeKeywordList = keywordHelper.getIncludeKeywordList();
         List<String> excludeKeywordList = keywordHelper.getExcludeKeywordList();
@@ -57,8 +57,8 @@ public class SearchQueries<T, U> {    // T: listDto, U: entity
         return builder1;
     }
 
-    private JPAQuery<T> createQueryWithConditions(BooleanBuilder mainWhereCondition, BooleanBuilder subWhereCondition) {
-        JPAQuery<T> query = essentialQuery.createBaseQuery(fields);
+    private JPAQuery<Dto> createQueryWithConditions(BooleanBuilder mainWhereCondition, BooleanBuilder subWhereCondition) {
+        JPAQuery<Dto> query = essentialQuery.createBaseQuery(fields);
         return query.where(mainWhereCondition.and(essentialQuery.getQueryType().in(
                 JPAExpressions.selectFrom(essentialQuery.getQueryType())
                         .where(subWhereCondition))));

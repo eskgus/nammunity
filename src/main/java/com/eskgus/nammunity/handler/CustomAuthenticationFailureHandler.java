@@ -1,6 +1,7 @@
 package com.eskgus.nammunity.handler;
 
 import com.eskgus.nammunity.service.user.SignInService;
+import com.eskgus.nammunity.util.ResponseUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,8 +13,6 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-
-import static com.eskgus.nammunity.util.ResponseUtil.setMessage;
 
 @Component
 public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
@@ -31,7 +30,7 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
             increaseAttempt(request);
         }
 
-        setMessage(exception, request, response);
+        ResponseUtil.setMessage(exception, request, response);
 
         setDefaultFailureUrl("/users/sign-in?error");
         super.onAuthenticationFailure(request, response, exception);

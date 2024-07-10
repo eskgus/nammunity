@@ -9,12 +9,12 @@ import org.springframework.data.support.PageableExecutionUtils;
 import java.util.List;
 
 public class PaginationRepoUtil {
-    public static <T> JPAQuery<T> addPageToQuery(JPAQuery<T> query, Pageable pageable) {
+    public static <Dto> JPAQuery<Dto> addPageToQuery(JPAQuery<Dto> query, Pageable pageable) {
         return query.offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
     }
 
-    public static <T> Page<T> createPage(List<T> dtos, Pageable pageable, JPAQuery<Long> totalQuery) {
+    public static <Dto> Page<Dto> createPage(List<Dto> dtos, Pageable pageable, JPAQuery<Long> totalQuery) {
         return PageableExecutionUtils.getPage(dtos, pageable, totalQuery::fetchOne);
     }
 

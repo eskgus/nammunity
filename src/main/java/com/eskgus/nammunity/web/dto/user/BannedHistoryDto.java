@@ -4,6 +4,8 @@ import com.eskgus.nammunity.domain.user.BannedUsers;
 import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 public class BannedHistoryDto {
     private final int count;
@@ -14,7 +16,11 @@ public class BannedHistoryDto {
     public BannedHistoryDto(BannedUsers bannedUser) {
         this.count = bannedUser.getCount();
         this.period = DateTimeUtil.convertPeriodToString(bannedUser.getPeriod());
-        this.startedDate = DateTimeUtil.formatDateTime(bannedUser.getStartedDate());
-        this.expiredDate = DateTimeUtil.formatDateTime(bannedUser.getExpiredDate());
+        this.startedDate = formatDateTime(bannedUser.getStartedDate());
+        this.expiredDate = formatDateTime(bannedUser.getExpiredDate());
+    }
+
+    private String formatDateTime(LocalDateTime dateTime) {
+        return DateTimeUtil.formatDateTime(dateTime);
     }
 }

@@ -8,19 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class PaginationDto<T> {
+public class PaginationDto<Dto> {
     private boolean hasNext = false;    // 다음/마지막 페이지 버튼 표시 여부
-    private int lastPage;  // 마지막 페이지
+    private final int lastPage;  // 마지막 페이지
     private int nextPage;   // 다음 페이지
 
     private boolean hasPrevious = false;    // 이전/처음 페이지 버튼 표시 여부
-    private final int firstPage = 1;    // 처음 페이지
+    private static final int FIRST_PAGE = 1;    // 처음 페이지
     private int previousPage;   // 이전 페이지
 
     private List<PageItem> displayPages;    // 페이지 번호 목록
 
     @Builder
-    public PaginationDto(Page<T> page, int display) {
+    public PaginationDto(Page<Dto> page, int display) {
         this.lastPage = page.getTotalPages() > 0 ? page.getTotalPages() : 1;
 
         // displayPages, hasNext, nextPage, hasPrevious, previousPage 초기화
@@ -42,11 +42,11 @@ public class PaginationDto<T> {
         this.displayPages = displayPages;
 
         // 페이지 넘김 버튼 설정
-        if ((startPage >= this.firstPage) && (endPage != this.lastPage)) {
+        if ((startPage >= this.FIRST_PAGE) && (endPage != this.lastPage)) {
             this.hasNext = true;
             this.nextPage = endPage + 1;
         }
-        if (startPage > this.firstPage) {
+        if (startPage > this.FIRST_PAGE) {
             this.hasPrevious = true;
             this.previousPage = startPage - 1;
         }

@@ -30,21 +30,21 @@ public class ReportsIndexController {
 
     @GetMapping("/content-report/posts")
     public String listPostReports(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
-        ContentsPageDto<ContentReportSummaryDto> contentsPage = reportSummaryService.findByTypes(ContentType.POSTS, page);
+        ContentsPageDto<ContentReportSummaryDto> contentsPage = findReportSummariesByTypes(ContentType.POSTS, page);
         model.addAttribute("contentsPage", contentsPage);
         return "admin/my-page/content-report-posts";
     }
 
     @GetMapping("/content-report/comments")
     public String listCommentReports(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
-        ContentsPageDto<ContentReportSummaryDto> contentsPage = reportSummaryService.findByTypes(ContentType.COMMENTS, page);
+        ContentsPageDto<ContentReportSummaryDto> contentsPage = findReportSummariesByTypes(ContentType.COMMENTS, page);
         model.addAttribute("contentsPage", contentsPage);
         return "admin/my-page/content-report-comments";
     }
 
     @GetMapping("/content-report/users")
     public String listUserReports(@RequestParam(name = "page", defaultValue = "1") int page, Model model) {
-        ContentsPageDto<ContentReportSummaryDto> contentsPage = reportSummaryService.findByTypes(ContentType.USERS, page);
+        ContentsPageDto<ContentReportSummaryDto> contentsPage = findReportSummariesByTypes(ContentType.USERS, page);
         model.addAttribute("contentsPage", contentsPage);
         return "admin/my-page/content-report-users";
     }
@@ -60,5 +60,9 @@ public class ReportsIndexController {
         ContentReportDetailDto reportDetail = reportsService.listContentReportDetails(requestDto);
         model.addAttribute("reportDetail", reportDetail);
         return "admin/my-page/content-report-details";
+    }
+
+    private ContentsPageDto<ContentReportSummaryDto> findReportSummariesByTypes(ContentType contentType, int page) {
+        return reportSummaryService.findByTypes(contentType, page);
     }
 }

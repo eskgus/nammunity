@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.handler;
 
+import com.eskgus.nammunity.util.ResponseUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,8 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import static com.eskgus.nammunity.util.ResponseUtil.sendRedirect;
-
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     @Override
@@ -20,7 +19,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                                         Authentication authentication) throws IOException, ServletException {
         addCookie(authentication, response);
 
-        sendRedirect(request, response);
+        ResponseUtil.sendRedirect(request, response);
     }
 
     private void addCookie(Authentication authentication, HttpServletResponse response) {

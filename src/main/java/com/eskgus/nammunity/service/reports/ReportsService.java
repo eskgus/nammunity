@@ -11,6 +11,7 @@ import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
 import com.eskgus.nammunity.service.user.UserService;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
@@ -28,7 +29,6 @@ import java.time.LocalDateTime;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_OTHER_REASON;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_TYPE;
 import static com.eskgus.nammunity.domain.enums.Fields.OTHER;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
 @Service
@@ -60,13 +60,13 @@ public class ReportsService {
         int page = requestDto.getPage();
 
         if (requestDto.getPostId() != null) {
-            Posts post = postsService.findById(requestDto.getPostId());
+            Posts post = findPostsById(requestDto.getPostId());
             return createContentReportDetailDto(post, new PostsListDto(post), ContentType.POSTS, page);
         } else if (requestDto.getCommentId() != null) {
-            Comments comment = commentsService.findById(requestDto.getCommentId());
+            Comments comment = findCommentsById(requestDto.getCommentId());
             return createContentReportDetailDto(comment, new CommentsListDto(comment), ContentType.COMMENTS, page);
         } else {
-            User user = userService.findById(requestDto.getUserId());
+            User user = findUsersById(requestDto.getUserId());
             return createContentReportDetailDto(user, new UsersListDto(user), ContentType.USERS, page);
         }
     }
@@ -90,18 +90,18 @@ public class ReportsService {
         ContentType contentType;
 
         if (requestDto.getPostsId() != null) {
-            posts = postsService.findById(requestDto.getPostsId());
+            posts = findPostsById(requestDto.getPostsId());
             contentType = ContentType.POSTS;
         } else if (requestDto.getCommentsId() != null) {
-            comments = commentsService.findById(requestDto.getCommentsId());
+            comments = findCommentsById(requestDto.getCommentsId());
             contentType = ContentType.COMMENTS;
         } else if (requestDto.getUserId() != null){
-            user = userService.findById(requestDto.getUserId());
+            user = findUsersById(requestDto.getUserId());
             contentType = ContentType.USERS;
         } else {
             throw new IllegalArgumentException(EMPTY_TYPE.getMessage());
         }
-        Types types = typesService.findByContentType(contentType);
+        Types types = findTypesByContentType(contentType);
 
         return ContentReportsSaveDto.builder()
                 .posts(posts).comments(comments).user(user)
@@ -110,8 +110,8 @@ public class ReportsService {
                 .build();
     }
 
-    private <T> boolean shouldCreateSummary(ContentReportsSaveDto saveDto) {
-        T contents = getContentsFromReportsSaveDto(saveDto);
+    private <Contents> boolean shouldCreateSummary(ContentReportsSaveDto saveDto) {
+        Contents contents = getContentsFromReportsSaveDto(saveDto);
         long countByContents = contentReportsRepository.countByContents(contents);
 
         if (contents instanceof User) {
@@ -125,9 +125,9 @@ public class ReportsService {
         reportSummaryService.saveOrUpdateContentReportSummary(summarySaveDto);
     }
 
-    private <T> ContentReportSummarySaveDto createSummarySaveDto(ContentReportsSaveDto saveDto) {
+    private <Contents> ContentReportSummarySaveDto createSummarySaveDto(ContentReportsSaveDto saveDto) {
         // types, 컨텐츠(posts, comments, user)는 saveDto에서 꺼내서 사용, 나머지는 테이블에서 검색
-        T contents = getContentsFromReportsSaveDto(saveDto);
+        Contents contents = getContentsFromReportsSaveDto(saveDto);
 
         LocalDateTime reportedDate = contentReportsRepository.findReportedDateByContents(contents);
         User reporter = contentReportsRepository.findReporterByContents(contents);
@@ -141,26 +141,42 @@ public class ReportsService {
                 .reasons(reason).otherReasons(otherReason).build();
     }
 
-    private <T> T getContentsFromReportsSaveDto(ContentReportsSaveDto saveDto) {
+    private <Contents> Contents getContentsFromReportsSaveDto(ContentReportsSaveDto saveDto) {
         if (saveDto.getPosts() != null) {
-            return (T) saveDto.getPosts();
+            return (Contents) saveDto.getPosts();
         } else if (saveDto.getComments() != null) {
-            return (T) saveDto.getComments();
+            return (Contents) saveDto.getComments();
         }
-        return (T) saveDto.getUser();
+        return (Contents) saveDto.getUser();
     }
 
-    private <T, U> ContentReportDetailDto<U> createContentReportDetailDto(T content, U contentListDto,
-                                                                          ContentType contentType, int page) {
-        Types type = typesService.findByContentType(contentType);
-        ContentsPageDto<ContentReportDetailListDto> contentsPage = createContentsPage(page, content);
-        return ContentReportDetailDto.<U>builder()
-                .type(type).contentListDto(contentListDto).contentsPage(contentsPage).build();
+    private <Contents, Dto> ContentReportDetailDto<Dto> createContentReportDetailDto(Contents contents, Dto dto,
+                                                                                     ContentType contentType, int page) {
+        Types type = findTypesByContentType(contentType);
+        ContentsPageDto<ContentReportDetailListDto> contentsPageDto = createContentsPageDto(page, contents);
+        return ContentReportDetailDto.<Dto>builder()
+                .type(type).dto(dto).contentsPage(contentsPageDto).build();
     }
 
-    private <T> ContentsPageDto<ContentReportDetailListDto> createContentsPage(int page, T content) {
-        Pageable pageable = createPageable(page, 10);
-        Page<ContentReportDetailListDto> contents = contentReportsRepository.findByContents(content, pageable);
-        return new ContentsPageDto<>(contents);
+    private Posts findPostsById(Long postId) {
+        return postsService.findById(postId);
+    }
+
+    private Comments findCommentsById(Long commentId) {
+        return commentsService.findById(commentId);
+    }
+
+    private User findUsersById(Long userId) {
+        return userService.findById(userId);
+    }
+
+    private Types findTypesByContentType(ContentType contentType) {
+        return typesService.findByContentType(contentType);
+    }
+
+    private <Contents> ContentsPageDto<ContentReportDetailListDto> createContentsPageDto(int page, Contents contents) {
+        Pageable pageable = PaginationRepoUtil.createPageable(page, 10);
+        Page<ContentReportDetailListDto> reportsPage = contentReportsRepository.findByContents(contents, pageable);
+        return new ContentsPageDto<>(reportsPage);
     }
 }

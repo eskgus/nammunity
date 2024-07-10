@@ -6,6 +6,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.FindQueries;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.*;
@@ -21,9 +22,6 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.addPageToQuery;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPage;
-
 public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport implements CustomContentReportsRepository {
     @Autowired
     private EntityManager entityManager;
@@ -35,13 +33,13 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
     }
 
     @Override
-    public <T> User findReporterByContents(T contents) {
+    public <Contents> User findReporterByContents(Contents contents) {
         JPAQuery<User> query = createBaseQueryForFindingReporterOrReason(contents, qContentReports.reporter);
         return query.fetchOne();
     }
 
     @Override
-    public <T> LocalDateTime findReportedDateByContents(T contents) {
+    public <Contents> LocalDateTime findReportedDateByContents(Contents contents) {
         BooleanBuilder whereCondition = createWhereConditionByContents(contents);
 
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
@@ -50,7 +48,7 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
                 .fetchOne();
     }
 
-    private <T> BooleanBuilder createWhereConditionByContents(T contents) {
+    private <Contents> BooleanBuilder createWhereConditionByContents(Contents contents) {
         Predicate whereCondition;
         if (contents instanceof Posts) {
             whereCondition = qContentReports.posts.eq((Posts) contents);
@@ -66,13 +64,13 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
     }
 
     @Override
-    public <T> Reasons findReasonByContents(T contents) {
+    public <Contents> Reasons findReasonByContents(Contents contents) {
         JPAQuery<Reasons> query = createBaseQueryForFindingReporterOrReason(contents, qContentReports.reasons);
         return query.fetchOne();
     }
 
     @Override
-    public <T> String findOtherReasonByContents(T contents, Reasons reason) {
+    public <Contents> String findOtherReasonByContents(Contents contents, Reasons reason) {
         BooleanBuilder whereCondition1 = createWhereConditionByContents(contents);
         BooleanBuilder whereCondition2 = createWhereConditionByContents(reason);
 
@@ -85,11 +83,11 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
     }
 
     @Override
-    public <T> Page<ContentReportDetailListDto> findByContents(T contents, Pageable pageable) {
+    public <Contents> Page<ContentReportDetailListDto> findByContents(Contents contents, Pageable pageable) {
         return findReportsByFields(contents, pageable);
     }
 
-    private <T> Page<ContentReportDetailListDto> findReportsByFields(T contents, Pageable pageable) {
+    private <Contents> Page<ContentReportDetailListDto> findReportsByFields(Contents contents, Pageable pageable) {
         EssentialQuery<ContentReportDetailListDto, ContentReports> essentialQuery
                 = createEssentialQueryForReports();
         JPAQuery<ContentReportDetailListDto> query = createQueryForFindReports(essentialQuery, contents, pageable);
@@ -101,19 +99,19 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
 
         return EssentialQuery.<ContentReportDetailListDto, ContentReports>builder()
                 .entityManager(entityManager).queryType(qContentReports)
-                .classOfListDto(ContentReportDetailListDto.class).constructorParams(constructorParams).build();
+                .dtoType(ContentReportDetailListDto.class).constructorParams(constructorParams).build();
     }
 
-    private <T> JPAQuery<ContentReportDetailListDto>
+    private <Contents> JPAQuery<ContentReportDetailListDto>
         createQueryForFindReports(EssentialQuery<ContentReportDetailListDto, ContentReports> essentialQuery,
-                                  T contents, Pageable pageable) {
+                                  Contents contents, Pageable pageable) {
         BooleanBuilder whereCondition = createWhereConditionByContents(contents);
 
         FindQueries<ContentReportDetailListDto, ContentReports> findQueries = FindQueries.<ContentReportDetailListDto, ContentReports>builder()
                 .essentialQuery(essentialQuery)
                 .whereCondition(whereCondition).build();
         JPAQuery<ContentReportDetailListDto> query = findQueries.createQueryForFindContents();
-        return addPageToQuery(query, pageable);
+        return PaginationRepoUtil.addPageToQuery(query, pageable);
     }
 
     private Page<ContentReportDetailListDto>
@@ -122,7 +120,7 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
                           Pageable pageable) {
         List<ContentReportDetailListDto> reports = query.fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
-        return createPage(reports, pageable, totalQuery);
+        return PaginationRepoUtil.createPage(reports, pageable, totalQuery);
     }
 
     @Override
@@ -144,14 +142,14 @@ public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport impl
     }
 
     @Override
-    public <T> long countByContents(T contents) {
+    public <Contents> long countByContents(Contents contents) {
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
         BooleanBuilder whereCondition = createWhereConditionByContents(contents);
         return query.select(qContentReports.count()).from(qContentReports).where(whereCondition).fetchOne();
     }
 
-    private <T, U> JPAQuery<U> createBaseQueryForFindingReporterOrReason(T contents,
-                                                                         EntityPathBase<U> qField) {
+    private <Contents, Field> JPAQuery<Field> createBaseQueryForFindingReporterOrReason(Contents contents,
+                                                                                        EntityPathBase<Field> qField) {
         BooleanBuilder whereCondition = createWhereConditionByContents(contents);
 
         JPAQueryFactory query = new JPAQueryFactory(entityManager);

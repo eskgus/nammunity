@@ -42,7 +42,7 @@ public class UserViewService {
 
     @Transactional(readOnly = true)
     public ActivityHistoryDto findActivityHistory(Long id, String type, int page) {
-        User user = userService.findById(id);
+        User user = findUsersById(id);
 
         UsersListDto usersListDto = new UsersListDto(user);
         BannedHistoryDto bannedHistoryDto = getBannedHistoryDto(user);
@@ -58,19 +58,19 @@ public class UserViewService {
 
     @Transactional(readOnly = true)
     public ContentsPageMoreDtos<PostsListDto, CommentsListDto, LikesListDto> getMyPage(Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
+        User user = getUserFromPrincipal(principal);
 
         int page = 1;
         int size = 5;
 
-        Page<PostsListDto> postsPage = postsService.findByUser(user, page, size);
-        ContentsPageMoreDto<PostsListDto> postsPageMoreDto = new ContentsPageMoreDto<>(postsPage);
+        Page<PostsListDto> postsPage = createPostsPage(user, page, size);
+        ContentsPageMoreDto<PostsListDto> postsPageMoreDto = createContentsPageMoreDto(postsPage);
 
-        Page<CommentsListDto> commentsPage = commentsService.findByUser(user, page, size);
-        ContentsPageMoreDto<CommentsListDto> commentsPageMoreDto = new ContentsPageMoreDto<>(commentsPage);
+        Page<CommentsListDto> commentsPage = createCommentsPage(user, page, size);
+        ContentsPageMoreDto<CommentsListDto> commentsPageMoreDto = createContentsPageMoreDto(commentsPage);
 
         Page<LikesListDto> likesPage = likesService.findLikesByUser(user, likesRepository::findByUser, page, size);
-        ContentsPageMoreDto<LikesListDto> likesPageMoreDto = new ContentsPageMoreDto<>(likesPage);
+        ContentsPageMoreDto<LikesListDto> likesPageMoreDto = createContentsPageMoreDto(likesPage);
 
         return ContentsPageMoreDtos.<PostsListDto, CommentsListDto, LikesListDto>builder()
                 .contentsPageMore1(postsPageMoreDto).contentsPageMore2(commentsPageMoreDto)
@@ -79,14 +79,18 @@ public class UserViewService {
 
     @Transactional(readOnly = true)
     public UserUpdateDto afterSignUp(Long id) {
-        User user = userService.findById(id);
-        return new UserUpdateDto(user);
+        User user = findUsersById(id);
+        return createUserUpdateDto(user);
     }
 
     @Transactional(readOnly = true)
     public UserUpdateDto updateUserInfo(Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
-        return new UserUpdateDto(user);
+        User user = getUserFromPrincipal(principal);
+        return createUserUpdateDto(user);
+    }
+
+    private User getUserFromPrincipal(Principal principal) {
+        return principalHelper.getUserFromPrincipal(principal, true);
     }
 
     private BannedHistoryDto getBannedHistoryDto(User user) {
@@ -98,12 +102,12 @@ public class UserViewService {
             return null;
         }
 
-        Page<PostsListDto> contents = postsService.findByUser(user, page, 10);
-        ContentsPageDto<PostsListDto> postsPage = createContentsPageDto(contents);
+        Page<PostsListDto> postsPage = createPostsPage(user, page, 10);
+        ContentsPageDto<PostsListDto> postsPageDto = createContentsPageDto(postsPage);
         long numberOfComments = commentsService.countByUser(user);
 
         return PostsHistoryDto.builder()
-                .contentsPage(postsPage).numberOfComments(numberOfComments).build();
+                .contentsPage(postsPageDto).numberOfComments(numberOfComments).build();
     }
 
     private CommentsHistoryDto getCommentsHistoryDto(String type, User user, int page) {
@@ -111,18 +115,18 @@ public class UserViewService {
             return null;
         }
 
-        Page<CommentsListDto> contents = commentsService.findByUser(user, page, 10);
-        ContentsPageDto<CommentsListDto> commentsPage = createContentsPageDto(contents);
+        Page<CommentsListDto> commentsPage = createCommentsPage(user, page, 10);
+        ContentsPageDto<CommentsListDto> commentsPageDto = createContentsPageDto(commentsPage);
         long numberOfPosts = postsService.countByUser(user);
 
         return CommentsHistoryDto.builder()
-                .contentsPage(commentsPage).numberOfPosts(numberOfPosts).build();
+                .contentsPage(commentsPageDto).numberOfPosts(numberOfPosts).build();
     }
 
     private Set<Map.Entry<String, Long>> getNumberOfReports(User user) {
-        long numberOfPostReports = reportsService.countReportsByContentTypeAndUser(POSTS, user);
-        long numberOfCommentReports = reportsService.countReportsByContentTypeAndUser(ContentType.COMMENTS, user);
-        long numberOfUserReports = reportsService.countReportsByContentTypeAndUser(ContentType.USERS, user);
+        long numberOfPostReports = countReportsByContentTypeAndUser(POSTS, user);
+        long numberOfCommentReports = countReportsByContentTypeAndUser(ContentType.COMMENTS, user);
+        long numberOfUserReports = countReportsByContentTypeAndUser(ContentType.USERS, user);
 
         Map<String, Long> numberOfReports = new HashMap<>();
         numberOfReports.put(POSTS.getDetail(), numberOfPostReports);
@@ -132,7 +136,31 @@ public class UserViewService {
         return numberOfReports.entrySet();
     }
 
-    private <T> ContentsPageDto<T> createContentsPageDto(Page<T> page) {
+    private <Dto> ContentsPageMoreDto<Dto> createContentsPageMoreDto(Page<Dto> contentsPage) {
+        return new ContentsPageMoreDto<>(contentsPage);
+    }
+
+    private User findUsersById(Long userId) {
+        return userService.findById(userId);
+    }
+
+    private UserUpdateDto createUserUpdateDto(User user) {
+        return new UserUpdateDto(user);
+    }
+
+    private <Dto> ContentsPageDto<Dto> createContentsPageDto(Page<Dto> page) {
         return new ContentsPageDto<>(page);
+    }
+
+    private Page<PostsListDto> createPostsPage(User user, int page, int size) {
+        return postsService.findByUser(user, page, size);
+    }
+
+    private Page<CommentsListDto> createCommentsPage(User user, int page, int size) {
+        return commentsService.findByUser(user, page, size);
+    }
+
+    private long countReportsByContentTypeAndUser(ContentType contentType, User user) {
+        return reportsService.countReportsByContentTypeAndUser(contentType, user);
     }
 }

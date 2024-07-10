@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.posts.PostsRepository;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.pagination.ContentsPageDto;
 import com.eskgus.nammunity.web.dto.posts.*;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,6 @@ import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.POST_NOT_FOUND;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
 @Service
@@ -72,8 +72,8 @@ public class PostsService {
     @Transactional(readOnly = true)
     public ContentsPageDto<PostsListDto> findAllDesc(int page) {
         Pageable pageable = createPageable(page, 20);
-        Page<PostsListDto> contents = postsRepository.findAllDesc(pageable);
-        return new ContentsPageDto<>(contents);
+        Page<PostsListDto> postsPage = postsRepository.findAllDesc(pageable);
+        return new ContentsPageDto<>(postsPage);
     }
 
     @Transactional(readOnly = true)
@@ -103,5 +103,9 @@ public class PostsService {
             case CONTENT -> postsRepository::searchByContent;
             default -> postsRepository::searchByTitleAndContent;
         };
+    }
+
+    private Pageable createPageable(int page, int size) {
+        return PaginationRepoUtil.createPageable(page, size);
     }
 }

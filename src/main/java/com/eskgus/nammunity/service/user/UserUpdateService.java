@@ -34,7 +34,7 @@ public class UserUpdateService {
 
     @Transactional
     public Long updatePassword(PasswordUpdateDto requestDto, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
+        User user = getUserFromPrincipal(principal);
 
         validatePasswordUpdateDto(requestDto, user);
 
@@ -45,7 +45,7 @@ public class UserUpdateService {
 
     @Transactional
     public Long updateEmail(EmailUpdateDto requestDto, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
+        User user = getUserFromPrincipal(principal);
 
         String email = requestDto.getEmail();
         validateEmailUpdateDto(email, user);
@@ -63,7 +63,7 @@ public class UserUpdateService {
 
     @Transactional
     public Long updateNickname(NicknameUpdateDto requestDto, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
+        User user = getUserFromPrincipal(principal);
 
         validateNicknameUpdateDto(requestDto, user);
 
@@ -74,7 +74,7 @@ public class UserUpdateService {
 
     @Transactional
     public HttpHeaders deleteUser(Principal principal, String accessToken) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
+        User user = getUserFromPrincipal(principal);
         Cookie cookie = resetCookie(user, accessToken);
         userService.delete(user.getId());
 
@@ -83,10 +83,10 @@ public class UserUpdateService {
 
     @Transactional
     public HttpHeaders unlinkSocial(Principal principal, String social, String accessToken) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
+        User user = getUserFromPrincipal(principal);
 
         SocialType socialType = convertSocialType(social);
-        Cookie cookie = customOAuth2UserService.unlinkSocial(socialType, accessToken, user);
+        Cookie cookie = unlinkSocial(socialType, accessToken, user);
 
         return createHeaders(cookie);
     }
@@ -95,6 +95,10 @@ public class UserUpdateService {
     public void encryptAndUpdatePassword(User user, String password) {
         String encryptedPassword = registrationService.encryptPassword(password);
         user.updatePassword(encryptedPassword);
+    }
+
+    private User getUserFromPrincipal(Principal principal) {
+        return principalHelper.getUserFromPrincipal(principal, true);
     }
 
     private void validatePasswordUpdateDto(PasswordUpdateDto passwordUpdateDto, User user) {
@@ -141,7 +145,7 @@ public class UserUpdateService {
         if (NONE.equals(user.getSocial())) {
             return null;
         }
-        return customOAuth2UserService.unlinkSocial(user.getSocial(), accessToken, user);
+        return unlinkSocial(user.getSocial(), accessToken, user);
     }
 
     private HttpHeaders createHeaders(Cookie cookie) {
@@ -158,5 +162,9 @@ public class UserUpdateService {
         headers.add(HttpHeaders.SET_COOKIE, responseCookie.toString());
 
         return headers;
+    }
+
+    private Cookie unlinkSocial(SocialType socialType, String accessToken, User user) {
+        return customOAuth2UserService.unlinkSocial(socialType, accessToken, user);
     }
 }

@@ -2,10 +2,8 @@ package com.eskgus.nammunity.web.dto.comments;
 
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Getter;
-
-import static com.eskgus.nammunity.util.DateTimeUtil.formatDateTime;
-import static com.eskgus.nammunity.util.DateTimeUtil.formatModifiedDate;
 
 @Getter
 public class CommentsReadDto {
@@ -34,8 +32,8 @@ public class CommentsReadDto {
         this.id = comment.getId();
         generateAuthor(comment.getUser());
         this.content = comment.getContent();
-        this.createdDate = formatDateTime(comment.getCreatedDate());
-        this.modifiedDate = formatModifiedDate(comment.getCreatedDate(), comment.getModifiedDate());
+        this.createdDate = DateTimeUtil.formatDateTime(comment.getCreatedDate());
+        this.modifiedDate = DateTimeUtil.formatModifiedDate(comment.getCreatedDate(), comment.getModifiedDate());
     }
 
     private void generateAuthor(User user) {

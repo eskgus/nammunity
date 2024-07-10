@@ -8,6 +8,7 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.comments.CommentsService;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.eskgus.nammunity.web.dto.likes.LikesSaveDto;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,6 @@ import java.util.function.BiFunction;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.LIKE_NOT_FOUND;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
 @Service
@@ -34,7 +34,7 @@ public class LikesService {
 
     @Transactional
     public Long save(Long postsId, Long commentsId, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
+        User user = getUserFromPrincipal(principal);
 
         LikesSaveDto likesSaveDto = createLikesSaveDto(postsId, commentsId, user);
 
@@ -43,7 +43,7 @@ public class LikesService {
 
     @Transactional
     public void deleteByContentId(Long postsId, Long commentsId, Principal principal) {
-        User user = principalHelper.getUserFromPrincipal(principal, true);
+        User user = getUserFromPrincipal(principal);
 
         if (postsId != null) {
             deleteByPostId(postsId, user);
@@ -65,7 +65,7 @@ public class LikesService {
     public Page<LikesListDto> findLikesByUser(User user, BiFunction<User, Pageable, Page<LikesListDto>> finder,
                                               int page, int size) {
         // finder: likesRepository.findByUser(전체 좋아요), findPostLikesByUser(게시글 좋아요), findCommentLikesByUser(댓글 좋아요)
-        Pageable pageable = createPageable(page, size);
+        Pageable pageable = PaginationRepoUtil.createPageable(page, size);
         return finder.apply(user, pageable);
     }
 
@@ -79,21 +79,25 @@ public class LikesService {
         return likesRepository.existsByCommentsAndUser(comment, user);
     }
 
+    private User getUserFromPrincipal(Principal principal) {
+        return principalHelper.getUserFromPrincipal(principal, true);
+    }
+
     private LikesSaveDto createLikesSaveDto(Long postsId, Long commentsId, User user) {
-        Posts posts = postsId != null ? postsService.findById(postsId) : null;
-        Comments comments = commentsId != null ? commentsService.findById(commentsId) : null;
+        Posts posts = postsId != null ? findPostsById(postsId) : null;
+        Comments comments = commentsId != null ? findCommentsById(commentsId) : null;
 
         return LikesSaveDto.builder()
                 .posts(posts).comments(comments).user(user).build();
     }
 
     private void deleteByPostId(Long postsId, User user) {
-        Posts posts = postsService.findById(postsId);
+        Posts posts = findPostsById(postsId);
         likesRepository.deleteByPosts(posts, user);
     }
 
     private void deleteByCommentId(Long commentsId, User user) {
-        Comments comments = commentsService.findById(commentsId);
+        Comments comments = findCommentsById(commentsId);
         likesRepository.deleteByComments(comments, user);
     }
 
@@ -102,5 +106,13 @@ public class LikesService {
         Likes like = likesRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException(LIKE_NOT_FOUND.getMessage()));
         likesRepository.delete(like);
+    }
+
+    private Posts findPostsById(Long postsId) {
+        return postsService.findById(postsId);
+    }
+
+    private Comments findCommentsById(Long commentsId) {
+        return commentsService.findById(commentsId);
     }
 }

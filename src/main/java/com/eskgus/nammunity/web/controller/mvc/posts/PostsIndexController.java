@@ -50,6 +50,13 @@ public class PostsIndexController {
         return readComments(id, principal, page, model);
     }
 
+    @GetMapping("/posts/update/{id}")
+    public String updatePosts(@PathVariable Long id, Model model) {
+        PostsUpdateDto postsUpdateDto = postsViewService.updatePosts(id);
+        model.addAttribute("post", postsUpdateDto);
+        return "posts/posts-update";
+    }
+
     private String readPosts(Long id, Principal principal, Model model) {
         PostWithReasonsDto postWithReasons = postsViewService.readPosts(id, principal);
         model.addAttribute("postWithReasons", postWithReasons);
@@ -65,12 +72,5 @@ public class PostsIndexController {
         ContentsPageDto<CommentsReadDto> contentsPage = postsViewService.readComments(id, principal, page);
         model.addAttribute("contentsPage", contentsPage);
         return "posts/comments-read";
-    }
-
-    @GetMapping("/posts/update/{id}")
-    public String updatePosts(@PathVariable Long id, Model model) {
-        PostsUpdateDto postsUpdateDto = postsViewService.updatePosts(id);
-        model.addAttribute("post", postsUpdateDto);
-        return "posts/posts-update";
     }
 }

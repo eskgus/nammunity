@@ -2,11 +2,9 @@ package com.eskgus.nammunity.web.dto.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
+import com.eskgus.nammunity.util.DateTimeUtil;
 import lombok.Builder;
 import lombok.Getter;
-
-import static com.eskgus.nammunity.util.DateTimeUtil.formatDateTime;
-import static com.eskgus.nammunity.util.DateTimeUtil.formatModifiedDate;
 
 @Getter
 public class PostsReadDto {
@@ -28,8 +26,8 @@ public class PostsReadDto {
         generateAuthor(post.getUser());
         this.title = post.getTitle();
         this.content = post.getContent();
-        this.createdDate = formatDateTime(post.getCreatedDate());
-        this.modifiedDate = formatModifiedDate(post.getCreatedDate(), post.getModifiedDate());
+        this.createdDate = DateTimeUtil.formatDateTime(post.getCreatedDate());
+        this.modifiedDate = DateTimeUtil.formatModifiedDate(post.getCreatedDate(), post.getModifiedDate());
         this.view = post.getView();
         this.postedByUser = postedByUser;
         this.likes = post.getLikes().size();

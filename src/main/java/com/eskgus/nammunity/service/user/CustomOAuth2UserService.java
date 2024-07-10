@@ -150,7 +150,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private User signInWithSocial(CustomOAuth2User customOAuth2User) {
-        Optional<User> result = userRepository.findByEmail(customOAuth2User.getEmail());
+        Optional<User> result = findUsersByEmail(customOAuth2User.getEmail());
         User user = result.orElseGet(() -> signUpWithSocial(customOAuth2User));
 
         if (NONE.equals(user.getSocial())) {
@@ -194,7 +194,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return createCookie(accessToken, exp);
     }
 
-    private <T> void addAttributes(CustomOAuth2User customOAuth2User, Fields field, T value) {
+    private <Value> void addAttributes(CustomOAuth2User customOAuth2User, Fields field, Value value) {
         customOAuth2User.getAttributes().put(field.getKey(), value);
     }
 
@@ -211,7 +211,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private boolean validateSocialEmail(CustomOAuth2User customOAuth2User, User user) {
         String socialEmail = customOAuth2User.getEmail();
 
-        Optional<User> result = userRepository.findByEmail(socialEmail);
+        Optional<User> result = findUsersByEmail(socialEmail);
         return result.map(existingUser -> {
             if (!user.getEmail().equals(socialEmail)) {
                 cancelSocialLink(existingUser, customOAuth2User, user);
@@ -232,6 +232,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return RegistrationDto.builder()
                 .username(name).password(password).nickname(name).email(customOAuth2User.getEmail()).role(Role.USER)
                 .build();
+    }
+
+    private Optional<User> findUsersByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     private void cancelSocialLink(User existingUser, CustomOAuth2User customOAuth2User, User user) {
@@ -271,7 +275,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String url = buildValidateAccessTokenUrl(socialType, accessToken, headers, username);
 
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        exchange(url, HttpMethod.GET, request, String.class);
     }
 
     private Cookie refreshAccessToken(User user, SocialType socialType) {
@@ -284,7 +288,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         HttpHeaders headers = generateSocialUnlinkHeaders(socialType, accessToken);
 
         HttpEntity<String> request = new HttpEntity<>(null, headers);
-        restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        exchange(url, HttpMethod.POST, request, String.class);
     }
 
     private String buildValidateAccessTokenUrl(SocialType socialType, String accessToken,
@@ -306,7 +310,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String refreshToken = getRefreshToken(user);
         String url = buildAccessTokenRefreshUrl(socialType, user.getUsername(), refreshToken);
 
-        return restTemplate.exchange(url, HttpMethod.POST, null, Map.class);
+        return exchange(url, HttpMethod.POST, null, Map.class);
     }
 
     private Cookie createAccessTokenCookieFromResponse(ResponseEntity<Map> response) {
@@ -353,6 +357,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return urlBuilder.append("&grant_type=refresh_token")
                 .append("&refresh_token=")
                 .append(refreshToken).toString();
+    }
+
+    private <ResponseType> ResponseEntity<ResponseType> exchange(String url, HttpMethod httpMethod,
+                                                                 HttpEntity<ResponseType> requestEntity,
+                                                                 Class<ResponseType> responseType) {
+        return restTemplate.exchange(url, httpMethod, requestEntity, responseType);
     }
 
     private StringBuilder buildBaseUrl(SocialType socialType, String username) {

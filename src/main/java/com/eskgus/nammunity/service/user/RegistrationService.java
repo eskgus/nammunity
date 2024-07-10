@@ -40,7 +40,7 @@ public class RegistrationService {
 
     @Transactional
     public void resendToken(Long id) {
-        User user = userService.findById(id);
+        User user = findUsersById(id);
 
         checkTokenResendAvailability(user);
 
@@ -50,7 +50,7 @@ public class RegistrationService {
 
     @Transactional
     public void sendToken(Long id, String email, String purpose) {
-        User user = userService.findById(id);
+        User user = findUsersById(id);
 
         String token = createAndSaveToken(user);
 
@@ -84,7 +84,7 @@ public class RegistrationService {
 
     @Transactional(readOnly = true)
     public String checkUserEnabled(Long id, String referer) {
-        User user = userService.findById(id);
+        User user = findUsersById(id);
         boolean enabled = user.isEnabled();
 
         if (!enabled) {
@@ -98,18 +98,22 @@ public class RegistrationService {
         }
     }
 
+    private User findUsersById(Long userId) {
+        return userService.findById(userId);
+    }
+
     @Transactional(readOnly = true)
     private void validateRegistrationDto(RegistrationDto registrationDto) {
-        if (userService.existsByUsername(registrationDto.getUsername())) {
+        if (existsUsersByUsername(registrationDto.getUsername())) {
             throw new CustomValidException(USERNAME, registrationDto.getUsername(), USERNAME_EXISTS);
         }
         if (!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
             throw new CustomValidException(CONFIRM_PASSWORD, registrationDto.getConfirmPassword(), CONFIRM_PASSWORD_MISMATCH);
         }
-        if (userService.existsByNickname(registrationDto.getNickname())) {
+        if (existsUsersByNickname(registrationDto.getNickname())) {
             throw new CustomValidException(NICKNAME, registrationDto.getNickname(), NICKNAME_EXISTS);
         }
-        if (userService.existsByEmail(registrationDto.getEmail())) {
+        if (existsUsersByEmail(registrationDto.getEmail())) {
             throw new CustomValidException(EMAIL, registrationDto.getEmail(), EMAIL_EXISTS);
         }
     }
@@ -168,7 +172,7 @@ public class RegistrationService {
         if (username.isBlank()) {
             throw new CustomValidException(USERNAME, username, EMPTY_USERNAME);
         }
-        if (userService.existsByUsername(username)) {
+        if (existsUsersByUsername(username)) {
             throw new CustomValidException(USERNAME, username, USERNAME_EXISTS);
         }
     }
@@ -177,7 +181,7 @@ public class RegistrationService {
         if (nickname.isBlank()) {
             throw new CustomValidException(NICKNAME, nickname, EMPTY_NICKNAME);
         }
-        if (userService.existsByNickname(nickname)) {
+        if (existsUsersByNickname(nickname)) {
             throw new CustomValidException(NICKNAME, nickname, NICKNAME_EXISTS);
         }
     }
@@ -186,8 +190,20 @@ public class RegistrationService {
         if (email.isBlank()) {
             throw new CustomValidException(EMAIL, email, EMPTY_EMAIL);
         }
-        if (userService.existsByEmail(email)) {
+        if (existsUsersByEmail(email)) {
             throw new CustomValidException(EMAIL, email, EMAIL_EXISTS);
         }
+    }
+
+    private boolean existsUsersByUsername(String username) {
+        return userService.existsByUsername(username);
+    }
+
+    private boolean existsUsersByNickname(String nickname) {
+        return userService.existsByNickname(nickname);
+    }
+
+    private boolean existsUsersByEmail(String email) {
+        return userService.existsByEmail(email);
     }
 }

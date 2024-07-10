@@ -18,7 +18,7 @@ public class SignInService {
 
     @Transactional
     public Integer increaseAttempt(String username) {
-        User user = userService.findByUsername(username);
+        User user = findUsersByUsername(username);
         int attempt = user.increaseAttempt();
         if (attempt == 5 && !user.isLocked()) {
             user.updateLocked();
@@ -41,7 +41,7 @@ public class SignInService {
 
     @Transactional
     public void findPassword(String username) {
-        User user = userService.findByUsername(username);
+        User user = findUsersByUsername(username);
 
         if (!bannedUsersService.isAccountNonBanned(username)) {
             throw new IllegalArgumentException(BANNED.getMessage());
@@ -56,6 +56,10 @@ public class SignInService {
             return username;
         }
         return username.substring(0, 3) + "****";
+    }
+
+    private User findUsersByUsername(String username) {
+        return userService.findByUsername(username);
     }
 
     private void createAndUpdatePassword(User user) {

@@ -12,7 +12,7 @@ import static com.eskgus.nammunity.domain.enums.ContentType.COMMENTS;
 import static com.eskgus.nammunity.domain.enums.ContentType.POSTS;
 
 @Getter
-public class ContentReportDetailDto <U> {
+public class ContentReportDetailDto <Dto> {
     private final String type;
     private PostsListDto postsListDto;
     private CommentsListDto commentsListDto;
@@ -20,20 +20,20 @@ public class ContentReportDetailDto <U> {
     private final ContentsPageDto<ContentReportDetailListDto> contentsPage;
 
     @Builder
-    public ContentReportDetailDto(Types type, U contentListDto,
+    public ContentReportDetailDto(Types type, Dto dto,
                                   ContentsPageDto<ContentReportDetailListDto> contentsPage) {
         this.type = type.getDetail();
-        generateContentListDto(contentListDto);
+        generateDto(dto);
         this.contentsPage = contentsPage;
     }
 
-    private void generateContentListDto(U contentListDto) {
+    private void generateDto(Dto dto) {
         if (POSTS.getDetail().equals(type)) {
-            this.postsListDto = (PostsListDto) contentListDto;
+            this.postsListDto = (PostsListDto) dto;
         } else if (COMMENTS.getDetail().equals(type)) {
-            this.commentsListDto = (CommentsListDto) contentListDto;
+            this.commentsListDto = (CommentsListDto) dto;
         } else {
-            this.usersListDto = (UsersListDto) contentListDto;
+            this.usersListDto = (UsersListDto) dto;
         }
     }
 }

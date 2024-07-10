@@ -27,15 +27,15 @@ public class SearchService {
         int page = 1;
         int size = 5;
 
-        Page<PostsListDto> postsPage
-                = postsService.search(keywords, SearchType.TITLE_AND_CONTENT.getKey(), page, size);
-        ContentsPageMoreDto<PostsListDto> postsPageMoreDto = new ContentsPageMoreDto<>(postsPage);
+        Page<PostsListDto> postsPage = searchPostsBySearchType(
+                keywords, SearchType.TITLE_AND_CONTENT.getKey(), page, size);
+        ContentsPageMoreDto<PostsListDto> postsPageMoreDto = createContentsPageMoreDto(postsPage);
 
-        Page<CommentsListDto> commentsPage = commentsService.searchByContent(keywords, page, size);
-        ContentsPageMoreDto<CommentsListDto> commentsPageMoreDto = new ContentsPageMoreDto<>(commentsPage);
+        Page<CommentsListDto> commentsPage = searchCommentsByContent(keywords, page, size);
+        ContentsPageMoreDto<CommentsListDto> commentsPageMoreDto = createContentsPageMoreDto(commentsPage);
 
-        Page<UsersListDto> usersPage = userService.searchByNickname(keywords, page, size);
-        ContentsPageMoreDto<UsersListDto> usersPageMoreDto = new ContentsPageMoreDto<>(usersPage);
+        Page<UsersListDto> usersPage = searchUsersByNickname(keywords, page, size);
+        ContentsPageMoreDto<UsersListDto> usersPageMoreDto = createContentsPageMoreDto(usersPage);
 
         return ContentsPageMoreDtos.<PostsListDto, CommentsListDto, UsersListDto>builder()
                 .contentsPageMore1(postsPageMoreDto).contentsPageMore2(commentsPageMoreDto)
@@ -44,19 +44,39 @@ public class SearchService {
 
     @Transactional(readOnly = true)
     public ContentsPageDto<PostsListDto> searchPosts(String keywords, String searchBy, int page) {
-        Page<PostsListDto> contents = postsService.search(keywords, searchBy, page, 30);
-        return new ContentsPageDto<>(contents);
+        Page<PostsListDto> postsPage = searchPostsBySearchType(keywords, searchBy, page, 30);
+        return createContentsPageDto(postsPage);
     }
 
     @Transactional(readOnly = true)
     public ContentsPageDto<CommentsListDto> searchComments(String keywords, int page) {
-        Page<CommentsListDto> contents = commentsService.searchByContent(keywords, page, 30);
-        return new ContentsPageDto<>(contents);
+        Page<CommentsListDto> commentsPage = searchCommentsByContent(keywords, page, 30);
+        return createContentsPageDto(commentsPage);
     }
 
     @Transactional(readOnly = true)
     public ContentsPageDto<UsersListDto> searchUsers(String keywords, int page) {
-        Page<UsersListDto> contents = userService.searchByNickname(keywords, page, 30);
-        return new ContentsPageDto<>(contents);
+        Page<UsersListDto> usersPage = searchUsersByNickname(keywords, page, 30);
+        return createContentsPageDto(usersPage);
+    }
+
+    private Page<PostsListDto> searchPostsBySearchType(String keywords, String searchBy, int page, int size) {
+        return postsService.search(keywords, searchBy, page, size);
+    }
+
+    private Page<CommentsListDto> searchCommentsByContent(String keywords, int page, int size) {
+        return commentsService.searchByContent(keywords, page, size);
+    }
+
+    private Page<UsersListDto> searchUsersByNickname(String keywords, int page, int size) {
+        return userService.searchByNickname(keywords, page, size);
+    }
+
+    private <Dto> ContentsPageMoreDto<Dto> createContentsPageMoreDto(Page<Dto> contentsPage) {
+        return new ContentsPageMoreDto<>(contentsPage);
+    }
+
+    private <Dto> ContentsPageDto<Dto> createContentsPageDto(Page<Dto> contentsPage) {
+        return new ContentsPageDto<>(contentsPage);
     }
 }

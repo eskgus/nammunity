@@ -4,11 +4,11 @@ import lombok.Getter;
 import org.springframework.data.domain.Page;
 
 @Getter
-public class ContentsPageMoreDto<T> {
-    private final Page<T> contents;
+public class ContentsPageMoreDto<Dto> {
+    private final Page<Dto> contents;
     private boolean more;
 
-    public ContentsPageMoreDto(Page<T> contents) {
+    public ContentsPageMoreDto(Page<Dto> contents) {
         this.contents = contents;
         generateMore();
     }

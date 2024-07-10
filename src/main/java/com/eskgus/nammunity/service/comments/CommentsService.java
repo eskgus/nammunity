@@ -6,6 +6,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.service.posts.PostsService;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.comments.CommentsListDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsReadDto;
 import com.eskgus.nammunity.web.dto.comments.CommentsSaveDto;
@@ -20,7 +21,6 @@ import java.util.List;
 
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.COMMENT_NOT_FOUND;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
 
 @RequiredArgsConstructor
 @Service
@@ -95,5 +95,9 @@ public class CommentsService {
     public int calculateCommentPage(Long postId, Long commentId) {
         long commentIndex = commentsRepository.countCommentIndex(postId, commentId);
         return (int) commentIndex / 30 + 1;
+    }
+
+    private Pageable createPageable(int page, int size) {
+        return PaginationRepoUtil.createPageable(page, size);
     }
 }

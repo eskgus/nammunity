@@ -25,16 +25,16 @@ public class CommentsViewService {
 
     @Transactional(readOnly = true)
     public Page<CommentsReadDto> findCommentsPageByPosts(Posts post, User user, int page) {
-        Page<CommentsReadDto> comments = commentsService.findByPosts(post, page);
-        setCommentsReadDto(comments.getContent(), user);
-        return comments;
+        Page<CommentsReadDto> commentsPage = commentsService.findByPosts(post, page);
+        setCommentsReadDto(commentsPage.getContent(), user);
+        return commentsPage;
     }
 
     @Transactional(readOnly = true)
     public ContentsPageDto<CommentsListDto> listComments(Principal principal, int page) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
-        Page<CommentsListDto> contents = commentsService.findByUser(user, page, 20);
-        return new ContentsPageDto<>(contents);
+        Page<CommentsListDto> commentsPage = commentsService.findByUser(user, page, 20);
+        return new ContentsPageDto<>(commentsPage);
     }
 
     private void setCommentsReadDto(List<CommentsReadDto> comments, User user) {

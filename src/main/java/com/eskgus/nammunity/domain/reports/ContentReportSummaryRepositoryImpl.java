@@ -8,6 +8,7 @@ import com.eskgus.nammunity.domain.user.QUser;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.FindQueries;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.reports.ContentReportSummaryDto;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Expression;
@@ -24,9 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.addPageToQuery;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPage;
-
 public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySupport implements CustomContentReportSummaryRepository {
     @Autowired
     private EntityManager entityManager;
@@ -41,7 +39,7 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
     }
 
     @Override
-    public <T> boolean existsByContents(T contents) {
+    public <Contents> boolean existsByContents(Contents contents) {
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
 
         Predicate whereCondition = createWhereConditionByContents(contents);
@@ -51,7 +49,7 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
                 .fetchFirst() != null;
     }
 
-    private <T> BooleanBuilder createWhereConditionByContents(T contents) {
+    private <Contents> BooleanBuilder createWhereConditionByContents(Contents contents) {
         Predicate whereCondition;
         if (contents instanceof Posts) {
             whereCondition = qReportSummary.posts.eq((Posts) contents);
@@ -67,7 +65,7 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
     }
 
     @Override
-    public <T> ContentReportSummary findByContents(T contents) {
+    public <Contents> ContentReportSummary findByContents(Contents contents) {
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
 
         Predicate whereCondition = createWhereConditionByContents(contents);
@@ -93,7 +91,7 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
 
         return EssentialQuery.<ContentReportSummaryDto, ContentReportSummary>builder()
                 .entityManager(entityManager).queryType(qReportSummary)
-                .classOfListDto(ContentReportSummaryDto.class).constructorParams(constructorParams).build();
+                .dtoType(ContentReportSummaryDto.class).constructorParams(constructorParams).build();
     }
 
     private JPAQuery<ContentReportSummaryDto>
@@ -105,7 +103,7 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
                 .essentialQuery(essentialQuery)
                 .whereCondition(whereCondition).build();
         JPAQuery<ContentReportSummaryDto> query = findQueries.createQueryForFindContents();
-        return addPageToQuery(query, pageable);
+        return PaginationRepoUtil.addPageToQuery(query, pageable);
     }
 
     private Page<ContentReportSummaryDto>
@@ -114,7 +112,7 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
                                   Pageable pageable) {
         List<ContentReportSummaryDto> reportSummaries = createLeftJoinClauseForReportSummaries(query).fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
-        return createPage(reportSummaries, pageable, totalQuery);
+        return PaginationRepoUtil.createPage(reportSummaries, pageable, totalQuery);
     }
 
     private JPAQuery<ContentReportSummaryDto> createLeftJoinClauseForReportSummaries(JPAQuery<ContentReportSummaryDto> query) {
@@ -130,7 +128,7 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
 
     @Override
     @Transactional
-    public <T> void deleteByContents(T contents) {
+    public <Contents> void deleteByContents(Contents contents) {
         Predicate whereCondition = createWhereConditionByContents(contents);
 
         JPADeleteClause query = new JPADeleteClause(entityManager, qReportSummary);

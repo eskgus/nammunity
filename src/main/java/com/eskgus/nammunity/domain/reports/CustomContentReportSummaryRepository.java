@@ -5,9 +5,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CustomContentReportSummaryRepository {
-    <T> boolean existsByContents(T contents);
-    <T> ContentReportSummary findByContents(T contents);
+    <Contents> boolean existsByContents(Contents contents);
+    <Contents> ContentReportSummary findByContents(Contents contents);
     Page<ContentReportSummaryDto> findAllDesc(Pageable pageable);
     Page<ContentReportSummaryDto> findByTypes(Types type, Pageable pageable);
-    <T> void deleteByContents(T contents);
+    <Contents> void deleteByContents(Contents contents);
 }

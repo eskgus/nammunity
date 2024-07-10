@@ -9,11 +9,11 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 
 public interface CustomContentReportsRepository {
-    <T> User findReporterByContents(T contents);
-    <T> LocalDateTime findReportedDateByContents(T contents);
-    <T> Reasons findReasonByContents(T contents);
-    <T> String findOtherReasonByContents(T contents, Reasons reason);
-    <T> Page<ContentReportDetailListDto> findByContents(T contents, Pageable pageable);
+    <Contents> User findReporterByContents(Contents contents);
+    <Contents> LocalDateTime findReportedDateByContents(Contents contents);
+    <Contents> Reasons findReasonByContents(Contents contents);
+    <Contents> String findOtherReasonByContents(Contents contents, Reasons reason);
+    <Contents> Page<ContentReportDetailListDto> findByContents(Contents contents, Pageable pageable);
     long countReportsByContentTypeAndUser(ContentType contentType, User user);
-    <T> long countByContents(T contents);
+    <Contents> long countByContents(Contents contents);
 }

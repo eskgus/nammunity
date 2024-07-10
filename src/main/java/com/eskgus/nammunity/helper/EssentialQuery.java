@@ -13,24 +13,24 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public class EssentialQuery<T, U> {    // T: listDto, U: entity
-    private EntityManager entityManager;
-    private EntityPathBase<U> queryType;
+public class EssentialQuery<Dto, Entity> {
+    private final EntityManager entityManager;
+    private final EntityPathBase<Entity> queryType;
 
-    private Class<T> classOfListDto;
-    private Expression[] constructorParams;
+    private final Class<Dto> dtoType;
+    private final Expression[] constructorParams;
 
     @Builder
-    public EssentialQuery(EntityManager entityManager, EntityPathBase<U> queryType,
-                          Class<T> classOfListDto, Expression[] constructorParams) {
+    public EssentialQuery(EntityManager entityManager, EntityPathBase<Entity> queryType,
+                          Class<Dto> dtoType, Expression[] constructorParams) {
         this.entityManager = entityManager;
         this.queryType = queryType;
-        this.classOfListDto = classOfListDto;
+        this.dtoType = dtoType;
         this.constructorParams = constructorParams;
     }
 
-    public JPAQuery<T> createBaseQuery(StringPath... fields) {
-        JPAQuery<T> query = createSelectClause(fields);
+    public JPAQuery<Dto> createBaseQuery(StringPath... fields) {
+        JPAQuery<Dto> query = createSelectClause(fields);
 
         NumberPath<Long> id = getNumberPathId();
 
@@ -39,7 +39,14 @@ public class EssentialQuery<T, U> {    // T: listDto, U: entity
                 .orderBy(id.desc());
     }
 
-    private JPAQuery<T> createSelectClause(StringPath... fields) {
+    public JPAQuery<Long> createBaseQueryForPagination(JPAQuery<Dto> query) {
+        JPAQuery<Long> total = new JPAQuery<>(entityManager);
+        return total.select(queryType.count())
+                .from(queryType)
+                .where(query.getMetadata().getWhere());
+    }
+
+    private JPAQuery<Dto> createSelectClause(StringPath... fields) {
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
         Expression projections = createProjections();
 
@@ -50,17 +57,10 @@ public class EssentialQuery<T, U> {    // T: listDto, U: entity
     }
 
     private Expression createProjections() {
-        return Projections.constructor(classOfListDto, constructorParams);
+        return Projections.constructor(dtoType, constructorParams);
     }
 
     private NumberPath<Long> getNumberPathId() {
         return Expressions.numberPath(Long.class, queryType, "id");
-    }
-
-    public JPAQuery<Long> createBaseQueryForPagination(JPAQuery<T> query) {
-        JPAQuery<Long> total = new JPAQuery<>(entityManager);
-        return total.select(queryType.count())
-                .from(queryType)
-                .where(query.getMetadata().getWhere());
     }
 }

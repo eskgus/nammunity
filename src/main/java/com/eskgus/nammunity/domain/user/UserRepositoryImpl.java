@@ -2,6 +2,7 @@ package com.eskgus.nammunity.domain.user;
 
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.SearchQueries;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.user.UsersListDto;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.StringPath;
@@ -13,9 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 
 import java.util.List;
-
-import static com.eskgus.nammunity.util.PaginationRepoUtil.addPageToQuery;
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPage;
 
 public class UserRepositoryImpl extends QuerydslRepositorySupport implements CustomUserRepository {
     @Autowired
@@ -43,7 +41,7 @@ public class UserRepositoryImpl extends QuerydslRepositorySupport implements Cus
 
         return EssentialQuery.<UsersListDto, User>builder()
                 .entityManager(entityManager).queryType(qUser)
-                .classOfListDto(UsersListDto.class).constructorParams(constructorParams).build();
+                .dtoType(UsersListDto.class).constructorParams(constructorParams).build();
     }
 
     private JPAQuery<UsersListDto> createQueryForSearchUsers(Pageable pageable,
@@ -52,7 +50,7 @@ public class UserRepositoryImpl extends QuerydslRepositorySupport implements Cus
         SearchQueries<UsersListDto, User> searchQueries = SearchQueries.<UsersListDto, User>builder()
                 .essentialQuery(essentialQuery).keywords(keywords).fields(fields).build();
         JPAQuery<UsersListDto> query = searchQueries.createQueryForSearchContents();
-        return addPageToQuery(query, pageable);
+        return PaginationRepoUtil.addPageToQuery(query, pageable);
     }
 
     private Page<UsersListDto> createUsersPage(JPAQuery<UsersListDto> query,
@@ -60,6 +58,6 @@ public class UserRepositoryImpl extends QuerydslRepositorySupport implements Cus
                                                Pageable pageable) {
         List<UsersListDto> users = query.fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
-        return createPage(users, pageable, totalQuery);
+        return PaginationRepoUtil.createPage(users, pageable, totalQuery);
     }
 }

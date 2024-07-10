@@ -23,7 +23,7 @@ public class LikesViewService {
     public ContentsPageDto<LikesListDto> listLikes(BiFunction<User, Pageable, Page<LikesListDto>> finder,
                                                    Principal principal, int page) {
         User user = principalHelper.getUserFromPrincipal(principal, true);
-        Page<LikesListDto> contents = likesService.findLikesByUser(user, finder, page, 20);
-        return new ContentsPageDto<>(contents);
+        Page<LikesListDto> likesPage = likesService.findLikesByUser(user, finder, page, 20);
+        return new ContentsPageDto<>(likesPage);
     }
 }

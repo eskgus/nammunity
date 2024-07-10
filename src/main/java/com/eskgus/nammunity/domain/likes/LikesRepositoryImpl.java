@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.FindQueries;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
 import com.eskgus.nammunity.web.dto.likes.LikesListDto;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.EntityPathBase;
@@ -18,8 +19,6 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
-import static com.eskgus.nammunity.util.PaginationRepoUtil.*;
 
 public class LikesRepositoryImpl extends QuerydslRepositorySupport implements CustomLikesRepository {
     @Autowired
@@ -36,7 +35,8 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
         return findLikesByFields(user, pageable, null);
     }
 
-    private <T> Page<LikesListDto> findLikesByFields(User user, Pageable pageable, EntityPathBase<T> contentTypeOfLikes) {
+    private <Content> Page<LikesListDto> findLikesByFields(User user, Pageable pageable,
+                                                           EntityPathBase<Content> contentTypeOfLikes) {
         EssentialQuery<LikesListDto, Likes> essentialQuery = createEssentialQueryForLikes();
         JPAQuery<LikesListDto> query = createQueryForFindLikes(essentialQuery, user, pageable, contentTypeOfLikes);
         return createLikesPage(query, essentialQuery, pageable);
@@ -47,18 +47,18 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
 
         return EssentialQuery.<LikesListDto, Likes>builder()
                 .entityManager(entityManager).queryType(qLikes)
-                .classOfListDto(LikesListDto.class).constructorParams(constructorParams).build();
+                .dtoType(LikesListDto.class).constructorParams(constructorParams).build();
     }
 
-    private <T> JPAQuery<LikesListDto> createQueryForFindLikes(EssentialQuery<LikesListDto, Likes> essentialQuery,
-                                                           User user, Pageable pageable,
-                                                           EntityPathBase<T> contentTypeOfLikes) {
+    private <Content> JPAQuery<LikesListDto> createQueryForFindLikes(EssentialQuery<LikesListDto, Likes> essentialQuery,
+                                                                     User user, Pageable pageable,
+                                                                     EntityPathBase<Content> contentTypeOfLikes) {
         FindQueries<LikesListDto, Likes> findQueries = FindQueries.<LikesListDto, Likes>builder()
                 .essentialQuery(essentialQuery).userId(qLikes.user.id).user(user)
                 .contentTypeOfLikes(contentTypeOfLikes).build();
         JPAQuery<LikesListDto> query = findQueries.createQueryForFindContents();
 
-        return addPageToQuery(query, pageable);
+        return PaginationRepoUtil.addPageToQuery(query, pageable);
     }
 
     private Page<LikesListDto> createLikesPage(JPAQuery<LikesListDto> query,
@@ -66,7 +66,7 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
                                                Pageable pageable) {
         List<LikesListDto> likes = query.fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
-        return createPage(likes, pageable, totalQuery);
+        return PaginationRepoUtil.createPage(likes, pageable, totalQuery);
     }
 
 
@@ -87,7 +87,7 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
         deleteByField(qLikes.posts, post, user);
     }
 
-    private <T> void deleteByField(EntityPathBase<T> qField, T field, User user) {
+    private <Field> void deleteByField(EntityPathBase<Field> qField, Field field, User user) {
         JPADeleteClause query = new JPADeleteClause(entityManager, qLikes);
         query.where(qField.eq(field).and(qLikes.user.eq(user))).execute();
     }

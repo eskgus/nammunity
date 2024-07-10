@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.handler;
 
+import com.eskgus.nammunity.util.ResponseUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,8 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import static com.eskgus.nammunity.util.ResponseUtil.setMessage;
-
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
     @Override
@@ -20,7 +19,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
                                         AuthenticationException exception) throws IOException, ServletException {
         String url = setUrl(exception, request, response);
 
-        setMessage(exception, request, response);
+        ResponseUtil.setMessage(exception, request, response);
 
         setDefaultFailureUrl(url);
         super.onAuthenticationFailure(request, response, exception);
