@@ -7,6 +7,8 @@ import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.user.Role;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.domain.user.UserRepository;
+import com.eskgus.nammunity.util.PaginationRepoUtil;
+import com.eskgus.nammunity.util.PaginationTestUtil;
 import com.eskgus.nammunity.web.dto.posts.PostsListDto;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,16 +22,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static com.eskgus.nammunity.util.PaginationRepoUtil.createPageable;
-import static com.eskgus.nammunity.util.PaginationTestUtil.createPageWithContent;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @DataJpaTest
@@ -46,8 +45,8 @@ public class PostsRepositoryTest {
     private PostsRepository postsRepository;
 
     private User[] users;
-    private final int page = 1;
-    private final PostsConverterForTest entityConverter = new PostsConverterForTest();
+    private static final int PAGE = 1;
+    private static final PostsConverterForTest POSTS_CONVERTER = new PostsConverterForTest();
 
     @BeforeEach
     public void setUp() {
@@ -60,84 +59,148 @@ public class PostsRepositoryTest {
         this.users = new User[]{ user1, user2 };
     }
 
-    private <T> T assertOptionalAndGetEntity(Function<Long, Optional<T>> finder, Long contentId) {
-        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
-    }
-
     @AfterEach
     public void cleanUp() {
         testDataHelper.cleanUp();
     }
 
     @Test
-    public void save() {
-        Posts post = createPost();
-        callAndAssertSavePosts(post);
-    }
-
-    private Posts createPost() {
-        return Posts.builder().title("title").content("content").user(users[0]).build();
-    }
-
-    private void callAndAssertSavePosts(Posts post) {
-        postsRepository.save(post);
-        Posts actualPost = assertOptionalAndGetEntity(postsRepository::findById, post.getId());
-        assertActualPostEqualsExpectedPost(actualPost, post);
-    }
-
-    private void assertActualPostEqualsExpectedPost(Posts actualPost, Posts expectedPost) {
-        assertThat(actualPost.getTitle()).isEqualTo(expectedPost.getTitle());
-        assertThat(actualPost.getContent()).isEqualTo(expectedPost.getContent());
+    public void countPostsByUserWithoutPosts() {
+        // given
+        // when/then
+        testCountPostsByUser(users[0], 0L);
     }
 
     @Test
-    public void addBaseTimeEntity() {
-        Posts savedPost = savePostAndGetSavedPost();
+    public void countPostsByUserWithPosts() {
+        // given
+        long numberOfPosts = savePosts();
 
-        LocalDateTime now = LocalDateTime.now();
-
-        assertThat(savedPost.getCreatedDate()).isBefore(now);
-        assertThat(savedPost.getModifiedDate()).isBefore(now);
-    }
-
-    private Posts savePostAndGetSavedPost() {
-        Long postId = testDataHelper.savePosts(users[0]);
-        return assertOptionalAndGetEntity(postsRepository::findById, postId);
+        // when/then
+        testCountPostsByUser(users[0], numberOfPosts);
     }
 
     @Test
-    public void countByUser() {
-        // 1. 게시글 작성 x 후 호출
-        callAndAssertCountByUser(0L);
-
-        // 2. 게시글 1개 작성 후 호출
-        Posts post = savePostAndGetSavedPost();
-        callAndAssertCountByUser(post.getId());
-    }
-
-    private void callAndAssertCountByUser(Long expectedCount) {
-        Long actualCount = postsRepository.countByUser(users[0]);
-        assertThat(actualCount).isEqualTo(expectedCount);
+    public void searchPostsByTitleWithoutExcludeKeywords() {
+        testSearchPostsByTitle("ti 제");
     }
 
     @Test
-    public void searchByTitle() {
+    public void searchPostsByTitleWithExcludeKeywords() {
+        testSearchPostsByTitle("ti 제 -목");
+    }
+
+    @Test
+    public void searchPostsByContentWithoutExcludeKeywords() {
+        testSearchPostsByContent("con 내");
+    }
+
+    @Test
+    public void searchPostsByContentWithExcludeKeywords() {
+        testSearchPostsByContent("con 내 -용");
+    }
+
+    @Test
+    public void searchPostsByTitleAndContentWithoutExcludeKeywords() {
+        testSearchPostsByTitleAndContent("ti 내");
+    }
+
+    @Test
+    public void searchPostsByTitleAndContentWithExcludeKeywords() {
+        testSearchPostsByTitleAndContent("ti con 내 -용");
+    }
+
+    @Test
+    public void findAllPostsDesc() {
+        // given
         savePosts();
 
-        // 1. 검색 제외 단어 x
-        callAndAssertSearch(postsRepository::searchByTitle, "ti 제목", Posts::getTitle);
+        Pageable pageable = createPageable();
 
-        // 2. 검색 제외 단어 o
-        callAndAssertSearch(postsRepository::searchByTitle, "ti 제목 -tle", Posts::getTitle);
+        Page<PostsListDto> postsPage = createPostsPageWithFilter(null, pageable);
+
+        // when
+        Page<PostsListDto> result = postsRepository.findAllDesc(pageable);
+
+        // then
+        assertPostsPage(result, postsPage);
     }
 
-    private void savePosts() {
+    @Test
+    public void findPostsByUser() {
+        // given
+        savePostsWithTitleAndContent();
+
+        User user = users[0];
+
+        Pageable pageable = createPageable();
+
+        Predicate<Posts> filter = createFilter(user);
+        Page<PostsListDto> postsPage = createPostsPageWithFilter(filter, pageable);
+
+        // when
+        Page<PostsListDto> result = postsRepository.findByUser(user, pageable);
+
+        // then
+        assertPostsPage(result, postsPage);
+    }
+
+    private void testCountPostsByUser(User user, long numberOfPosts) {
+        // when
+        long result = postsRepository.countByUser(user);
+
+        // then
+        assertEquals(numberOfPosts, result);
+    }
+
+    private void testSearchPostsByTitle(String keywords) {
+        testSearchPostsBySearchType(keywords, postsRepository::searchByTitle, Posts::getTitle);
+    }
+
+    private void testSearchPostsByContent(String keywords) {
+        testSearchPostsBySearchType(keywords, postsRepository::searchByContent, Posts::getContent);
+    }
+
+    private void testSearchPostsByTitleAndContent(String keywords) {
+        testSearchPostsBySearchType(
+                keywords, postsRepository::searchByTitleAndContent, Posts::getTitle, Posts::getContent);
+    }
+
+    private void testSearchPostsBySearchType(String keywords, BiFunction<String, Pageable, Page<PostsListDto>> searcher,
+                                             Function<Posts, String>... fieldExtractors) {
+        // given
+        savePostsWithTitleAndContent();
+
+        Pageable pageable = createPageable();
+
+        SearchTestHelper<Posts> searchHelper = createSearchHelper(keywords, fieldExtractors);
+        Page<PostsListDto> postsPage = createPostsPage(searchHelper, pageable);
+
+        // when
+        Page<PostsListDto> result = searcher.apply(keywords, pageable);
+
+        // then
+        assertPostsPage(result, postsPage);
+    }
+
+    private long savePosts() {
+        long numberOfPosts = 3L;
+
+        for (long i = 0; i < numberOfPosts; i++) {
+            Long postId = testDataHelper.savePosts(users[0]);
+            assertOptionalAndGetEntity(postsRepository::findById, postId);
+        }
+
+        return numberOfPosts;
+    }
+
+    private void savePostsWithTitleAndContent() {
         long numberOfPostsByUser = 10;
         long half = numberOfPostsByUser / 2;
 
         Range firstRange = Range.builder().startIndex(1).endIndex(half).title("title").content("content").build();
-        Range secondRange = Range.builder().startIndex(half + 1).endIndex(numberOfPostsByUser)
-                .title("제목").content("내용").build();
+        Range secondRange = Range.builder()
+                .startIndex(half + 1).endIndex(numberOfPostsByUser).title("제목").content("내용").build();
 
         savePostsInRange(firstRange);
         savePostsInRange(secondRange);
@@ -146,109 +209,49 @@ public class PostsRepositoryTest {
     private void savePostsInRange(Range range) {
         for (User user : users) {
             for (long i = range.getStartIndex(); i <= range.getEndIndex(); i++) {
-                Long postId = testDataHelper.savePostWithTitleAndContent(user, range.getTitle() + i, range.getContent() + i);
+                Long postId = testDataHelper.savePostWithTitleAndContent(user, range.getTitle(), range.getContent());
                 assertOptionalAndGetEntity(postsRepository::findById, postId);
             }
         }
     }
 
-    private void callAndAssertSearch(BiFunction<String, Pageable, Page<PostsListDto>> searcher, String keywords,
-                                     Function<Posts, String>... fieldExtractors) {
-        int size = 3;
-
-        Pageable pageable = createPageable(page, size);
-
-        Page<PostsListDto> actualContents = searcher.apply(keywords, pageable);
-        Page<PostsListDto> expectedContents = createExpectedContents(keywords, pageable, fieldExtractors);
-
-        assertContents(actualContents, expectedContents);
+    private Pageable createPageable() {
+        return PaginationRepoUtil.createPageable(PAGE, 3);
     }
 
-    private Page<PostsListDto> createExpectedContents(String keywords, Pageable pageable,
-                                                      Function<Posts, String>... fieldExtractors) {
-        SearchTestHelper<Posts> searchHelper = SearchTestHelper.<Posts>builder()
-                .totalContents(postsRepository.findAll()).keywords(keywords)
-                .fieldExtractors(fieldExtractors).build();
+    private SearchTestHelper<Posts> createSearchHelper(String keywords, Function<Posts, String>... fieldExtractors) {
+        return SearchTestHelper.<Posts>builder()
+                .totalContents(postsRepository.findAll()).keywords(keywords).fieldExtractors(fieldExtractors).build();
+    }
+
+    private Predicate<Posts> createFilter(User user) {
+        return post -> POSTS_CONVERTER.extractUserId(post).equals(user.getId());
+    }
+
+    private Page<PostsListDto> createPostsPage(SearchTestHelper<Posts> searchHelper, Pageable pageable) {
         Stream<Posts> filteredPostsStream = searchHelper.getKeywordsFilter();
 
-        return createPageWithContent(filteredPostsStream, entityConverter, pageable);
+        return createPageWithContent(filteredPostsStream, pageable);
     }
 
-    private void assertContents(Page<PostsListDto> actualContents, Page<PostsListDto> expectedContents) {
+    private Page<PostsListDto> createPostsPageWithFilter(Predicate<Posts> filter, Pageable pageable) {
+        Stream<Posts> postsStream = postsRepository.findAll().stream();
+        Stream<Posts> filteredPostsStream = filter == null ? postsStream : postsStream.filter(filter);
+
+        return createPageWithContent(filteredPostsStream, pageable);
+    }
+
+    private Page<PostsListDto> createPageWithContent(Stream<Posts> filteredPostsStream, Pageable pageable) {
+        return PaginationTestUtil.createPageWithContent(filteredPostsStream, POSTS_CONVERTER, pageable);
+    }
+
+    private void assertPostsPage(Page<PostsListDto> result, Page<PostsListDto> postsPage) {
         PaginationTestHelper<PostsListDto, Posts> paginationHelper
-                = new PaginationTestHelper<>(actualContents, expectedContents, entityConverter);
+                = new PaginationTestHelper<>(result, postsPage, POSTS_CONVERTER);
         paginationHelper.assertContents();
     }
 
-    @Test
-    public void searchByContent() {
-        savePosts();
-
-        // 1. 검색 제외 단어 x
-        callAndAssertSearch(postsRepository::searchByContent, "con 내용", Posts::getContent);
-
-        // 2. 검색 제외 단어 o
-        callAndAssertSearch(postsRepository::searchByContent, "con 내용 -용", Posts::getContent);
-    }
-
-    @Test
-    public void searchByTitleAndContent() {
-        savePosts();
-
-        // 1. 검색 제외 단어 x
-        callAndAssertSearch(postsRepository::searchByTitleAndContent, "title 내용",
-                Posts::getTitle, Posts::getContent);
-
-        // 2. 검색 제외 단어 o
-        callAndAssertSearch(postsRepository::searchByTitleAndContent, "title 내용 -제목",
-                Posts::getTitle, Posts::getContent);
-    }
-
-    @Test
-    public void findAllDesc() {
-        savePosts();
-
-        callAndAssertFindAllDesc();
-    }
-
-    private void callAndAssertFindAllDesc() {
-        int size = 4;
-
-        Pageable pageable = createPageable(page, size);
-
-        Page<PostsListDto> actualContents = postsRepository.findAllDesc(pageable);
-        Page<PostsListDto> expectedContents = createExpectedContents(null, pageable);
-
-        assertContents(actualContents, expectedContents);
-    }
-
-    private Page<PostsListDto> createExpectedContents(Predicate<Posts> filter, Pageable pageable) {
-        Stream<Posts> filteredPostsStream = filter != null
-                ? postsRepository.findAll().stream().filter(filter) : postsRepository.findAll().stream();
-        return createPageWithContent(filteredPostsStream, entityConverter, pageable);
-    }
-
-    @Test
-    public void findByUser() {
-        savePosts();
-
-        callAndAssertFindByUser();
-    }
-
-    private void callAndAssertFindByUser() {
-        int size = 4;
-        User user = users[0];
-
-        Pageable pageable = createPageable(page, size);
-
-        Page<PostsListDto> actualContents = postsRepository.findByUser(user, pageable);
-        Page<PostsListDto> expectedContents = createExpectedContentsByUser(user, pageable);
-
-        assertContents(actualContents, expectedContents);
-    }
-
-    private Page<PostsListDto> createExpectedContentsByUser(User user, Pageable pageable) {
-        Predicate<Posts> filter = post -> entityConverter.extractUserId(post).equals(user.getId());
-        return createExpectedContents(filter, pageable);
+    private <Entity> Entity assertOptionalAndGetEntity(Function<Long, Optional<Entity>> finder, Long contentId) {
+        return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

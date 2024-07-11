@@ -23,9 +23,9 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
     @Autowired
     private EntityManager entityManager;
 
-    private final QPosts qPosts = QPosts.posts;
-    private final QComments qComments = QComments.comments;
-    private final QLikes qLikes = QLikes.likes;
+    private static final QPosts Q_POSTS = QPosts.posts;
+    private static final QComments Q_COMMENTS = QComments.comments;
+    private static final QLikes Q_LIKES = QLikes.likes;
 
     public PostsRepositoryImpl() {
         super(Posts.class);
@@ -33,20 +33,48 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
 
     @Override
     public Page<PostsListDto> searchByTitle(String keywords, Pageable pageable) {
-        return searchPostsByFields(pageable, keywords, qPosts.title);
+        return searchPostsByFields(pageable, keywords, Q_POSTS.title);
+    }
+
+    @Override
+    public Page<PostsListDto> searchByContent(String keywords, Pageable pageable) {
+        return searchPostsByFields(pageable, keywords, Q_POSTS.content);
+    }
+
+    @Override
+    public Page<PostsListDto> searchByTitleAndContent(String keywords, Pageable pageable) {
+        return searchPostsByFields(pageable, keywords, Q_POSTS.title, Q_POSTS.content);
+    }
+
+    @Override
+    public Page<PostsListDto> findAllDesc(Pageable pageable) {
+        return findPostsByFields(null, pageable);
+    }
+
+    @Override
+    public Page<PostsListDto> findByUser(User user, Pageable pageable) {
+        return findPostsByFields(user, pageable);
     }
 
     private Page<PostsListDto> searchPostsByFields(Pageable pageable, String keywords, StringPath... fields) {
         EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQueryForPosts();
         JPAQuery<PostsListDto> query = createQueryForSearchPosts(pageable, essentialQuery, keywords, fields);
+
+        return createPostsPage(query, essentialQuery, pageable);
+    }
+
+    private Page<PostsListDto> findPostsByFields(User user, Pageable pageable) {
+        EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQueryForPosts();
+        JPAQuery<PostsListDto> query = createQueryForFindPosts(essentialQuery, user, pageable);
+
         return createPostsPage(query, essentialQuery, pageable);
     }
 
     private EssentialQuery<PostsListDto, Posts> createEssentialQueryForPosts() {
-        Expression[] constructorParams = { qPosts, qComments.id.countDistinct(), qLikes.id.countDistinct() };
+        Expression[] constructorParams = {Q_POSTS, Q_COMMENTS.id.countDistinct(), Q_LIKES.id.countDistinct() };
 
         return EssentialQuery.<PostsListDto, Posts>builder()
-                .entityManager(entityManager).queryType(qPosts)
+                .entityManager(entityManager).queryType(Q_POSTS)
                 .dtoType(PostsListDto.class).constructorParams(constructorParams).build();
     }
 
@@ -56,6 +84,16 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
         SearchQueries<PostsListDto, Posts> searchQueries = SearchQueries.<PostsListDto, Posts>builder()
                 .essentialQuery(essentialQuery).keywords(keywords).fields(fields).build();
         JPAQuery<PostsListDto> query = searchQueries.createQueryForSearchContents();
+
+        return addPageToQuery(query, pageable);
+    }
+
+    private JPAQuery<PostsListDto> createQueryForFindPosts(EssentialQuery<PostsListDto, Posts> essentialQuery,
+                                                           User user, Pageable pageable) {
+        FindQueries<PostsListDto, Posts> findQueries = FindQueries.<PostsListDto, Posts>builder()
+                .essentialQuery(essentialQuery).userId(Q_POSTS.user.id).user(user).build();
+        JPAQuery<PostsListDto> query = findQueries.createQueryForFindContents();
+
         return addPageToQuery(query, pageable);
     }
 
@@ -64,50 +102,16 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
                                                Pageable pageable) {
         List<PostsListDto> posts = createLeftJoinClauseForPosts(query).fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
+
         return PaginationRepoUtil.createPage(posts, pageable, totalQuery);
-    }
-
-    private JPAQuery<PostsListDto> createLeftJoinClauseForPosts(JPAQuery<PostsListDto> query) {
-        return query.leftJoin(qPosts.comments, qComments)
-                .leftJoin(qPosts.likes, qLikes);
-    }
-
-    @Override
-    public Page<PostsListDto> searchByContent(String keywords, Pageable pageable) {
-        return searchPostsByFields(pageable, keywords, qPosts.content);
-    }
-
-    @Override
-    public Page<PostsListDto> searchByTitleAndContent(String keywords, Pageable pageable) {
-        return searchPostsByFields(pageable, keywords, qPosts.title, qPosts.content);
-    }
-
-    @Override
-    public Page<PostsListDto> findAllDesc(Pageable pageable) {
-        return findPostsByFields(null, pageable);
-    }
-
-    private Page<PostsListDto> findPostsByFields(User user, Pageable pageable) {
-        EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQueryForPosts();
-        JPAQuery<PostsListDto> query = createQueryForFindPosts(essentialQuery, user, pageable);
-        return createPostsPage(query, essentialQuery, pageable);
-    }
-
-    private JPAQuery<PostsListDto> createQueryForFindPosts(EssentialQuery<PostsListDto, Posts> essentialQuery,
-                                                           User user, Pageable pageable) {
-        FindQueries<PostsListDto, Posts> findQueries = FindQueries.<PostsListDto, Posts>builder()
-                .essentialQuery(essentialQuery).userId(qPosts.user.id).user(user).build();
-        JPAQuery<PostsListDto> query = findQueries.createQueryForFindContents();
-
-        return addPageToQuery(query, pageable);
     }
 
     private JPAQuery<PostsListDto> addPageToQuery(JPAQuery<PostsListDto> query, Pageable pageable) {
         return PaginationRepoUtil.addPageToQuery(query, pageable);
     }
 
-    @Override
-    public Page<PostsListDto> findByUser(User user, Pageable pageable) {
-        return findPostsByFields(user, pageable);
+    private JPAQuery<PostsListDto> createLeftJoinClauseForPosts(JPAQuery<PostsListDto> query) {
+        return query.leftJoin(Q_POSTS.comments, Q_COMMENTS)
+                .leftJoin(Q_POSTS.likes, Q_LIKES);
     }
 }
