@@ -3,6 +3,7 @@ package com.eskgus.nammunity.domain.likes;
 import com.eskgus.nammunity.config.TestConfig;
 import com.eskgus.nammunity.converter.LikesConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.helper.PaginationTestHelper;
 import com.eskgus.nammunity.helper.TestDataHelper;
@@ -61,6 +62,7 @@ public class LikesRepositoryTest {
     private Comments comment1;
     private static final int PAGE = 1;
     private static final LikesConverterForTest LIKES_CONVERTER = new LikesConverterForTest();
+    private static final LikesTestVisitor VISITOR = new LikesTestVisitor(LIKES_CONVERTER);
 
     @BeforeEach
     public void setUp() {
@@ -153,8 +155,7 @@ public class LikesRepositoryTest {
         assertEquals(exists, result);
     }
 
-    private <Content> void testFindContentLikesByUser(Content content,
-                                                      BiFunction<User, Pageable, Page<LikesListDto>> finder) {
+    private void testFindContentLikesByUser(Element element, BiFunction<User, Pageable, Page<LikesListDto>> finder) {
         // given
         saveLikes();
 
@@ -162,7 +163,7 @@ public class LikesRepositoryTest {
 
         Pageable pageable = createPageable();
 
-        Predicate<Likes> filter = content != null ? createFilter(content, user) : createFilter(user);
+        Predicate<Likes> filter = element != null ? createFilter(element, user) : createFilter(user);
         Page<LikesListDto> likesPage = createLikesPage(filter, pageable);
 
         // when
@@ -212,16 +213,17 @@ public class LikesRepositoryTest {
         return PaginationRepoUtil.createPageable(PAGE, 3);
     }
 
-    private <Content> Predicate<Likes> createFilter(Content content, User user) {
-        Predicate<Likes> filter = content instanceof Posts
-                ? like -> LIKES_CONVERTER.getPosts(like) != null
-                : like -> LIKES_CONVERTER.getComments(like) != null;
+    private Predicate<Likes> createFilter(Element element, User user) {
+        element.accept(VISITOR);
 
+        Predicate<Likes> filter = VISITOR.getFilter();
         return filter.and(createFilter(user));
     }
 
     private Predicate<Likes> createFilter(User user) {
-        return like -> LIKES_CONVERTER.extractUserId(like).equals(user.getId());
+        user.accept(VISITOR);
+
+        return VISITOR.getFilter();
     }
 
     private Page<LikesListDto> createLikesPage(Predicate<Likes> filter, Pageable pageable) {
@@ -240,7 +242,7 @@ public class LikesRepositoryTest {
         paginationHelper.assertContents();
     }
 
-    private <Dto> Dto assertOptionalAndGetEntity(Function<Long, Optional<Dto>> finder, Long contentId) {
+    private <Entity> Entity assertOptionalAndGetEntity(Function<Long, Optional<Entity>> finder, Long contentId) {
         return testDataHelper.assertOptionalAndGetEntity(finder, contentId);
     }
 }

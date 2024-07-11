@@ -1,4 +1,4 @@
-package com.eskgus.nammunity.domain;
+package com.eskgus.nammunity.domain.common;
 
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;

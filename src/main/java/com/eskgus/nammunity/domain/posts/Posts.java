@@ -1,7 +1,9 @@
 package com.eskgus.nammunity.domain.posts;
 
-import com.eskgus.nammunity.domain.BaseTimeEntity;
+import com.eskgus.nammunity.domain.common.BaseTimeEntity;
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.common.Element;
+import com.eskgus.nammunity.domain.common.Visitor;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.reports.ContentReports;
@@ -16,7 +18,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @Entity
-public class Posts extends BaseTimeEntity {
+public class Posts extends BaseTimeEntity implements Element {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -60,5 +62,10 @@ public class Posts extends BaseTimeEntity {
 
     public void countView() {
         this.view += 1;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

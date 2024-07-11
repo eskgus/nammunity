@@ -1,6 +1,6 @@
 package com.eskgus.nammunity.domain.likes;
 
-import com.eskgus.nammunity.domain.BaseTimeEntity;
+import com.eskgus.nammunity.domain.common.BaseTimeEntity;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;

@@ -1,7 +1,9 @@
 package com.eskgus.nammunity.domain.user;
 
-import com.eskgus.nammunity.domain.BaseTimeEntity;
+import com.eskgus.nammunity.domain.common.BaseTimeEntity;
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.common.Element;
+import com.eskgus.nammunity.domain.common.Visitor;
 import com.eskgus.nammunity.domain.enums.SocialType;
 import com.eskgus.nammunity.domain.likes.Likes;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -23,7 +25,7 @@ import static com.eskgus.nammunity.domain.enums.SocialType.NONE;
 @NoArgsConstructor
 @Entity
 @Table(name = "users")
-public class User extends BaseTimeEntity {
+public class User extends BaseTimeEntity implements Element {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -134,5 +136,10 @@ public class User extends BaseTimeEntity {
 
     public void updateCreatedDate(LocalDateTime createdDate) {
         super.createdDate = createdDate;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -3,6 +3,7 @@ package com.eskgus.nammunity.domain.comments;
 import com.eskgus.nammunity.config.TestConfig;
 import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.converter.EntityConverterForTest;
+import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.helper.*;
 import com.eskgus.nammunity.helper.TestDataHelper;
 import com.eskgus.nammunity.domain.posts.Posts;
@@ -107,12 +108,12 @@ public class CommentsRepositoryTest {
 
     @Test
     public void findCommentsByUser() {
-        testFindCommentsByField(users[0], CommentsListDto.class, commentsRepository::findByUser);
+        testFindCommentsByElement(users[0], CommentsListDto.class, commentsRepository::findByUser);
     }
 
     @Test
     public void findCommentsByPosts() {
-        testFindCommentsByField(posts[0], CommentsReadDto.class, commentsRepository::findByPosts);
+        testFindCommentsByElement(posts[0], CommentsReadDto.class, commentsRepository::findByPosts);
     }
 
     @Test
@@ -159,8 +160,8 @@ public class CommentsRepositoryTest {
         assertCommentsPage(result, commentsPage, commentsConverter);
     }
 
-    private <Field, Dto> void testFindCommentsByField(Field field, Class<Dto> dtoType,
-                                                      BiFunction<Field, Pageable, Page<Dto>> finder) {
+    private <ElementType extends Element, Dto> void testFindCommentsByElement(ElementType element, Class<Dto> dtoType,
+                                                                              BiFunction<ElementType, Pageable, Page<Dto>> finder) {
         // given
         saveCommentsWithContent();
 
@@ -168,11 +169,11 @@ public class CommentsRepositoryTest {
 
         CommentsConverterForTest<Dto> commentsConverter = createCommentsConverter(dtoType);
 
-        Predicate<Comments> filter = createFilter(commentsConverter, field);
+        Predicate<Comments> filter = createFilter(commentsConverter, element);
         Page<Dto> commentsPage = createCommentsPage(filter, commentsConverter, pageable);
 
         // when
-        Page<Dto> result = finder.apply(field, pageable);
+        Page<Dto> result = finder.apply(element, pageable);
 
         // then
         assertCommentsPage(result, commentsPage, commentsConverter);
@@ -227,11 +228,11 @@ public class CommentsRepositoryTest {
         return new CommentsConverterForTest<>(dtoType);
     }
 
-    private <Field, Dto> Predicate<Comments> createFilter(CommentsConverterForTest<Dto> commentsConverter, Field field) {
-        if (field instanceof Posts) {
-            return comment -> commentsConverter.extractPostId(comment).equals(((Posts) field).getId());
-        }
-        return comment -> commentsConverter.extractUserId(comment).equals(((User) field).getId());
+    private <Dto> Predicate<Comments> createFilter(CommentsConverterForTest<Dto> commentsConverter, Element element) {
+        CommentsTestVisitor<Dto> visitor = new CommentsTestVisitor<>(commentsConverter);
+        element.accept(visitor);
+
+        return visitor.getFilter();
     }
 
     private Page<CommentsListDto> createCommentsPage(SearchTestHelper<Comments> searchHelper,
