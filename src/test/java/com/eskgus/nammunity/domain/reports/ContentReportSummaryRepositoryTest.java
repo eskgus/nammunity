@@ -88,17 +88,11 @@ public class ContentReportSummaryRepositoryTest {
 
     @Test
     public void findSummariesByUserWithoutReportSummaries() {
-        // given
-        // when/then
         testFindSummariesByUser(false);
     }
 
     @Test
     public void findSummariesByUserWithReportSummaries() {
-        // given
-        saveUserReportSummary();
-
-        // when/then
         testFindSummariesByUser(true);
     }
 
@@ -179,11 +173,15 @@ public class ContentReportSummaryRepositoryTest {
     }
 
     private void testFindSummariesByUser(boolean present) {
+        // given
+        Optional<ContentReportSummary> reportSummary = present
+                ? Optional.of(saveUserReportSummary()) : Optional.empty();
+
         // when
         Optional<ContentReportSummary> result = contentReportSummaryRepository.findByUser(user);
 
         // then
-        assertEquals(present, result.isPresent());
+        assertEquals(reportSummary, result);
     }
 
     private void testExistsSummariesByElement(Element element) {
