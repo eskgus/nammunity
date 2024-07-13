@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.service.reports;
 
+import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.reports.ContentReportSummary;
 import com.eskgus.nammunity.domain.reports.ContentReportSummaryRepository;
@@ -37,9 +38,9 @@ public class ReportSummaryService {
     private final UserService userService;
 
     @Transactional
-    public <Contents> Long saveOrUpdateContentReportSummary(ContentReportSummarySaveDto requestDto) {
+    public Long saveOrUpdateContentReportSummary(ContentReportSummarySaveDto requestDto) {
         // contentReportSummary 테이블에 컨텐츠 (posts, comments, user) 없으면 저장, 있으면 수정
-        Contents contents = getContents(requestDto);
+        Element contents = getContents(requestDto);
         boolean doesSummaryExist = contentReportSummaryRepository.existsByContents(contents);
 
         if (doesSummaryExist) {
@@ -78,14 +79,15 @@ public class ReportSummaryService {
         deleteByContents(deleteDto.getUserId(), userService::findById);
     }
 
-    private <Contents> Contents getContents(ContentReportSummarySaveDto requestDto) {
+    private Element getContents(ContentReportSummarySaveDto requestDto) {
         String type = requestDto.getTypes().getDetail();
+
         if (POSTS.getDetail().equals(type)) {
-            return (Contents) requestDto.getPosts();
+            return requestDto.getPosts();
         } else if (COMMENTS.getDetail().equals(type)) {
-            return (Contents) requestDto.getComments();
+            return requestDto.getComments();
         } else {
-            return (Contents) requestDto.getUser();
+            return requestDto.getUser();
         }
     }
 

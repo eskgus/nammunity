@@ -1,10 +1,12 @@
 package com.eskgus.nammunity.service.reports;
 
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.reports.ContentReportsRepository;
 import com.eskgus.nammunity.domain.reports.Reasons;
+import com.eskgus.nammunity.domain.reports.ReportsVisitor;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.PrincipalHelper;
@@ -110,14 +112,19 @@ public class ReportsService {
                 .build();
     }
 
-    private <Contents> boolean shouldCreateSummary(ContentReportsSaveDto saveDto) {
-        Contents contents = getContentsFromReportsSaveDto(saveDto);
-        long countByContents = contentReportsRepository.countByContents(contents);
+    private boolean shouldCreateSummary(ContentReportsSaveDto saveDto) {
+        Element element = getElementFromReportsSaveDto(saveDto);
 
-        if (contents instanceof User) {
+        long countByContents = contentReportsRepository.countByElement(element);
+
+        ReportsVisitor visitor = new ReportsVisitor();
+        element.accept(visitor);
+
+        if (visitor.isUser()) {
             return countByContents >= 3;
+        } else {
+            return countByContents >= 10;
         }
-        return countByContents >= 10;
     }
 
     private void createAndSaveSummary(ContentReportsSaveDto saveDto) {
@@ -125,15 +132,15 @@ public class ReportsService {
         reportSummaryService.saveOrUpdateContentReportSummary(summarySaveDto);
     }
 
-    private <Contents> ContentReportSummarySaveDto createSummarySaveDto(ContentReportsSaveDto saveDto) {
+    private ContentReportSummarySaveDto createSummarySaveDto(ContentReportsSaveDto saveDto) {
         // types, 컨텐츠(posts, comments, user)는 saveDto에서 꺼내서 사용, 나머지는 테이블에서 검색
-        Contents contents = getContentsFromReportsSaveDto(saveDto);
+        Element element = getElementFromReportsSaveDto(saveDto);
 
-        LocalDateTime reportedDate = contentReportsRepository.findReportedDateByContents(contents);
-        User reporter = contentReportsRepository.findReporterByContents(contents);
-        Reasons reason = contentReportsRepository.findReasonByContents(contents);
+        LocalDateTime reportedDate = contentReportsRepository.findReportedDateByElement(element);
+        User reporter = contentReportsRepository.findReporterByElement(element);
+        Reasons reason = contentReportsRepository.findReasonByElement(element);
         String otherReason = OTHER.getKey().equals(reason.getDetail()) ?
-                contentReportsRepository.findOtherReasonByContents(contents, reason) : null;
+                contentReportsRepository.findOtherReasonByElement(element, reason) : null;
 
         return ContentReportSummarySaveDto.builder()
                 .posts(saveDto.getPosts()).comments(saveDto.getComments()).user(saveDto.getUser())
@@ -141,19 +148,21 @@ public class ReportsService {
                 .reasons(reason).otherReasons(otherReason).build();
     }
 
-    private <Contents> Contents getContentsFromReportsSaveDto(ContentReportsSaveDto saveDto) {
+    private Element getElementFromReportsSaveDto(ContentReportsSaveDto saveDto) {
         if (saveDto.getPosts() != null) {
-            return (Contents) saveDto.getPosts();
+            return saveDto.getPosts();
         } else if (saveDto.getComments() != null) {
-            return (Contents) saveDto.getComments();
+            return saveDto.getComments();
+        } else {
+            return saveDto.getUser();
         }
-        return (Contents) saveDto.getUser();
     }
 
-    private <Contents, Dto> ContentReportDetailDto<Dto> createContentReportDetailDto(Contents contents, Dto dto,
-                                                                                     ContentType contentType, int page) {
+    private <Dto> ContentReportDetailDto<Dto> createContentReportDetailDto(Element element, Dto dto,
+                                                                           ContentType contentType, int page) {
         Types type = findTypesByContentType(contentType);
-        ContentsPageDto<ContentReportDetailListDto> contentsPageDto = createContentsPageDto(page, contents);
+        ContentsPageDto<ContentReportDetailListDto> contentsPageDto = createContentsPageDto(page, element);
+
         return ContentReportDetailDto.<Dto>builder()
                 .type(type).dto(dto).contentsPage(contentsPageDto).build();
     }
@@ -174,9 +183,10 @@ public class ReportsService {
         return typesService.findByContentType(contentType);
     }
 
-    private <Contents> ContentsPageDto<ContentReportDetailListDto> createContentsPageDto(int page, Contents contents) {
+    private ContentsPageDto<ContentReportDetailListDto> createContentsPageDto(int page, Element element) {
         Pageable pageable = PaginationRepoUtil.createPageable(page, 10);
-        Page<ContentReportDetailListDto> reportsPage = contentReportsRepository.findByContents(contents, pageable);
+        Page<ContentReportDetailListDto> reportsPage = contentReportsRepository.findByElement(element, pageable);
+
         return new ContentsPageDto<>(reportsPage);
     }
 }

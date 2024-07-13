@@ -1,5 +1,6 @@
 package com.eskgus.nammunity.domain.reports;
 
+import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.web.dto.reports.ContentReportDetailListDto;
@@ -9,11 +10,11 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 
 public interface CustomContentReportsRepository {
-    <Contents> User findReporterByContents(Contents contents);
-    <Contents> LocalDateTime findReportedDateByContents(Contents contents);
-    <Contents> Reasons findReasonByContents(Contents contents);
-    <Contents> String findOtherReasonByContents(Contents contents, Reasons reason);
-    <Contents> Page<ContentReportDetailListDto> findByContents(Contents contents, Pageable pageable);
+    User findReporterByElement(Element element);
+    LocalDateTime findReportedDateByElement(Element element);
+    Reasons findReasonByElement(Element element);
+    String findOtherReasonByElement(Element element, Reasons reason);
+    Page<ContentReportDetailListDto> findByElement(Element element, Pageable pageable);
     long countReportsByContentTypeAndUser(ContentType contentType, User user);
-    <Contents> long countByContents(Contents contents);
+    long countByElement(Element element);
 }

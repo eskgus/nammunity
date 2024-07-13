@@ -1,8 +1,7 @@
 package com.eskgus.nammunity.domain.reports;
 
-import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.domain.enums.ContentType;
-import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.FindQueries;
@@ -22,141 +21,150 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.eskgus.nammunity.domain.enums.ContentType.COMMENTS;
+import static com.eskgus.nammunity.domain.enums.ContentType.POSTS;
+
 public class ContentReportsRepositoryImpl extends QuerydslRepositorySupport implements CustomContentReportsRepository {
     @Autowired
     private EntityManager entityManager;
 
-    private final QContentReports qContentReports = QContentReports.contentReports;
+    private static final QContentReports Q_CONTENT_REPORTS = QContentReports.contentReports;
 
     public ContentReportsRepositoryImpl() {
         super(ContentReports.class);
     }
 
     @Override
-    public <Contents> User findReporterByContents(Contents contents) {
-        JPAQuery<User> query = createBaseQueryForFindingReporterOrReason(contents, qContentReports.reporter);
+    public User findReporterByElement(Element element) {
+        JPAQuery<User> query = findReporterOrReason(element, Q_CONTENT_REPORTS.reporter);
+
         return query.fetchOne();
     }
 
     @Override
-    public <Contents> LocalDateTime findReportedDateByContents(Contents contents) {
-        BooleanBuilder whereCondition = createWhereConditionByContents(contents);
+    public LocalDateTime findReportedDateByElement(Element element) {
+        BooleanBuilder whereCondition = createWhereCondition(element);
 
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        return query.select(qContentReports.createdDate.max()).from(qContentReports)
+
+        return query.select(Q_CONTENT_REPORTS.createdDate.max()).from(Q_CONTENT_REPORTS)
                 .where(whereCondition)
                 .fetchOne();
     }
 
-    private <Contents> BooleanBuilder createWhereConditionByContents(Contents contents) {
-        Predicate whereCondition;
-        if (contents instanceof Posts) {
-            whereCondition = qContentReports.posts.eq((Posts) contents);
-        } else if (contents instanceof Comments) {
-            whereCondition = qContentReports.comments.eq((Comments) contents);
-        } else if (contents instanceof User) {
-            whereCondition = qContentReports.user.eq((User) contents);
-        } else {
-            whereCondition = qContentReports.reasons.eq((Reasons) contents);
-        }
-
-        return new BooleanBuilder().and(whereCondition);
-    }
-
     @Override
-    public <Contents> Reasons findReasonByContents(Contents contents) {
-        JPAQuery<Reasons> query = createBaseQueryForFindingReporterOrReason(contents, qContentReports.reasons);
+    public Reasons findReasonByElement(Element element) {
+        JPAQuery<Reasons> query = findReporterOrReason(element, Q_CONTENT_REPORTS.reasons);
+
         return query.fetchOne();
     }
 
     @Override
-    public <Contents> String findOtherReasonByContents(Contents contents, Reasons reason) {
-        BooleanBuilder whereCondition1 = createWhereConditionByContents(contents);
-        BooleanBuilder whereCondition2 = createWhereConditionByContents(reason);
+    public String findOtherReasonByElement(Element element, Reasons reason) {
+        BooleanBuilder elementCondition = createWhereCondition(element);
+        BooleanBuilder reasonCondition = createWhereCondition(reason);
 
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        return query.select(qContentReports.otherReasons).from(qContentReports)
-                .where(whereCondition1, whereCondition2)
-                .orderBy(qContentReports.createdDate.desc())
+
+        return query.select(Q_CONTENT_REPORTS.otherReasons).from(Q_CONTENT_REPORTS)
+                .where(elementCondition, reasonCondition)
+                .orderBy(Q_CONTENT_REPORTS.createdDate.desc())
                 .limit(1)
                 .fetchOne();
     }
 
     @Override
-    public <Contents> Page<ContentReportDetailListDto> findByContents(Contents contents, Pageable pageable) {
-        return findReportsByFields(contents, pageable);
-    }
-
-    private <Contents> Page<ContentReportDetailListDto> findReportsByFields(Contents contents, Pageable pageable) {
-        EssentialQuery<ContentReportDetailListDto, ContentReports> essentialQuery
-                = createEssentialQueryForReports();
-        JPAQuery<ContentReportDetailListDto> query = createQueryForFindReports(essentialQuery, contents, pageable);
-        return createReportsPage(query, essentialQuery, pageable);
-    }
-
-    private EssentialQuery<ContentReportDetailListDto, ContentReports> createEssentialQueryForReports() {
-        Expression[] constructorParams = { qContentReports };
-
-        return EssentialQuery.<ContentReportDetailListDto, ContentReports>builder()
-                .entityManager(entityManager).queryType(qContentReports)
-                .dtoType(ContentReportDetailListDto.class).constructorParams(constructorParams).build();
-    }
-
-    private <Contents> JPAQuery<ContentReportDetailListDto>
-        createQueryForFindReports(EssentialQuery<ContentReportDetailListDto, ContentReports> essentialQuery,
-                                  Contents contents, Pageable pageable) {
-        BooleanBuilder whereCondition = createWhereConditionByContents(contents);
-
-        FindQueries<ContentReportDetailListDto, ContentReports> findQueries = FindQueries.<ContentReportDetailListDto, ContentReports>builder()
-                .essentialQuery(essentialQuery)
-                .whereCondition(whereCondition).build();
-        JPAQuery<ContentReportDetailListDto> query = findQueries.createQueryForFindContents();
-        return PaginationRepoUtil.addPageToQuery(query, pageable);
-    }
-
-    private Page<ContentReportDetailListDto>
-        createReportsPage(JPAQuery<ContentReportDetailListDto> query,
-                          EssentialQuery<ContentReportDetailListDto, ContentReports> essentialQuery,
-                          Pageable pageable) {
-        List<ContentReportDetailListDto> reports = query.fetch();
-        JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
-        return PaginationRepoUtil.createPage(reports, pageable, totalQuery);
+    public Page<ContentReportDetailListDto> findByElement(Element element, Pageable pageable) {
+        return findReportsByElement(element, pageable);
     }
 
     @Override
     public long countReportsByContentTypeAndUser(ContentType contentType, User user) {
-        QContentReports qContentReports = QContentReports.contentReports;
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        Predicate whereCondition = createWhereConditionForCount(qContentReports, contentType, user);
-        return query.select(qContentReports.count()).from(qContentReports).where(whereCondition).fetchOne();
-    }
+        Predicate whereCondition = createWhereCondition(contentType, user);
 
-    private Predicate createWhereConditionForCount(QContentReports qContentReports, ContentType contentType, User user) {
-        if (contentType.equals(ContentType.POSTS)) {
-            return qContentReports.posts.user.eq(user);
-        } else if (contentType.equals(ContentType.COMMENTS)) {
-            return qContentReports.comments.user.eq(user);
-        } else {
-            return qContentReports.user.eq(user);
-        }
+        return countReports(whereCondition);
     }
 
     @Override
-    public <Contents> long countByContents(Contents contents) {
-        JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        BooleanBuilder whereCondition = createWhereConditionByContents(contents);
-        return query.select(qContentReports.count()).from(qContentReports).where(whereCondition).fetchOne();
+    public long countByElement(Element element) {
+        BooleanBuilder whereCondition = createWhereCondition(element);
+
+        return countReports(whereCondition);
     }
 
-    private <Contents, Field> JPAQuery<Field> createBaseQueryForFindingReporterOrReason(Contents contents,
-                                                                                        EntityPathBase<Field> qField) {
-        BooleanBuilder whereCondition = createWhereConditionByContents(contents);
+    private <Field> JPAQuery<Field> findReporterOrReason(Element element,
+                                                         EntityPathBase<Field> qField) {
+        BooleanBuilder whereCondition = createWhereCondition(element);
 
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
-        return query.select(qField).from(qContentReports)
+
+        return query.select(qField).from(Q_CONTENT_REPORTS)
                 .where(whereCondition)
                 .groupBy(qField)
-                .orderBy(qContentReports.count().desc(), qContentReports.createdDate.max().desc())
+                .orderBy(Q_CONTENT_REPORTS.count().desc(), Q_CONTENT_REPORTS.createdDate.max().desc())
                 .limit(1);
+    }
+
+    private Page<ContentReportDetailListDto> findReportsByElement(Element element, Pageable pageable) {
+        EssentialQuery<ContentReportDetailListDto, ContentReports> essentialQuery
+                = createEssentialQuery();
+
+        JPAQuery<ContentReportDetailListDto> query = createFindQuery(essentialQuery, element, pageable);
+
+        return createReportsPage(query, essentialQuery, pageable);
+    }
+
+    private long countReports(Predicate whereCondition) {
+        JPAQueryFactory query = new JPAQueryFactory(entityManager);
+
+        return query.select(Q_CONTENT_REPORTS.count()).from(Q_CONTENT_REPORTS).where(whereCondition).fetchOne();
+    }
+
+    private EssentialQuery<ContentReportDetailListDto, ContentReports> createEssentialQuery() {
+        Expression[] constructorParams = { Q_CONTENT_REPORTS };
+
+        return EssentialQuery.<ContentReportDetailListDto, ContentReports>builder()
+                .entityManager(entityManager).queryType(Q_CONTENT_REPORTS)
+                .dtoType(ContentReportDetailListDto.class).constructorParams(constructorParams).build();
+    }
+
+    private JPAQuery<ContentReportDetailListDto> createFindQuery(
+            EssentialQuery<ContentReportDetailListDto, ContentReports> essentialQuery,
+            Element element, Pageable pageable) {
+        BooleanBuilder whereCondition = createWhereCondition(element);
+
+        FindQueries<ContentReportDetailListDto, ContentReports> findQueries = FindQueries.<ContentReportDetailListDto, ContentReports>builder()
+                .essentialQuery(essentialQuery).whereCondition(whereCondition).build();
+
+        JPAQuery<ContentReportDetailListDto> query = findQueries.createQueryForFindContents();
+
+        return PaginationRepoUtil.addPageToQuery(query, pageable);
+    }
+
+    private Predicate createWhereCondition(ContentType contentType, User user) {
+        if (POSTS.equals(contentType)) {
+            return Q_CONTENT_REPORTS.posts.user.eq(user);
+        } else if (COMMENTS.equals(contentType)) {
+            return Q_CONTENT_REPORTS.comments.user.eq(user);
+        } else {
+            return Q_CONTENT_REPORTS.user.eq(user);
+        }
+    }
+
+    private BooleanBuilder createWhereCondition(Element element) {
+        ReportsVisitor visitor = new ReportsVisitor(Q_CONTENT_REPORTS);
+        element.accept(visitor);
+
+        Predicate whereCondition = visitor.getWhereCondition();
+        return new BooleanBuilder().and(whereCondition);
+    }
+
+    private Page<ContentReportDetailListDto> createReportsPage(
+            JPAQuery<ContentReportDetailListDto> query,
+            EssentialQuery<ContentReportDetailListDto, ContentReports> essentialQuery, Pageable pageable) {
+        List<ContentReportDetailListDto> reports = query.fetch();
+        JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
+
+        return PaginationRepoUtil.createPage(reports, pageable, totalQuery);
     }
 }

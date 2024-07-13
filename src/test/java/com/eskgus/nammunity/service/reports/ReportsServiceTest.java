@@ -1,5 +1,7 @@
 package com.eskgus.nammunity.service.reports;
 
+import com.eskgus.nammunity.domain.common.Element;
+import com.eskgus.nammunity.domain.common.Visitor;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.helper.PrincipalHelper;
 import com.eskgus.nammunity.domain.comments.Comments;
@@ -90,6 +92,7 @@ public class ReportsServiceTest {
     @Test
     public void savePostReportsAndSummary() {
         Posts post = givePost();
+
         testSaveContentReports(POSTS, post, COUNT_TEN);
     }
 
@@ -161,6 +164,77 @@ public class ReportsServiceTest {
         verify(contentReportsRepository).countReportsByContentTypeAndUser(eq(contentType), eq(user));
     }
 
+    private void testSaveContentReports(ContentType contentType, Element content, long count) {
+        // given
+        ContentReportsSaveDto requestDto = createReportsSaveDto(contentType);
+
+        Pair<Principal, User> pair = givePrincipal();
+        Principal principal = pair.getFirst();
+        User reporter = pair.getSecond();
+
+        Reasons reason = giveReason();
+
+        giveType();
+
+        ContentReports report = giveReport();
+
+        when(contentReportsRepository.countByElement(any())).thenReturn(count);
+
+        giveVisitor(contentType, content);
+
+        List<Long> contentIds = Arrays.asList(
+                requestDto.getPostsId(), requestDto.getCommentsId(), requestDto.getUserId());
+
+        VerificationMode mode;
+        if (count > 0) {
+            giveSummarySaveDto(reporter, reason);
+            mode = times(1);
+        } else {
+            mode = never();
+        }
+
+        // when
+        Long result = reportsService.saveContentReports(requestDto, principal);
+
+        // then
+        assertEquals(report.getId(), result);
+
+        verify(principalHelper).getUserFromPrincipal(principal, true);
+        verify(reasonsService).findById(eq(requestDto.getReasonsId()));
+        verifyFindContentById(contentType, contentIds);
+        verify(typesService).findByContentType(eq(contentType));
+        verify(contentReportsRepository).save(any(ContentReports.class));
+        verify(contentReportsRepository).countByElement(eq(content));
+        verifyAfterCountByContents(mode, content);
+    }
+
+    private <Dto> ContentReportDetailDto<Dto> testListContentReportDetails(ContentType contentType, Element content) {
+        // given
+        ContentReportDetailRequestDto requestDto = createReportDetailRequestDto(contentType);
+
+        Types type = giveType();
+        when(type.getDetail()).thenReturn(contentType.getDetail());
+
+        Page<ContentReportDetailListDto> reportDetailsPage = ServiceTestUtil.giveContentsPage(
+                contentReportsRepository::findByElement, content.getClass());
+
+        List<Long> contentIds = Arrays.asList(
+                requestDto.getPostId(), requestDto.getCommentId(), requestDto.getUserId());
+
+        // when
+        ContentReportDetailDto<Dto> result = reportsService.listContentReportDetails(requestDto);
+
+        // then
+        assertEquals(reportDetailsPage, result.getContentsPage().getContents());
+        assertEquals(type.getDetail(), result.getType());
+
+        verifyFindContentById(contentType, contentIds);
+        verify(typesService).findByContentType(eq(contentType));
+        verify(contentReportsRepository).findByElement(eq(content), any(Pageable.class));
+
+        return result;
+    }
+
     private ContentReportsSaveDto createReportsSaveDto(ContentType contentType) {
         ContentReportsSaveDto requestDto = new ContentReportsSaveDto();
         requestDto.setReasonsId(ID);
@@ -229,80 +303,26 @@ public class ReportsServiceTest {
         return report;
     }
 
-    private void giveSummarySaveDto(User reporter, Reasons reason) {
-        when(contentReportsRepository.findReportedDateByContents(any())).thenReturn(NOW);
-        when(contentReportsRepository.findReporterByContents(any())).thenReturn(reporter);
-        when(contentReportsRepository.findReasonByContents(any())).thenReturn(reason);
+    private void giveVisitor(ContentType contentType, Element element) {
+        doAnswer(invocation -> {
+            Visitor visitor = invocation.getArgument(0);
+            giveVisit(visitor, contentType, element);
+            return null;
+        }).when(element).accept(any(Visitor.class));
     }
 
-    private <Entity> void testSaveContentReports(ContentType contentType, Entity content, long count) {
-        // given
-        ContentReportsSaveDto requestDto = createReportsSaveDto(contentType);
-
-        Pair<Principal, User> pair = givePrincipal();
-        Principal principal = pair.getFirst();
-        User reporter = pair.getSecond();
-
-        Reasons reason = giveReason();
-
-        giveType();
-
-        ContentReports report = giveReport();
-
-        when(contentReportsRepository.countByContents(any())).thenReturn(count);
-
-        List<Long> contentIds = Arrays.asList(
-                requestDto.getPostsId(), requestDto.getCommentsId(), requestDto.getUserId());
-
-        VerificationMode mode;
-        if (count > 0) {
-            giveSummarySaveDto(reporter, reason);
-            mode = times(1);
-        } else {
-            mode = never();
+    private void giveVisit(Visitor visitor, ContentType contentType, Element element) {
+        switch (contentType) {
+            case POSTS -> visitor.visit((Posts) element);
+            case COMMENTS -> visitor.visit((Comments) element);
+            case USERS -> visitor.visit((User) element);
         }
-
-        // when
-        Long result = reportsService.saveContentReports(requestDto, principal);
-
-        // then
-        assertEquals(report.getId(), result);
-
-        verify(principalHelper).getUserFromPrincipal(principal, true);
-        verify(reasonsService).findById(eq(requestDto.getReasonsId()));
-        verifyFindContentById(contentType, contentIds);
-        verify(typesService).findByContentType(eq(contentType));
-        verify(contentReportsRepository).save(any(ContentReports.class));
-        verify(contentReportsRepository).countByContents(eq(content));
-        verifyAfterCountByContents(mode, content);
     }
 
-    private <Entity, Dto> ContentReportDetailDto<Dto> testListContentReportDetails(ContentType contentType,
-                                                                                   Entity content) {
-        // given
-        ContentReportDetailRequestDto requestDto = createReportDetailRequestDto(contentType);
-
-        Types type = giveType();
-        when(type.getDetail()).thenReturn(contentType.getDetail());
-
-        Page<ContentReportDetailListDto> reportDetailsPage = ServiceTestUtil.giveContentsPage(
-                contentReportsRepository::findByContents, content.getClass());
-
-        List<Long> contentIds = Arrays.asList(
-                requestDto.getPostId(), requestDto.getCommentId(), requestDto.getUserId());
-
-        // when
-        ContentReportDetailDto<Dto> result = reportsService.listContentReportDetails(requestDto);
-
-        // then
-        assertEquals(reportDetailsPage, result.getContentsPage().getContents());
-        assertEquals(type.getDetail(), result.getType());
-
-        verifyFindContentById(contentType, contentIds);
-        verify(typesService).findByContentType(eq(contentType));
-        verify(contentReportsRepository).findByContents(eq(content), any(Pageable.class));
-
-        return result;
+    private void giveSummarySaveDto(User reporter, Reasons reason) {
+        when(contentReportsRepository.findReportedDateByElement(any())).thenReturn(NOW);
+        when(contentReportsRepository.findReporterByElement(any())).thenReturn(reporter);
+        when(contentReportsRepository.findReasonByElement(any())).thenReturn(reason);
     }
 
     private void verifyFindContentById(ContentType contentType, List<Long> contentIds) {
@@ -313,11 +333,11 @@ public class ReportsServiceTest {
         verify(userService, modes.get(2)).findById(eq(contentIds.get(2)));
     }
 
-    private <Entity> void verifyAfterCountByContents(VerificationMode mode, Entity content) {
-        verify(contentReportsRepository, mode).findReportedDateByContents(eq(content));
-        verify(contentReportsRepository, mode).findReporterByContents(eq(content));
-        verify(contentReportsRepository, mode).findReasonByContents(eq(content));
-        verify(contentReportsRepository, never()).findOtherReasonByContents(eq(content), any(Reasons.class));
+    private void verifyAfterCountByContents(VerificationMode mode, Element content) {
+        verify(contentReportsRepository, mode).findReportedDateByElement(eq(content));
+        verify(contentReportsRepository, mode).findReporterByElement(eq(content));
+        verify(contentReportsRepository, mode).findReasonByElement(eq(content));
+        verify(contentReportsRepository, never()).findOtherReasonByElement(eq(content), any(Reasons.class));
         verify(reportSummaryService, mode).saveOrUpdateContentReportSummary(any(ContentReportSummarySaveDto.class));
     }
 }

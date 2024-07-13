@@ -303,11 +303,11 @@ public class ReportsServiceExceptionTest {
 
         verify(principalHelper).getUserFromPrincipal(principal, true);
         verify(contentReportsRepository, never()).save(any(ContentReports.class));
-        verify(contentReportsRepository, never()).countByContents(any());
-        verify(contentReportsRepository, never()).findReportedDateByContents(any());
-        verify(contentReportsRepository, never()).findReporterByContents(any());
-        verify(contentReportsRepository, never()).findReasonByContents(any());
-        verify(contentReportsRepository, never()).findOtherReasonByContents(any(), any(Reasons.class));
+        verify(contentReportsRepository, never()).countByElement(any());
+        verify(contentReportsRepository, never()).findReportedDateByElement(any());
+        verify(contentReportsRepository, never()).findReporterByElement(any());
+        verify(contentReportsRepository, never()).findReasonByElement(any());
+        verify(contentReportsRepository, never()).findOtherReasonByElement(any(), any(Reasons.class));
         verify(reportSummaryService, never()).saveOrUpdateContentReportSummary(any(ContentReportSummarySaveDto.class));
 
         return Arrays.asList(requestDto.getPostsId(), requestDto.getCommentsId(), requestDto.getUserId());
