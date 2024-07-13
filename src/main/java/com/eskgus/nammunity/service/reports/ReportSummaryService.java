@@ -26,7 +26,7 @@ import java.util.function.Function;
 import static com.eskgus.nammunity.domain.enums.ContentType.COMMENTS;
 import static com.eskgus.nammunity.domain.enums.ContentType.POSTS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.USER_REPORT_SUMMARY_NOT_FOUND;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.REPORT_SUMMARY_NOT_FOUND;
 
 @RequiredArgsConstructor
 @Service
@@ -70,7 +70,7 @@ public class ReportSummaryService {
     @Transactional(readOnly = true)
     public ContentReportSummary findByUser(User user) {
         return contentReportSummaryRepository.findByUser(user)
-                .orElseThrow(() -> new IllegalArgumentException(USER_REPORT_SUMMARY_NOT_FOUND.getMessage()));
+                .orElseThrow(() -> new IllegalArgumentException(REPORT_SUMMARY_NOT_FOUND.getMessage()));
     }
 
     @Transactional

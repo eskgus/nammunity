@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.common.BaseVisitor;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.function.Predicate;
@@ -12,11 +13,9 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class ReportsTestVisitor extends BaseVisitor {
     private final ContentReportsConverterForTest reportsConverter;
-    private Predicate<ContentReports> filter;
 
-    public Predicate<ContentReports> getFilter() {
-        return filter;
-    }
+    @Getter
+    private Predicate<ContentReports> filter;
 
     @Override
     public void visit(Posts post) {

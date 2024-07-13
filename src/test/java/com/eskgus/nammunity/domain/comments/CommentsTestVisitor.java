@@ -4,6 +4,7 @@ import com.eskgus.nammunity.converter.CommentsConverterForTest;
 import com.eskgus.nammunity.domain.common.BaseVisitor;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.function.Predicate;
@@ -11,11 +12,9 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class CommentsTestVisitor<Dto> extends BaseVisitor {
     private final CommentsConverterForTest<Dto> commentsConverter;
-    private Predicate<Comments> filter;
 
-    public Predicate<Comments> getFilter() {
-        return filter;
-    }
+    @Getter
+    private Predicate<Comments> filter;
 
     @Override
     public void visit(Posts post) {

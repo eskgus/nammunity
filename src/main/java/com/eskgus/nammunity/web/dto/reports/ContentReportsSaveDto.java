@@ -17,7 +17,7 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 public class ContentReportsSaveDto {
-    @NotNull(message = "신고 사유를 선택하세요.")
+    @NotNull(message = "신고 사유을(를) 선택하세요.")
     private Long reasonsId;
 
     private Long postsId;
@@ -31,7 +31,7 @@ public class ContentReportsSaveDto {
     private Types types;
     private Reasons reasons;
 
-    @Size(max = 500, message = "기타 사유는 500글자 이하로 작성해 주세요.")
+    @Size(max = 500, message = "기타 사유는 500글자 이하로 작성하세요.")
     private String otherReasons;
 
     @Builder

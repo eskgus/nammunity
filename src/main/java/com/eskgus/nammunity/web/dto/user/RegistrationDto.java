@@ -12,26 +12,23 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class RegistrationDto {
-    @NotBlank(message = "ID를 입력하세요.")
-    @Pattern(regexp = "^(?=[a-z])(?=.*[0-9])[a-z0-9]{8,20}",
-            message = "ID는 영어 소문자로 시작, 숫자 1개 이상 포함, 한글/특수문자/공백 불가능, 8글자 이상 20글자 이하")
+    @NotBlank(message = "ID을(를) 입력하세요.")
+    @Pattern(regexp = "^(?=[a-z])(?=.*[0-9])[a-z0-9]{8,20}", message = "ID 형식을 확인하세요.")
     private String username;
 
-    @NotBlank(message = "비밀번호를 입력하세요.")
-    @Pattern(regexp = "(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9~!@#$%^&*()_+:<>?]{8,20}",
-            message = "비밀번호는 영어와 숫자 1개 이상 포함, 특수문자 가능, 한글/공백 불가능, 8글자 이상 20글자 이하")
+    @NotBlank(message = "비밀번호을(를) 입력하세요.")
+    @Pattern(regexp = "(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9~!@#$%^&*()_+:<>?]{8,20}", message = "비밀번호 형식을 확인하세요.")
     private String password;
 
-    @NotBlank(message = "비밀번호를 확인하세요.")
+    @NotBlank(message = "비밀번호 확인을(를) 입력하세요.")
     private String confirmPassword;
 
-    @NotBlank(message = "닉네임을 입력하세요.")
-    @Pattern(regexp = "(?=[a-zA-Z0-9가-힣])[a-zA-Z0-9가-힣]{3,10}",
-            message = "닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하")
+    @NotBlank(message = "닉네임을(를) 입력하세요.")
+    @Pattern(regexp = "(?=[a-zA-Z0-9가-힣])[a-zA-Z0-9가-힣]{3,10}", message = "닉네임 형식을 확인하세요.")
     private String nickname;
 
-    @NotBlank(message = "이메일을 입력하세요.")
-    @Email(message = "이메일 형식이 맞지 않습니다.")
+    @NotBlank(message = "이메일을(를) 입력하세요.")
+    @Email(message = "이메일 형식을 확인하세요.")
     private String email;
 
     private Role role;

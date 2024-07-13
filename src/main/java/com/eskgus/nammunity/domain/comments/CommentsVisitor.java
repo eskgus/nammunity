@@ -6,17 +6,16 @@ import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.FindQueries;
 import com.querydsl.core.BooleanBuilder;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class CommentsVisitor<Dto> extends BaseVisitor {
     private final QComments qComments;
     private final EssentialQuery<Dto, Comments> essentialQuery;
-    private FindQueries<Dto, Comments> findQueries;
 
-    public FindQueries<Dto, Comments> getFindQueries() {
-        return findQueries;
-    }
+    @Getter
+    private FindQueries<Dto, Comments> findQueries;
 
     @Override
     public void visit(Posts post) {

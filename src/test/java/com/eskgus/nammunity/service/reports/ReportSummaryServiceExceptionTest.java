@@ -70,7 +70,7 @@ public class ReportSummaryServiceExceptionTest {
         User user = mock(User.class);
 
         // when/then
-        assertIllegalArgumentException(() -> reportSummaryService.findByUser(user), USER_REPORT_SUMMARY_NOT_FOUND);
+        assertIllegalArgumentException(() -> reportSummaryService.findByUser(user), REPORT_SUMMARY_NOT_FOUND);
 
         verify(contentReportSummaryRepository).findByUser(eq(user));
     }

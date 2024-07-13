@@ -60,7 +60,7 @@ public class BannedUsersServiceExceptionTest {
         ServiceTestUtil.giveContentFinder(bannedUsersRepository::findByUser, User.class, bannedUser);
 
         // when/then
-        testBanUserException(reportSummaryService::findByUser, USER_REPORT_SUMMARY_NOT_FOUND, user);
+        testBanUserException(reportSummaryService::findByUser, REPORT_SUMMARY_NOT_FOUND, user);
     }
 
     @Test

@@ -18,14 +18,14 @@ public class SignInApiController {
     private final SignInService signInService;
 
     @GetMapping("/username")
-    public ResponseEntity<String> findUsername(@RequestParam @NotBlank(message = "이메일을 입력하세요.")
-                                                @Email(message = "이메일 형식이 맞지 않습니다.") String email) {
+    public ResponseEntity<String> findUsername(@RequestParam @NotBlank(message = "이메일을(를) 입력하세요.")
+                                                @Email(message = "이메일 형식을 확인하세요.") String email) {
         String username = signInService.findUsername(email);
         return ResponseEntity.status(HttpStatus.OK).body(username);
     }
 
     @PutMapping("/password")
-    public ResponseEntity<Void> findPassword(@RequestParam @NotBlank(message = "ID를 입력하세요.") String username,
+    public ResponseEntity<Void> findPassword(@RequestParam @NotBlank(message = "ID을(를) 입력하세요.") String username,
                                             HttpServletRequest request) {
         signInService.findPassword(username);
         request.getSession().setAttribute("prePage", "/users/my-page/update/password");

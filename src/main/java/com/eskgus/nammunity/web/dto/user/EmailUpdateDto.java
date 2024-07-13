@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class EmailUpdateDto {
-    @NotBlank(message = "이메일을 입력하세요.")
-    @Email(message = "이메일 형식이 맞지 않습니다.")
+    @NotBlank(message = "이메일을(를) 입력하세요.")
+    @Email(message = "이메일 형식을 확인하세요.")
     private String email;
 
     public EmailUpdateDto(String email) {

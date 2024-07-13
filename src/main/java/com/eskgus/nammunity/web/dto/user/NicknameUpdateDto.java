@@ -8,9 +8,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class NicknameUpdateDto {
-    @NotBlank(message = "닉네임을 입력하세요.")
-    @Pattern(regexp = "(?=[a-zA-Z0-9가-힣])[a-zA-Z0-9가-힣]{3,10}",
-            message = "닉네임은 영어/숫자/한글 가능, 특수문자/공백 불가능, 3글자 이상 10글자 이하")
+    @NotBlank(message = "닉네임을(를) 입력하세요.")
+    @Pattern(regexp = "(?=[a-zA-Z0-9가-힣])[a-zA-Z0-9가-힣]{3,10}", message = "닉네임 형식을 확인하세요.")
     private String nickname;
 
     public NicknameUpdateDto(String nickname) {

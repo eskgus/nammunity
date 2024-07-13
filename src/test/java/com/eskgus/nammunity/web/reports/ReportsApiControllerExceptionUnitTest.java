@@ -69,7 +69,7 @@ public class ReportsApiControllerExceptionUnitTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(null, null);
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASON_ID);
+        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASON);
         testSaveContentReportsException(requestDto, never(), resultMatchers);
     }
 

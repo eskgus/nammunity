@@ -82,7 +82,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
         ContentReportsSaveDto requestDto = createContentReportsSaveDto(null, POSTS);
 
         // when/then
-        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASON_ID);
+        ResultMatcher[] resultMatchers = createResultMatchers(REASONS_ID, null, EMPTY_REASON);
         testSaveContentReportsThrowsMethodArgumentNotValidException(requestDto, resultMatchers);
     }
 
@@ -221,7 +221,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void banUserWithNonExistentUserReportSummary() throws Exception {
-        testBanUserException(USER_REPORT_SUMMARY_NOT_FOUND, ID);
+        testBanUserException(REPORT_SUMMARY_NOT_FOUND, ID);
     }
 
     private ContentReportsSaveDto createContentReportsSaveDto(Long reasonId, ContentType contentType) {

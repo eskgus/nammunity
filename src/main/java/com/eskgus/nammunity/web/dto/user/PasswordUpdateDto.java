@@ -9,15 +9,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class PasswordUpdateDto {
-    @NotBlank(message = "현재 비밀번호를 입력하세요.")
+    @NotBlank(message = "현재 비밀번호을(를) 입력하세요.")
     private String oldPassword;
 
-    @NotBlank(message = "새 비밀번호를 입력하세요.")
-    @Pattern(regexp = "(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9~!@#$%^&*()_+:<>?]{8,20}",
-            message = "비밀번호는 영어와 숫자 1개 이상 포함, 특수문자 가능, 한글/공백 불가능, 8글자 이상 20글자 이하")
+    @NotBlank(message = "새 비밀번호을(를) 입력하세요.")
+    @Pattern(regexp = "(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9~!@#$%^&*()_+:<>?]{8,20}", message = "비밀번호 형식을 확인하세요.")
     private String password;
 
-    @NotBlank(message = "비밀번호를 확인하세요.")
+    @NotBlank(message = "비밀번호 확인을(를) 입력하세요.")
     private String confirmPassword;
 
     @Builder

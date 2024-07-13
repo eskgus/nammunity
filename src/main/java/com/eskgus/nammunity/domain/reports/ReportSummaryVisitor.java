@@ -5,16 +5,15 @@ import com.eskgus.nammunity.domain.common.BaseVisitor;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.querydsl.core.types.Predicate;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ReportSummaryVisitor extends BaseVisitor {
     private final QContentReportSummary qReportSummary;
-    private Predicate whereCondition;
 
-    public Predicate getWhereCondition() {
-        return whereCondition;
-    }
+    @Getter
+    private Predicate whereCondition;
 
     @Override
     public void visit(Posts post) {

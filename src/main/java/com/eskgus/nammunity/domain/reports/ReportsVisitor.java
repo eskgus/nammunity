@@ -5,6 +5,7 @@ import com.eskgus.nammunity.domain.common.BaseVisitor;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
 import com.querydsl.core.types.Predicate;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.function.Supplier;
@@ -12,19 +13,15 @@ import java.util.function.Supplier;
 @NoArgsConstructor
 public class ReportsVisitor extends BaseVisitor {
     private QContentReports qReports;
+
+    @Getter
     private Predicate whereCondition;
+
+    @Getter
     private boolean isUser;
 
     public ReportsVisitor(QContentReports qReports) {
         this.qReports = qReports;
-    }
-
-    public Predicate getWhereCondition() {
-        return whereCondition;
-    }
-
-    public boolean isUser() {
-        return isUser;
     }
 
     @Override
