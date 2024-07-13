@@ -114,13 +114,13 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
     private Page<ContentReportSummaryDto> createReportSummariesPage(
             JPAQuery<ContentReportSummaryDto> query,
             EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery, Pageable pageable) {
-        List<ContentReportSummaryDto> reportSummaries = createLeftJoinClauseForReportSummaries(query).fetch();
+        List<ContentReportSummaryDto> reportSummaries = createLeftJoinClause(query).fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
 
         return PaginationRepoUtil.createPage(reportSummaries, pageable, totalQuery);
     }
 
-    private JPAQuery<ContentReportSummaryDto> createLeftJoinClauseForReportSummaries(JPAQuery<ContentReportSummaryDto> query) {
+    private JPAQuery<ContentReportSummaryDto> createLeftJoinClause(JPAQuery<ContentReportSummaryDto> query) {
         return query.leftJoin(Q_REPORT_SUMMARY.posts, Q_POSTS)
                 .leftJoin(Q_REPORT_SUMMARY.comments, Q_COMMENTS)
                 .leftJoin(Q_REPORT_SUMMARY.user, Q_USER);

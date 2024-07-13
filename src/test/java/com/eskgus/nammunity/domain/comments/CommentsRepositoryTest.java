@@ -2,7 +2,6 @@ package com.eskgus.nammunity.domain.comments;
 
 import com.eskgus.nammunity.config.TestConfig;
 import com.eskgus.nammunity.converter.CommentsConverterForTest;
-import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.helper.*;
 import com.eskgus.nammunity.helper.TestDataHelper;
@@ -257,7 +256,7 @@ public class CommentsRepositoryTest {
     }
 
     private <Dto> void assertCommentsPage(Page<Dto> result, Page<Dto> commentsPage,
-                                          EntityConverterForTest<Dto, Comments> commentsConverter) {
+                                          CommentsConverterForTest<Dto> commentsConverter) {
         PaginationTestHelper<Dto, Comments> paginationHelper
                 = new PaginationTestHelper<>(result, commentsPage, commentsConverter);
         paginationHelper.assertContents();

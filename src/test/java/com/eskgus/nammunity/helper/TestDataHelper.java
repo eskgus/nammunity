@@ -107,11 +107,6 @@ public class TestDataHelper {
         return newToken.getId();
     }
 
-    public void confirmTokens(Tokens token) {
-        token.updateConfirmedAt(LocalDateTime.now());
-        token.getUser().updateEnabled();
-    }
-
     public Long savePosts(User user) {
         Posts post = Posts.builder()
                 .title("title").content("content").user(user).build();

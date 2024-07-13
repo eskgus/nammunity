@@ -57,20 +57,20 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
     }
 
     private Page<PostsListDto> searchPostsByFields(Pageable pageable, String keywords, StringPath... fields) {
-        EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQueryForPosts();
-        JPAQuery<PostsListDto> query = createQueryForSearchPosts(pageable, essentialQuery, keywords, fields);
+        EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQuery();
+        JPAQuery<PostsListDto> query = createSearchQuery(pageable, essentialQuery, keywords, fields);
 
         return createPostsPage(query, essentialQuery, pageable);
     }
 
     private Page<PostsListDto> findPostsByFields(User user, Pageable pageable) {
-        EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQueryForPosts();
-        JPAQuery<PostsListDto> query = createQueryForFindPosts(essentialQuery, user, pageable);
+        EssentialQuery<PostsListDto, Posts> essentialQuery = createEssentialQuery();
+        JPAQuery<PostsListDto> query = createFindQuery(essentialQuery, user, pageable);
 
         return createPostsPage(query, essentialQuery, pageable);
     }
 
-    private EssentialQuery<PostsListDto, Posts> createEssentialQueryForPosts() {
+    private EssentialQuery<PostsListDto, Posts> createEssentialQuery() {
         Expression[] constructorParams = {Q_POSTS, Q_COMMENTS.id.countDistinct(), Q_LIKES.id.countDistinct() };
 
         return EssentialQuery.<PostsListDto, Posts>builder()
@@ -78,9 +78,9 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
                 .dtoType(PostsListDto.class).constructorParams(constructorParams).build();
     }
 
-    private JPAQuery<PostsListDto> createQueryForSearchPosts(Pageable pageable,
-                                                             EssentialQuery<PostsListDto, Posts> essentialQuery,
-                                                             String keywords, StringPath... fields) {
+    private JPAQuery<PostsListDto> createSearchQuery(Pageable pageable,
+                                                     EssentialQuery<PostsListDto, Posts> essentialQuery,
+                                                     String keywords, StringPath... fields) {
         SearchQueries<PostsListDto, Posts> searchQueries = SearchQueries.<PostsListDto, Posts>builder()
                 .essentialQuery(essentialQuery).keywords(keywords).fields(fields).build();
         JPAQuery<PostsListDto> query = searchQueries.createQueryForSearchContents();
@@ -88,8 +88,8 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
         return addPageToQuery(query, pageable);
     }
 
-    private JPAQuery<PostsListDto> createQueryForFindPosts(EssentialQuery<PostsListDto, Posts> essentialQuery,
-                                                           User user, Pageable pageable) {
+    private JPAQuery<PostsListDto> createFindQuery(EssentialQuery<PostsListDto, Posts> essentialQuery,
+                                                   User user, Pageable pageable) {
         FindQueries<PostsListDto, Posts> findQueries = FindQueries.<PostsListDto, Posts>builder()
                 .essentialQuery(essentialQuery).userId(Q_POSTS.user.id).user(user).build();
         JPAQuery<PostsListDto> query = findQueries.createQueryForFindContents();
@@ -100,7 +100,7 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
     private Page<PostsListDto> createPostsPage(JPAQuery<PostsListDto> query,
                                                EssentialQuery<PostsListDto, Posts> essentialQuery,
                                                Pageable pageable) {
-        List<PostsListDto> posts = createLeftJoinClauseForPosts(query).fetch();
+        List<PostsListDto> posts = createLeftJoinClause(query).fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
 
         return PaginationRepoUtil.createPage(posts, pageable, totalQuery);
@@ -110,7 +110,7 @@ public class PostsRepositoryImpl extends QuerydslRepositorySupport implements Cu
         return PaginationRepoUtil.addPageToQuery(query, pageable);
     }
 
-    private JPAQuery<PostsListDto> createLeftJoinClauseForPosts(JPAQuery<PostsListDto> query) {
+    private JPAQuery<PostsListDto> createLeftJoinClause(JPAQuery<PostsListDto> query) {
         return query.leftJoin(Q_POSTS.comments, Q_COMMENTS)
                 .leftJoin(Q_POSTS.likes, Q_LIKES);
     }

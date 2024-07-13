@@ -55,23 +55,25 @@ public class CommentsRepositoryImpl extends QuerydslRepositorySupport implements
         BooleanBuilder whereCondition = new BooleanBuilder();
         whereCondition.and(Q_COMMENTS.posts.id.eq(postId));
         whereCondition.and(Q_COMMENTS.id.gt(commentId));
+
         return query.select(Q_COMMENTS.count()).from(Q_COMMENTS).where(whereCondition).fetchOne();
     }
 
     private Page<CommentsListDto> searchCommentsByFields(Pageable pageable, String keywords, StringPath... fields) {
-        EssentialQuery<CommentsListDto, Comments> essentialQuery = createEssentialQueryForComments(CommentsListDto.class);
-        JPAQuery<CommentsListDto> query = createQueryForSearchComments(pageable, essentialQuery, keywords, fields);
+        EssentialQuery<CommentsListDto, Comments> essentialQuery = createEssentialQuery(CommentsListDto.class);
+        JPAQuery<CommentsListDto> query = createSearchQuery(pageable, essentialQuery, keywords, fields);
+
         return createCommentsPage(query, essentialQuery, pageable);
     }
 
     private <Dto> Page<Dto> findCommentsByElement(Element element, Pageable pageable, Class<Dto> dtoType) {
-        EssentialQuery<Dto, Comments> essentialQuery = createEssentialQueryForComments(dtoType);
-        JPAQuery<Dto> query = createQueryForFindComments(essentialQuery, element, pageable);
+        EssentialQuery<Dto, Comments> essentialQuery = createEssentialQuery(dtoType);
+        JPAQuery<Dto> query = createFindQuery(essentialQuery, element, pageable);
 
         return createCommentsPage(query, essentialQuery, pageable);
     }
 
-    private <Dto> EssentialQuery<Dto, Comments> createEssentialQueryForComments(Class<Dto> dtoType) {
+    private <Dto> EssentialQuery<Dto, Comments> createEssentialQuery(Class<Dto> dtoType) {
         Expression[] constructorParams = { Q_COMMENTS, Q_LIKES.id.countDistinct() };
 
         return EssentialQuery.<Dto, Comments>builder()
@@ -79,9 +81,9 @@ public class CommentsRepositoryImpl extends QuerydslRepositorySupport implements
                 .dtoType(dtoType).constructorParams(constructorParams).build();
     }
 
-    private JPAQuery<CommentsListDto> createQueryForSearchComments(Pageable pageable,
-                                                                   EssentialQuery<CommentsListDto, Comments> essentialQuery,
-                                                                   String keywords, StringPath... fields) {
+    private JPAQuery<CommentsListDto> createSearchQuery(Pageable pageable,
+                                                        EssentialQuery<CommentsListDto, Comments> essentialQuery,
+                                                        String keywords, StringPath... fields) {
         SearchQueries<CommentsListDto, Comments> searchQueries = SearchQueries.<CommentsListDto, Comments>builder()
                 .essentialQuery(essentialQuery).keywords(keywords).fields(fields).build();
         JPAQuery<CommentsListDto> query = searchQueries.createQueryForSearchContents();
@@ -89,8 +91,8 @@ public class CommentsRepositoryImpl extends QuerydslRepositorySupport implements
         return addPageToQuery(query, pageable);
     }
 
-    private <Dto> JPAQuery<Dto> createQueryForFindComments(EssentialQuery<Dto, Comments> essentialQuery,
-                                                           Element element, Pageable pageable) {
+    private <Dto> JPAQuery<Dto> createFindQuery(EssentialQuery<Dto, Comments> essentialQuery,
+                                                Element element, Pageable pageable) {
         FindQueries<Dto, Comments> findQueries = createFindQueries(essentialQuery, element);
         JPAQuery<Dto> query = findQueries.createQueryForFindContents();
 
@@ -107,13 +109,13 @@ public class CommentsRepositoryImpl extends QuerydslRepositorySupport implements
 
     private <Dto> Page<Dto> createCommentsPage(JPAQuery<Dto> query, EssentialQuery<Dto, Comments> essentialQuery,
                                                Pageable pageable) {
-        List<Dto> comments = createLeftJoinClauseForComments(query).fetch();
+        List<Dto> comments = createLeftJoinClause(query).fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
 
         return PaginationRepoUtil.createPage(comments, pageable, totalQuery);
     }
 
-    private <Dto> JPAQuery<Dto> createLeftJoinClauseForComments(JPAQuery<Dto> query) {
+    private <Dto> JPAQuery<Dto> createLeftJoinClause(JPAQuery<Dto> query) {
         return query.leftJoin(Q_COMMENTS.likes, Q_LIKES);
     }
 

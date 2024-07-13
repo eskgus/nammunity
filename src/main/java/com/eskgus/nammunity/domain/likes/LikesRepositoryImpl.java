@@ -48,23 +48,29 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
     @Override
     @Transactional
     public void deleteByPosts(Posts post, User user) {
-        deleteByField(Q_LIKES.posts, post, user);
+        deleteByFields(Q_LIKES.posts, post, user);
     }
 
     @Override
     @Transactional
     public void deleteByComments(Comments comment, User user) {
-        deleteByField(Q_LIKES.comments, comment, user);
+        deleteByFields(Q_LIKES.comments, comment, user);
     }
 
     private <Content> Page<LikesListDto> findLikesByFields(User user, Pageable pageable,
                                                            EntityPathBase<Content> contentTypeOfLikes) {
-        EssentialQuery<LikesListDto, Likes> essentialQuery = createEssentialQueryForLikes();
-        JPAQuery<LikesListDto> query = createQueryForFindLikes(essentialQuery, user, pageable, contentTypeOfLikes);
+        EssentialQuery<LikesListDto, Likes> essentialQuery = createEssentialQuery();
+        JPAQuery<LikesListDto> query = createFindQuery(essentialQuery, user, pageable, contentTypeOfLikes);
+
         return createLikesPage(query, essentialQuery, pageable);
     }
 
-    private EssentialQuery<LikesListDto, Likes> createEssentialQueryForLikes() {
+    private <Field> void deleteByFields(EntityPathBase<Field> qField, Field field, User user) {
+        JPADeleteClause query = new JPADeleteClause(entityManager, Q_LIKES);
+        query.where(qField.eq(field).and(Q_LIKES.user.eq(user))).execute();
+    }
+
+    private EssentialQuery<LikesListDto, Likes> createEssentialQuery() {
         Expression[] constructorParams = { Q_LIKES };
 
         return EssentialQuery.<LikesListDto, Likes>builder()
@@ -72,9 +78,9 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
                 .dtoType(LikesListDto.class).constructorParams(constructorParams).build();
     }
 
-    private <Content> JPAQuery<LikesListDto> createQueryForFindLikes(EssentialQuery<LikesListDto, Likes> essentialQuery,
-                                                                     User user, Pageable pageable,
-                                                                     EntityPathBase<Content> contentTypeOfLikes) {
+    private <Content> JPAQuery<LikesListDto> createFindQuery(EssentialQuery<LikesListDto, Likes> essentialQuery,
+                                                             User user, Pageable pageable,
+                                                             EntityPathBase<Content> contentTypeOfLikes) {
         FindQueries<LikesListDto, Likes> findQueries = FindQueries.<LikesListDto, Likes>builder()
                 .essentialQuery(essentialQuery).userId(Q_LIKES.user.id).user(user)
                 .contentTypeOfLikes(contentTypeOfLikes).build();
@@ -88,11 +94,7 @@ public class LikesRepositoryImpl extends QuerydslRepositorySupport implements Cu
                                                Pageable pageable) {
         List<LikesListDto> likes = query.fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
-        return PaginationRepoUtil.createPage(likes, pageable, totalQuery);
-    }
 
-    private <Field> void deleteByField(EntityPathBase<Field> qField, Field field, User user) {
-        JPADeleteClause query = new JPADeleteClause(entityManager, Q_LIKES);
-        query.where(qField.eq(field).and(Q_LIKES.user.eq(user))).execute();
+        return PaginationRepoUtil.createPage(likes, pageable, totalQuery);
     }
 }
