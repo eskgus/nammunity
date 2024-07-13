@@ -102,7 +102,6 @@ public class RegistrationService {
         return userService.findById(userId);
     }
 
-    @Transactional(readOnly = true)
     private void validateRegistrationDto(RegistrationDto registrationDto) {
         if (existsUsersByUsername(registrationDto.getUsername())) {
             throw new CustomValidException(USERNAME, registrationDto.getUsername(), USERNAME_EXISTS);
@@ -135,7 +134,6 @@ public class RegistrationService {
         }
     }
 
-    @Transactional
     private String createAndSaveToken(User user) {
         String uuid = UUID.randomUUID().toString();
         Tokens token = Tokens.builder()
@@ -162,7 +160,6 @@ public class RegistrationService {
         }
     }
 
-    @Transactional
     private void updateTokenAndUser(Tokens token) {
         token.updateConfirmedAt(LocalDateTime.now());
         token.getUser().updateEnabled();

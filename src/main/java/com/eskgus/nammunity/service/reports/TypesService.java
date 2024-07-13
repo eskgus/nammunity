@@ -19,7 +19,6 @@ public class TypesService {
         return findByDetail(contentType.getDetail());
     }
 
-    @Transactional(readOnly = true)
     private Types findByDetail(String detail) {
         return typesRepository.findByDetail(detail).orElseThrow(() -> new
                 IllegalArgumentException(TYPE_NOT_FOUND.getMessage()));

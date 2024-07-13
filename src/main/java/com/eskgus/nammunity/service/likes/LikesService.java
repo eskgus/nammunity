@@ -101,7 +101,6 @@ public class LikesService {
         likesRepository.deleteByComments(comments, user);
     }
 
-    @Transactional
     private void delete(Long id) {
         Likes like = likesRepository.findById(id).orElseThrow(() -> new
                 IllegalArgumentException(LIKE_NOT_FOUND.getMessage()));

@@ -124,7 +124,6 @@ public class UserUpdateService {
         }
     }
 
-    @Transactional
     private void updateAndSendToken(User user, String email) {
         user.getTokens().forEach(tokens -> tokens.updateExpiredAt(LocalDateTime.now()));
         registrationService.sendToken(user.getId(), email, "update");
@@ -140,7 +139,6 @@ public class UserUpdateService {
         }
     }
 
-    @Transactional
     private Cookie resetCookie(User user, String accessToken) {
         if (NONE.equals(user.getSocial())) {
             return null;

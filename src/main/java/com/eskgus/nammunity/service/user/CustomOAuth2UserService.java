@@ -114,7 +114,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         addRefreshTokenToAttributes(userRequest, customOAuth2User);
     }
 
-    @Transactional
     private User handleUserAuthentication(CustomOAuth2User customOAuth2User) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = authentication == null
@@ -125,7 +124,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return user;
     }
 
-    @Transactional
     private void saveOrUpdateRefreshToken(CustomOAuth2User customOAuth2User, User user) {
         String refreshToken = (String) customOAuth2User.getAttributes().get(REFRESH_TOKEN.getKey());
         if (refreshToken != null) {
