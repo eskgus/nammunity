@@ -40,19 +40,21 @@ public class ReportSummaryService {
     @Transactional
     public Long saveOrUpdateContentReportSummary(ContentReportSummarySaveDto requestDto) {
         // contentReportSummary 테이블에 컨텐츠 (posts, comments, user) 없으면 저장, 있으면 수정
-        Element contents = getContents(requestDto);
-        boolean doesSummaryExist = contentReportSummaryRepository.existsByContents(contents);
+        Element element = getElement(requestDto);
+        boolean doesSummaryExist = contentReportSummaryRepository.existsByElement(element);
 
         if (doesSummaryExist) {
-            return updateContentReportSummary(requestDto, contents);
+            return updateContentReportSummary(requestDto, element);
+        } else {
+            return saveContentReportSummary(requestDto);
         }
-        return saveContentReportSummary(requestDto);
     }
 
     @Transactional(readOnly = true)
     public ContentsPageDto<ContentReportSummaryDto> findAllDesc(int page) {
         Pageable pageable = createPageable(page);
         Page<ContentReportSummaryDto> summariesPage = contentReportSummaryRepository.findAllDesc(pageable);
+
         return createContentsPageDto(summariesPage);
     }
 
@@ -61,6 +63,7 @@ public class ReportSummaryService {
         Pageable pageable = createPageable(page);
         Types type = typesService.findByContentType(contentType);
         Page<ContentReportSummaryDto> summariesPage = contentReportSummaryRepository.findByTypes(type, pageable);
+
         return createContentsPageDto(summariesPage);
     }
 
@@ -79,7 +82,7 @@ public class ReportSummaryService {
         deleteByContents(deleteDto.getUserId(), userService::findById);
     }
 
-    private Element getContents(ContentReportSummarySaveDto requestDto) {
+    private Element getElement(ContentReportSummarySaveDto requestDto) {
         String type = requestDto.getTypes().getDetail();
 
         if (POSTS.getDetail().equals(type)) {
@@ -91,15 +94,14 @@ public class ReportSummaryService {
         }
     }
 
-    @Transactional
-    private <Contents> Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, Contents contents) {
-        ContentReportSummary reportSummary = contentReportSummaryRepository.findByContents(contents);
+    private Long updateContentReportSummary(ContentReportSummarySaveDto requestDto, Element element) {
+        ContentReportSummary reportSummary = contentReportSummaryRepository.findByElement(element);
         reportSummary.update(requestDto.getReportedDate(), requestDto.getReporter(),
                 requestDto.getReasons(), requestDto.getOtherReasons());
+
         return reportSummary.getId();
     }
 
-    @Transactional
     private Long saveContentReportSummary(ContentReportSummarySaveDto requestDto) {
         return contentReportSummaryRepository.save(requestDto.toEntity()).getId();
     }
@@ -120,11 +122,10 @@ public class ReportSummaryService {
         }
     }
 
-    @Transactional
-    private <Contents> void deleteByContents(List<Long> contentIds, Function<Long, Contents> finder) {
+    private void deleteByContents(List<Long> contentIds, Function<Long, Element> finder) {
         contentIds.forEach(id -> {
-            Contents contents = finder.apply(id);
-            contentReportSummaryRepository.deleteByContents(contents);
+            Element element = finder.apply(id);
+            contentReportSummaryRepository.deleteByElement(element);
         });
     }
 }

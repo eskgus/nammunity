@@ -5,6 +5,7 @@ import com.eskgus.nammunity.converter.EntityConverterForTest;
 import com.eskgus.nammunity.converter.PostsConverterForTest;
 import com.eskgus.nammunity.converter.UserConverterForTest;
 import com.eskgus.nammunity.domain.comments.Comments;
+import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.domain.enums.ContentType;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.reports.*;
@@ -168,7 +169,7 @@ public class ReportSummaryServiceTest {
         ContentReportSummaryDeleteDto requestDto = ContentReportSummaryDeleteDto.builder()
                 .postsId(postIds).commentsId(commentIds).userId(userIds).build();
 
-        doNothing().when(contentReportSummaryRepository).deleteByContents(any());
+        doNothing().when(contentReportSummaryRepository).deleteByElement(any());
 
         // when
         reportSummaryService.deleteSelectedReportSummaries(requestDto);
@@ -178,14 +179,64 @@ public class ReportSummaryServiceTest {
         verifyDeleteByContents(posts.size(), comments.size(), users.size());
     }
 
-    private <Entity> ContentReportSummarySaveDto createSummarySaveDto(ContentType contentType, Entity content) {
+    private void testSaveContentReportSummary(ContentType contentType, Element element) {
+        // given
+        ContentReportSummary summary = giveSummary();
+        when(contentReportSummaryRepository.save(any(ContentReportSummary.class))).thenReturn(summary);
+
+        // when
+        ContentReportSummarySaveDto requestDto = testSaveOrUpdateContentReportSummary(
+                contentType, element, false, summary.getId());
+
+        // then
+        Pair<VerificationMode, VerificationMode> modePair = Pair.of(times(1), never());
+        Pair<ContentReportSummary, ContentReportSummarySaveDto> summaryPair = Pair.of(summary, requestDto);
+
+        verifySaveOrUpdateContentReportSummary(modePair, element, summaryPair);
+    }
+
+    private void testUpdateContentReportSummary(ContentType contentType, Element element) {
+        // given
+        ContentReportSummary summary = giveSummary();
+        when(contentReportSummaryRepository.findByElement(any())).thenReturn(summary);
+
+        // when
+        ContentReportSummarySaveDto requestDto = testSaveOrUpdateContentReportSummary(
+                contentType, element, true, summary.getId());
+
+        // then
+        Pair<VerificationMode, VerificationMode> modePair = Pair.of(never(), times(1));
+        Pair<ContentReportSummary, ContentReportSummarySaveDto> summaryPair = Pair.of(summary, requestDto);
+
+        verifySaveOrUpdateContentReportSummary(modePair, element, summaryPair);
+    }
+
+    private ContentReportSummarySaveDto testSaveOrUpdateContentReportSummary(ContentType contentType, Element element,
+                                                                             boolean doesSummaryExist, Long summaryId) {
+        // given
+        ContentReportSummarySaveDto requestDto = createSummarySaveDto(contentType, element);
+
+        when(contentReportSummaryRepository.existsByElement(any())).thenReturn(doesSummaryExist);
+
+        // when
+        Long result = reportSummaryService.saveOrUpdateContentReportSummary(requestDto);
+
+        // then
+        assertEquals(summaryId, result);
+
+        verify(contentReportSummaryRepository).existsByElement(eq(element));
+
+        return requestDto;
+    }
+
+    private ContentReportSummarySaveDto createSummarySaveDto(ContentType contentType, Element element) {
         Posts post = null;
         Comments comment = null;
         User user = null;
         switch (contentType) {
-            case POSTS -> post = (Posts) content;
-            case COMMENTS -> comment = (Comments) content;
-            case USERS -> user = (User) content;
+            case POSTS -> post = (Posts) element;
+            case COMMENTS -> comment = (Comments) element;
+            case USERS -> user = (User) element;
         }
 
         Types type = mock(Types.class);
@@ -248,61 +299,9 @@ public class ReportSummaryServiceTest {
         return ServiceTestUtil.createContentIds(contents, entityConverter);
     }
 
-    private <Entity> void testSaveContentReportSummary(ContentType contentType, Entity content) {
-        // given
-        ContentReportSummary summary = giveSummary();
-        when(contentReportSummaryRepository.save(any(ContentReportSummary.class))).thenReturn(summary);
-
-        // when
-        ContentReportSummarySaveDto requestDto = testSaveOrUpdateContentReportSummary(
-                contentType, content, false, summary.getId());
-
-        // then
-        Pair<VerificationMode, VerificationMode> modePair = Pair.of(times(1), never());
-        Pair<ContentReportSummary, ContentReportSummarySaveDto> summaryPair = Pair.of(summary, requestDto);
-
-        verifySaveOrUpdateContentReportSummary(modePair, content, summaryPair);
-    }
-
-    private <Entity> void testUpdateContentReportSummary(ContentType contentType, Entity content) {
-        // given
-        ContentReportSummary summary = giveSummary();
-        when(contentReportSummaryRepository.findByContents(any())).thenReturn(summary);
-
-        // when
-        ContentReportSummarySaveDto requestDto = testSaveOrUpdateContentReportSummary(
-                contentType, content, true, summary.getId());
-
-        // then
-        Pair<VerificationMode, VerificationMode> modePair = Pair.of(never(), times(1));
-        Pair<ContentReportSummary, ContentReportSummarySaveDto> summaryPair = Pair.of(summary, requestDto);
-
-        verifySaveOrUpdateContentReportSummary(modePair, content, summaryPair);
-    }
-
-    private <Entity> ContentReportSummarySaveDto testSaveOrUpdateContentReportSummary(ContentType contentType,
-                                                                                      Entity content,
-                                                                                      boolean doesSummaryExist,
-                                                                                      Long summaryId) {
-        // given
-        ContentReportSummarySaveDto requestDto = createSummarySaveDto(contentType, content);
-
-        when(contentReportSummaryRepository.existsByContents(any())).thenReturn(doesSummaryExist);
-
-        // when
-        Long result = reportSummaryService.saveOrUpdateContentReportSummary(requestDto);
-
-        // then
-        assertEquals(summaryId, result);
-
-        verify(contentReportSummaryRepository).existsByContents(eq(content));
-
-        return requestDto;
-    }
-
-    private <Entity> void verifySaveOrUpdateContentReportSummary(Pair<VerificationMode, VerificationMode> modePair,
-                                                                 Entity content,
-                                                                 Pair<ContentReportSummary, ContentReportSummarySaveDto> summaryPair) {
+    private void verifySaveOrUpdateContentReportSummary(
+            Pair<VerificationMode, VerificationMode> modePair, Element element,
+            Pair<ContentReportSummary, ContentReportSummarySaveDto> summaryPair) {
         VerificationMode saveMode = modePair.getFirst();
         VerificationMode updateMode = modePair.getSecond();
 
@@ -310,7 +309,7 @@ public class ReportSummaryServiceTest {
         ContentReportSummarySaveDto requestDto = summaryPair.getSecond();
 
         verify(contentReportSummaryRepository, saveMode).save(any(ContentReportSummary.class));
-        verify(contentReportSummaryRepository, updateMode).findByContents(eq(content));
+        verify(contentReportSummaryRepository, updateMode).findByElement(eq(element));
         verify(summary, updateMode).update(eq(requestDto.getReportedDate()), eq(requestDto.getReporter()),
                 eq(requestDto.getReasons()), eq(requestDto.getOtherReasons()));
     }
@@ -322,8 +321,8 @@ public class ReportSummaryServiceTest {
     }
 
     private void verifyDeleteByContents(int postsSize, int commentsSize, int usersSize) {
-        verify(contentReportSummaryRepository, times(postsSize)).deleteByContents(any(Posts.class));
-        verify(contentReportSummaryRepository, times(commentsSize)).deleteByContents(any(Comments.class));
-        verify(contentReportSummaryRepository, times(usersSize)).deleteByContents(any(User.class));
+        verify(contentReportSummaryRepository, times(postsSize)).deleteByElement(any(Posts.class));
+        verify(contentReportSummaryRepository, times(commentsSize)).deleteByElement(any(Comments.class));
+        verify(contentReportSummaryRepository, times(usersSize)).deleteByElement(any(User.class));
     }
 }

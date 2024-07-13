@@ -1,11 +1,9 @@
 package com.eskgus.nammunity.domain.reports;
 
-import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.comments.QComments;
-import com.eskgus.nammunity.domain.posts.Posts;
+import com.eskgus.nammunity.domain.common.Element;
 import com.eskgus.nammunity.domain.posts.QPosts;
 import com.eskgus.nammunity.domain.user.QUser;
-import com.eskgus.nammunity.domain.user.User;
 import com.eskgus.nammunity.helper.EssentialQuery;
 import com.eskgus.nammunity.helper.FindQueries;
 import com.eskgus.nammunity.util.PaginationRepoUtil;
@@ -29,109 +27,102 @@ public class ContentReportSummaryRepositoryImpl extends QuerydslRepositorySuppor
     @Autowired
     private EntityManager entityManager;
 
-    private final QContentReportSummary qReportSummary = QContentReportSummary.contentReportSummary;
-    private final QPosts qPosts = QPosts.posts;
-    private final QComments qComments = QComments.comments;
-    private final QUser qUser = QUser.user;
+    private static final QContentReportSummary Q_REPORT_SUMMARY = QContentReportSummary.contentReportSummary;
+    private static final QPosts Q_POSTS = QPosts.posts;
+    private static final QComments Q_COMMENTS = QComments.comments;
+    private static final QUser Q_USER = QUser.user;
 
     public ContentReportSummaryRepositoryImpl() {
         super(ContentReportSummary.class);
     }
 
     @Override
-    public <Contents> boolean existsByContents(Contents contents) {
+    public boolean existsByElement(Element element) {
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
 
-        Predicate whereCondition = createWhereConditionByContents(contents);
+        Predicate whereCondition = createWhereCondition(element);
 
-        return query.selectFrom(qReportSummary)
+        return query.selectFrom(Q_REPORT_SUMMARY)
                 .where(whereCondition)
                 .fetchFirst() != null;
     }
 
-    private <Contents> BooleanBuilder createWhereConditionByContents(Contents contents) {
-        Predicate whereCondition;
-        if (contents instanceof Posts) {
-            whereCondition = qReportSummary.posts.eq((Posts) contents);
-        } else if (contents instanceof Comments) {
-            whereCondition = qReportSummary.comments.eq((Comments) contents);
-        } else if (contents instanceof User){
-            whereCondition = qReportSummary.user.eq((User) contents);
-        } else {
-            whereCondition = qReportSummary.types.eq((Types) contents);
-        }
-
-        return new BooleanBuilder().and(whereCondition);
-    }
-
-    @Override
-    public <Contents> ContentReportSummary findByContents(Contents contents) {
+    public ContentReportSummary findByElement(Element element) {
         JPAQueryFactory query = new JPAQueryFactory(entityManager);
 
-        Predicate whereCondition = createWhereConditionByContents(contents);
+        Predicate whereCondition = createWhereCondition(element);
 
-        return query.selectFrom(qReportSummary)
+        return query.selectFrom(Q_REPORT_SUMMARY)
                 .where(whereCondition).fetchOne();
     }
 
     @Override
     public Page<ContentReportSummaryDto> findAllDesc(Pageable pageable) {
-        return findReportSummariesByFields(null, pageable);
+        return findReportSummaries(null, pageable);
     }
 
-    private Page<ContentReportSummaryDto> findReportSummariesByFields(Types type, Pageable pageable) {
+    @Override
+    public Page<ContentReportSummaryDto> findByTypes(Types type, Pageable pageable) {
+        return findReportSummaries(type, pageable);
+    }
+
+    @Override
+    @Transactional
+    public void deleteByElement(Element element) {
+        Predicate whereCondition = createWhereCondition(element);
+
+        JPADeleteClause query = new JPADeleteClause(entityManager, Q_REPORT_SUMMARY);
+        query.where(whereCondition).execute();
+    }
+
+    private Page<ContentReportSummaryDto> findReportSummaries(Types type, Pageable pageable) {
         EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery
-                = createEssentialQueryForReportSummaries();
-        JPAQuery<ContentReportSummaryDto> query = createQueryForFindReportSummaries(essentialQuery, type, pageable);
+                = createEssentialQuery();
+        JPAQuery<ContentReportSummaryDto> query = createFindQuery(essentialQuery, type, pageable);
+
         return createReportSummariesPage(query, essentialQuery, pageable);
     }
 
-    private EssentialQuery<ContentReportSummaryDto, ContentReportSummary> createEssentialQueryForReportSummaries() {
-        Expression[] constructorParams = { qReportSummary, qPosts, qComments, qUser};
+    private EssentialQuery<ContentReportSummaryDto, ContentReportSummary> createEssentialQuery() {
+        Expression[] constructorParams = {Q_REPORT_SUMMARY, Q_POSTS, Q_COMMENTS, Q_USER};
 
         return EssentialQuery.<ContentReportSummaryDto, ContentReportSummary>builder()
-                .entityManager(entityManager).queryType(qReportSummary)
+                .entityManager(entityManager).queryType(Q_REPORT_SUMMARY)
                 .dtoType(ContentReportSummaryDto.class).constructorParams(constructorParams).build();
     }
 
-    private JPAQuery<ContentReportSummaryDto>
-        createQueryForFindReportSummaries(EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery,
-                                          Types type, Pageable pageable) {
-        BooleanBuilder whereCondition = type != null ? createWhereConditionByContents(type) : new BooleanBuilder();
+    private JPAQuery<ContentReportSummaryDto> createFindQuery(
+            EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery, Types type, Pageable pageable) {
+        BooleanBuilder whereCondition = type != null ? createWhereCondition(type) : new BooleanBuilder();
 
         FindQueries<ContentReportSummaryDto, ContentReportSummary> findQueries = FindQueries.<ContentReportSummaryDto, ContentReportSummary>builder()
                 .essentialQuery(essentialQuery)
                 .whereCondition(whereCondition).build();
         JPAQuery<ContentReportSummaryDto> query = findQueries.createQueryForFindContents();
+
         return PaginationRepoUtil.addPageToQuery(query, pageable);
     }
 
-    private Page<ContentReportSummaryDto>
-        createReportSummariesPage(JPAQuery<ContentReportSummaryDto> query,
-                                  EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery,
-                                  Pageable pageable) {
+    private BooleanBuilder createWhereCondition(Element element) {
+        ReportSummaryVisitor visitor = new ReportSummaryVisitor(Q_REPORT_SUMMARY);
+        element.accept(visitor);
+
+        Predicate whereCondition = visitor.getWhereCondition();
+        return new BooleanBuilder().and(whereCondition);
+    }
+
+    private Page<ContentReportSummaryDto> createReportSummariesPage(
+            JPAQuery<ContentReportSummaryDto> query,
+            EssentialQuery<ContentReportSummaryDto, ContentReportSummary> essentialQuery, Pageable pageable) {
         List<ContentReportSummaryDto> reportSummaries = createLeftJoinClauseForReportSummaries(query).fetch();
         JPAQuery<Long> totalQuery = essentialQuery.createBaseQueryForPagination(query);
+
         return PaginationRepoUtil.createPage(reportSummaries, pageable, totalQuery);
     }
 
     private JPAQuery<ContentReportSummaryDto> createLeftJoinClauseForReportSummaries(JPAQuery<ContentReportSummaryDto> query) {
-        return query.leftJoin(qReportSummary.posts, qPosts)
-                .leftJoin(qReportSummary.comments, qComments)
-                .leftJoin(qReportSummary.user, qUser);
-    }
-
-    @Override
-    public Page<ContentReportSummaryDto> findByTypes(Types type, Pageable pageable) {
-        return findReportSummariesByFields(type, pageable);
-    }
-
-    @Override
-    @Transactional
-    public <Contents> void deleteByContents(Contents contents) {
-        Predicate whereCondition = createWhereConditionByContents(contents);
-
-        JPADeleteClause query = new JPADeleteClause(entityManager, qReportSummary);
-        query.where(whereCondition).execute();
+        return query.leftJoin(Q_REPORT_SUMMARY.posts, Q_POSTS)
+                .leftJoin(Q_REPORT_SUMMARY.comments, Q_COMMENTS)
+                .leftJoin(Q_REPORT_SUMMARY.user, Q_USER);
     }
 }

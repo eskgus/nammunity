@@ -75,11 +75,11 @@ public class ContentReportsRepositoryTest {
 
     @BeforeEach
     public void setUp() {
-        Long user1Id = testDataHelper.signUp(1L, Role.USER);
-        this.reporter = assertOptionalAndGetEntity(userRepository::findById, user1Id);
+        Long reporterId = testDataHelper.signUp(1L, Role.USER);
+        this.reporter = assertOptionalAndGetEntity(userRepository::findById, reporterId);
 
-        Long user2Id = testDataHelper.signUp(2L, Role.USER);
-        this.user = assertOptionalAndGetEntity(userRepository::findById, user2Id);
+        Long userId = testDataHelper.signUp(2L, Role.USER);
+        this.user = assertOptionalAndGetEntity(userRepository::findById, userId);
 
         Long postId = testDataHelper.savePosts(reporter);
         this.post = assertOptionalAndGetEntity(postsRepository::findById, postId);

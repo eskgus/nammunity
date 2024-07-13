@@ -99,30 +99,6 @@ public class ReportSummaryServiceExceptionTest {
         testDeleteSelectedSummariesNotFoundContentException(USERS, userService::findById, USER_NOT_FOUND);
     }
 
-    private ContentReportSummaryDeleteDto createSummaryDeleteDto(ContentType contentType) {
-        List<Long> postIds = Collections.emptyList();
-        List<Long> commentIds = Collections.emptyList();
-        List<Long> userIds = Collections.emptyList();
-
-        Long id = 1L;
-
-        if (contentType != null) {
-            switch (contentType) {
-                case POSTS -> postIds = Collections.singletonList(id);
-                case COMMENTS -> commentIds = Collections.singletonList(id);
-                case USERS -> userIds = Collections.singletonList(id);
-            }
-        }
-
-        return ContentReportSummaryDeleteDto.builder()
-                .postsId(postIds).commentsId(commentIds).userId(userIds).build();
-    }
-
-    private <Entity, ParamType> void throwIllegalArgumentException(Function<ParamType, Entity> finder,
-                                                                   ExceptionMessages exceptionMessage) {
-        ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
-    }
-
     private <Entity> void testDeleteSelectedSummariesNotFoundContentException(ContentType contentType,
                                                                               Function<Long, Entity> finder,
                                                                               ExceptionMessages exceptionMessage) {
@@ -145,7 +121,31 @@ public class ReportSummaryServiceExceptionTest {
         verify(postsService, modes.get(0)).findById(anyLong());
         verify(commentsService, modes.get(1)).findById(anyLong());
         verify(userService, modes.get(2)).findById(anyLong());
-        verify(contentReportSummaryRepository, never()).deleteByContents(any());
+        verify(contentReportSummaryRepository, never()).deleteByElement(any());
+    }
+
+    private ContentReportSummaryDeleteDto createSummaryDeleteDto(ContentType contentType) {
+        List<Long> postIds = Collections.emptyList();
+        List<Long> commentIds = Collections.emptyList();
+        List<Long> userIds = Collections.emptyList();
+
+        Long id = 1L;
+
+        if (contentType != null) {
+            switch (contentType) {
+                case POSTS -> postIds = Collections.singletonList(id);
+                case COMMENTS -> commentIds = Collections.singletonList(id);
+                case USERS -> userIds = Collections.singletonList(id);
+            }
+        }
+
+        return ContentReportSummaryDeleteDto.builder()
+                .postsId(postIds).commentsId(commentIds).userId(userIds).build();
+    }
+
+    private <Entity, ParamType> void throwIllegalArgumentException(Function<ParamType, Entity> finder,
+                                                                   ExceptionMessages exceptionMessage) {
+        ServiceTestUtil.throwIllegalArgumentException(finder, exceptionMessage);
     }
 
     private void assertIllegalArgumentException(Executable executable, ExceptionMessages exceptionMessage) {
