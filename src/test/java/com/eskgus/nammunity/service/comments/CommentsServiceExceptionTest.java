@@ -103,7 +103,7 @@ public class CommentsServiceExceptionTest {
         List<Long> commentIds = Collections.emptyList();
 
         // when/then
-        testDeleteSelectedCommentsException(commentIds, EMPTY_CONTENT_IDS, never());
+        testDeleteSelectedCommentsException(commentIds, EMPTY_CONTENTS, never());
     }
 
     @Test

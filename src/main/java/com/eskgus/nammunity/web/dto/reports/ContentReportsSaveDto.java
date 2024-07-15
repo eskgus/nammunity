@@ -6,18 +6,21 @@ import com.eskgus.nammunity.domain.reports.ContentReports;
 import com.eskgus.nammunity.domain.reports.Reasons;
 import com.eskgus.nammunity.domain.reports.Types;
 import com.eskgus.nammunity.domain.user.User;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import com.eskgus.nammunity.validation.CustomNotNull;
+import com.eskgus.nammunity.validation.CustomSize;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_REASON;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.INVALID_OTHER_REASON;
+
 @Setter
 @Getter
 @NoArgsConstructor
 public class ContentReportsSaveDto {
-    @NotNull(message = "신고 사유을(를) 선택하세요.")
+    @CustomNotNull(exceptionMessage = EMPTY_REASON)
     private Long reasonsId;
 
     private Long postsId;
@@ -31,7 +34,7 @@ public class ContentReportsSaveDto {
     private Types types;
     private Reasons reasons;
 
-    @Size(max = 500, message = "기타 사유는 500글자 이하로 작성하세요.")
+    @CustomSize(exceptionMessage = INVALID_OTHER_REASON, max = 500)
     private String otherReasons;
 
     @Builder

@@ -125,7 +125,7 @@ public class LikesApiControllerExceptionIntegrationTest {
         List<Long> requestDto = Collections.emptyList();
 
         // when/then
-        testDeleteSelectedLikesExpectBadRequest(requestDto, EMPTY_CONTENT_IDS);
+        testDeleteSelectedLikesExpectBadRequest(requestDto, EMPTY_CONTENTS);
     }
 
     @Test

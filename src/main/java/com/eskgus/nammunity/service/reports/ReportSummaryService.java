@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 import static com.eskgus.nammunity.domain.enums.ContentType.COMMENTS;
 import static com.eskgus.nammunity.domain.enums.ContentType.POSTS;
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENTS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.REPORT_SUMMARY_NOT_FOUND;
 
 @RequiredArgsConstructor
@@ -118,7 +118,7 @@ public class ReportSummaryService {
         if (deleteDto.getPostsId().isEmpty()
                 && deleteDto.getCommentsId().isEmpty()
                 && deleteDto.getUserId().isEmpty()) {
-            throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
+            throw new IllegalArgumentException(EMPTY_CONTENTS.getMessage());
         }
     }
 

@@ -1,22 +1,24 @@
 package com.eskgus.nammunity.web.dto.user;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import com.eskgus.nammunity.validation.CustomNotBlank;
+import com.eskgus.nammunity.validation.CustomPattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+
 @Getter
 @NoArgsConstructor
 public class PasswordUpdateDto {
-    @NotBlank(message = "현재 비밀번호을(를) 입력하세요.")
+    @CustomNotBlank(exceptionMessage = EMPTY_OLD_PASSWORD)
     private String oldPassword;
 
-    @NotBlank(message = "새 비밀번호을(를) 입력하세요.")
-    @Pattern(regexp = "(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9~!@#$%^&*()_+:<>?]{8,20}", message = "비밀번호 형식을 확인하세요.")
+    @CustomNotBlank(exceptionMessage = EMPTY_NEW_PASSWORD)
+    @CustomPattern(exceptionMessage = INVALID_PASSWORD, regexp = "(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9~!@#$%^&*()_+:<>?]{8,20}")
     private String password;
 
-    @NotBlank(message = "비밀번호 확인을(를) 입력하세요.")
+    @CustomNotBlank(exceptionMessage = EMPTY_CONFIRM_PASSWORD)
     private String confirmPassword;
 
     @Builder

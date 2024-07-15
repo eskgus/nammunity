@@ -71,7 +71,7 @@ public class PostsServiceExceptionTest {
         List<Long> postIds = Collections.emptyList();
 
         // when/then
-        testDeleteSelectedPostsException(postIds, EMPTY_CONTENT_IDS, never());
+        testDeleteSelectedPostsException(postIds, EMPTY_CONTENTS, never());
     }
 
     @Test

@@ -196,7 +196,7 @@ public class CommentsApiControllerExceptionIntegrationTest {
         List<Long> requestDto = Collections.emptyList();
 
         // when/then
-        testDeleteSelectedCommentsExpectBadRequest(requestDto, EMPTY_CONTENT_IDS);
+        testDeleteSelectedCommentsExpectBadRequest(requestDto, EMPTY_CONTENTS);
     }
 
     @Test

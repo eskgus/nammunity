@@ -114,7 +114,7 @@ public class LikesServiceExceptionTest {
         List<Long> likeIds = Collections.emptyList();
 
         // when/then
-        testDeleteSelectedLikesException(likeIds, EMPTY_CONTENT_IDS, never());
+        testDeleteSelectedLikesException(likeIds, EMPTY_CONTENTS, never());
     }
 
     @Test

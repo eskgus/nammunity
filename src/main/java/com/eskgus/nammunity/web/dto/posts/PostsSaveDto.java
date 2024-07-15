@@ -2,21 +2,23 @@ package com.eskgus.nammunity.web.dto.posts;
 
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.eskgus.nammunity.validation.CustomNotBlank;
+import com.eskgus.nammunity.validation.CustomSize;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.*;
+
 @Getter
 @NoArgsConstructor
 public class PostsSaveDto {
-    @NotBlank(message = "제목을(를) 입력하세요.")
-    @Size(max = 100, message = "제목은 100글자 이하로 작성하세요.")
+    @CustomNotBlank(exceptionMessage = EMPTY_TITLE)
+    @CustomSize(exceptionMessage = INVALID_TITLE, max = 100)
     private String title;
 
-    @NotBlank(message = "내용을(를) 입력하세요.")
-    @Size(max = 3000, message = "내용은 3000글자 이하로 작성하세요.")
+    @CustomNotBlank(exceptionMessage = EMPTY_CONTENT)
+    @CustomSize(exceptionMessage = INVALID_CONTENT, max = 3000)
     private String content;
 
     private User user;

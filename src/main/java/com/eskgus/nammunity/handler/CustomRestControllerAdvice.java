@@ -22,19 +22,6 @@ public class CustomRestControllerAdvice {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(fieldErrors);
     }
 
-    private List<FieldError> sortFieldErrors(List<FieldError> fieldErrors) {
-        String notBlank = "NotBlank";
-        boolean hasNotBlankError = fieldErrors.stream().anyMatch(error -> notBlank.equals(error.getCode()));
-
-        if (hasNotBlankError && !notBlank.equals(fieldErrors.get(0).getCode())) {
-            return fieldErrors.stream()
-                    .sorted(Comparator.comparingInt(error -> notBlank.equals(error.getCode()) ? -1 : 0))
-                    .toList();
-        }
-
-        return fieldErrors;
-    }
-
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
         String message = ex.getConstraintViolations().iterator().next().getMessage();
@@ -56,5 +43,18 @@ public class CustomRestControllerAdvice {
         ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("서버 오류가 발생했습니다. 관리자에게 문의하세요.");
+    }
+
+    private List<FieldError> sortFieldErrors(List<FieldError> fieldErrors) {
+        String notBlank = "CustomNotBlank";
+        boolean hasNotBlankError = fieldErrors.stream().anyMatch(error -> notBlank.equals(error.getCode()));
+
+        if (hasNotBlankError && !notBlank.equals(fieldErrors.get(0).getCode())) {
+            return fieldErrors.stream()
+                    .sorted(Comparator.comparingInt(error -> notBlank.equals(error.getCode()) ? -1 : 0))
+                    .toList();
+        }
+
+        return fieldErrors;
     }
 }

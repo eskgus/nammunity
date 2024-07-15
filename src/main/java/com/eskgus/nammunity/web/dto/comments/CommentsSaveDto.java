@@ -3,17 +3,20 @@ package com.eskgus.nammunity.web.dto.comments;
 import com.eskgus.nammunity.domain.comments.Comments;
 import com.eskgus.nammunity.domain.posts.Posts;
 import com.eskgus.nammunity.domain.user.User;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.eskgus.nammunity.validation.CustomNotBlank;
+import com.eskgus.nammunity.validation.CustomSize;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_COMMENT;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.INVALID_COMMENT;
+
 @Getter
 @NoArgsConstructor
 public class CommentsSaveDto {
-    @NotBlank(message = "댓글을(를) 입력하세요.")
-    @Size(max = 1500, message = "댓글은 1500글자 이하로 작성하세요.")
+    @CustomNotBlank(exceptionMessage = EMPTY_COMMENT)
+    @CustomSize(exceptionMessage = INVALID_COMMENT, max = 1500)
     private String content;
 
     private Long postsId;

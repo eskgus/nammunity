@@ -74,7 +74,7 @@ public enum ExceptionMessages {
     // like
     LIKE_NOT_FOUND,
 
-    EMPTY_CONTENT_IDS,
+    EMPTY_CONTENTS,
 
     // report
     REASON_NOT_FOUND,
@@ -158,7 +158,7 @@ public enum ExceptionMessages {
             return "신고 분류";
         } else if (name.startsWith("report_summary")) {
             return "신고 요약 내역";
-        } else if (name.endsWith("nickname")) {
+        } else if (name.contains("nickname")) {
             return "닉네임";
         } else if (name.endsWith("title")) {
             return getTitleField(name);
@@ -180,7 +180,7 @@ public enum ExceptionMessages {
 
     private String getInvalidFix(String name) {
         if (name.contains("new")) {
-            return "현재 %s와 같습니다.";
+            return "현재 %s와(과) 같습니다.";
         } else if (name.endsWith("title") || name.endsWith("content") || name.endsWith("comment") || name.endsWith("other_reason")) {
             return "%s글자 이하로 작성하세요.";
         } else {

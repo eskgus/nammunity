@@ -214,7 +214,7 @@ public class PostsApiControllerExceptionIntegrationTest {
         List<Long> requestDto = Collections.emptyList();
 
         // when/then
-        testDeleteSelectedPostsExpectBadRequest(requestDto, EMPTY_CONTENT_IDS);
+        testDeleteSelectedPostsExpectBadRequest(requestDto, EMPTY_CONTENTS);
     }
 
     @Test

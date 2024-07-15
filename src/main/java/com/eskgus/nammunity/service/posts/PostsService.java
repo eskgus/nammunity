@@ -18,7 +18,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENTS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.POST_NOT_FOUND;
 
 @RequiredArgsConstructor
@@ -46,7 +46,7 @@ public class PostsService {
     @Transactional
     public void deleteSelectedPosts(List<Long> postIds) {
         if (postIds.isEmpty()) {
-            throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
+            throw new IllegalArgumentException(EMPTY_CONTENTS.getMessage());
         }
 
         postIds.forEach(this::delete);

@@ -21,7 +21,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENTS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.LIKE_NOT_FOUND;
 
 @RequiredArgsConstructor
@@ -55,7 +55,7 @@ public class LikesService {
     @Transactional
     public void deleteSelectedLikes(List<Long> likeIds) {
         if (likeIds.isEmpty()) {
-            throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
+            throw new IllegalArgumentException(EMPTY_CONTENTS.getMessage());
         }
 
         likeIds.forEach(this::delete);

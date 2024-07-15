@@ -1,15 +1,18 @@
 package com.eskgus.nammunity.web.dto.user;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import com.eskgus.nammunity.validation.CustomNotBlank;
+import com.eskgus.nammunity.validation.CustomPattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_NICKNAME;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.INVALID_NICKNAME;
 
 @Getter
 @NoArgsConstructor
 public class NicknameUpdateDto {
-    @NotBlank(message = "닉네임을(를) 입력하세요.")
-    @Pattern(regexp = "(?=[a-zA-Z0-9가-힣])[a-zA-Z0-9가-힣]{3,10}", message = "닉네임 형식을 확인하세요.")
+    @CustomNotBlank(exceptionMessage = EMPTY_NICKNAME)
+    @CustomPattern(exceptionMessage = INVALID_NICKNAME, regexp = "(?=[a-zA-Z0-9가-힣])[a-zA-Z0-9가-힣]{3,10}")
     private String nickname;
 
     public NicknameUpdateDto(String nickname) {

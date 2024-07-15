@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.Principal;
 import java.util.List;
 
-import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENT_IDS;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_CONTENTS;
 import static com.eskgus.nammunity.domain.enums.ExceptionMessages.COMMENT_NOT_FOUND;
 
 @RequiredArgsConstructor
@@ -50,7 +50,7 @@ public class CommentsService {
     @Transactional
     public void deleteSelectedComments(List<Long> commentIds) {
         if (commentIds.isEmpty()) {
-            throw new IllegalArgumentException(EMPTY_CONTENT_IDS.getMessage());
+            throw new IllegalArgumentException(EMPTY_CONTENTS.getMessage());
         }
 
         commentIds.forEach(this::delete);

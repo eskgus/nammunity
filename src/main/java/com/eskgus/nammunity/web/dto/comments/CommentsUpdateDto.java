@@ -1,15 +1,18 @@
 package com.eskgus.nammunity.web.dto.comments;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.eskgus.nammunity.validation.CustomNotBlank;
+import com.eskgus.nammunity.validation.CustomSize;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.EMPTY_COMMENT;
+import static com.eskgus.nammunity.domain.enums.ExceptionMessages.INVALID_COMMENT;
 
 @Getter
 @NoArgsConstructor
 public class CommentsUpdateDto {
-    @NotBlank(message = "댓글을(를) 입력하세요.")
-    @Size(max = 1500, message = "댓글은 1500글자 이하로 작성하세요.")
+    @CustomNotBlank(exceptionMessage = EMPTY_COMMENT)
+    @CustomSize(exceptionMessage = INVALID_COMMENT, max = 1500)
     private String content;
 
     public CommentsUpdateDto(String content) {

@@ -81,7 +81,7 @@ public class ReportSummaryServiceExceptionTest {
         ContentReportSummaryDeleteDto requestDto = createSummaryDeleteDto(null);
 
         // when/then
-        testDeleteSelectedSummariesException(null, requestDto, EMPTY_CONTENT_IDS);
+        testDeleteSelectedSummariesException(null, requestDto, EMPTY_CONTENTS);
     }
 
     @Test

@@ -182,7 +182,7 @@ public class ReportsApiControllerExceptionIntegrationTest {
     @Test
     @WithMockUser(username = "username2", roles = "ADMIN")
     public void deleteSelectedReportSummariesWithEmptyReportIds() throws Exception {
-        testDeleteSelectedReportSummariesException(null, EMPTY_CONTENT_IDS);
+        testDeleteSelectedReportSummariesException(null, EMPTY_CONTENTS);
     }
 
     @Test
