@@ -405,7 +405,6 @@ var usersMain = {
             alert('연동 해제됐습니다.')
             window.location.reload();
         }).fail(function(xhRequest) {
-            console.log(xhRequest);
             indexMain.fail(xhRequest);
         });
     }

@@ -1136,7 +1136,6 @@ textarea:disabled {
 }
 
 #container .read .report-popup .otherReasons {
-    display: none;
     margin-left: 27px;
     margin-bottom: 7px;
     width: -webkit-fill-available;
@@ -1148,6 +1147,10 @@ textarea:disabled {
 
 #container .read .report-popup .btn-area {
     border-width: 1px;
+}
+
+.hidden {
+    display: none;
 }
 /* 여기까지 신고 사유 팝업 */
 
@@ -1170,6 +1173,11 @@ textarea:disabled {
     width: 30%;
 }
 
+#container .search .results-area td a pre,
+#container .my-page .comments-area td pre,
+#container .read .content pre,
+#container .read .comments-area .comments-list pre,
+#container .read .title-area .top-area .title,
 #container .my-page #reports-area td {
     word-wrap: break-word;
 }
@@ -1322,6 +1330,7 @@ textarea:disabled {
     margin-right: 5px;
 }
 
+#container .my-page .comments-area td pre,
 #container .search .results-area td a pre {
     text-overflow: ellipsis;
     overflow: hidden;

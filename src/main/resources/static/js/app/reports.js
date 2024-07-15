@@ -67,9 +67,9 @@ var reportsMain = {
 
                 // 선택된 사유가 기타면 otherReasons 입력 박스 표시
                 if (_this.reasons[_this.reasons.length - 1] === reason) {
-                    _this.otherReasons.style.display = 'block';
+                    _this.otherReasons.classList.remove('hidden');
                 } else {
-                    _this.otherReasons.style.display = 'none';
+                    _this.otherReasons.classList.add('hidden');
                 }
             });
         });
@@ -103,12 +103,14 @@ var reportsMain = {
         reportsMain.reasons.forEach((reason) => {
             reason.checked = false;
         });
-        reportsMain.otherReasons.value = '';
-        reportsMain.otherReasons.style.display = 'none';
 
         reportsMain.popupContainer.style.display = 'block';
     },
     closeReportPopup: function() {
+        // 팝업 닫을 때 기타 사유 입력 칸 초기화
+        reportsMain.otherReasons.value = '';
+        reportsMain.otherReasons.classList.add('hidden');
+
         reportsMain.popupContainer.style.display = 'none';
     },
     getReasons: function() {    // 신고 사유 반환
@@ -120,12 +122,17 @@ var reportsMain = {
             }
         });
 
+        var isOtherReason = reasonsId === reportsMain.reasons.length;
+        var isOtherReasonEmpty = reportsMain.otherReasons.value === '';
+
         if (reasonsId === 0) {
             alert('신고 사유를 선택하세요.');
             return null;
-        } else if (reasonsId === reportsMain.reasons.length && reportsMain.otherReasons.value === '') {
+        } else if (isOtherReason && isOtherReasonEmpty) {
             alert('기타 사유를 입력하세요.');
             return null;
+        } else if (!isOtherReason && !isOtherReasonEmpty) {
+            reportsMain.otherReasons.value = '';
         }
 
         return reasonsId;
@@ -142,7 +149,7 @@ var reportsMain = {
             alert('신고됐습니다.');
             reportsMain.closeReportPopup();
         }).fail(function(xhRequest) {
-            indexMain.fail(xhRequest);
+            reportsMain.fail(xhRequest);
         });
     },
     generateData: function(type, reasonsId) {
@@ -158,6 +165,42 @@ var reportsMain = {
         };
 
         return data;
+    },
+    fail: function(xhRequest) {
+        if (xhRequest.status === 400) {
+            var errors = xhRequest.responseJSON;
+            if (Array.isArray(errors) && errors.length > 0) {
+                var firstError = errors[0];
+                if ('otherReasons' === firstError.field) {
+                    reportsMain.redBorder(firstError.field, firstError.rejectedValue);
+                }
+                alert(firstError.defaultMessage);
+            } else {
+                alert(xhRequest.responseText);
+                if (xhRequest.responseText.includes('기타')) {
+                    reportsMain.redBorder();
+                } else {
+                    window.location.reload();
+                }
+            }
+        } else {
+            indexMain.notBadRequestError(xhRequest);
+        }
+    },
+    redBorder: function(field = 'otherReasons', rejectedValue = '') {
+        var box = reportsMain.otherReasons;
+
+        var red = 'border: 1px solid #ea3636';
+
+        box.style = red;
+        box.addEventListener('input', function() {
+            if (rejectedValue != box.value) {
+                box.style = 'border: 1px solid #205943';
+            } else {
+                box.style = red;
+            }
+        });
+        box.focus();
     }
 };
 

@@ -24,8 +24,6 @@ public class ReasonsRepositoryTest {
         // when
         List<Reasons> result = reasonsRepository.findAllAsc();
 
-        result.forEach(reason -> System.out.println(reason.getId()));
-
         // then
         assertEquals(reasonsRepository.count(), result.size());
     }

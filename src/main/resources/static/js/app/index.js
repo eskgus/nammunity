@@ -7,7 +7,7 @@ var indexMain = {
         });
 
         $('#btn-back').on('click', function() { // mvc controller IllegalArgumentException
-            window.history.back();
+            window.location.href = '/';
         });
 
         var searchBtns = document.getElementsByName('btn-search');
